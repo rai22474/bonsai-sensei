@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from bonsai_sensei.telegram import bot
 
 router = APIRouter()
 

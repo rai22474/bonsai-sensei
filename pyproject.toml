@@ -5,6 +5,7 @@ description = "FastAPI application with uv"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi",
+    "python-telegram-bot>=22.5",
     "uvicorn",
 ]
 
