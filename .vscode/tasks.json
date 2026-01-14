@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run with uvicorn",
+			"type": "shell",
+			"command": "uv run uvicorn bonsai_sensei.main:app --reload",
+			"isBackground": true,
+			"group": "test"
+		}
+	]
+}
