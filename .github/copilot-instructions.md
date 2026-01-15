@@ -78,6 +78,9 @@ DEVELOPMENT RULES:
 - Use VS Code API tool only for VS Code extension projects.
 - Once the project is created, it is already opened in Visual Studio Code—do not suggest commands to open this project in Visual Studio again.
 - If the project setup information has additional rules, follow them strictly.
+- LANGUAGE RULES: Ensure all comments and logs are in English.
+- CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory.
+- ERROR HANDLING: Avoid adding explicit try-except blocks for generic exceptions in API routes if a global exception handler is already configured. Let the global handler manage unexpected errors.
 
 FOLDER CREATION RULES:
 - Always use the current directory as the project root.

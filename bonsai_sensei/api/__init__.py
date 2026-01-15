@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from .routes import router
+from .telegram_routes import router as telegram_router
 from bonsai_sensei.telegram import bot
 from bonsai_sensei.logging_config import configure_logging
 
@@ -32,3 +33,4 @@ configure_logging()
 app = FastAPI(lifespan=lifespan)
 app.add_exception_handler(Exception, _generic_exception_handler)
 app.include_router(router)
+app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

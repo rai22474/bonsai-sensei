@@ -1,7 +1,6 @@
 import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
-from fastapi import Request
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
