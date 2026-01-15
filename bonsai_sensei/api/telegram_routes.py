@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 from bonsai_sensei.telegram.bot import bot
 from bonsai_sensei.logging_config import get_logger
