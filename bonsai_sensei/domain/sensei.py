@@ -8,13 +8,9 @@ from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_cred
 from google.adk.runners import InMemoryRunner
 from bonsai_sensei.logging_config import get_logger
 from bonsai_sensei.domain.weather_tool import get_weather
-from dotenv import load_dotenv
 
 
 logger = get_logger(__name__)
-
-
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
 SENSEI_INSTRUCTION = """
@@ -58,7 +54,6 @@ async def _generate_advise(
         return "No puedo procesar tu solicitud porque el agente no está inicializado (probablemente falta la API Key)."
 
     logger.info(f"Processing message from {user_id}: {text}")
-    logger.info(f"Using GOOGLE_API_KEY: {GOOGLE_API_KEY}")
 
     events = await runner.run_debug(
         user_messages=text,
