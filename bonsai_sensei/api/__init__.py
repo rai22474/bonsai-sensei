@@ -3,9 +3,14 @@ import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from functools import partial
+from telegram.ext import CommandHandler, MessageHandler, filters
+
+from bonsai_sensei.domain.sensei import create_sensei
 from .routes import router
 from .telegram_routes import router as telegram_router
-from bonsai_sensei.telegram import bot
+from bonsai_sensei.telegram.bot import TelegramBot
+from bonsai_sensei.telegram.handlers import start, handle_user_message
 from bonsai_sensei.logging_config import configure_logging
 
 
@@ -22,10 +27,20 @@ async def _generic_exception_handler(request, exc):
     )
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    await bot.initialize()
+async def lifespan(app: FastAPI):  
+    message_handler = partial(handle_user_message, message_processor=create_sensei())
+    handlers = [
+        CommandHandler("start", start),
+        MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
+    ]
+    bot_instance = TelegramBot(handlers=handlers)
+
+    app.state.bot = bot_instance
+    await bot_instance.initialize()
+    
     yield
-    await bot.shutdown()
+    
+    await bot_instance.shutdown()
 
 
 configure_logging()

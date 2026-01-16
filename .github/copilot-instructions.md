@@ -24,6 +24,9 @@
 	Apply modifications using appropriate tools and user-provided references.
 	Skip this step for "Hello World" projects.
 	-->
+    - Implemented Telegram Bot (Long Polling).
+    - Added centralized English logging.
+    - Integrated Google ADK for AI Agent with Weather Tool using `google-adk`.
 
 - [x] Install Required Extensions
 	<!-- ONLY install extensions provided mentioned in the get_project_setup_info. Skip this step otherwise and mark as completed. -->
@@ -79,8 +82,8 @@ DEVELOPMENT RULES:
 - Once the project is created, it is already opened in Visual Studio Code—do not suggest commands to open this project in Visual Studio again.
 - If the project setup information has additional rules, follow them strictly.
 - LANGUAGE RULES: Ensure all comments and logs are in English.
-- CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory.
-- ERROR HANDLING: Avoid adding explicit try-except blocks for generic exceptions in API routes if a global exception handler is already configured. Let the global handler manage unexpected errors.
+- CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory. STRICTLY FORBIDDEN to generate comments explaining code logic.
+- ERROR HANDLING: Never catch generic Exceptions just for logging purposes. Let them bubble up to the global exception handler.
 
 FOLDER CREATION RULES:
 - Always use the current directory as the project root.

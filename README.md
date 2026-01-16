@@ -1,6 +1,10 @@
 # Bonsai Sensei
 
-A FastAPI application managed by `uv` and Dockerized.
+An intelligent assistant for Bonsai care.
+
+## Features
+
+- **Temperature-based Protection Advice**: Determine which bonsais need protection based on current weather conditions.
 
 ## Prerequisites
 
