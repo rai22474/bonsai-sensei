@@ -1,16 +1,21 @@
 from functools import partial
 import os
 from google.adk.agents.llm_agent import Agent
+from google.adk.tools.openapi_tool import OpenAPIToolset
+
+from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
+
 from google.adk.runners import InMemoryRunner
 from bonsai_sensei.logging_config import get_logger
 from bonsai_sensei.domain.weather_tool import get_weather
-from google.adk.runners import InMemoryRunner
-from bonsai_sensei.logging_config import get_logger
+from dotenv import load_dotenv
+
 
 logger = get_logger(__name__)
 
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
 
 SENSEI_INSTRUCTION = """
 #ROL
@@ -29,12 +34,9 @@ teniendo en cuenta factores como la especie del bonsái, las condiciones climát
 
 
 def create_sensei() -> InMemoryRunner | None:
-    if not GOOGLE_API_KEY:
-        logger.warning("GOOGLE_API_KEY not set. AI features will not work.")
-        return None
 
     agent = Agent(
-        model="gemini-1.5-flash",
+        model="gemini-3-flash-preview",
         name="weather_agent",
         instruction=SENSEI_INSTRUCTION,
         tools=[get_weather],
@@ -56,6 +58,7 @@ async def _generate_advise(
         return "No puedo procesar tu solicitud porque el agente no está inicializado (probablemente falta la API Key)."
 
     logger.info(f"Processing message from {user_id}: {text}")
+    logger.info(f"Using GOOGLE_API_KEY: {GOOGLE_API_KEY}")
 
     events = await runner.run_debug(
         user_messages=text,

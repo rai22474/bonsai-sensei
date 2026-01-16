@@ -89,6 +89,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "google-adk" },
+    { name = "python-dotenv" },
     { name = "python-telegram-bot" },
     { name = "uvicorn" },
 ]
@@ -97,6 +98,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi" },
     { name = "google-adk", specifier = ">=1.22.1" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-telegram-bot", specifier = ">=22.5" },
     { name = "uvicorn" },
 ]

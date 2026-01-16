@@ -23,3 +23,15 @@ async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         response = "Error interno: No puedo procesar tu mensaje."
     
     await update.message.reply_text(response)
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Log the error and send a telegram message to notify the developer."""
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text(
+                "Lo siento mucho, ha ocurrido un error inesperado."
+            )
+        except Exception as e:
+            logger.error(f"Could not send error response to user: {e}")

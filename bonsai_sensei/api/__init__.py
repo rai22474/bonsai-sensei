@@ -10,7 +10,7 @@ from bonsai_sensei.domain.sensei import create_sensei
 from .routes import router
 from .telegram_routes import router as telegram_router
 from bonsai_sensei.telegram.bot import TelegramBot
-from bonsai_sensei.telegram.handlers import start, handle_user_message
+from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
 from bonsai_sensei.logging_config import configure_logging
 
 
@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
     ]
-    bot_instance = TelegramBot(handlers=handlers)
+    bot_instance = TelegramBot(handlers=handlers, error_handler=error_handler)
 
     app.state.bot = bot_instance
     await bot_instance.initialize()

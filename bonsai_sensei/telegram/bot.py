@@ -8,13 +8,15 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 
 class TelegramBot:
-    def __init__(self, handlers: list = None):
+    def __init__(self, handlers: list = None, error_handler=None):
         self.application = None
         if TOKEN:
             self.application = Application.builder().token(TOKEN).build()
             if handlers:
                 for handler in handlers:
                     self.application.add_handler(handler)
+            if error_handler:
+                self.application.add_error_handler(error_handler)
         else:
             logger.warning("TELEGRAM_BOT_TOKEN not set. Bot will not function.")
 
