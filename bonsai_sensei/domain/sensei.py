@@ -8,6 +8,10 @@ from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_cred
 from google.adk.runners import InMemoryRunner
 from bonsai_sensei.logging_config import get_logger
 from bonsai_sensei.domain.weather_tool import get_weather
+from bonsai_sensei.domain.garden_tool import get_garden_species
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 logger = get_logger(__name__)
@@ -23,6 +27,7 @@ teniendo en cuenta factores como la especie del bonsái, las condiciones climát
 
 # HERRAMIENTAS
 * get_weather para encontrar información meteorológica cuando sea necesario para contestar correctamente a la pregunta. 
+* get_garden_species para conocer qué árboles tiene el usuario en su jardín, sus edades y especies.
 
 # INSTRUCCIONES ADICIONALES
 * Responde siempre en español.
@@ -35,7 +40,7 @@ def create_sensei() -> InMemoryRunner | None:
         model="gemini-3-flash-preview",
         name="weather_agent",
         instruction=SENSEI_INSTRUCTION,
-        tools=[get_weather],
+        tools=[get_weather, get_garden_species],
     )
 
     return partial(
