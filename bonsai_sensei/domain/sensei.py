@@ -1,14 +1,8 @@
+from typing import List, Callable
 from functools import partial
-import os
 from google.adk.agents.llm_agent import Agent
-from google.adk.tools.openapi_tool import OpenAPIToolset
-
-from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
-
 from google.adk.runners import InMemoryRunner
 from bonsai_sensei.logging_config import get_logger
-from bonsai_sensei.domain.weather_tool import get_weather
-from bonsai_sensei.domain.garden_tool import get_garden_species
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,22 +19,18 @@ Eres un asistente útil especializado en el cuidado de bonsáis.
 Tu objetivo es proporcionar consejos precisos y prácticos para el cuidado de bonsáis, 
 teniendo en cuenta factores como la especie del bonsái, las condiciones climáticas y las mejores prácticas de jardinería.
 
-# HERRAMIENTAS
-* get_weather para encontrar información meteorológica cuando sea necesario para contestar correctamente a la pregunta. 
-* get_garden_species para conocer qué árboles tiene el usuario en su jardín, sus edades y especies.
-
 # INSTRUCCIONES ADICIONALES
 * Responde siempre en español.
 """
 
 
-def create_sensei() -> InMemoryRunner | None:
+def create_sensei(tools: List[Callable]) -> InMemoryRunner | None:
 
     agent = Agent(
         model="gemini-3-flash-preview",
         name="weather_agent",
         instruction=SENSEI_INSTRUCTION,
-        tools=[get_weather, get_garden_species],
+        tools=tools,
     )
 
     return partial(

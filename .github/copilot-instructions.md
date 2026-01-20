@@ -82,8 +82,10 @@ DEVELOPMENT RULES:
 - Once the project is created, it is already opened in Visual Studio Code—do not suggest commands to open this project in Visual Studio again.
 - If the project setup information has additional rules, follow them strictly.
 - LANGUAGE RULES: Ensure all comments and logs are in English.
+- DOCUMENTATION RULES: Do not add docstrings to functions/methods if the name is self-explanatory. Only add docstrings if they explain "why" something is done or complex behavior that isn't obvious from the signature.
 - CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory. STRICTLY FORBIDDEN to generate comments explaining code logic.
 - ERROR HANDLING: Never catch generic Exceptions just for logging purposes. Let them bubble up to the global exception handler.
+- IMPORT RULES: Never use relative imports (e.g., `from .module import func`). Always use absolute imports (e.g., `from package.module import func`).
 
 FOLDER CREATION RULES:
 - Always use the current directory as the project root.

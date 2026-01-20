@@ -1,4 +1,4 @@
-from bonsai_sensei.api import app
+from bonsai_sensei import app
 
 if __name__ == "__main__":
     import uvicorn

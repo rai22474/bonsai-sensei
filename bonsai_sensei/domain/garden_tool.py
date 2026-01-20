@@ -3,14 +3,14 @@ from bonsai_sensei.domain import garden
 
 logger = get_logger(__name__)
 
-def get_garden_species() -> str:
+def get_garden_species(get_all_species_func) -> str:
     """
     Retrieves the list of unique bonsai species currently in the user's garden.
     Use this to identify which species the user owns to provide specific advice.
     """
     logger.info("Fetching user bonsai garden species")
     try:
-        species_list = garden.get_all_species()
+        species_list = get_all_species_func()
         if not species_list:
             return "Your bonsai garden is currently empty."
         
