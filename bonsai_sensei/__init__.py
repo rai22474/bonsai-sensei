@@ -8,7 +8,7 @@ from telegram.ext import CommandHandler, MessageHandler, filters
 
 from bonsai_sensei.domain.sensei import create_sensei
 from bonsai_sensei.api.species import router as species_router
-from bonsai_sensei.api.telegram_routes import router as telegram_router
+from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.telegram.bot import TelegramBot
 from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
 from bonsai_sensei.logging_config import configure_logging
