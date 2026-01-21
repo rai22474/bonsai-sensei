@@ -1,7 +1,7 @@
 from typing import List
 from sqlmodel import select, Session
 from bonsai_sensei.database import Species
-from bonsai_sensei.database.decorators import with_session
+from bonsai_sensei.database.session_wrapper import with_session
 
 
 @with_session

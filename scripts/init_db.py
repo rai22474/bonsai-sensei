@@ -1,6 +1,7 @@
 import logging
 import os
 from sqlmodel import SQLModel, create_engine
+from bonsai_sensei.database import species
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

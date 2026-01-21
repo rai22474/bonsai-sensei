@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict, Callable
-from bonsai_sensei.database.models import Species
+from bonsai_sensei.database.species import Species
 
 router = APIRouter()
 
-# Dependency providers
 def get_list_species_svc(request: Request) -> Callable:
     return request.app.state.garden_service["list_species"]
 
