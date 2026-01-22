@@ -7,9 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 logger = get_logger(__name__)
-
 
 SENSEI_INSTRUCTION = """
 #ROL
@@ -21,13 +19,14 @@ teniendo en cuenta factores como la especie del bonsái, las condiciones climát
 
 # INSTRUCCIONES ADICIONALES
 * Responde siempre en español.
+* La respuesta se enviará por Telegram: usa texto plano, sin Markdown ni HTML, y evita caracteres de control.
+* Mantén el mensaje en un solo bloque de texto con saltos de línea simples.
 """
 
-
-def create_sensei(tools: List[Callable]) -> InMemoryRunner | None:
-
+def create_sensei(tools: List[Callable], model_factory: Callable[[], object]) -> InMemoryRunner | None:
+    model = model_factory()
     agent = Agent(
-        model="gemini-3-flash-preview",
+        model=model,
         name="weather_agent",
         instruction=SENSEI_INSTRUCTION,
         tools=tools,
@@ -42,9 +41,6 @@ def create_sensei(tools: List[Callable]) -> InMemoryRunner | None:
 async def _generate_advise(
     text: str, runner: InMemoryRunner, user_id: str = "default_user"
 ) -> str:
-    """
-    Processes a user message to generate advice about bonsai care using the Google Agent Development Kit (ADK).
-    """
     if not runner:
         return "No puedo procesar tu solicitud porque el agente no está inicializado (probablemente falta la API Key)."
 

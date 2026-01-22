@@ -1,4 +1,5 @@
 import logging
+import os
 import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -7,6 +8,10 @@ from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, filters
 
 from bonsai_sensei.domain.sensei import create_sensei
+from bonsai_sensei.domain.model_factory import (
+    get_cloud_model_factory,
+    get_local_model_factory,
+)
 from bonsai_sensei.api.species import router as species_router
 from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.telegram.bot import TelegramBot
@@ -55,9 +60,18 @@ async def lifespan(app: FastAPI):
         "delete_species": partial(garden.delete_species, create_session=get_session_partial),
     }
 
+
+    provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
+    logging.info(f"el provider debe es {provider}")
+    model_factory = (
+        get_local_model_factory() if provider == "local" else get_cloud_model_factory()
+    )
     message_handler = partial(
         handle_user_message,
-        message_processor=create_sensei(tools=[get_weather, garden_species_tool]),
+        message_processor=create_sensei(
+            tools=[get_weather, garden_species_tool],
+            model_factory=model_factory,
+        ),
     )
     handlers = [
         CommandHandler("start", start),

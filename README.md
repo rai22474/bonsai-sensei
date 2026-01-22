@@ -11,6 +11,7 @@ An intelligent assistant for Bonsai care.
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
 - Docker (optional, for containerization)
+- Ollama installed for local model mode
 
 ## Installation
 
@@ -32,6 +33,28 @@ uv run uvicorn bonsai_sensei.main:app --reload
 Open http://127.0.0.1:8000/docs to see the Swagger UI.
 
 ## Docker
+
+### Local model (Ollama)
+
+Start Ollama and pull the model if needed:
+
+```bash
+./scripts/start_ollama.sh
+```
+
+Start the stack using the local model:
+
+```bash
+./scripts/start_applications.sh local
+```
+
+### Cloud model
+
+Start the stack using the cloud model:
+
+```bash
+./scripts/start_applications.sh cloud
+```
 
 Build the image:
 
