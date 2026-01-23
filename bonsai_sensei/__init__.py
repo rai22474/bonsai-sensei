@@ -7,8 +7,11 @@ from fastapi.responses import JSONResponse
 from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, filters
 
-from bonsai_sensei.domain.sensei import create_sensei
-from bonsai_sensei.domain.model_factory import (
+from bonsai_sensei.domain.advisor import create_advisor
+from bonsai_sensei.domain.sensei_agent import create_sensei_agent
+from bonsai_sensei.domain.weather_agent import create_weather_agent
+from bonsai_sensei.domain.species_agent import create_species_agent
+from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
     get_local_model_factory,
 )
@@ -51,8 +54,7 @@ def _create_garden_tool(session_factory):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_session_partial = partial(get_session, engine=get_engine())
-    garden_species_tool = _create_garden_tool(session_factory=get_session_partial)
-
+   
     app.state.garden_service = {
         "list_species": partial(garden.list_species, create_session=get_session_partial),
         "create_species": partial(garden.create_species, create_session=get_session_partial),
@@ -62,16 +64,27 @@ async def lifespan(app: FastAPI):
 
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
-    logging.info(f"el provider debe es {provider}")
     model_factory = (
         get_local_model_factory() if provider == "local" else get_cloud_model_factory()
     )
+    model = model_factory()
+    garden_species_tool = _create_garden_tool(session_factory=get_session_partial)
+
+    weather_agent = create_weather_agent(
+        model=model,
+        tools=[get_weather, garden_species_tool],
+    )
+    species_agent = create_species_agent(
+        model=model,
+        create_species_func=app.state.garden_service["create_species"],
+    )
+    sensei_agent = create_sensei_agent(
+        model=model,
+        sub_agents=[weather_agent, species_agent],
+    )
     message_handler = partial(
         handle_user_message,
-        message_processor=create_sensei(
-            tools=[get_weather, garden_species_tool],
-            model_factory=model_factory,
-        ),
+        message_processor=create_advisor(sensei_agent),
     )
     handlers = [
         CommandHandler("start", start),
