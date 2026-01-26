@@ -86,6 +86,11 @@ DEVELOPMENT RULES:
 - CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory. STRICTLY FORBIDDEN to generate comments explaining code logic.
 - ERROR HANDLING: Never catch generic Exceptions just for logging purposes. Let them bubble up to the global exception handler.
 - IMPORT RULES: Never use relative imports (e.g., `from .module import func`). Always use absolute imports (e.g., `from package.module import func`).
+- DESIGN RULES: Inject external dependencies into functions for testability (e.g., translators, HTTP clients).
+- TESTING RULES: Use a single assert per test.
+- TESTING RULES: Prefer pytest fixtures for test data setup.
+- TESTING RULES: Name tests with a should_ prefix.
+- TESTING RULES: Place fixtures below tests in test files.
 
 FOLDER CREATION RULES:
 - Always use the current directory as the project root.

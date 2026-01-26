@@ -32,6 +32,14 @@ uv run uvicorn bonsai_sensei.main:app --reload
 
 Open http://127.0.0.1:8000/docs to see the Swagger UI.
 
+## Observability (Monocle)
+
+Monocle observability is disabled by default. To enable it, set the environment variables below:
+
+- `MONOCLE_ENABLED=true`
+- `MONOCLE_WORKFLOW_NAME=bonsai-sensei`
+- `MONOCLE_EXPORTERS=console` (optional)
+
 ## Docker
 
 ### Local model (Ollama)
