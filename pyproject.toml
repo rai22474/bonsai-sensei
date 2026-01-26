@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "FastAPI application with uv"
 requires-python = ">=3.12"
 dependencies = [
-    "ddgs>=3.4.0",
     "deep-translator>=1.11.4",
     "fastapi",
     "google-adk>=1.22.1",
@@ -14,7 +13,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-telegram-bot>=22.5",
     "sqlmodel>=0.0.31",
-    "trafilatura>=1.8.0",
+    "tavily-python>=0.7.19",
     "uvicorn",
 ]
 

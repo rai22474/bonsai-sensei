@@ -1,15 +1,24 @@
-from typing import List
+from typing import List, Dict
 from sqlmodel import select, Session
 from bonsai_sensei.database import Species
 from bonsai_sensei.database.session_wrapper import with_session
 
 
 @with_session
-def get_all_species(session: Session) -> List[str]:
-    statement = select(Species.name)
+def get_all_species(session: Session) -> List[Dict[str, str]]:
+    statement = select(Species)
     results = session.exec(statement).all()
-    
-    return sorted(list(set(results)))
+
+    species_items = []
+    for species in results:
+        species_items.append(
+            {
+                "common_name": species.name,
+                "scientific_name": species.scientific_name or "",
+            }
+        )
+
+    return sorted(species_items, key=lambda item: item["common_name"])
 
 
 @with_session

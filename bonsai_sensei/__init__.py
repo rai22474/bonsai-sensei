@@ -11,12 +11,15 @@ from bonsai_sensei.domain.advisor import create_advisor
 from bonsai_sensei.domain.sensei_agent import create_sensei_agent
 from bonsai_sensei.domain.weather_agent import create_weather_agent
 from bonsai_sensei.domain.species_agent import create_species_agent
+from bonsai_sensei.domain.care_guide_agent import create_care_guide_agent
 from bonsai_sensei.domain.scientific_name_tool import (
     resolve_scientific_name,
     create_scientific_name_resolver,
 )
 from bonsai_sensei.domain.scientific_name_translator import translate_to_english
 from bonsai_sensei.domain.scientific_name_searcher import trefle_search
+from bonsai_sensei.domain.tavily_searcher import create_tavily_searcher
+from bonsai_sensei.domain.care_guide_service import create_care_guide_builder
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
     get_local_model_factory,
@@ -27,7 +30,7 @@ from bonsai_sensei.telegram.bot import TelegramBot
 from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.domain.weather_tool import get_weather
-from bonsai_sensei.domain.garden_tool import get_garden_species
+from bonsai_sensei.domain.list_species_tool import create_list_bonsai_species_tool
 from bonsai_sensei.domain import garden
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import setup_monocle_observability
@@ -46,46 +49,56 @@ async def _generic_exception_handler(request, exc):
     )
 
 
-def _create_garden_tool(session_factory):
-    get_all_species_partial = partial(
-        garden.get_all_species, create_session=session_factory
-    )
-    tool = partial(get_garden_species, get_all_species_func=get_all_species_partial)
-
-    tool.__name__ = "get_garden_species"
-    tool.__doc__ = get_garden_species.__doc__
-
-    return tool
-
-
 def _with_tool_metadata(tool, name: str, doc_source):
     tool.__name__ = name
     tool.__doc__ = doc_source.__doc__
     return tool
 
 
-def _create_agents(model: object, garden_species_tool, create_species_func):
+def _create_list_species_tool(session_factory):
+    get_all_species_partial = partial(
+        garden.get_all_species, create_session=session_factory
+    )
+    tool = create_list_bonsai_species_tool(get_all_species_partial)
+
+    tool.__name__ = "list_bonsai_species"
+
+    return tool
+
+
+def _create_agents(model: object, list_species_tool, create_species_func):
     weather_agent = create_weather_agent(
         model=model,
-        tools=[get_weather, garden_species_tool],
+        tools=[get_weather, list_species_tool],
     )
     resolve_name_tool = create_scientific_name_resolver(
         translator=translate_to_english,
         searcher=trefle_search,
     )
     resolve_name_tool = _with_tool_metadata(
-        resolve_name_tool, "resolve_scientific_name", resolve_scientific_name
+        resolve_name_tool, "resolve_bonsai_scientific_names", resolve_scientific_name
+    )
+    tavily_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"))
+    care_guide_builder = create_care_guide_builder(tavily_searcher)
+    care_guide_builder = _with_tool_metadata(
+        care_guide_builder, "build_bonsai_care_guide", care_guide_builder
+    )
+    care_guide_agent = create_care_guide_agent(
+        model=model,
+        tools=[care_guide_builder],
     )
     species_agent = create_species_agent(
         model=model,
         create_species_func=create_species_func,
         resolve_scientific_name=resolve_name_tool,
-        list_species=garden_species_tool,
+        list_species=list_species_tool,
+        care_guide_agent=care_guide_agent,
     )
     sensei_agent = create_sensei_agent(
         model=model,
         sub_agents=[weather_agent, species_agent],
     )
+    
     return sensei_agent
 
 
@@ -114,11 +127,11 @@ async def lifespan(app: FastAPI):
         get_local_model_factory() if provider == "local" else get_cloud_model_factory()
     )
     model = model_factory()
-    garden_species_tool = _create_garden_tool(session_factory=get_session_partial)
+    list_species_tool = _create_list_species_tool(session_factory=get_session_partial)
 
     sensei_agent = _create_agents(
         model=model,
-        garden_species_tool=garden_species_tool,
+        list_species_tool=list_species_tool,
         create_species_func=app.state.garden_service["create_species"],
     )
     message_handler = partial(
