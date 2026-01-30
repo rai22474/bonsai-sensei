@@ -9,6 +9,7 @@ from telegram.ext import CommandHandler, MessageHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.sensei import create_sensei
+from google.adk.tools import AgentTool
 from bonsai_sensei.domain.services.weather.weather_advisor import create_weather_advisor
 from bonsai_sensei.domain.services.species.botanist import create_botanist
 from bonsai_sensei.domain.services.species.care_guide_agent import (
@@ -136,9 +137,14 @@ def _create_agents(
         model=model,
         tools=[list_bonsai_tool, create_bonsai_tool, get_bonsai_by_name_tool],
     )
+    sensei_tools = [
+        AgentTool(weather_agent),
+        AgentTool(species_agent),
+        AgentTool(gardener_agent),
+    ]
     sensei_agent = create_sensei(
         model=model,
-        sub_agents=[weather_agent, species_agent, gardener_agent],
+        tools=sensei_tools,
     )
 
     return sensei_agent
