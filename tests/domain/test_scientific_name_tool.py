@@ -1,30 +1,31 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.domain import scientific_name_tool
+from bonsai_sensei.domain.services.species import scientific_name_tool
 
 
 def should_resolve_scientific_name_from_results(resolver_with_results):
     result = resolver_with_results("arce")
 
-    assert result["scientific_names"] == ["Acer palmatum"]
+    assert_that(result["scientific_names"], equal_to(["Acer palmatum"]))
 
 
 def should_use_translated_term_when_searching(resolver_with_translation):
     result = resolver_with_translation("pino negro japonés")
 
-    assert result["search_term"] == "Japanese black pine"
+    assert_that(result["search_term"], equal_to("Japanese black pine"))
 
 
 def should_return_empty_when_no_results(resolver_with_empty_results):
     result = resolver_with_empty_results("arce")
 
-    assert result["scientific_names"] == []
+    assert_that(result["scientific_names"], equal_to([]))
 
 
 def should_deduplicate_scientific_names(resolver_with_duplicates):
     result = resolver_with_duplicates("arce")
 
-    assert result["scientific_names"] == ["Acer palmatum"]
+    assert_that(result["scientific_names"], equal_to(["Acer palmatum"]))
 
 
 @pytest.fixture

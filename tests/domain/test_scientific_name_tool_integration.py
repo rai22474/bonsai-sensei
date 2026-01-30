@@ -1,29 +1,30 @@
 import pytest
+from hamcrest import assert_that, equal_to, has_item
 
-from bonsai_sensei.domain.scientific_name_tool import create_scientific_name_resolver
-from bonsai_sensei.domain.scientific_name_translator import translate_to_english
-from bonsai_sensei.domain.scientific_name_searcher import trefle_search
+from bonsai_sensei.domain.services.species.scientific_name_tool import create_scientific_name_resolver
+from bonsai_sensei.domain.services.species.scientific_name_translator import translate_to_english
+from bonsai_sensei.domain.services.species.scientific_name_searcher import trefle_search
 
 
 @pytest.mark.integration
 def should_resolve_scientific_name_for_japanese_maple(resolver):
     result = resolver("Japanese maple")
 
-    assert "Acer palmatum" in result["scientific_names"]
+    assert_that(result["scientific_names"], has_item("Acer palmatum"))
 
 
 @pytest.mark.integration
 def should_resolve_scientific_name_for_chinese_juniper(resolver):
     result = resolver("Chinese juniper")
 
-    assert "Juniperus chinensis" in result["scientific_names"]
+    assert_that(result["scientific_names"], has_item("Juniperus chinensis"))
 
 
 @pytest.mark.integration
 def should_resolve_scientific_name_for_japanese_black_pine(resolver):
     result = resolver("Japanese black pine")
 
-    assert "Pinus thunbergii" in result["scientific_names"]
+    assert_that(result["scientific_names"], has_item("Pinus thunbergii"))
 
 
 @pytest.mark.integration
@@ -31,7 +32,10 @@ def should_match_spanish_and_english_names_for_japanese_black_pine(resolver):
     english = resolver("Japanese black pine")
     spanish = resolver("pino negro japonés")
 
-    assert set(english["scientific_names"]) == set(spanish["scientific_names"])
+    assert_that(
+        set(english["scientific_names"]),
+        equal_to(set(spanish["scientific_names"])),
+    )
 
 
 @pytest.fixture(scope="module")

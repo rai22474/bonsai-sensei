@@ -5,16 +5,16 @@ from bonsai_sensei.database.species import Species
 router = APIRouter()
 
 def get_list_species_svc(request: Request) -> Callable:
-    return request.app.state.garden_service["list_species"]
+    return request.app.state.herbarium_service["list_species"]
 
 def get_create_species_svc(request: Request) -> Callable:
-    return request.app.state.garden_service["create_species"]
+    return request.app.state.herbarium_service["create_species"]
 
 def get_update_species_svc(request: Request) -> Callable:
-    return request.app.state.garden_service["update_species"]
+    return request.app.state.herbarium_service["update_species"]
 
 def get_delete_species_svc(request: Request) -> Callable:
-    return request.app.state.garden_service["delete_species"]
+    return request.app.state.herbarium_service["delete_species"]
 
 
 @router.get("/species", response_model=List[Species])

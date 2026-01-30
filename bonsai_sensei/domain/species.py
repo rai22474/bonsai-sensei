@@ -3,7 +3,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, JSON
 
 if TYPE_CHECKING:
-    from bonsai_sensei.database.bonsai import Bonsai
+    from bonsai_sensei.domain.bonsai import Bonsai
 
 
 class Species(SQLModel, table=True):

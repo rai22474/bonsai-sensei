@@ -16,10 +16,11 @@ Detecta riesgos climáticos y propone medidas preventivas para evitar daños en 
 """
 
 
-def create_weather_agent(model: object, tools: List[Callable]) -> Agent:
+def create_weather_advisor(model: object, tools: List[Callable]) -> Agent:
     return Agent(
         model=model,
-        name="weather_agent",
+        name="weather_advisor",
+        description="Un experto en proteger bonsáis de riesgos climáticos.",
         instruction=WEATHER_INSTRUCTION,
         tools=tools,
     )

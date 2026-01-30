@@ -11,7 +11,7 @@ def setup_monocle_observability() -> bool:
         return False
     
     workflow_name = os.getenv("MONOCLE_WORKFLOW_NAME", "bonsai-sensei")
-    exporters = os.getenv("MONOCLE_EXPORTER", "console")
+    exporters = os.getenv("MONOCLE_EXPORTER", "console,file")
     setup_monocle_telemetry(
         workflow_name=workflow_name,
         monocle_exporters_list=exporters,

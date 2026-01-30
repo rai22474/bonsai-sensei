@@ -2,75 +2,103 @@ import pytest
 import pytest_asyncio
 import respx
 from httpx import Response
-from bonsai_sensei.domain.weather_tool import get_weather
+from hamcrest import assert_that, contains_string, equal_to, starts_with
+from bonsai_sensei.domain.services.weather.weather_tool import get_weather
 
 
 @pytest.mark.asyncio
 async def should_call_weather_api(weather_success_result):
-    assert weather_success_result["route_called"] is True
+    assert_that(weather_success_result["route_called"], equal_to(True))
 
 
 @pytest.mark.asyncio
 async def should_include_weather_header(weather_success_result):
     location = weather_success_result["location"]
-    assert weather_success_result["result"].startswith(f"Weather in {location}:")
+    assert_that(
+        weather_success_result["result"],
+        starts_with(f"Weather in {location}:"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_include_current_condition(weather_success_result):
-    assert "Current: Partly cloudy, 15°C" in weather_success_result["result"]
+    assert_that(
+        weather_success_result["result"],
+        contains_string("Current: Partly cloudy, 15°C"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_include_min_max(weather_success_result):
-    assert "Min/Max: 10°C/20°C" in weather_success_result["result"]
+    assert_that(
+        weather_success_result["result"],
+        contains_string("Min/Max: 10°C/20°C"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_include_frost_chance(weather_success_result):
-    assert "Max Frost Chance: 50%" in weather_success_result["result"]
+    assert_that(
+        weather_success_result["result"],
+        contains_string("Max Frost Chance: 50%"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_include_midnight_forecast(weather_success_result):
-    assert "00:00h: 10°C" in weather_success_result["result"]
+    assert_that(
+        weather_success_result["result"],
+        contains_string("00:00h: 10°C"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_include_noon_forecast(weather_success_result):
-    assert "12:00h: 18°C, Frost chance: 50%" in weather_success_result["result"]
+    assert_that(
+        weather_success_result["result"],
+        contains_string("12:00h: 18°C, Frost chance: 50%"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_return_message_when_location_missing():
     result = await get_weather("")
-    assert result == "Please provide a location."
+    assert_that(result, equal_to("Please provide a location."))
 
 
 @pytest.mark.asyncio
 async def should_call_weather_api_on_error(weather_api_error_result):
-    assert weather_api_error_result["route_called"] is True
+    assert_that(weather_api_error_result["route_called"], equal_to(True))
 
 
 @pytest.mark.asyncio
 async def should_return_message_on_api_error(weather_api_error_result):
     location = weather_api_error_result["location"]
-    assert weather_api_error_result["result"] == f"Could not fetch weather for {location}."
+    assert_that(
+        weather_api_error_result["result"],
+        equal_to(f"Could not fetch weather for {location}."),
+    )
 
 
 @pytest.mark.asyncio
 async def should_call_weather_api_on_network_error(weather_network_error_result):
-    assert weather_network_error_result["route_called"] is True
+    assert_that(weather_network_error_result["route_called"], equal_to(True))
 
 
 @pytest.mark.asyncio
 async def should_return_error_message_on_network_error(weather_network_error_result):
-    assert "Error retrieving weather information" in weather_network_error_result["result"]
+    assert_that(
+        weather_network_error_result["result"],
+        contains_string("Error retrieving weather information"),
+    )
 
 
 @pytest.mark.asyncio
 async def should_return_exception_details_on_network_error(weather_network_error_result):
-    assert "Network error" in weather_network_error_result["result"]
+    assert_that(
+        weather_network_error_result["result"],
+        contains_string("Network error"),
+    )
 
 
 @pytest_asyncio.fixture

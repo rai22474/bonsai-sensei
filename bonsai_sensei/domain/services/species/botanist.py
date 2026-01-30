@@ -2,7 +2,7 @@ from typing import Callable
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import AgentTool
 from bonsai_sensei.database.species import Species
-from bonsai_sensei.domain.create_bonsai_species_tool import create_bonsai_species_tool
+from bonsai_sensei.domain.services.species.create_bonsai_species_tool import create_bonsai_species_tool
 
 SPECIES_INSTRUCTION = """
 #ROL
@@ -27,7 +27,7 @@ Ayudar a los usuarios a crear especies de bonsái y listar las especies existent
 """
 
 
-def create_species_agent(
+def create_botanist(
     model: object,
     create_species_func: Callable[..., Species],
     resolve_scientific_name: Callable[..., dict],
@@ -37,11 +37,16 @@ def create_species_agent(
     create_species = create_bonsai_species_tool(create_species_func)
     create_species.__name__ = "create_bonsai_species"
     care_guide_compiler = AgentTool(care_guide_agent)
-    
+
     return Agent(
         model=model,
-        name="species_agent",
+        name="botanist",
+        description="Un experto en botánica especializado en la gestión de especies de bonsáis.",
         instruction=SPECIES_INSTRUCTION,
-        tools=[resolve_scientific_name, create_species, list_species, care_guide_compiler],
+        tools=[
+            resolve_scientific_name,
+            create_species,
+            list_species,
+            care_guide_compiler,
+        ],
     )
-

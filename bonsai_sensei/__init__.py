@@ -7,19 +7,31 @@ from fastapi.responses import JSONResponse
 from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, filters
 
-from bonsai_sensei.domain.advisor import create_advisor
-from bonsai_sensei.domain.sensei_agent import create_sensei_agent
-from bonsai_sensei.domain.weather_agent import create_weather_agent
-from bonsai_sensei.domain.species_agent import create_species_agent
-from bonsai_sensei.domain.care_guide_agent import create_care_guide_agent
-from bonsai_sensei.domain.scientific_name_tool import (
+from bonsai_sensei.domain.services.advisor import create_advisor
+from bonsai_sensei.domain.services.sensei import create_sensei
+from bonsai_sensei.domain.services.weather.weather_advisor import create_weather_advisor
+from bonsai_sensei.domain.services.species.botanist import create_botanist
+from bonsai_sensei.domain.services.species.care_guide_agent import (
+    create_care_guide_agent,
+)
+from bonsai_sensei.domain.services.species.scientific_name_tool import (
     resolve_scientific_name,
     create_scientific_name_resolver,
 )
-from bonsai_sensei.domain.scientific_name_translator import translate_to_english
-from bonsai_sensei.domain.scientific_name_searcher import trefle_search
-from bonsai_sensei.domain.tavily_searcher import create_tavily_searcher
-from bonsai_sensei.domain.care_guide_service import create_care_guide_builder
+from bonsai_sensei.domain.services.species.scientific_name_translator import (
+    translate_to_english,
+)
+from bonsai_sensei.domain.services.species.scientific_name_searcher import trefle_search
+from bonsai_sensei.domain.services.species.tavily_searcher import create_tavily_searcher
+from bonsai_sensei.domain.services.species.care_guide_service import (
+    create_care_guide_builder,
+)
+from bonsai_sensei.domain.services.bonsai.gardener import create_gardener
+from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
+    create_create_bonsai_tool,
+    create_get_bonsai_by_name_tool,
+    create_list_bonsai_tool,
+)
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
     get_local_model_factory,
@@ -29,9 +41,12 @@ from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.telegram.bot import TelegramBot
 from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
 from bonsai_sensei.logging_config import configure_logging
-from bonsai_sensei.domain.weather_tool import get_weather
-from bonsai_sensei.domain.list_species_tool import create_list_bonsai_species_tool
+from bonsai_sensei.domain.services.weather.weather_tool import get_weather
+from bonsai_sensei.domain.services.species.list_species_tool import (
+    create_list_bonsai_species_tool,
+)
 from bonsai_sensei.domain import garden
+from bonsai_sensei.domain import herbarium
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import setup_monocle_observability
 
@@ -57,7 +72,7 @@ def _with_tool_metadata(tool, name: str, doc_source):
 
 def _create_list_species_tool(session_factory):
     get_all_species_partial = partial(
-        garden.get_all_species, create_session=session_factory
+        herbarium.get_all_species, create_session=session_factory
     )
     tool = create_list_bonsai_species_tool(get_all_species_partial)
 
@@ -66,8 +81,16 @@ def _create_list_species_tool(session_factory):
     return tool
 
 
-def _create_agents(model: object, list_species_tool, create_species_func):
-    weather_agent = create_weather_agent(
+def _create_agents(
+    model: object,
+    list_species_tool,
+    create_species_func,
+    list_bonsai_func,
+    create_bonsai_func,
+    get_bonsai_by_name_func,
+    list_species_func,
+):
+    weather_agent = create_weather_advisor(
         model=model,
         tools=[get_weather, list_species_tool],
     )
@@ -87,18 +110,37 @@ def _create_agents(model: object, list_species_tool, create_species_func):
         model=model,
         tools=[care_guide_builder],
     )
-    species_agent = create_species_agent(
+    species_agent = create_botanist(
         model=model,
         create_species_func=create_species_func,
         resolve_scientific_name=resolve_name_tool,
         list_species=list_species_tool,
         care_guide_agent=care_guide_agent,
     )
-    sensei_agent = create_sensei_agent(
-        model=model,
-        sub_agents=[weather_agent, species_agent],
+    list_bonsai_tool = create_list_bonsai_tool(
+        list_bonsai_func=list_bonsai_func,
+        list_species_func=list_species_func,
     )
-    
+    list_bonsai_tool.__name__ = "list_bonsai"
+    create_bonsai_tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=list_species_func,
+    )
+    create_bonsai_tool.__name__ = "create_bonsai"
+    get_bonsai_by_name_tool = create_get_bonsai_by_name_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_species_func=list_species_func,
+    )
+    get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
+    gardener_agent = create_gardener(
+        model=model,
+        tools=[list_bonsai_tool, create_bonsai_tool, get_bonsai_by_name_tool],
+    )
+    sensei_agent = create_sensei(
+        model=model,
+        sub_agents=[weather_agent, species_agent, gardener_agent],
+    )
+
     return sensei_agent
 
 
@@ -107,18 +149,35 @@ async def lifespan(app: FastAPI):
     get_session_partial = partial(get_session, engine=get_engine())
     setup_monocle_observability()
 
-    app.state.garden_service = {
+    app.state.herbarium_service = {
         "list_species": partial(
-            garden.list_species, create_session=get_session_partial
+            herbarium.list_species, create_session=get_session_partial
         ),
         "create_species": partial(
-            garden.create_species, create_session=get_session_partial
+            herbarium.create_species, create_session=get_session_partial
         ),
         "update_species": partial(
-            garden.update_species, create_session=get_session_partial
+            herbarium.update_species, create_session=get_session_partial
         ),
         "delete_species": partial(
-            garden.delete_species, create_session=get_session_partial
+            herbarium.delete_species, create_session=get_session_partial
+        ),
+    }
+    app.state.garden_service = {
+        "list_bonsai": partial(
+            garden.list_bonsai, create_session=get_session_partial
+        ),
+        "create_bonsai": partial(
+            garden.create_bonsai, create_session=get_session_partial
+        ),
+        "get_bonsai_by_name": partial(
+            garden.get_bonsai_by_name, create_session=get_session_partial
+        ),
+        "update_bonsai": partial(
+            garden.update_bonsai, create_session=get_session_partial
+        ),
+        "delete_bonsai": partial(
+            garden.delete_bonsai, create_session=get_session_partial
         ),
     }
 
@@ -132,7 +191,11 @@ async def lifespan(app: FastAPI):
     sensei_agent = _create_agents(
         model=model,
         list_species_tool=list_species_tool,
-        create_species_func=app.state.garden_service["create_species"],
+        create_species_func=app.state.herbarium_service["create_species"],
+        list_bonsai_func=app.state.garden_service["list_bonsai"],
+        create_bonsai_func=app.state.garden_service["create_bonsai"],
+        get_bonsai_by_name_func=app.state.garden_service["get_bonsai_by_name"],
+        list_species_func=app.state.herbarium_service["list_species"],
     )
     message_handler = partial(
         handle_user_message,

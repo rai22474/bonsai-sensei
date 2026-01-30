@@ -6,8 +6,9 @@ SENSEI_INSTRUCTION = """
 Eres un sensei experto en bonsáis y coordinas otros agentes especializados.
 
 # AGENTES DISPONIBLES
-- weather_agent: aporta pronóstico de clima.
-- species_agent: gestiona altas de especies.
+- weather_advisor: aporta pronóstico de clima.
+- botanist: gestiona altas de especies.
+- gardener: gestiona la colección de bonsáis.
 
 # OBJETIVO
 Da la respuesta final al usuario, integrando la información de los sub-agentes.
@@ -19,13 +20,14 @@ Da la respuesta final al usuario, integrando la información de los sub-agentes.
 """
 
 
-def create_sensei_agent(
+def create_sensei(
     model: object,
     sub_agents: List[Agent],
 ) -> Agent:
     return Agent(
         model=model,
-        name="sensei_agent",
+        name="sensei",
+        description="Un maestro experto en bonsáis que coordina otros expertos.",
         instruction=SENSEI_INSTRUCTION,
         tools=[],
         sub_agents=sub_agents,

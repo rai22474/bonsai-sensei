@@ -1,25 +1,26 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.database.species import Species
-from bonsai_sensei.domain.create_bonsai_species_tool import create_bonsai_species_tool
+from bonsai_sensei.domain.services.species.create_bonsai_species_tool import create_bonsai_species_tool
 
 
 def should_return_needs_scientific_name_when_missing(create_tool, sample_guide):
     result = create_tool("arce", "", **sample_guide)
 
-    assert result["needs_scientific_name"] is True
+    assert_that(result["needs_scientific_name"], equal_to(True))
 
 
 def should_return_created_name_when_created(create_tool, sample_guide):
     result = create_tool("arce", "Acer palmatum", **sample_guide)
 
-    assert result["created_name"] == "arce"
+    assert_that(result["created_name"], equal_to("arce"))
 
 
 def should_return_care_guide_when_created(create_tool, sample_guide):
     result = create_tool("arce", "Acer palmatum", **sample_guide)
 
-    assert result["care_guide"] == sample_guide
+    assert_that(result["care_guide"], equal_to(sample_guide))
 
 
 @pytest.fixture
