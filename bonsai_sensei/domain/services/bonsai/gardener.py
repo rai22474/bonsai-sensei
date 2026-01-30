@@ -1,5 +1,13 @@
-from typing import Callable, List
+from typing import Callable
 from google.adk.agents.llm_agent import Agent
+from bonsai_sensei.database.bonsai import Bonsai
+from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
+    create_create_bonsai_tool,
+    create_delete_bonsai_tool,
+    create_get_bonsai_by_name_tool,
+    create_list_bonsai_tool,
+    create_update_bonsai_tool,
+)
 
 GARDENER_INSTRUCTION = """
 #ROL
@@ -22,11 +30,48 @@ Que características tienen y gestionar los registros de nuevos bonsáis.
 """
 
 
-def create_gardener(model: object, tools: List[Callable]) -> Agent:
+def create_gardener(
+    model: object,
+    list_bonsai_func: Callable[[], list[Bonsai]],
+    create_bonsai_func: Callable[[Bonsai], Bonsai | None],
+    get_bonsai_by_name_func: Callable[[str], Bonsai | None],
+    update_bonsai_func: Callable[[int, dict], Bonsai | None],
+    delete_bonsai_func: Callable[[int], bool],
+    list_species_func: Callable[[], list],
+) -> Agent:
+    list_bonsai_tool = create_list_bonsai_tool(
+        list_bonsai_func=list_bonsai_func,
+        list_species_func=list_species_func,
+    )
+    list_bonsai_tool.__name__ = "list_bonsai"
+    create_bonsai_tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=list_species_func,
+    )
+    create_bonsai_tool.__name__ = "create_bonsai"
+    get_bonsai_by_name_tool = create_get_bonsai_by_name_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_species_func=list_species_func,
+    )
+    get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
+    update_bonsai_tool = create_update_bonsai_tool(
+        update_bonsai_func=update_bonsai_func,
+        list_species_func=list_species_func,
+    )
+    update_bonsai_tool.__name__ = "update_bonsai"
+    delete_bonsai_tool = create_delete_bonsai_tool(delete_bonsai_func=delete_bonsai_func)
+    delete_bonsai_tool.__name__ = "delete_bonsai"
+
     return Agent(
         model=model,
         name="gardener",
         description="Gestiona la colección de bonsáis y sus registros.",
         instruction=GARDENER_INSTRUCTION,
-        tools=tools,
+        tools=[
+            list_bonsai_tool,
+            create_bonsai_tool,
+            get_bonsai_by_name_tool,
+            update_bonsai_tool,
+            delete_bonsai_tool,
+        ],
     )

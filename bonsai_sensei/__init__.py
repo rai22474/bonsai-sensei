@@ -28,13 +28,6 @@ from bonsai_sensei.domain.services.species.care_guide_service import (
     create_care_guide_builder,
 )
 from bonsai_sensei.domain.services.bonsai.gardener import create_gardener
-from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
-    create_create_bonsai_tool,
-    create_delete_bonsai_tool,
-    create_get_bonsai_by_name_tool,
-    create_list_bonsai_tool,
-    create_update_bonsai_tool,
-)
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
     get_local_model_factory,
@@ -90,6 +83,7 @@ def _create_agents(
     create_species_func,
     update_species_func,
     delete_species_func,
+    get_species_by_name_func,
     list_bonsai_func,
     create_bonsai_func,
     get_bonsai_by_name_func,
@@ -122,41 +116,19 @@ def _create_agents(
         create_species_func=create_species_func,
         update_species_func=update_species_func,
         delete_species_func=delete_species_func,
+        get_species_by_name_func=get_species_by_name_func,
         resolve_scientific_name=resolve_name_tool,
         list_species=list_species_tool,
         care_guide_agent=care_guide_agent,
     )
-    list_bonsai_tool = create_list_bonsai_tool(
-        list_bonsai_func=list_bonsai_func,
-        list_species_func=list_species_func,
-    )
-    list_bonsai_tool.__name__ = "list_bonsai"
-    create_bonsai_tool = create_create_bonsai_tool(
-        create_bonsai_func=create_bonsai_func,
-        list_species_func=list_species_func,
-    )
-    create_bonsai_tool.__name__ = "create_bonsai"
-    get_bonsai_by_name_tool = create_get_bonsai_by_name_tool(
-        get_bonsai_by_name_func=get_bonsai_by_name_func,
-        list_species_func=list_species_func,
-    )
-    get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
-    update_bonsai_tool = create_update_bonsai_tool(
-        update_bonsai_func=update_bonsai_func,
-        list_species_func=list_species_func,
-    )
-    update_bonsai_tool.__name__ = "update_bonsai"
-    delete_bonsai_tool = create_delete_bonsai_tool(delete_bonsai_func=delete_bonsai_func)
-    delete_bonsai_tool.__name__ = "delete_bonsai"
     gardener_agent = create_gardener(
         model=model,
-        tools=[
-            list_bonsai_tool,
-            create_bonsai_tool,
-            get_bonsai_by_name_tool,
-            update_bonsai_tool,
-            delete_bonsai_tool,
-        ],
+        list_bonsai_func=list_bonsai_func,
+        create_bonsai_func=create_bonsai_func,
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        update_bonsai_func=update_bonsai_func,
+        delete_bonsai_func=delete_bonsai_func,
+        list_species_func=list_species_func,
     )
     sensei_tools = [
         AgentTool(weather_agent),
@@ -179,6 +151,9 @@ async def lifespan(app: FastAPI):
     app.state.herbarium_service = {
         "list_species": partial(
             herbarium.list_species, create_session=get_session_partial
+        ),
+        "get_species_by_name": partial(
+            herbarium.get_species_by_name, create_session=get_session_partial
         ),
         "create_species": partial(
             herbarium.create_species, create_session=get_session_partial
@@ -221,6 +196,7 @@ async def lifespan(app: FastAPI):
         create_species_func=app.state.herbarium_service["create_species"],
         update_species_func=app.state.herbarium_service["update_species"],
         delete_species_func=app.state.herbarium_service["delete_species"],
+        get_species_by_name_func=app.state.herbarium_service["get_species_by_name"],
         list_bonsai_func=app.state.garden_service["list_bonsai"],
         create_bonsai_func=app.state.garden_service["create_bonsai"],
         get_bonsai_by_name_func=app.state.garden_service["get_bonsai_by_name"],

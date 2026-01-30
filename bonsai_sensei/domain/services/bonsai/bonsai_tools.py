@@ -9,6 +9,10 @@ def create_list_bonsai_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     def list_bonsai() -> dict:
+        """Return JSON with status and bonsai list.
+
+        Output JSON: {"status": "success", "bonsai": [{"id","name","species_id","species_name"}]}.
+        """
         bonsai_items = list_bonsai_func()
         if not bonsai_items:
             return {"status": "success", "bonsai": []}
@@ -35,6 +39,11 @@ def create_create_bonsai_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     def create_bonsai(name: str, species_id: int) -> dict:
+        """Create a bonsai and return JSON with status and created record.
+
+        Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not name:
             return {"status": "error", "message": "bonsai_name_required"}
         if not species_id:
@@ -64,6 +73,11 @@ def create_get_bonsai_by_name_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     def get_bonsai_by_name(name: str) -> dict:
+        """Lookup a bonsai by name and return JSON with status and record.
+
+        Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not name:
             return {"status": "error", "message": "bonsai_name_required"}
         bonsai = get_bonsai_by_name_func(name)
@@ -92,6 +106,11 @@ def create_update_bonsai_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     def update_bonsai(bonsai_id: int, name: str | None = None, species_id: int | None = None) -> dict:
+        """Update a bonsai and return JSON with status and updated record.
+
+        Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
         species_map = _build_species_map(list_species_func())
@@ -122,6 +141,11 @@ def create_update_bonsai_tool(
 
 def create_delete_bonsai_tool(delete_bonsai_func: Callable[[int], bool]):
     def delete_bonsai(bonsai_id: int) -> dict:
+        """Delete a bonsai by id and return JSON with status and bonsai_id.
+
+        Output JSON (success): {"status":"success","bonsai_id": <id>}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
         deleted = delete_bonsai_func(bonsai_id=bonsai_id)

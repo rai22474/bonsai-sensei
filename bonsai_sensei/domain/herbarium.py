@@ -28,6 +28,14 @@ def list_species(session: Session) -> List[Species]:
 
 
 @with_session
+def get_species_by_name(session: Session, name: str) -> Species | None:
+    if not name:
+        return None
+    statement = select(Species).where(Species.name == name)
+    return session.exec(statement).first()
+
+
+@with_session
 def create_species(session: Session, species: Species) -> Species:
     session.add(species)
     return species

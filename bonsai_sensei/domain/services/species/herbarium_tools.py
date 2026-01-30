@@ -17,6 +17,11 @@ def create_species_tool(
         pruning: Optional[str] = None,
         pests: Optional[str] = None,
     ) -> dict:
+        """Create a species and return JSON with care guide details.
+
+        Output JSON (success): {"common_name","scientific_name","created_name","care_guide":{...}}.
+        Output JSON (error): {"common_name","scientific_name":null,"candidates":[],"needs_scientific_name":true}.
+        """
         normalized_scientific = _normalize_scientific_name(scientific_name)
         if not normalized_scientific:
             return {
@@ -53,6 +58,10 @@ def create_species_tool(
 
 def create_list_species_tool(get_all_species_func):
     def list_bonsai_species() -> dict:
+        """Return JSON with status and species list.
+
+        Output JSON: {"status":"success","species":[{"common_name","scientific_name"}]}.
+        """
         species_list = get_all_species_func()
         if not species_list:
             return {"status": "success", "species": []}
@@ -68,6 +77,33 @@ def create_list_species_tool(get_all_species_func):
     return list_bonsai_species
 
 
+def create_get_species_by_name_tool(
+    get_species_by_name_func: Callable[[str], Species | None],
+):
+    def get_bonsai_species_by_name(name: str) -> dict:
+        """Lookup a species by common name and return JSON with status and record.
+
+        Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name","care_guide"}}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
+        if not name:
+            return {"status": "error", "message": "species_name_required"}
+        species = get_species_by_name_func(name)
+        if not species:
+            return {"status": "error", "message": "species_not_found"}
+        return {
+            "status": "success",
+            "species": {
+                "id": species.id,
+                "common_name": species.name,
+                "scientific_name": species.scientific_name or "",
+                "care_guide": species.care_guide or {},
+            },
+        }
+
+    return get_bonsai_species_by_name
+
+
 def create_update_bonsai_species_tool(
     update_species_func: Callable[[int, dict], Species | None],
 ):
@@ -76,6 +112,11 @@ def create_update_bonsai_species_tool(
         common_name: str | None = None,
         scientific_name: str | None = None,
     ) -> dict:
+        """Update a species and return JSON with status and updated record.
+
+        Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name"}}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not species_id:
             return {"status": "error", "message": "species_id_required"}
         species_data = {}
@@ -102,6 +143,11 @@ def create_update_bonsai_species_tool(
 
 def create_delete_bonsai_species_tool(delete_species_func: Callable[[int], bool]):
     def delete_bonsai_species(species_id: int) -> dict:
+        """Delete a species by id and return JSON with status and species_id.
+
+        Output JSON (success): {"status":"success","species_id": <id>}.
+        Output JSON (error): {"status":"error","message": "..."}.
+        """
         if not species_id:
             return {"status": "error", "message": "species_id_required"}
         deleted = delete_species_func(species_id=species_id)
