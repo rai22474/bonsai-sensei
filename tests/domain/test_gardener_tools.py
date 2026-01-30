@@ -13,7 +13,20 @@ from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
 def should_list_bonsai_with_species(list_bonsai_tool):
     result = list_bonsai_tool()
 
-    assert_that(result, equal_to("Bonsáis registrados:\n- Olmo 1 (Olmo)"))
+    assert_that(result["status"], equal_to("success"))
+    assert_that(
+        result["bonsai"],
+        equal_to(
+            [
+                {
+                    "id": 1,
+                    "name": "Olmo 1",
+                    "species_id": 1,
+                    "species_name": "Olmo",
+                }
+            ]
+        ),
+    )
 
 
 def should_create_bonsai(create_bonsai_tool):
@@ -25,7 +38,18 @@ def should_create_bonsai(create_bonsai_tool):
 def should_get_bonsai_by_name(get_bonsai_tool):
     result = get_bonsai_tool("Olmo 1")
 
-    assert_that(result, equal_to("Bonsái: Olmo 1 (Olmo)"))
+    assert_that(result["status"], equal_to("success"))
+    assert_that(
+        result["bonsai"],
+        equal_to(
+            {
+                "id": 1,
+                "name": "Olmo 1",
+                "species_id": 1,
+                "species_name": "Olmo",
+            }
+        ),
+    )
 
 
 @pytest.fixture

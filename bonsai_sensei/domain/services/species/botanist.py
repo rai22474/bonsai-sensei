@@ -2,7 +2,11 @@ from typing import Callable
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import AgentTool
 from bonsai_sensei.database.species import Species
-from bonsai_sensei.domain.services.species.create_bonsai_species_tool import create_bonsai_species_tool
+from bonsai_sensei.domain.services.species.herbarium_tools import (
+    create_species_tool,
+    create_delete_bonsai_species_tool,
+    create_update_bonsai_species_tool,
+)
 
 SPECIES_INSTRUCTION = """
 #ROL
@@ -31,12 +35,18 @@ Es muy importante que la información que proporciones sea precisa y fiable.
 def create_botanist(
     model: object,
     create_species_func: Callable[..., Species],
+    update_species_func: Callable[..., Species | None],
+    delete_species_func: Callable[..., bool],
     resolve_scientific_name: Callable[..., dict],
     list_species: Callable[..., dict],
     care_guide_agent: Agent,
 ) -> Agent:
-    create_species = create_bonsai_species_tool(create_species_func)
+    create_species = create_species_tool(create_species_func)
     create_species.__name__ = "create_bonsai_species"
+    update_species = create_update_bonsai_species_tool(update_species_func)
+    update_species.__name__ = "update_bonsai_species"
+    delete_species = create_delete_bonsai_species_tool(delete_species_func)
+    delete_species.__name__ = "delete_bonsai_species"
     care_guide_compiler = AgentTool(care_guide_agent)
 
     return Agent(
@@ -47,6 +57,8 @@ def create_botanist(
         tools=[
             resolve_scientific_name,
             create_species,
+            update_species,
+            delete_species,
             list_species,
             care_guide_compiler,
         ],
