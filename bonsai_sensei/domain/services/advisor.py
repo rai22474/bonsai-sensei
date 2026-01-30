@@ -2,16 +2,21 @@ from typing import Callable
 from functools import partial
 from google.adk.runners import InMemoryRunner
 
-def create_advisor(sensei_agent) -> Callable[..., str]:
+
+def create_advisor(
+    sensei_agent,
+    trace_handler: Callable[[str, list], None] | None = None,
+) -> Callable[..., str]:
     runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
-    return partial(_generate_advise, runner=runner)
+    return partial(_generate_advise, runner=runner, trace_handler=trace_handler)
 
 
 async def _generate_advise(
     text: str,
     runner: InMemoryRunner,
     user_id: str = "default_user",
+    trace_handler: Callable[[str, list], None] | None = None,
 ) -> str:
     events = await runner.run_debug(
         user_messages=text,
@@ -19,6 +24,8 @@ async def _generate_advise(
         session_id=str(user_id),
         quiet=True,
     )
+    if trace_handler:
+        trace_handler(text, events)
     response_texts = []
     for event in events:
         if event.content and hasattr(event.content, "parts") and event.content.parts:
