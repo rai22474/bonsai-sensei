@@ -49,7 +49,7 @@ Start Ollama and pull the model if needed:
 ```bash
 ./scripts/start_ollama.sh
 
-By default this pulls `qwen3:32b`. Override by passing another model name.
+By default this pulls `qwen2.5:32b-instruct`. Override by passing another model name.
 ```
 
 Start the stack using the local model:

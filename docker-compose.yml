@@ -12,7 +12,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/application_default_credentials.json
       - MODEL_PROVIDER=${MODEL_PROVIDER:-cloud}
       - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:32b}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:32b-instruct}
       - MONOCLE_TRACE_OUTPUT_PATH=/app/.monocle
     volumes:
       - ~/.config/gcloud/application_default_credentials.json:/app/credentials/application_default_credentials.json:ro

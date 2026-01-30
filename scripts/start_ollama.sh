@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-MODEL_NAME=${1:-qwen3:32b}
+MODEL_NAME=${1:-qwen2.5:32b-instruct}
 
 if ! command -v ollama >/dev/null 2>&1; then
     echo "Ollama CLI not found. Install it from https://ollama.com before running this script."

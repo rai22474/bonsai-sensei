@@ -22,7 +22,7 @@ docker compose down
 if [ "$MODE" = "local" ]; then
     export MODEL_PROVIDER=local
     export OLLAMA_API_BASE=http://host.docker.internal:11434
-    export OLLAMA_MODEL=qwen3:32b
+    export OLLAMA_MODEL=qwen2.5:32b-instruct
     if ! curl -s http://localhost:11434/api/status >/dev/null 2>&1; then
         scripts/start_ollama.sh "$OLLAMA_MODEL"
     fi
