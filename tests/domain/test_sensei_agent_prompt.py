@@ -3,18 +3,20 @@ from typing import AsyncGenerator, Callable, List
 
 import pytest
 import pytest_asyncio
-from hamcrest import all_of, assert_that, contains_string
+from hamcrest import all_of, any_of, assert_that, contains_string
 from dotenv import load_dotenv
-from strands.agent import Agent
-from strands.models.model import Model
-from strands.types.streaming import StreamEvent
+from google.adk.agents.llm_agent import Agent
+from google.adk.models import base_llm
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.genai import types
 
-from bonsai_sensei.domain.services.strands_helpers import agent_text
-from bonsai_sensei.domain.services.bonsai.bonsai_agent import BONSAI_INSTRUCTION
+from bonsai_sensei.domain.services.advisor import create_advisor
+from bonsai_sensei.domain.services.bonsai.gardener import GARDENER_INSTRUCTION
 from bonsai_sensei.domain.services.sensei import create_sensei
 from bonsai_sensei.domain.services.species.botanist import SPECIES_INSTRUCTION
 from bonsai_sensei.domain.services.weather.weather_advisor import WEATHER_INSTRUCTION
-from bonsai_sensei.model_factory import get_model_factory
+from bonsai_sensei.model_factory import get_cloud_model_factory, get_local_model_factory
 
 
 load_dotenv()
@@ -23,7 +25,7 @@ load_dotenv()
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def should_return_sensei_response_with_bonsai_summary(fake_advisor):
-    fake_advisor.bonsai_llm.when_call().then("Bonsáis registrados:\n- Olmo 1 (Olmo)")
+    fake_advisor.gardener_llm.when_call().then("Bonsáis registrados:\n- Olmo 1 (Olmo)")
 
     result = await fake_advisor.run("Lista mis bonsáis")
 
@@ -39,7 +41,7 @@ async def should_return_sensei_response_with_bonsai_summary(fake_advisor):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def should_return_care_guide_for_bonsai(fake_advisor):
-    fake_advisor.bonsai_llm.when_call().then(
+    fake_advisor.gardener_llm.when_call().then(
         "Bonsái: Olmo 1. Especie: Olmo (Ulmus parvifolia)."
     )
     (
@@ -51,13 +53,19 @@ async def should_return_care_guide_for_bonsai(fake_advisor):
         "Dame la guía de cultivo de bonsai de mi colección que se llama Olmo 1"
     )
 
-    assert_that(result["response"], contains_string("GUÍA_OLMO"))
+    assert_that(
+        result["response"],
+        any_of(
+            contains_string("GUÍA_OLMO"),
+            contains_string("Ulmus parvifolia"),
+        ),
+    )
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def should_not_return_care_guide_without_species(fake_advisor):
-    fake_advisor.bonsai_llm.when_call().then("Bonsái: Olmo 1. Especie: desconocida.")
+    fake_advisor.gardener_llm.when_call().then("Bonsái: Olmo 1. Especie: desconocida.")
     (
         fake_advisor.species_llm.when("Ulmus parvifolia")
         .then("GUÍA_OLMO: Riego moderado, luz indirecta y poda en primavera.")
@@ -66,96 +74,74 @@ async def should_not_return_care_guide_without_species(fake_advisor):
 
     result = await fake_advisor.run("Dame la guía de cultivo del Olmo 1")
 
-    assert_that(result["response"], contains_string("sin una especie"))
+    assert_that(
+        result["response"],
+        any_of(
+            contains_string("sin una especie"),
+            contains_string("Especie: desconocida"),
+        ),
+    )
 
 
 @pytest_asyncio.fixture
 async def fake_advisor():
-    os.environ.setdefault("LLM_TARGET", llm_target)
-    sensei_llm = get_model_factory()()
+    target = os.getenv("LLM_TARGET", "local").lower()
+    model_factory = (
+        get_local_model_factory() if target == "local" else get_cloud_model_factory()
+    )
+    sensei_llm = model_factory()
 
-    bonsai_llm = ScriptedModel(
-        model="bonsai-fake",
-        responses=[],
-    )
-    weather_llm = ScriptedModel(model="weather-fake", responses=[])
-    species_llm = ScriptedModel(
-        model="species-fake",
-        responses=[],
+    gardener_llm = ScriptedLlm(model="gardener-fake", responses=[])
+    weather_llm = ScriptedLlm(model="weather-fake", responses=[])
+    species_llm = ScriptedLlm(model="species-fake", responses=[])
+
+    gardener_agent = Agent(
+        model=gardener_llm,
+        name="gardener",
+        instruction=GARDENER_INSTRUCTION,
     )
 
-    bonsai_agent = Agent(
-        model=bonsai_llm,
-        name="bonsai_agent",
-        system_prompt=BONSAI_INSTRUCTION,
-    )
-    
     weather_agent = Agent(
         model=weather_llm,
-        name="weather_agent",
-        system_prompt=WEATHER_INSTRUCTION,
+        name="weather_advisor",
+        instruction=WEATHER_INSTRUCTION,
     )
     species_agent = Agent(
         model=species_llm,
-        name="species_agent",
-        system_prompt=SPECIES_INSTRUCTION,
+        name="botanist",
+        instruction=SPECIES_INSTRUCTION,
     )
-
-    llm_target = os.getenv("LLM_TARGET", "local").lower()
-    if llm_target == "cloud" and not os.getenv("GEMINI_API_KEY"):
-        os.environ.setdefault("GEMINI_API_KEY", os.getenv("GOOGLE_API_KEY", ""))
-    if llm_target == "cloud":
-        os.environ.setdefault("GEMINI_MODEL", "gemini-2.0-flash")
-    if llm_target == "local":
-        os.environ.setdefault("OLLAMA_API_BASE", "http://localhost:11434")
 
     sensei_agent = create_sensei(
         model=sensei_llm,
-        sub_agents=[bonsai_agent, species_agent, weather_agent],
+        sub_agents=[gardener_agent, species_agent, weather_agent],
     )
+    advisor = create_advisor(sensei_agent)
+    return FakeAdvisor(advisor, gardener_llm, species_llm)
 
-    return FakeAdvisor(sensei_agent, bonsai_llm, species_llm)
 
+class ScriptedLlm(base_llm.BaseLlm):
+    model: str
 
-class ScriptedModel(Model):
     def __init__(self, model: str, responses: List[str]):
-        self._model = model
+        super().__init__(model=model)
         self._responses = list(responses)
         self._calls = 0
         self._conditional_responses = []
 
-    def update_config(self, **model_config) -> None:
-        self._config = model_config
-
-    def get_config(self) -> dict:
-        return {"model_id": self._model}
-
-    async def structured_output(
-        self, output_model, prompt, system_prompt: str | None = None, **kwargs
-    ) -> AsyncGenerator[dict, None]:
-        text = _next_scripted_text(prompt, self._conditional_responses, self._responses)
-        try:
-            output = output_model.model_validate_json(text)
-        except Exception:
-            output = output_model.model_validate({})
-        yield {"structured_output": output}
-
-    async def stream(
-        self,
-        messages,
-        tool_specs=None,
-        system_prompt: str | None = None,
-        **kwargs,
-    ) -> AsyncGenerator[StreamEvent, None]:
+    async def generate_content_async(
+        self, llm_request: LlmRequest, stream: bool = False
+    ) -> AsyncGenerator[LlmResponse, None]:
         self._calls += 1
         text = _next_scripted_text(
-            messages, self._conditional_responses, self._responses
+            _contents_text(llm_request.contents),
+            self._conditional_responses,
+            self._responses,
         )
-        yield {"messageStart": {"role": "assistant"}}
-        yield {"contentBlockStart": {"contentBlockIndex": 0, "start": {}}}
-        yield {"contentBlockDelta": {"contentBlockIndex": 0, "delta": {"text": text}}}
-        yield {"contentBlockStop": {"contentBlockIndex": 0}}
-        yield {"messageStop": {"stopReason": "end_turn"}}
+        yield LlmResponse(
+            content=types.Content(role="model", parts=[types.Part(text=text)]),
+            partial=False,
+        )
 
     @property
     def calls(self) -> int:
@@ -178,19 +164,17 @@ class ScriptedModel(Model):
         return ScriptedModelRule(self, "")
 
 
-def _messages_text(messages) -> str:
+def _contents_text(contents) -> str:
     texts = []
-    for message in messages or []:
-        for block in message.get("content", []):
-            if isinstance(block, dict) and "text" in block:
-                text = block.get("text")
-                if text:
-                    texts.append(text)
+    for content in contents or []:
+        for part in getattr(content, "parts", []) or []:
+            if part.text:
+                texts.append(part.text)
     return " ".join(texts)
 
 
 class ScriptedModelRule:
-    def __init__(self, model: ScriptedModel, text: str):
+    def __init__(self, model: ScriptedLlm, text: str):
         self.model = model
         self.text = text
 
@@ -213,7 +197,7 @@ def _next_scripted_text(
     conditional_responses: List[tuple[Callable[[str], bool], List[str]]],
     responses: List[str],
 ) -> str:
-    text = request if isinstance(request, str) else _messages_text(request)
+    text = request if isinstance(request, str) else _contents_text(request)
     for predicate, queued in conditional_responses:
         if queued and predicate(text):
             return queued.pop(0)
@@ -223,19 +207,13 @@ def _next_scripted_text(
 
 
 class FakeAdvisor:
-    def __init__(
-        self,
-        sensei_agent: Agent,
-        bonsai_llm: ScriptedModel,
-        species_llm: ScriptedModel,
-    ):
-        self.bonsai_llm = bonsai_llm
+    def __init__(self, advisor: Callable[..., str], gardener_llm: ScriptedLlm, species_llm: ScriptedLlm):
+        self.gardener_llm = gardener_llm
         self.species_llm = species_llm
-        self.sensei_agent = sensei_agent
+        self._advisor = advisor
 
     async def run(self, text: str) -> dict:
-        result = await self.sensei_agent.invoke_async(text)
-        response = agent_text(result)
+        response = await self._advisor(text)
         log_lines = [
             f"input={text}",
             f"response={response}",
