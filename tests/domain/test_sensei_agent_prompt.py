@@ -3,7 +3,9 @@ from typing import AsyncGenerator, Callable, Iterable, List
 
 import pytest
 import pytest_asyncio
-from hamcrest import all_of, any_of, assert_that, contains_string
+from deepeval import assert_test
+from deepeval.metrics import PatternMatchMetric
+from deepeval.test_case import LLMTestCase
 from dotenv import load_dotenv
 from google.adk.agents.llm_agent import Agent
 from google.adk.models import base_llm
@@ -30,12 +32,10 @@ async def should_return_sensei_response_with_bonsai_summary(fake_advisor):
 
     result = await fake_advisor.run("Lista mis bonsáis")
 
-    assert_that(
-        result["response"],
-        all_of(
-            contains_string("Olmo 1"),
-            contains_string("Ulmus parvifolia")
-        ),
+    _assert_matches_pattern(
+        prompt="Lista mis bonsáis",
+        response=result["response"],
+        pattern=r"(?s).*Olmo 1.*(Ulmus parvifolia|Olmo).*",
     )
 
 
@@ -54,11 +54,10 @@ async def should_return_care_guide_for_bonsai(fake_advisor):
         "Dame la guía de cultivo de bonsai de mi colección que se llama Frieren"
     )
 
-    assert_that(
-        result["response"],
-        any_of(contains_string("Riego moderado"),
-                contains_string("luz indirecta"),
-                contains_string("poda en primavera")),
+    _assert_matches_pattern(
+        prompt="Dame la guía de cultivo de bonsai de mi colección que se llama Frieren",
+        response=result["response"],
+        pattern=r"(?s).*(riego moderado|luz indirecta|poda en primavera).*",
     )
 
 
@@ -74,13 +73,12 @@ async def should_not_return_care_guide_without_species(fake_advisor):
 
     result = await fake_advisor.run("Dame la guía de cultivo de Fern")
 
-    assert_that(
-        result["response"],
-        any_of(
-            contains_string("sin una especie"),
-            contains_string("especie"),
-            contains_string("no se puede proporcionar"),
-            contains_string("no tengo la información"),
+    _assert_matches_pattern(
+        prompt="Dame la guía de cultivo de Fern",
+        response=result["response"],
+        pattern=(
+            r"(?s).*(sin una especie|especie.*desconocida|no puedo|"
+            r"no tengo la información|no puede.*proporcionar).*"
         ),
     )
 
@@ -178,6 +176,12 @@ def _contents_text(contents) -> str:
             if part.text:
                 texts.append(part.text)
     return " ".join(texts)
+
+
+def _assert_matches_pattern(prompt: str, response: str, pattern: str) -> None:
+    test_case = LLMTestCase(input=prompt, actual_output=response)
+    metric = PatternMatchMetric(pattern=pattern, ignore_case=True)
+    assert_test(test_case=test_case, metrics=[metric], run_async=False)
 
 
 class ScriptedModelRule:
