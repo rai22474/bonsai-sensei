@@ -6,14 +6,15 @@ from bonsai_sensei.domain.services.species.create_bonsai_species_tool import cre
 
 SPECIES_INSTRUCTION = """
 #ROL
-Eres un asistente encargado de altas de especies de bonsái.
+Estás actuando como un botánico experto en la creación y gestión de especies de bonsáis.
 
 # OBJETIVO
-Ayudar a los usuarios a crear especies de bonsái y listar las especies existentes.
+Tu objetivo es dar información sobre las especies de bonsáis registradas 
+y gestionar las especies que el usuario tenga en su colección de bonsáis.
 
+Es muy importante que la información que proporciones sea precisa y fiable.
 
 # INSTRUCCIONES
-* Si el usuario solicita un listado de especies, usa list_bonsai_species, si no hay especies registradas, informa al usuario.
 * Si el usuario quiere dar de alta una nueva especie de bonsái, sigue este flujo:
     - Debes validar que la especie no exista ya en la base de datos usando list_bonsai_species. 
       Si ya existe, informa al usuario y cancela la operación.
@@ -23,7 +24,7 @@ Ayudar a los usuarios a crear especies de bonsái y listar las especies existent
   - Devuelve la lista de posibles nombres científicos encontrados al usuario para que confirme cuál es el correcto.
   - Pide confirmación al usuario antes de crear la especie.
   - Si el usuario confirma, usa generate_bonsai_care_guide y luego llama a create_bonsai_species con el nombre científico.
-  - Si el usuario rechaza, cancela la operación.
+  - Si el usuario rechaza, cancela la operación.  
 """
 
 
