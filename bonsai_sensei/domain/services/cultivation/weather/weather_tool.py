@@ -38,7 +38,7 @@ async def _fetch_weather_data(location: str) -> dict | None:
         response = await client.get(url)
         if response.status_code == 200:
             return response.json()
-    
+
     return None
 
 
@@ -48,7 +48,7 @@ def _extract_hourly_data(weather_today: dict) -> tuple[str, int]:
     max_frost_chance = 0
 
     for hour in weather_today["hourly"]:
-        time_str = hour["time"].zfill(4) 
+        time_str = hour["time"].zfill(4)
         formatted_time = f"{time_str[:2]}:{time_str[2:]}"
         temp = hour["tempC"]
         frost_chance = int(hour.get("chanceoffrost", "0"))

@@ -3,7 +3,7 @@ import pytest_asyncio
 import respx
 from httpx import Response
 from hamcrest import assert_that, contains_string, equal_to, starts_with
-from bonsai_sensei.domain.services.weather.weather_tool import get_weather
+from bonsai_sensei.domain.services.cultivation.weather.weather_tool import get_weather
 
 
 @pytest.mark.asyncio

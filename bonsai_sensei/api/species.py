@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict, Callable
-from bonsai_sensei.database.species import Species
+from bonsai_sensei.domain.species import Species
 
 router = APIRouter()
 

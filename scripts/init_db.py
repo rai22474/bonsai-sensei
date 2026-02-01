@@ -1,12 +1,15 @@
 import logging
 import os
 from sqlmodel import SQLModel, create_engine
-from bonsai_sensei.database import species, bonsai
+from bonsai_sensei.domain import species, bonsai, fertilizer, phytosanitary
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://bonsai_user:bonsai_password@localhost:5432/bonsai_db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://bonsai_user:bonsai_password@localhost:5432/bonsai_db"
+)
+
 
 def create_db_and_tables():
     logger.info(f"Connecting to database at {DATABASE_URL}...")

@@ -1,6 +1,6 @@
 from typing import Callable
 from google.adk.agents.llm_agent import Agent
-from bonsai_sensei.database.bonsai import Bonsai
+from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
     create_create_bonsai_tool,
     create_delete_bonsai_tool,

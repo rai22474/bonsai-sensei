@@ -1,6 +1,6 @@
 from typing import Callable, Optional, List
 
-from bonsai_sensei.database.species import Species
+from bonsai_sensei.domain.species import Species
 
 
 def create_species_tool(

@@ -2,7 +2,7 @@ import logging
 import pytest
 import pytest_asyncio
 from hamcrest import assert_that, any_of, contains_string, starts_with
-from bonsai_sensei.domain.services.weather.weather_tool import get_weather
+from bonsai_sensei.domain.services.cultivation.weather.weather_tool import get_weather
 
 
 @pytest.mark.asyncio

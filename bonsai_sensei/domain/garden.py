@@ -1,7 +1,7 @@
 from typing import List
 from sqlmodel import select, Session
-from bonsai_sensei.database.bonsai import Bonsai
-from bonsai_sensei.database.species import Species
+from bonsai_sensei.domain.bonsai import Bonsai
+from bonsai_sensei.domain.species import Species
 from bonsai_sensei.database.session_wrapper import with_session
 
 

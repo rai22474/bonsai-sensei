@@ -17,8 +17,8 @@ from google.genai import types
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.bonsai.gardener import GARDENER_INSTRUCTION
 from bonsai_sensei.domain.services.sensei import create_sensei
-from bonsai_sensei.domain.services.species.botanist import SPECIES_INSTRUCTION
-from bonsai_sensei.domain.services.weather.weather_advisor import WEATHER_INSTRUCTION
+from bonsai_sensei.domain.services.cultivation.species.botanist import SPECIES_INSTRUCTION
+from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import WEATHER_INSTRUCTION
 from bonsai_sensei.model_factory import get_cloud_model_factory, get_local_model_factory
 
 

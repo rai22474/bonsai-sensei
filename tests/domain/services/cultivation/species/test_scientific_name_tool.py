@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.domain.services.species import scientific_name_tool
+from bonsai_sensei.domain.services.cultivation.species import scientific_name_tool
 
 
 def should_resolve_scientific_name_from_results(resolver_with_results):

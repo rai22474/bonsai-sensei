@@ -40,7 +40,7 @@ def _resolve_scientific_name(
         return _empty_result(common_name)
 
     translated_name = translator(common_name)
-    
+
     search_term = translated_name or common_name
     scientific_names = _extract_scientific_names(searcher(search_term))
 

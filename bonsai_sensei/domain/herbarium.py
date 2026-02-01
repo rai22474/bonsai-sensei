@@ -1,6 +1,6 @@
 from typing import List, Dict
 from sqlmodel import select, Session
-from bonsai_sensei.database import Species
+from bonsai_sensei.domain.species import Species
 from bonsai_sensei.database.session_wrapper import with_session
 
 

@@ -1,9 +1,15 @@
 import pytest
 from hamcrest import assert_that, equal_to, has_item
 
-from bonsai_sensei.domain.services.species.scientific_name_tool import create_scientific_name_resolver
-from bonsai_sensei.domain.services.species.scientific_name_translator import translate_to_english
-from bonsai_sensei.domain.services.species.scientific_name_searcher import trefle_search
+from bonsai_sensei.domain.services.cultivation.species.scientific_name_tool import (
+    create_scientific_name_resolver,
+)
+from bonsai_sensei.domain.services.cultivation.species.scientific_name_translator import (
+    translate_to_english,
+)
+from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher import (
+    trefle_search,
+)
 
 
 @pytest.mark.integration

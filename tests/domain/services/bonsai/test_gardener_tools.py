@@ -1,8 +1,8 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.database.bonsai import Bonsai
-from bonsai_sensei.database.species import Species
+from bonsai_sensei.domain.bonsai import Bonsai
+from bonsai_sensei.domain.species import Species
 from bonsai_sensei.domain.services.bonsai.bonsai_tools import (
     create_create_bonsai_tool,
     create_get_bonsai_by_name_tool,
