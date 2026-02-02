@@ -10,7 +10,12 @@ from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools
 
 
 def should_create_phytosanitary(create_phytosanitary_tool):
-    result = create_phytosanitary_tool("Phytosanitary A", "Sheet A", "10 ml/L")
+    result = create_phytosanitary_tool(
+        "Phytosanitary A",
+        "Sheet A",
+        "10 ml/L",
+        "Oidio",
+    )
 
     assert_that(result["status"], equal_to("success"))
 
@@ -29,6 +34,7 @@ def should_list_phytosanitary(list_phytosanitary_tool):
                         "name": "Phytosanitary A",
                         "usage_sheet": "Sheet A",
                         "recommended_amount": "10 ml/L",
+                        "recommended_for": "Oidio",
                     }
                 ],
             }
@@ -49,6 +55,7 @@ def should_get_phytosanitary_by_name(get_phytosanitary_tool):
                     "name": "Phytosanitary A",
                     "usage_sheet": "Sheet A",
                     "recommended_amount": "10 ml/L",
+                    "recommended_for": "Oidio",
                 },
             }
         ),
@@ -73,6 +80,7 @@ def list_phytosanitary_func():
                 name="Phytosanitary A",
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
+                recommended_for="Oidio",
             )
         ]
 
@@ -88,6 +96,7 @@ def get_phytosanitary_by_name_func():
                 name="Phytosanitary A",
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
+                recommended_for="Oidio",
             )
         return None
 

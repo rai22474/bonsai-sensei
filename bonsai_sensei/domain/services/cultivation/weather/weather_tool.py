@@ -1,9 +1,11 @@
 import httpx
 from bonsai_sensei.logging_config import get_logger
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 logger = get_logger(__name__)
 
 
+@limit_tool_calls(agent_name="weather_advisor")
 async def get_weather(location: str) -> str:
     """
     Fetches the weather forecast for a given location.

@@ -2,12 +2,14 @@ from typing import Callable
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.species import Species
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 
 def create_list_bonsai_tool(
     list_bonsai_func: Callable[[], list[Bonsai]],
     list_species_func: Callable[[], list[Species]],
 ):
+    @limit_tool_calls(agent_name="gardener")
     def list_bonsai() -> dict:
         """Return JSON with status and bonsai list.
 
@@ -38,6 +40,7 @@ def create_create_bonsai_tool(
     create_bonsai_func: Callable[[Bonsai], Bonsai | None],
     list_species_func: Callable[[], list[Species]],
 ):
+    @limit_tool_calls(agent_name="gardener")
     def create_bonsai(name: str, species_id: int) -> dict:
         """Create a bonsai and return JSON with status and created record.
 
@@ -72,6 +75,7 @@ def create_get_bonsai_by_name_tool(
     get_bonsai_by_name_func: Callable[[str], Bonsai | None],
     list_species_func: Callable[[], list[Species]],
 ):
+    @limit_tool_calls(agent_name="gardener")
     def get_bonsai_by_name(name: str) -> dict:
         """Lookup a bonsai by name and return JSON with status and record.
 
@@ -105,6 +109,7 @@ def create_update_bonsai_tool(
     update_bonsai_func: Callable[[int, dict], Bonsai | None],
     list_species_func: Callable[[], list[Species]],
 ):
+    @limit_tool_calls(agent_name="gardener")
     def update_bonsai(bonsai_id: int, name: str | None = None, species_id: int | None = None) -> dict:
         """Update a bonsai and return JSON with status and updated record.
 
@@ -140,6 +145,7 @@ def create_update_bonsai_tool(
 
 
 def create_delete_bonsai_tool(delete_bonsai_func: Callable[[int], bool]):
+    @limit_tool_calls(agent_name="gardener")
     def delete_bonsai(bonsai_id: int) -> dict:
         """Delete a bonsai by id and return JSON with status and bonsai_id.
 

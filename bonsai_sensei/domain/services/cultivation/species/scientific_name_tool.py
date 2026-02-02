@@ -1,10 +1,13 @@
 from typing import Callable, List, Dict
 
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+
 
 Translator = Callable[[str], str]
 Searcher = Callable[[str], List[Dict[str, str]]]
 
 
+@limit_tool_calls(agent_name="botanist")
 def resolve_scientific_name(
     common_name: str,
     translator: Translator,
@@ -21,6 +24,7 @@ def create_scientific_name_resolver(
     translator: Translator,
     searcher: Searcher,
 ) -> Callable[[str], Dict]:
+    @limit_tool_calls(agent_name="botanist")
     def resolve(common_name: str) -> Dict:
         return _resolve_scientific_name(
             common_name=common_name,

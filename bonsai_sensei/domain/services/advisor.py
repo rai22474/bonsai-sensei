@@ -1,7 +1,12 @@
 from typing import Callable
 from functools import partial
+import os
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.adk.agents.invocation_context import LlmCallsLimitExceededError
+from bonsai_sensei.domain.services.tool_limiter import ToolCallsLimitExceededError
+
+
+DEFAULT_MAX_LLM_CALLS = 20
 
 
 def create_advisor(
@@ -19,16 +24,15 @@ async def _generate_advise(
     user_id: str = "default_user",
     trace_handler: Callable[[str, list], None] | None = None,
 ) -> str:
-    run_config = RunConfig(max_llm_calls=3)
+    run_config = RunConfig(max_llm_calls=DEFAULT_MAX_LLM_CALLS)
     try:
         events = await runner.run_debug(
             user_messages=text,
             user_id=user_id,
             session_id=str(user_id),
-            run_config=run_config,
-            quiet=True,
+            run_config=run_config
         )
-    except LlmCallsLimitExceededError:
+    except (LlmCallsLimitExceededError, ToolCallsLimitExceededError):
         return "No pude hacerlo y no tengo la información necesaria."
     if trace_handler:
         trace_handler(text, events)

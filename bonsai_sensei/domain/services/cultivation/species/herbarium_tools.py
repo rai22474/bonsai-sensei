@@ -1,11 +1,13 @@
 from typing import Callable, Optional, List
 
 from bonsai_sensei.domain.species import Species
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 
 def create_species_tool(
     create_species_func: Callable[..., Species],
 ):
+    @limit_tool_calls(agent_name="botanist")
     def create_bonsai_species(
         common_name: str,
         scientific_name: str,
@@ -57,6 +59,7 @@ def create_species_tool(
 
 
 def create_list_species_tool(get_all_species_func):
+    @limit_tool_calls(agent_name="botanist")
     def list_bonsai_species() -> dict:
         """Return JSON with status and species list.
 
@@ -80,6 +83,7 @@ def create_list_species_tool(get_all_species_func):
 def create_get_species_by_name_tool(
     get_species_by_name_func: Callable[[str], Species | None],
 ):
+    @limit_tool_calls(agent_name="botanist")
     def get_bonsai_species_by_name(name: str) -> dict:
         """Lookup a species by common name and return JSON with status and record.
 
@@ -107,6 +111,7 @@ def create_get_species_by_name_tool(
 def create_update_bonsai_species_tool(
     update_species_func: Callable[[int, dict], Species | None],
 ):
+    @limit_tool_calls(agent_name="botanist")
     def update_bonsai_species(
         species_id: int,
         common_name: str | None = None,
@@ -142,6 +147,7 @@ def create_update_bonsai_species_tool(
 
 
 def create_delete_bonsai_species_tool(delete_species_func: Callable[[int], bool]):
+    @limit_tool_calls(agent_name="botanist")
     def delete_bonsai_species(species_id: int) -> dict:
         """Delete a species by id and return JSON with status and species_id.
 

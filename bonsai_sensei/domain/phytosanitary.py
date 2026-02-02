@@ -7,3 +7,4 @@ class Phytosanitary(SQLModel, table=True):
     name: str = Field(index=True, unique=True)
     usage_sheet: str = Field(default="")
     recommended_amount: str = Field(default="")
+    recommended_for: str = Field(default="")

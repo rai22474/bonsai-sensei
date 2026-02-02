@@ -2,13 +2,15 @@ from typing import Callable
 import re
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 
 def create_phytosanitary_info_tool(searcher: Callable[[str], dict]):
+    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
     def fetch_phytosanitary_info(name: str) -> dict:
         """Fetch phytosanitary info and return JSON with usage sheet and recommended amount.
 
-        Output JSON: {"status":"success","phytosanitary":{"name","usage_sheet","recommended_amount","sources"}}.
+    Output JSON: {"status":"success","phytosanitary":{"name","usage_sheet","recommended_amount","recommended_for","sources"}}.
         """
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
@@ -28,6 +30,7 @@ def create_phytosanitary_info_tool(searcher: Callable[[str], dict]):
                 "name": name,
                 "usage_sheet": usage_sheet,
                 "recommended_amount": recommended_amount,
+                "recommended_for": "",
                 "sources": sources,
             },
         }
@@ -38,10 +41,16 @@ def create_phytosanitary_info_tool(searcher: Callable[[str], dict]):
 def create_create_phytosanitary_tool(
     create_phytosanitary_func: Callable[[Phytosanitary], Phytosanitary],
 ):
-    def create_phytosanitary(name: str, usage_sheet: str, recommended_amount: str) -> dict:
+    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
+    def create_phytosanitary(
+        name: str,
+        usage_sheet: str,
+        recommended_amount: str,
+        recommended_for: str,
+    ) -> dict:
         """Create a phytosanitary and return JSON with status and record.
 
-        Output JSON (success): {"status":"success","phytosanitary":{"id","name","usage_sheet","recommended_amount"}}.
+    Output JSON (success): {"status":"success","phytosanitary":{"id","name","usage_sheet","recommended_amount","recommended_for"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -50,11 +59,14 @@ def create_create_phytosanitary_tool(
             return {"status": "error", "message": "usage_sheet_required"}
         if not recommended_amount:
             return {"status": "error", "message": "recommended_amount_required"}
+        if not recommended_for:
+            return {"status": "error", "message": "recommended_for_required"}
         created = create_phytosanitary_func(
             phytosanitary=Phytosanitary(
                 name=name,
                 usage_sheet=usage_sheet,
                 recommended_amount=recommended_amount,
+                recommended_for=recommended_for,
             )
         )
         return {
@@ -64,6 +76,7 @@ def create_create_phytosanitary_tool(
                 "name": created.name,
                 "usage_sheet": created.usage_sheet,
                 "recommended_amount": created.recommended_amount,
+                "recommended_for": created.recommended_for,
             },
         }
 
@@ -73,10 +86,11 @@ def create_create_phytosanitary_tool(
 def create_list_phytosanitary_tool(
     list_phytosanitary_func: Callable[[], list[Phytosanitary]],
 ):
+    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
     def list_phytosanitary() -> dict:
         """Return JSON with all registered phytosanitary items.
 
-        Output JSON: {"status":"success","phytosanitary":[{"id","name","usage_sheet","recommended_amount"}]}.
+    Output JSON: {"status":"success","phytosanitary":[{"id","name","usage_sheet","recommended_amount","recommended_for"}]}.
         """
         items = list_phytosanitary_func()
         results = [
@@ -85,6 +99,7 @@ def create_list_phytosanitary_tool(
                 "name": phytosanitary.name,
                 "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
+                "recommended_for": phytosanitary.recommended_for,
             }
             for phytosanitary in items
         ]
@@ -96,10 +111,11 @@ def create_list_phytosanitary_tool(
 def create_get_phytosanitary_by_name_tool(
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
 ):
+    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
     def get_phytosanitary_by_name(name: str) -> dict:
         """Lookup a phytosanitary by name and return JSON with status and record.
 
-        Output JSON (success): {"status":"success","phytosanitary":{"id","name","usage_sheet","recommended_amount"}}.
+    Output JSON (success): {"status":"success","phytosanitary":{"id","name","usage_sheet","recommended_amount","recommended_for"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -114,6 +130,7 @@ def create_get_phytosanitary_by_name_tool(
                 "name": phytosanitary.name,
                 "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
+                "recommended_for": phytosanitary.recommended_for,
             },
         }
 

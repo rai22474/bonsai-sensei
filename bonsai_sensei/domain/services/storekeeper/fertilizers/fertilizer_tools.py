@@ -2,9 +2,11 @@ from typing import Callable
 import re
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 
 def create_fertilizer_info_tool(searcher: Callable[[str], dict]):
+    @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def fetch_fertilizer_info(name: str) -> dict:
         """Fetch fertilizer info and return JSON with usage sheet and recommended amount.
 
@@ -36,6 +38,7 @@ def create_fertilizer_info_tool(searcher: Callable[[str], dict]):
 
 
 def create_create_fertilizer_tool(create_fertilizer_func: Callable[[Fertilizer], Fertilizer]):
+    @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def create_fertilizer(name: str, usage_sheet: str, recommended_amount: str) -> dict:
         """Create a fertilizer and return JSON with status and record.
 
@@ -69,6 +72,7 @@ def create_create_fertilizer_tool(create_fertilizer_func: Callable[[Fertilizer],
 
 
 def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertilizer]]):
+    @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def list_fertilizers() -> dict:
         """Return JSON with all registered fertilizers.
 
@@ -92,6 +96,7 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
 def create_get_fertilizer_by_name_tool(
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
 ):
+    @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def get_fertilizer_by_name(name: str) -> dict:
         """Lookup a fertilizer by name and return JSON with status and record.
 
