@@ -10,7 +10,12 @@ from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools impo
 
 
 def should_create_fertilizer(create_fertilizer_tool):
-    result = create_fertilizer_tool("Fertilizer A", "Sheet A", "10 ml/L")
+    result = create_fertilizer_tool(
+        "Fertilizer A",
+        "Sheet A",
+        "10 ml/L",
+        ["https://example.com/fertilizer-a"],
+    )
 
     assert_that(result["status"], equal_to("success"))
 
@@ -29,6 +34,7 @@ def should_list_fertilizers(list_fertilizers_tool):
                         "name": "Fertilizer A",
                         "usage_sheet": "Sheet A",
                         "recommended_amount": "10 ml/L",
+                        "sources": ["https://example.com/fertilizer-a"],
                     }
                 ],
             }
@@ -49,6 +55,7 @@ def should_get_fertilizer_by_name(get_fertilizer_tool):
                     "name": "Fertilizer A",
                     "usage_sheet": "Sheet A",
                     "recommended_amount": "10 ml/L",
+                    "sources": ["https://example.com/fertilizer-a"],
                 },
             }
         ),
@@ -73,6 +80,7 @@ def list_fertilizers_func():
                 name="Fertilizer A",
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
+                sources=["https://example.com/fertilizer-a"],
             )
         ]
 
@@ -88,6 +96,7 @@ def get_fertilizer_by_name_func():
                 name="Fertilizer A",
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
+                sources=["https://example.com/fertilizer-a"],
             )
         return None
 

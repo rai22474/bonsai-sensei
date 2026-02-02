@@ -15,6 +15,7 @@ def should_create_phytosanitary(create_phytosanitary_tool):
         "Sheet A",
         "10 ml/L",
         "Oidio",
+        ["https://example.com/phytosanitary-a"],
     )
 
     assert_that(result["status"], equal_to("success"))
@@ -35,6 +36,7 @@ def should_list_phytosanitary(list_phytosanitary_tool):
                         "usage_sheet": "Sheet A",
                         "recommended_amount": "10 ml/L",
                         "recommended_for": "Oidio",
+                        "sources": ["https://example.com/phytosanitary-a"],
                     }
                 ],
             }
@@ -56,6 +58,7 @@ def should_get_phytosanitary_by_name(get_phytosanitary_tool):
                     "usage_sheet": "Sheet A",
                     "recommended_amount": "10 ml/L",
                     "recommended_for": "Oidio",
+                    "sources": ["https://example.com/phytosanitary-a"],
                 },
             }
         ),
@@ -81,6 +84,7 @@ def list_phytosanitary_func():
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
                 recommended_for="Oidio",
+                sources=["https://example.com/phytosanitary-a"],
             )
         ]
 
@@ -97,6 +101,7 @@ def get_phytosanitary_by_name_func():
                 usage_sheet="Sheet A",
                 recommended_amount="10 ml/L",
                 recommended_for="Oidio",
+                sources=["https://example.com/phytosanitary-a"],
             )
         return None
 

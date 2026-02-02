@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Column, JSON
 
 
 class Phytosanitary(SQLModel, table=True):
@@ -8,3 +9,4 @@ class Phytosanitary(SQLModel, table=True):
     usage_sheet: str = Field(default="")
     recommended_amount: str = Field(default="")
     recommended_for: str = Field(default="")
+    sources: list[str] = Field(default_factory=list, sa_column=Column(JSON))

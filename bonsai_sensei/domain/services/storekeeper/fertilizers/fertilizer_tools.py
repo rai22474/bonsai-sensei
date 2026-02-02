@@ -39,7 +39,12 @@ def create_fertilizer_info_tool(searcher: Callable[[str], dict]):
 
 def create_create_fertilizer_tool(create_fertilizer_func: Callable[[Fertilizer], Fertilizer]):
     @limit_tool_calls(agent_name="fertilizer_storekeeper")
-    def create_fertilizer(name: str, usage_sheet: str, recommended_amount: str) -> dict:
+    def create_fertilizer(
+        name: str,
+        usage_sheet: str,
+        recommended_amount: str,
+        sources: list[str] | None = None,
+    ) -> dict:
         """Create a fertilizer and return JSON with status and record.
 
         Output JSON (success): {"status":"success","fertilizer":{"id","name","usage_sheet","recommended_amount"}}.
@@ -51,11 +56,14 @@ def create_create_fertilizer_tool(create_fertilizer_func: Callable[[Fertilizer],
             return {"status": "error", "message": "usage_sheet_required"}
         if not recommended_amount:
             return {"status": "error", "message": "recommended_amount_required"}
+        if sources is None:
+            sources = []
         created = create_fertilizer_func(
             fertilizer=Fertilizer(
                 name=name,
                 usage_sheet=usage_sheet,
                 recommended_amount=recommended_amount,
+                sources=sources,
             )
         )
         return {
@@ -65,6 +73,7 @@ def create_create_fertilizer_tool(create_fertilizer_func: Callable[[Fertilizer],
                 "name": created.name,
                 "usage_sheet": created.usage_sheet,
                 "recommended_amount": created.recommended_amount,
+                "sources": created.sources,
             },
         }
 
@@ -85,6 +94,7 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
                 "name": fertilizer.name,
                 "usage_sheet": fertilizer.usage_sheet,
                 "recommended_amount": fertilizer.recommended_amount,
+                "sources": fertilizer.sources,
             }
             for fertilizer in fertilizers
         ]
@@ -115,6 +125,7 @@ def create_get_fertilizer_by_name_tool(
                 "name": fertilizer.name,
                 "usage_sheet": fertilizer.usage_sheet,
                 "recommended_amount": fertilizer.recommended_amount,
+                "sources": fertilizer.sources,
             },
         }
 

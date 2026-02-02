@@ -47,6 +47,7 @@ def create_create_phytosanitary_tool(
         usage_sheet: str,
         recommended_amount: str,
         recommended_for: str,
+        sources: list[str] | None = None,
     ) -> dict:
         """Create a phytosanitary and return JSON with status and record.
 
@@ -61,12 +62,15 @@ def create_create_phytosanitary_tool(
             return {"status": "error", "message": "recommended_amount_required"}
         if not recommended_for:
             return {"status": "error", "message": "recommended_for_required"}
+        if sources is None:
+            sources = []
         created = create_phytosanitary_func(
             phytosanitary=Phytosanitary(
                 name=name,
                 usage_sheet=usage_sheet,
                 recommended_amount=recommended_amount,
                 recommended_for=recommended_for,
+                sources=sources,
             )
         )
         return {
@@ -77,6 +81,7 @@ def create_create_phytosanitary_tool(
                 "usage_sheet": created.usage_sheet,
                 "recommended_amount": created.recommended_amount,
                 "recommended_for": created.recommended_for,
+                "sources": created.sources,
             },
         }
 
@@ -100,6 +105,7 @@ def create_list_phytosanitary_tool(
                 "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
                 "recommended_for": phytosanitary.recommended_for,
+                "sources": phytosanitary.sources,
             }
             for phytosanitary in items
         ]
@@ -131,6 +137,7 @@ def create_get_phytosanitary_by_name_tool(
                 "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
                 "recommended_for": phytosanitary.recommended_for,
+                "sources": phytosanitary.sources,
             },
         }
 
