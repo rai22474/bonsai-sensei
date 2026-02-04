@@ -5,6 +5,26 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 logger = get_logger(__name__)
 
 
+def create_weather_tool(base_url: str):
+    @limit_tool_calls(agent_name="weather_advisor")
+    async def get_weather(location: str) -> str:
+        if not location:
+            return "Please provide a location."
+
+        try:
+            data = await _fetch_weather_data(location, base_url)
+            if data:
+                result = _format_weather_report(location, data)
+                logger.info(f"Weather result: {result}")
+                return result
+            return f"Could not fetch weather for {location}."
+        except Exception as e:
+            logger.exception(f"Error calling wttr.in for location '{location}': {e}")
+            return f"Error retrieving weather information: {str(e)}"
+
+    return get_weather
+
+
 @limit_tool_calls(agent_name="weather_advisor")
 async def get_weather(location: str) -> str:
     """
@@ -16,26 +36,11 @@ async def get_weather(location: str) -> str:
                   Using coordinates provides a much more precise forecast.
     """
     logger.info(f"Fetching weather for: {location}")
-    if not location:
-        return "Please provide a location."
-
-    try:
-        data = await _fetch_weather_data(location)
-        if data:
-            result = _format_weather_report(location, data)
-            logger.info(f"Weather result: {result}")
-            return result
-        else:
-            return f"Could not fetch weather for {location}."
-
-    except Exception as e:
-        logger.exception(f"Error calling wttr.in for location '{location}': {e}")
-        return f"Error retrieving weather information: {str(e)}"
+    return await create_weather_tool("https://wttr.in")(location)
 
 
-async def _fetch_weather_data(location: str) -> dict | None:
-    """Makes the HTTP request to the external weather service."""
-    url = f"https://wttr.in/{location}?format=j1"
+async def _fetch_weather_data(location: str, base_url: str) -> dict | None:
+    url = f"{base_url.rstrip('/')}/{location}?format=j1"
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(url)
         if response.status_code == 200:

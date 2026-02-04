@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build: ..
+    ports:
+      - "8060:8000"
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db
+      - MODEL_PROVIDER=cloud
+      - MONOCLE_ENABLED=false
+      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:32b-instruct}
+      - WEATHER_API_BASE=http://host.docker.internal:8070
+      - TREFLE_API_BASE=http://host.docker.internal:8070
+      - TREFLE_API_TOKEN=stub-token
+      - TAVILY_API_BASE=http://host.docker.internal:8070
+      - TAVILY_API_KEY=stub-key
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8000"
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=bonsai_user
+      - POSTGRES_PASSWORD=bonsai_password
+      - POSTGRES_DB=bonsai_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bonsai_user -d bonsai_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data_acceptance:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_acceptance:

@@ -36,12 +36,18 @@ async def _generate_advise(
         return "No pude hacerlo y no tengo la información necesaria."
     if trace_handler:
         trace_handler(text, events)
+    
+    response_texts = _build_response_texts(events)
+    if not response_texts:
+        return "No pude generar una respuesta en este momento."
+    return "\n".join(response_texts)
+
+
+def _build_response_texts(events: list) -> list[str]:
     response_texts = []
     for event in events:
         if event.content and hasattr(event.content, "parts") and event.content.parts:
             for part in event.content.parts:
                 if hasattr(part, "text") and part.text:
                     response_texts.append(part.text)
-    if not response_texts:
-        return "No pude generar una respuesta en este momento."
-    return "\n".join(response_texts)
+    return response_texts

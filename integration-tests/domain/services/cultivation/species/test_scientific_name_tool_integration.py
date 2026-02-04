@@ -1,3 +1,4 @@
+import os
 import pytest
 from hamcrest import assert_that, equal_to, has_item
 
@@ -8,7 +9,7 @@ from bonsai_sensei.domain.services.cultivation.species.scientific_name_translato
     translate_to_english,
 )
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher import (
-    trefle_search,
+    create_trefle_searcher,
 )
 
 
@@ -46,11 +47,13 @@ def should_match_spanish_and_english_names_for_japanese_black_pine(resolver):
 
 @pytest.fixture(scope="module")
 def resolver():
-    try:
-        trefle_search("check")
-    except ValueError:
+    api_token = os.getenv("TREFLE_API_TOKEN")
+    if not api_token:
         pytest.skip("TREFLE_API_TOKEN is required for integration tests")
+    base_url = os.getenv("TREFLE_API_BASE", "https://trefle.io")
+    trefle_searcher = create_trefle_searcher(api_token, base_url)
+    trefle_searcher("check")
     return create_scientific_name_resolver(
         translator=translate_to_english,
-        searcher=trefle_search,
+        searcher=trefle_searcher,
     )

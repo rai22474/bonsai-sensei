@@ -13,7 +13,7 @@ from bonsai_sensei.domain.services.cultivation.species.care_guide_service import
     create_care_guide_builder,
 )
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher import (
-    trefle_search,
+    create_trefle_searcher,
 )
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_tool import (
     create_scientific_name_resolver,
@@ -28,7 +28,7 @@ from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import (
 from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import (
     create_weather_advisor,
 )
-from bonsai_sensei.domain.services.cultivation.weather.weather_tool import get_weather
+from bonsai_sensei.domain.services.cultivation.weather.weather_tool import create_weather_tool
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
     create_list_species_tool,
 )
@@ -51,18 +51,23 @@ def create_cultivation_group(
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
+    weather_base_url = os.getenv("WEATHER_API_BASE", "https://wttr.in")
+    weather_tool = create_weather_tool(weather_base_url)
     weather_agent = create_weather_advisor(
         model=model,
-        tools=[get_weather, list_species_tool],
+        tools=[weather_tool, list_species_tool],
     )
+    trefle_base_url = os.getenv("TREFLE_API_BASE", "https://trefle.io")
+    trefle_searcher = create_trefle_searcher(os.getenv("TREFLE_API_TOKEN"), trefle_base_url)
     resolve_name_tool = create_scientific_name_resolver(
         translator=translate_to_english,
-        searcher=trefle_search,
+        searcher=trefle_searcher,
     )
     resolve_name_tool = _with_tool_metadata(
         resolve_name_tool, "resolve_bonsai_scientific_names", resolve_scientific_name
     )
-    tavily_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"))
+    tavily_base_url = os.getenv("TAVILY_API_BASE")
+    tavily_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     care_guide_builder = create_care_guide_builder(tavily_searcher)
     care_guide_builder = _with_tool_metadata(
         care_guide_builder, "build_bonsai_care_guide", care_guide_builder

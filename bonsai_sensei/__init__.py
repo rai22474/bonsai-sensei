@@ -17,8 +17,11 @@ from bonsai_sensei.model_factory import (
     get_local_model_factory,
 )
 from bonsai_sensei.api.species import router as species_router
+from bonsai_sensei.api.bonsai import router as bonsai_router
 from bonsai_sensei.api.fertilizers import router as fertilizers_router
 from bonsai_sensei.api.phytosanitary import router as phytosanitary_router
+from bonsai_sensei.api.advice import router as advice_router
+from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.telegram.bot import TelegramBot
 from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
@@ -153,9 +156,10 @@ async def lifespan(app: FastAPI):
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
     )
+    app.state.advisor = create_advisor(sensei_agent)
     message_handler = partial(
         handle_user_message,
-        message_processor=create_advisor(sensei_agent),
+        message_processor=app.state.advisor,
     )
     handlers = [
         CommandHandler("start", start),
@@ -176,6 +180,9 @@ configure_logging()
 app = FastAPI(lifespan=lifespan)
 app.add_exception_handler(Exception, _generic_exception_handler)
 app.include_router(species_router, prefix="/api", tags=["species"])
+app.include_router(bonsai_router, prefix="/api", tags=["bonsai"])
 app.include_router(fertilizers_router, prefix="/api", tags=["fertilizers"])
 app.include_router(phytosanitary_router, prefix="/api", tags=["phytosanitary"])
+app.include_router(advice_router, prefix="/api", tags=["advice"])
+app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

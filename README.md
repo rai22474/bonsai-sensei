@@ -32,6 +32,16 @@ uv run uvicorn bonsai_sensei.main:app --reload
 
 Open http://127.0.0.1:8000/docs to see the Swagger UI.
 
+## Acceptance tests (BDD)
+
+Run the BDD acceptance test suite against the local model stack:
+
+```bash
+./acceptance-tests/run_bdd_acceptance.sh
+```
+
+The acceptance tests use HTTP stubs for external services like weather.
+
 ## Observability (Monocle)
 
 Monocle observability is disabled by default. To enable it, set the environment variables below:

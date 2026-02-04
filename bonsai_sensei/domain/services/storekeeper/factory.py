@@ -38,7 +38,8 @@ def create_storekeeper_group(
         phytosanitary_registry.get_phytosanitary_by_name,
         create_session=session_factory,
     )
-    fertilizer_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"))
+    tavily_base_url = os.getenv("TAVILY_API_BASE")
+    fertilizer_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     fertilizer_storekeeper = create_fertilizer_storekeeper(
         model=model,
         create_fertilizer_func=create_fertilizer_func,
@@ -46,7 +47,7 @@ def create_storekeeper_group(
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         searcher=fertilizer_searcher,
     )
-    phytosanitary_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"))
+    phytosanitary_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     phytosanitary_storekeeper = create_phytosanitary_storekeeper(
         model=model,
         create_phytosanitary_func=create_phytosanitary_func,
