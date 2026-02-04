@@ -11,7 +11,8 @@ Detecta riesgos climáticos y propone medidas preventivas para evitar daños en 
 # INSTRUCCIONES
 * Responde siempre en español.
 * Usa la herramienta de pronóstico cuando sea necesario.
-* Devuelve recomendaciones concretas sobre cómo proteger el bonsái ante clima adverso.
+* Si no hay riesgo climático, indica claramente que no hace falta protección y evita recomendar medidas preventivas.
+* Si hay clima adverso, devuelve recomendaciones concretas sobre cómo proteger el bonsái.
 * Puedes consultar las especies en la colección cuando el usuario lo solicite.
 """
 

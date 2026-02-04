@@ -5,12 +5,12 @@ import pytest
 from pytest_bdd import given, scenario, then, when, parsers
 from pytest_httpserver import HTTPServer
 from deepeval import assert_test
-from deepeval.metrics import PatternMatchMetric
 from deepeval.test_case import LLMTestCase
 
 from http_client import request_json
+from judge import create_recommendation_metric
 STUB_PORT = int(os.getenv("WEATHER_STUB_PORT", "8070"))
-PATTERN = r"(?i)(protecci|proteger|helad|fr[ií]o|temperatur|riesgo|cobijo)"
+CRITERIA = "The response should recommend protecting the bonsai tonight and explain frost risk."
 
 
 @scenario("features/protect_bonsai.feature", "Advise protection for nighttime frost risk")
@@ -95,5 +95,8 @@ def verify_recommendation(context, bonsai_fixture):
         input=context.get("prompt", ""),
         actual_output=context.get("response", ""),
     )
-    metric = PatternMatchMetric(pattern=PATTERN, ignore_case=True)
+    metric = create_recommendation_metric(
+        "protect_bonsai_recommendation",
+        CRITERIA,
+    )
     assert_test(test_case=test_case, metrics=[metric], run_async=False)

@@ -1,191 +1,172 @@
-acceptance-tests-db-1   | The files belonging to this database system will be owned by user "postgres".
-acceptance-tests-db-1   | This user must also own the server process.
-acceptance-tests-app-1  | 2026-02-04 09:48:07,696 - __main__ - INFO - Connecting to database at postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db...
-acceptance-tests-app-1  | 2026-02-04 09:48:07,772 - __main__ - INFO - Creating database tables...
-acceptance-tests-app-1  | 2026-02-04 09:48:07,817 - __main__ - INFO - Tables created.
-acceptance-tests-app-1  | INFO:     Started server process [8]
-acceptance-tests-app-1  | INFO:     Waiting for application startup.
-acceptance-tests-app-1  | 2026-02-04 09:48:10,570 - telegram.ext.Application - INFO - Application started
-acceptance-tests-app-1  | INFO:     Application startup complete.
-acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-acceptance-tests-app-1  | INFO:     192.168.16.1:37372 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:33118 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:33122 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-02-04 09:48:35,225 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  |  ### Created new session: bdd
-acceptance-tests-app-1  | 
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-tests-db-1   | The default database encoding has accordingly been set to "UTF8".
-acceptance-tests-db-1   | The default text search configuration will be set to "english".
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | Data page checksums are disabled.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
-acceptance-tests-app-1  | User > Dime si mis bonsais deben estar protegidos esta noche en Madrid
-acceptance-tests-app-1  | 2026-02-04 09:48:35,279 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:37,906 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:37,906 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
-acceptance-tests-app-1  | 2026-02-04 09:48:37,968 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:39,280 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:39,361 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:40,940 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:40,942 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:48:40,942 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:48:41,017 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:42,865 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:42,947 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:45,296 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:45,369 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:45,417 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:47,222 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:47,327 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:47,398 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:48,289 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, 8°C. Min/Max: 6°C/12°C. Max Frost Chance: 0%. Hourly: 00:00h: 7°C; 03:00h: 6°C; 06:00h: 8°C
-acceptance-tests-app-1  | 2026-02-04 09:48:48,368 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:48,722 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:48,813 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:50,704 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-db-1   | creating subdirectories ... ok
-acceptance-tests-db-1   | selecting dynamic shared memory implementation ... posix
-acceptance-tests-db-1   | selecting default max_connections ... 100
-acceptance-tests-db-1   | selecting default shared_buffers ... 128MB
-acceptance-tests-db-1   | selecting default time zone ... UTC
-acceptance-tests-db-1   | creating configuration files ... ok
-acceptance-tests-db-1   | running bootstrap script ... ok
-acceptance-tests-db-1   | sh: locale: not found
-acceptance-tests-db-1   | 2026-02-04 09:48:00.386 UTC [35] WARNING:  no usable system locales were found
-acceptance-tests-db-1   | performing post-bootstrap initialization ... ok
-acceptance-tests-db-1   | syncing data to disk ... ok
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 
+acceptance-tests-db-1  | The files belonging to this database system will be owned by user "postgres".
+acceptance-tests-db-1  | This user must also own the server process.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-tests-db-1  | The default database encoding has accordingly been set to "UTF8".
+acceptance-tests-db-1  | The default text search configuration will be set to "english".
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | Data page checksums are disabled.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1  | creating subdirectories ... ok
+acceptance-tests-db-1  | selecting dynamic shared memory implementation ... posix
+acceptance-tests-db-1  | selecting default max_connections ... 100
+acceptance-tests-db-1  | selecting default shared_buffers ... 128MB
+acceptance-tests-db-1  | selecting default time zone ... UTC
+acceptance-tests-db-1  | creating configuration files ... ok
+acceptance-tests-db-1  | running bootstrap script ... ok
+acceptance-tests-db-1  | sh: locale: not found
+acceptance-tests-db-1  | 2026-02-04 11:07:10.886 UTC [37] WARNING:  no usable system locales were found
+acceptance-tests-db-1  | performing post-bootstrap initialization ... ok
+acceptance-tests-db-1  | initdb: warning: enabling "trust" authentication for local connections
+acceptance-tests-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-tests-db-1  | syncing data to disk ... ok
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 
 acceptance-tests-db-1   | Success. You can now start the database server using:
 acceptance-tests-db-1   | 
 acceptance-tests-db-1   |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
 acceptance-tests-db-1   | 
-acceptance-tests-db-1   | initdb: warning: enabling "trust" authentication for local connections
-acceptance-tests-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-tests-app-1  | 2026-02-04 09:48:50,708 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:48:50,709 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:48:53,776 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:48:53,777 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:48:53,777 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:48:53,834 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:48:58,020 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-db-1   | waiting for server to start....2026-02-04 09:48:00.737 UTC [41] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-02-04 09:48:00.740 UTC [41] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1   | 2026-02-04 09:48:00.744 UTC [44] LOG:  database system was shut down at 2026-02-04 09:48:00 UTC
-acceptance-tests-db-1   | 2026-02-04 09:48:00.748 UTC [41] LOG:  database system is ready to accept connections
-acceptance-tests-app-1  | 2026-02-04 09:48:58,027 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:48:58,027 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:48:58,100 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:02,592 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | sensei > Para determinar si tu bonsái Sasuke (Juniperus procumbens) necesita protección esta noche en Madrid, he consultado con nuestros especialistas en botánica y clima:
+acceptance-tests-db-1   | waiting for server to start....2026-02-04 11:07:11.773 UTC [43] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-app-1  | 2026-02-04 11:07:21,434 - __main__ - INFO - Connecting to database at postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db...
+acceptance-tests-app-1  | 2026-02-04 11:07:21,712 - __main__ - INFO - Creating database tables...
+acceptance-tests-app-1  | 2026-02-04 11:07:22,046 - __main__ - INFO - Tables created.
+acceptance-tests-app-1  | INFO:     Started server process [8]
+acceptance-tests-db-1   | 2026-02-04 11:07:11.776 UTC [43] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-02-04 11:07:11.787 UTC [46] LOG:  database system was shut down at 2026-02-04 11:07:11 UTC
+acceptance-tests-db-1   | 2026-02-04 11:07:11.793 UTC [43] LOG:  database system is ready to accept connections
 acceptance-tests-db-1   |  done
 acceptance-tests-db-1   | server started
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Conclusión: No necesita protección
-acceptance-tests-app-1  | 
 acceptance-tests-db-1   | CREATE DATABASE
 acceptance-tests-db-1   | 
 acceptance-tests-db-1   | 
 acceptance-tests-db-1   | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-tests-app-1  | No es necesario que protejas tu Juniperus procumbens esta noche. Según el pronóstico para Madrid (mínimas de 6C a 8C) y las necesidades específicas de la especie, el árbol estará perfectamente seguro en el exterior.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Aquí tienes los detalles técnicos que respaldan esta recomendación:
 acceptance-tests-db-1   | 
-acceptance-tests-db-1   | waiting for server to shut down....2026-02-04 09:48:00.871 UTC [41] LOG:  received fast shutdown request
-acceptance-tests-db-1   | 2026-02-04 09:48:00.872 UTC [41] LOG:  aborting any active transactions
-acceptance-tests-db-1   | 2026-02-04 09:48:00.875 UTC [41] LOG:  background worker "logical replication launcher" (PID 47) exited with exit code 1
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 1. Resistencia de la especie: El Juniperus procumbens es un bonsái de exterior muy robusto. Nuestro botánico indica que su rango de tolerancia al frío es excelente, soportando temperaturas de hasta -2C sin problemas. Al estar la previsión muy por encima de ese límite (unos 8 grados más), el árbol no corre ningún riesgo.
-acceptance-tests-db-1   | 2026-02-04 09:48:00.875 UTC [42] LOG:  shutting down
-acceptance-tests-db-1   | 2026-02-04 09:48:00.877 UTC [42] LOG:  checkpoint starting: shutdown immediate
-acceptance-tests-db-1   | 2026-02-04 09:48:00.924 UTC [42] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.018 s, sync=0.025 s, total=0.050 s; sync files=301, longest=0.005 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
-acceptance-tests-db-1   | 2026-02-04 09:48:00.929 UTC [41] LOG:  database system is shut down
+acceptance-tests-db-1   | waiting for server to shut down....2026-02-04 11:07:12.088 UTC [43] LOG:  received fast shutdown request
+acceptance-tests-db-1   | 2026-02-04 11:07:12.091 UTC [43] LOG:  aborting any active transactions
+acceptance-tests-app-1  | INFO:     Waiting for application startup.
+acceptance-tests-app-1  | 2026-02-04 11:07:26,852 - telegram.ext.Application - INFO - Application started
+acceptance-tests-db-1   | 2026-02-04 11:07:12.093 UTC [43] LOG:  background worker "logical replication launcher" (PID 49) exited with exit code 1
+acceptance-tests-db-1   | 2026-02-04 11:07:12.094 UTC [44] LOG:  shutting down
+acceptance-tests-db-1   | 2026-02-04 11:07:12.095 UTC [44] LOG:  checkpoint starting: shutdown immediate
+acceptance-tests-db-1   | 2026-02-04 11:07:12.174 UTC [44] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.031 s, sync=0.041 s, total=0.080 s; sync files=301, longest=0.011 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
+acceptance-tests-db-1   | 2026-02-04 11:07:12.180 UTC [43] LOG:  database system is shut down
 acceptance-tests-db-1   |  done
 acceptance-tests-db-1   | server stopped
 acceptance-tests-db-1   | 
 acceptance-tests-db-1   | PostgreSQL init process complete; ready for start up.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 2. Condiciones climáticas en Madrid: El asesor meteorológico confirma una noche despejada con mínimas de 6C-8C. Para especies como los juníperos, estas temperaturas frescas son positivas, ya que les ayudan a seguir su ciclo estacional natural.
-acceptance-tests-app-1  | 
 acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 2026-02-04 09:48:00.988 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-02-04 09:48:00.988 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-tests-db-1   | 2026-02-04 09:48:00.988 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-tests-db-1   | 2026-02-04 09:48:00.991 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1   | 2026-02-04 09:48:00.994 UTC [57] LOG:  database system was shut down at 2026-02-04 09:48:00 UTC
-acceptance-tests-db-1   | 2026-02-04 09:48:00.998 UTC [1] LOG:  database system is ready to accept connections
-acceptance-tests-app-1  | 3. Recomendación de riego: Dado que las temperaturas bajarán hasta los 6C, evita regarlo a última hora del día para que las raíces no permanezcan excesivamente húmedas y frías durante la noche. Es preferible esperar a la mañana.
+acceptance-tests-db-1   | 2026-02-04 11:07:12.209 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1   | 2026-02-04 11:07:12.210 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-tests-db-1   | 2026-02-04 11:07:12.210 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-tests-db-1   | 2026-02-04 11:07:12.216 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-02-04 11:07:12.232 UTC [59] LOG:  database system was shut down at 2026-02-04 11:07:12 UTC
+acceptance-tests-db-1   | 2026-02-04 11:07:12.239 UTC [1] LOG:  database system is ready to accept connections
+acceptance-tests-app-1  | INFO:     Application startup complete.
+acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+acceptance-tests-app-1  | INFO:     192.168.192.1:35130 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:46654 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:46656 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-04 11:07:47,373 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | En resumen, puedes dejar a Sasuke en su ubicación habitual de exterior sin preocupaciones.
-acceptance-tests-app-1  | 2026-02-04 09:49:02,598 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
-acceptance-tests-app-1  | INFO:     192.168.16.1:33138 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44632 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44648 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44650 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44654 - "DELETE /api/species/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44656 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:44666 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-02-04 09:49:07,885 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
+acceptance-tests-app-1  |  ### Created new session: bdd
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Dime si mis bonsais deben estar protegidos esta noche en Madrid
+acceptance-tests-app-1  | 2026-02-04 11:07:47,448 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:51,814 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:07:51,814 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+acceptance-tests-app-1  | 2026-02-04 11:07:51,879 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:52,874 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:07:52,965 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:54,338 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:07:54,340 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:07:54,340 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:07:54,421 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:56,668 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:07:56,758 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:59,327 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:07:59,407 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:07:59,459 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:00,788 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:01,102 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:01,197 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:01,857 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, 8°C. Min/Max: 6°C/12°C. Max Frost Chance: 0%. Hourly: 00:00h: 7°C; 03:00h: 6°C; 06:00h: 8°C
+acceptance-tests-app-1  | 2026-02-04 11:08:01,930 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:03,043 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:03,121 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:04,283 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:04,283 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:08:04,284 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:08:06,838 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:06,841 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:08:06,846 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:08:06,918 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:10,345 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:08:10,348 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:08:10,349 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:08:10,432 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:08:13,139 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Para tu Juniperus procumbens llamado Sasuke en Madrid esta noche no es necesario protegerlo.
+acceptance-tests-app-1  | El pronostico indica una temperatura minima de 6 grados con cielos despejados y sin riesgo de heladas.
+acceptance-tests-app-1  | El Juniperus procumbens es una especie robusta que tolera bien el frio y su limite de seguridad esta en torno a los -2 grados.
+acceptance-tests-app-1  | Al estar la temperatura minima muy por encima de su limite tu bonsai estara perfectamente al exterior.
+acceptance-tests-app-1  | Estas temperaturas frescas son incluso beneficiosas para su periodo de letargo invernal.
+acceptance-tests-app-1  | Solo deberas preocuparte de protegerlo si se anuncian heladas intensas o si la temperatura baja de los 0 grados de forma continuada.
+acceptance-tests-app-1  | Puedes dejarlo fuera con total tranquilidad.
+acceptance-tests-app-1  | 2026-02-04 11:08:13,142 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
+acceptance-tests-app-1  | INFO:     192.168.192.1:46662 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:56388 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:56398 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:56406 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:56414 - "DELETE /api/species/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:37408 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:37416 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-04 11:09:11,652 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  |  ### Continue session: bdd
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  | User > Dime si mis bonsais deben estar protegidos esta noche en Madrid
-acceptance-tests-app-1  | 2026-02-04 09:49:07,945 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:09,740 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:09,826 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:11,179 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:11,267 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:12,571 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:12,572 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:49:12,572 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:49:12,656 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:13,895 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:13,967 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:17,492 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:17,538 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:17,583 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:19,692 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:19,744 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:19,821 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:20,755 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, -1°C. Min/Max: -3°C/2°C. Max Frost Chance: 95%. WARNING: High risk of frost (95%). Hourly: 00:00h: -2°C, Frost chance: 90%; 03:00h: -3°C, Frost chance: 95%; 06:00h: -1°C, Frost chance: 85%
-acceptance-tests-app-1  | 2026-02-04 09:49:20,822 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:25,956 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:25,959 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:49:25,960 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:49:28,645 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:28,646 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:49:28,646 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:49:28,722 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:34,822 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 09:49:34,831 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 09:49:34,833 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 09:49:34,915 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 09:49:38,071 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | sensei > Para proteger adecuadamente a tu bonsai Sasuke (Juniperus procumbens) esta noche en Madrid, he consultado con nuestros expertos en botánica y clima. Aquí tienes las recomendaciones clave:
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 1. Diagnóstico de Riesgo
-acceptance-tests-app-1  | El Clima en Madrid: Se prevé una mínima de -3C con un riesgo de helada muy alto (95%).
-acceptance-tests-app-1  | Resistencia de la especie: Aunque el Juniperus procumbens es una especie de exterior muy resistente, su límite de seguridad en maceta de bonsái se sitúa en los -2C. Al estar las raíces en un espacio reducido, son mucho más vulnerables que si el árbol estuviera plantado en el suelo.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 2. ¿Qué debes hacer con Sasuke?
-acceptance-tests-app-1  | Sí, necesita protección, pero no de cualquier tipo. Sigue estos pasos para asegurar su salud:
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | NO lo metas dentro de casa: Como especie de exterior, el aire seco y el calor de la calefacción en Madrid podrían ser fatales o debilitarlo gravemente. El choque térmico es más peligroso que el frío.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Protege la maceta: El objetivo es evitar que el cepellón o raíces se congele por completo. Envuelve la maceta con plástico de burbujas, tela de arpillera o incluso papel de periódico.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Cambia su ubicación: Si lo tienes en una mesa o estante, bájalo al suelo. El suelo retiene más calor que el aire a cierta altura. Colócalo bajo un porche, tejadillo o alero. Esto evitará que la escarcha caiga directamente sobre sus acículas, reduciendo el riesgo de deshidratación por frío.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Humedad justa: Asegúrate de que el sustrato esté ligeramente húmedo. Un sustrato completamente seco hace que las raíces sufran más con el hielo, pero un sustrato encharcado podría congelarse en bloque.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | En resumen: Deja a Sasuke en el exterior, pero resguardado del cielo abierto y con la maceta abrigada. Con esto, tu enebro pasará la noche en Madrid sin problemas y aprovechará el frío necesario para su ciclo natural.
-acceptance-tests-app-1  | 2026-02-04 09:49:38,072 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
-acceptance-tests-app-1  | INFO:     192.168.16.1:44674 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:41596 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:41604 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:41620 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.16.1:41634 - "DELETE /api/species/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-04 11:09:11,813 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:15,984 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:16,100 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:17,271 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:17,435 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:19,078 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:19,091 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:09:19,091 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:09:19,158 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:21,026 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:21,115 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:23,254 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:23,358 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:23,420 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:25,012 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:25,148 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:25,931 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:27,046 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, -1°C. Min/Max: -3°C/2°C. Max Frost Chance: 95%. WARNING: High risk of frost (95%). Hourly: 00:00h: -2°C, Frost chance: 90%; 03:00h: -3°C, Frost chance: 95%; 06:00h: -1°C, Frost chance: 85%
+acceptance-tests-app-1  | 2026-02-04 11:09:27,104 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:27,965 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:27,974 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:09:27,975 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:09:33,162 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:33,177 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:09:33,178 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:09:33,249 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:37,241 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-04 11:09:37,252 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-04 11:09:37,253 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-04 11:09:37,379 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-04 11:09:39,969 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Si es muy recomendable que protejas tu Juniperus procumbens llamado Sasuke esta noche en Madrid.
+acceptance-tests-app-1  | Se preve una noche critica con una temperatura minima de -3 grados y un riesgo de helada del 95 por ciento bajando de los 0 grados a partir de medianoche.
+acceptance-tests-app-1  | Aunque el Juniperus procumbens es resistente su limite de seguridad esta en torno a los -2 grados y estas temperaturas podrian congelar el sustrato y dañar las raices.
+acceptance-tests-app-1  | Te recomiendo envolver la maceta con plastico de burbujas o arpillera para proteger las raices.
+acceptance-tests-app-1  | Si puedes muevelo a un lugar resguardado como un porche o garaje frio pero evita meterlo dentro de casa con calefaccion por el cambio brusco de temperatura.
+acceptance-tests-app-1  | Si no puedes moverlo cubrirlo con una manta termica de jardineria le proporcionara la proteccion necesaria.
+acceptance-tests-app-1  | No te arriesgues y protegelo hoy ya que la temperatura bajara de su limite de resistencia.
+acceptance-tests-app-1  | 2026-02-04 11:09:39,998 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
+acceptance-tests-app-1  | INFO:     192.168.192.1:37422 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:52142 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:52144 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:52158 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.192.1:52174 - "DELETE /api/species/2 HTTP/1.1" 200 OK
