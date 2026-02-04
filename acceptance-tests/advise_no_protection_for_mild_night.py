@@ -44,6 +44,9 @@ def weather_stub_server():
     server.expect_request("/api/v1/plants/search").respond_with_json(
         {"data": [{"scientific_name": "Juniperus procumbens"}]}
     )
+    server.expect_request("/search").respond_with_json(
+        {"answer": "Guía de cuidado disponible.", "results": []}
+    )
     yield server
     server.stop()
 
