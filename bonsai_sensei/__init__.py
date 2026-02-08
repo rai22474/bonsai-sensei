@@ -52,6 +52,9 @@ def _create_herbarium_service(session_factory):
         "list_species": partial(
             herbarium.list_species, create_session=session_factory
         ),
+        "search_species_by_name": partial(
+            herbarium.search_species_by_name, create_session=session_factory
+        ),
         "get_species_by_name": partial(
             herbarium.get_species_by_name, create_session=session_factory
         ),

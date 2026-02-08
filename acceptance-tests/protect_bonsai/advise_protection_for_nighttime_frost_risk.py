@@ -7,13 +7,15 @@ from pytest_httpserver import HTTPServer
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 
-from http_client import request_json
+from http_client import advise, delete, get, post
 from judge import create_recommendation_metric
+
 STUB_PORT = int(os.getenv("WEATHER_STUB_PORT", "8070"))
 CRITERIA = "The response should recommend protecting the bonsai tonight and explain frost risk."
 
 
-@scenario("features/protect_bonsai.feature", "Advise protection for nighttime frost risk")
+
+@scenario("../features/protect_bonsai.feature", "Advise protection for nighttime frost risk")
 def test_protect_bonsai():
     return None
 
@@ -41,7 +43,9 @@ def weather_stub_server():
             }
         ],
     }
-    server.expect_request(re.compile(r"/.+"), query_string="format=j1").respond_with_json(payload)
+    server.expect_request(re.compile(r"/.+"), query_string="format=j1").respond_with_json(
+        payload
+    )
     server.expect_request("/api/v1/plants/search").respond_with_json(
         {"data": [{"scientific_name": "Juniperus procumbens"}]}
     )
@@ -54,8 +58,7 @@ def weather_stub_server():
 
 @given("a bonsai collection with frost-sensitive bonsais", target_fixture="bonsai_fixture")
 def bonsai_fixture(weather_stub_server):
-    species = request_json(
-        "POST",
+    species = post(
         "/api/species",
         {
             "name": "Juniperus procumbens",
@@ -67,27 +70,22 @@ def bonsai_fixture(weather_stub_server):
         },
     )
     species_id = species.get("id")
-    request_json(
-        "POST",
+    post(
         "/api/bonsai",
         {"name": "Sasuke", "species_id": species_id},
     )
     yield
-    bonsai_items = request_json("GET", "/api/bonsai") or []
+    bonsai_items = get("/api/bonsai") or []
     for item in bonsai_items:
-        request_json("DELETE", f"/api/bonsai/{item['id']}")
-    species_items = request_json("GET", "/api/species") or []
+        delete(f"/api/bonsai/{item['id']}")
+    species_items = get("/api/species") or []
     for item in species_items:
-        request_json("DELETE", f"/api/species/{item['id']}")
+        delete(f"/api/species/{item['id']}")
 
 
 @when(parsers.parse('I ask "{question}"'))
 def ask_for_protection(context, bonsai_fixture, question):
-    response = request_json(
-        "POST",
-        "/api/advice",
-        {"text": question, "user_id": "bdd"},
-    )
+    response = advise(question, "bdd")
     context["prompt"] = question
     context["response"] = response.get("response", "")
 

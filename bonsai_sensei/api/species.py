@@ -10,6 +10,9 @@ def get_list_species_svc(request: Request) -> Callable:
 def get_create_species_svc(request: Request) -> Callable:
     return request.app.state.herbarium_service["create_species"]
 
+def get_search_species_svc(request: Request) -> Callable:
+    return request.app.state.herbarium_service["search_species_by_name"]
+
 def get_update_species_svc(request: Request) -> Callable:
     return request.app.state.herbarium_service["update_species"]
 
@@ -20,6 +23,13 @@ def get_delete_species_svc(request: Request) -> Callable:
 @router.get("/species", response_model=List[Species])
 def get_species_list(list_species: Callable = Depends(get_list_species_svc)):
     return list_species()
+
+
+@router.get("/species/search", response_model=List[Species])
+def search_species_by_name(
+    name: str, search_species: Callable = Depends(get_search_species_svc)
+):
+    return search_species(name=name)
 
 @router.post("/species", response_model=Species)
 def create_new_species(

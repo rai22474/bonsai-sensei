@@ -1,5 +1,6 @@
 from typing import List, Dict
 from sqlmodel import select, Session
+from sqlalchemy import func
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.database.session_wrapper import with_session
 
@@ -31,8 +32,16 @@ def list_species(session: Session) -> List[Species]:
 def get_species_by_name(session: Session, name: str) -> Species | None:
     if not name:
         return None
-    statement = select(Species).where(Species.name == name)
+    statement = select(Species).where(func.lower(Species.name) == name.lower())
     return session.exec(statement).first()
+
+
+@with_session
+def search_species_by_name(session: Session, name: str) -> List[Species]:
+    if not name:
+        return []
+    statement = select(Species).where(Species.name.ilike(f"%{name}%"))
+    return session.exec(statement).all()
 
 
 @with_session

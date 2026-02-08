@@ -1,192 +1,410 @@
-acceptance-tests-db-1  | The files belonging to this database system will be owned by user "postgres".
-acceptance-tests-db-1  | This user must also own the server process.
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-tests-db-1  | The default database encoding has accordingly been set to "UTF8".
-acceptance-tests-db-1  | The default text search configuration will be set to "english".
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | Data page checksums are disabled.
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
-acceptance-tests-db-1  | creating subdirectories ... ok
-acceptance-tests-db-1  | selecting dynamic shared memory implementation ... posix
-acceptance-tests-db-1  | selecting default max_connections ... 100
-acceptance-tests-db-1  | selecting default shared_buffers ... 128MB
-acceptance-tests-db-1  | selecting default time zone ... UTC
-acceptance-tests-db-1  | creating configuration files ... ok
-acceptance-tests-db-1  | running bootstrap script ... ok
-acceptance-tests-db-1  | sh: locale: not found
-acceptance-tests-db-1  | 2026-02-04 15:08:23.258 UTC [37] WARNING:  no usable system locales were found
-acceptance-tests-db-1  | performing post-bootstrap initialization ... ok
-acceptance-tests-db-1  | syncing data to disk ... ok
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | Success. You can now start the database server using:
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | initdb: warning: enabling "trust" authentication for local connections
-acceptance-tests-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-tests-db-1  | waiting for server to start....2026-02-04 15:08:23.659 UTC [43] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1  | 2026-02-04 15:08:23.661 UTC [43] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1  | 2026-02-04 15:08:23.666 UTC [46] LOG:  database system was shut down at 2026-02-04 15:08:23 UTC
-acceptance-tests-db-1  | 2026-02-04 15:08:23.670 UTC [43] LOG:  database system is ready to accept connections
-acceptance-tests-db-1  |  done
-acceptance-tests-db-1  | server started
-acceptance-tests-db-1  | CREATE DATABASE
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | waiting for server to shut down....2026-02-04 15:08:23.798 UTC [43] LOG:  received fast shutdown request
-acceptance-tests-db-1  | 2026-02-04 15:08:23.800 UTC [43] LOG:  aborting any active transactions
-acceptance-tests-db-1  | 2026-02-04 15:08:23.802 UTC [43] LOG:  background worker "logical replication launcher" (PID 49) exited with exit code 1
-acceptance-tests-db-1  | 2026-02-04 15:08:23.802 UTC [44] LOG:  shutting down
-acceptance-tests-db-1  | 2026-02-04 15:08:23.804 UTC [44] LOG:  checkpoint starting: shutdown immediate
-acceptance-tests-db-1   | 2026-02-04 15:08:23.860 UTC [44] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.021 s, sync=0.031 s, total=0.058 s; sync files=301, longest=0.004 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
-acceptance-tests-db-1   | 2026-02-04 15:08:23.865 UTC [43] LOG:  database system is shut down
+acceptance-tests-app-1  | 2026-02-06 16:12:15,388 - __main__ - INFO - Connecting to database at postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db...
+acceptance-tests-app-1  | 2026-02-06 16:12:15,521 - __main__ - INFO - Creating database tables...
+acceptance-tests-app-1  | 2026-02-06 16:12:15,601 - __main__ - INFO - Tables created.
+acceptance-tests-app-1  | INFO:     Started server process [8]
+acceptance-tests-app-1  | INFO:     Waiting for application startup.
+acceptance-tests-app-1  | 2026-02-06 16:12:18,470 - telegram.ext.Application - INFO - Application started
+acceptance-tests-app-1  | INFO:     Application startup complete.
+acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+acceptance-tests-app-1  | INFO:     172.25.0.1:46332 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43376 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:12:43,221 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-e6a36be51fd144f085682b251a2899c9 text=Da de alta la especie de bonsái Ficus Retusa con nombre científico Ficus retusa. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Created new session: bdd-species-e6a36be51fd144f085682b251a2899c9
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Da de alta la especie de bonsái Ficus Retusa con nombre científico Ficus retusa.
+acceptance-tests-app-1  | 2026-02-06 16:12:43,280 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:12:48,270 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:12:48,270 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+acceptance-tests-app-1  | 2026-02-06 16:12:48,330 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:12:52,767 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:12:52,835 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:12:54,526 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:12:54,600 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:03,824 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:03,826 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:13:03,826 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:13:03,879 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:05,415 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:05,478 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:07,302 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:07,372 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:09,371 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:09,433 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:10,641 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:10,968 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle search: Ficus Retusa
+acceptance-tests-app-1  | 2026-02-06 16:13:12,016 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle results count: 1
+acceptance-tests-app-1  | 2026-02-06 16:13:12,071 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:14,161 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:14,161 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-db-1   | The files belonging to this database system will be owned by user "postgres".
+acceptance-tests-db-1   | This user must also own the server process.
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-tests-db-1   | The default database encoding has accordingly been set to "UTF8".
+acceptance-tests-app-1  | 2026-02-06 16:13:14,161 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:13:14,213 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:17,176 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-db-1   | The default text search configuration will be set to "english".
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | Data page checksums are disabled.
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1   | creating subdirectories ... ok
+acceptance-tests-db-1   | selecting dynamic shared memory implementation ... posix
+acceptance-tests-app-1  | 2026-02-06 16:13:17,240 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:19,013 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-db-1   | selecting default max_connections ... 100
+acceptance-tests-db-1   | selecting default shared_buffers ... 128MB
+acceptance-tests-db-1   | selecting default time zone ... UTC
+acceptance-tests-db-1   | creating configuration files ... ok
+acceptance-tests-db-1   | running bootstrap script ... ok
+acceptance-tests-db-1   | sh: locale: not found
+acceptance-tests-db-1   | 2026-02-06 16:12:07.671 UTC [36] WARNING:  no usable system locales were found
+acceptance-tests-db-1   | performing post-bootstrap initialization ... ok
+acceptance-tests-db-1   | syncing data to disk ... ok
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | Success. You can now start the database server using:
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | initdb: warning: enabling "trust" authentication for local connections
+acceptance-tests-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-tests-db-1   | waiting for server to start....2026-02-06 16:12:08.290 UTC [42] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1   | 2026-02-06 16:12:08.293 UTC [42] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-02-06 16:12:08.306 UTC [45] LOG:  database system was shut down at 2026-02-06 16:12:07 UTC
+acceptance-tests-db-1   | 2026-02-06 16:12:08.314 UTC [42] LOG:  database system is ready to accept connections
+acceptance-tests-app-1  | 2026-02-06 16:13:19,076 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:20,564 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:20,626 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:22,467 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:22,532 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:29,472 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:29,473 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:13:29,474 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-db-1   |  done
+acceptance-tests-db-1   | server started
+acceptance-tests-db-1   | CREATE DATABASE
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | waiting for server to shut down....2026-02-06 16:12:08.421 UTC [42] LOG:  received fast shutdown request
+acceptance-tests-db-1   | 2026-02-06 16:12:08.423 UTC [42] LOG:  aborting any active transactions
+acceptance-tests-db-1   | 2026-02-06 16:12:08.426 UTC [42] LOG:  background worker "logical replication launcher" (PID 48) exited with exit code 1
+acceptance-tests-db-1   | 2026-02-06 16:12:08.426 UTC [43] LOG:  shutting down
+acceptance-tests-db-1   | 2026-02-06 16:12:08.428 UTC [43] LOG:  checkpoint starting: shutdown immediate
+acceptance-tests-db-1   | 2026-02-06 16:12:08.534 UTC [43] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.027 s, sync=0.074 s, total=0.109 s; sync files=301, longest=0.008 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
+acceptance-tests-db-1   | 2026-02-06 16:12:08.540 UTC [42] LOG:  database system is shut down
 acceptance-tests-db-1   |  done
 acceptance-tests-db-1   | server stopped
 acceptance-tests-db-1   | 
 acceptance-tests-db-1   | PostgreSQL init process complete; ready for start up.
 acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 2026-02-04 15:08:23.916 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-02-04 15:08:23.916 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-tests-db-1   | 2026-02-04 15:08:23.916 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-tests-db-1   | 2026-02-04 15:08:23.921 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-app-1  | 2026-02-04 15:08:31,014 - __main__ - INFO - Connecting to database at postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db...
-acceptance-tests-db-1   | 2026-02-04 15:08:23.926 UTC [59] LOG:  database system was shut down at 2026-02-04 15:08:23 UTC
-acceptance-tests-app-1  | 2026-02-04 15:08:31,090 - __main__ - INFO - Creating database tables...
-acceptance-tests-app-1  | 2026-02-04 15:08:31,148 - __main__ - INFO - Tables created.
-acceptance-tests-app-1  | INFO:     Started server process [8]
-acceptance-tests-app-1  | INFO:     Waiting for application startup.
-acceptance-tests-app-1  | 2026-02-04 15:08:34,124 - telegram.ext.Application - INFO - Application started
-acceptance-tests-app-1  | INFO:     Application startup complete.
-acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-acceptance-tests-app-1  | INFO:     192.168.32.1:51884 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42592 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42598 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-02-04 15:08:59,570 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
+acceptance-tests-db-1   | 2026-02-06 16:12:08.647 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1   | 2026-02-06 16:12:08.647 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-tests-db-1   | 2026-02-06 16:12:08.647 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-tests-db-1   | 2026-02-06 16:12:08.651 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-02-06 16:12:08.657 UTC [58] LOG:  database system was shut down at 2026-02-06 16:12:08 UTC
+acceptance-tests-db-1   | 2026-02-06 16:12:08.663 UTC [1] LOG:  database system is ready to accept connections
+acceptance-tests-db-1   | 2026-02-06 16:17:08.733 UTC [56] LOG:  checkpoint starting: time
+acceptance-tests-app-1  | 2026-02-06 16:13:29,525 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-db-1   | 2026-02-06 16:17:21.355 UTC [56] LOG:  checkpoint complete: wrote 125 buffers (0.8%); 0 WAL file(s) added, 0 removed, 0 recycled; write=12.568 s, sync=0.027 s, total=12.623 s; sync files=77, longest=0.003 s, average=0.001 s; distance=527 kB, estimate=527 kB
+acceptance-tests-app-1  | 2026-02-06 16:13:32,367 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:32,435 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:34,593 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:34,596 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:13:34,596 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:13:34,662 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:37,418 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:37,424 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:13:37,424 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:13:37,490 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:44,484 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > ¡Excelente noticia! He coordinado con nuestro experto botánico para registrar tu bonsái.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | La especie Ficus Retusa (nombre científico: Ficus retusa) ha sido dada de alta correctamente en nuestra base de datos. Es una elección fantástica, especialmente por su resistencia y sus características raíces aéreas.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | Aquí tienes la guía básica de cuidados que hemos preparado para ti:
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | Luz: Requiere una ubicación con mucha luz, idealmente sol directo para un crecimiento vigoroso.
+acceptance-tests-app-1  | Riego: Debes regar de forma abundante cada vez que la superficie del sustrato comience a secarse. Es crucial evitar el encharcamiento permanente.
+acceptance-tests-app-1  | Sustrato: Necesita una mezcla con muy buen drenaje (como Akadama y Kiryuzuna).
+acceptance-tests-app-1  | Poda: Tolera bien la poda de mantenimiento durante todo el año. La poda más fuerte o estructural es preferible hacerla a finales de primavera.
+acceptance-tests-app-1  | Prevención: Vigila la aparición de cochinillas o araña roja, especialmente si el ambiente es muy seco.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | ¿Te gustaría que consultara con nuestro asesor climático sobre alguna precaución específica según el tiempo actual en tu zona o tienes alguna otra duda sobre tu nuevo Ficus?
+acceptance-tests-app-1  | 2026-02-06 16:13:44,493 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-e6a36be51fd144f085682b251a2899c9 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:43390 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:13:44,512 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-e6a36be51fd144f085682b251a2899c9 text=Sí, confirma la creación de la especie Ficus Retusa con nombre científico Ficus retusa. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Continue session: bdd-species-e6a36be51fd144f085682b251a2899c9
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Sí, confirma la creación de la especie Ficus Retusa con nombre científico Ficus retusa.
+acceptance-tests-app-1  | 2026-02-06 16:13:44,557 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:50,062 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:50,112 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:52,341 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:52,390 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:54,301 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:54,351 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:55,702 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:55,937 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle search: Ficus Retusa
+acceptance-tests-app-1  | 2026-02-06 16:13:56,965 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle results count: 1
+acceptance-tests-app-1  | 2026-02-06 16:13:57,026 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:13:58,630 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:13:58,631 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:13:58,631 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:13:58,678 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:00,430 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:00,479 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:02,802 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:03,090 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle search: Ficus Retusa
+acceptance-tests-app-1  | 2026-02-06 16:14:04,111 - bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher - INFO - Trefle results count: 1
+acceptance-tests-app-1  | 2026-02-06 16:14:04,164 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:05,802 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:05,803 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:05,803 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:05,851 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:07,625 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:07,673 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:10,072 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:10,121 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:12,533 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:12,588 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:14,681 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:14,738 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:24,649 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:24,651 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:24,652 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:24,719 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:27,698 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:27,760 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:30,875 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:30,881 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:30,881 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:30,926 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:34,156 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:34,158 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:34,158 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:34,216 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:36,393 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > He confirmado y registrado con éxito la especie Ficus Retusa (Ficus retusa) en nuestro sistema. Esta especie es ampliamente reconocida en el mundo del bonsái por su resistencia y sus características raíces aéreas.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | A continuación, te presento la guía básica de cuidados que se ha asociado al registro:
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | Descripción: Es un árbol muy versátil y robusto, perfecto tanto para principiantes como para expertos.
+acceptance-tests-app-1  | Iluminación: Necesita una ubicación muy luminosa. Tolera el sol directo, lo cual favorece un crecimiento compacto.
+acceptance-tests-app-1  | Riego: Se debe regar de forma abundante cuando la superficie del sustrato esté ligeramente seca. Es recomendable pulverizar sus hojas para mantener la humedad ambiental.
+acceptance-tests-app-1  | Sustrato: Requiere un suelo que drene muy bien (mezclas tipo Akadama y Pómice).
+acceptance-tests-app-1  | Poda y Modelado: Soporta podas fuertes y se puede pinzar durante todo el periodo de crecimiento para mantener su forma.
+acceptance-tests-app-1  | Sanidad: Es importante vigilar la aparición de cochinillas o araña roja, especialmente en ambientes secos.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | El registro es ahora definitivo y está listo para ser consultado en cualquier momento. ¿Deseas realizar alguna otra gestión o añadir detalles específicos sobre el clima para esta especie?
+acceptance-tests-app-1  | 2026-02-06 16:14:36,394 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-e6a36be51fd144f085682b251a2899c9 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:59070 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47518 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47524 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47532 - "DELETE /api/species/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47538 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47548 - "DELETE /api/species/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47564 - "GET /api/species/search?name=Ulmus+Parvifolia HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:47580 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:14:37,094 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-c36901ce7f7a4dc980d1b76305201e33 text=Borra la especie Ulmus Parvifolia del registro de especies. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Created new session: bdd-species-c36901ce7f7a4dc980d1b76305201e33
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Borra la especie Ulmus Parvifolia del registro de especies.
+acceptance-tests-app-1  | 2026-02-06 16:14:37,140 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:39,056 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:39,127 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:44,346 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:44,348 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:44,348 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:44,410 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:47,867 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Lo siento, pero solo tengo permisos para gestionar la colección de bonsáis individuales (altas, bajas y modificaciones). No tengo la capacidad de modificar o eliminar registros del catálogo general de especies. Si tienes algún bonsái en tu colección que sea de la especie Ulmus Parvifolia y deseas eliminarlo, puedo ayudarte con eso si me proporcionas su nombre o ID. ¿Deseas que revise si tienes algún bonsái de esa especie en tu colección?
+acceptance-tests-app-1  | 2026-02-06 16:14:47,869 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-c36901ce7f7a4dc980d1b76305201e33 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:47592 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:14:47,887 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-c36901ce7f7a4dc980d1b76305201e33 text=Sí, confirma la eliminación de la especie Ulmus Parvifolia del registro. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Continue session: bdd-species-c36901ce7f7a4dc980d1b76305201e33
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Sí, confirma la eliminación de la especie Ulmus Parvifolia del registro.
+acceptance-tests-app-1  | 2026-02-06 16:14:47,938 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:51,365 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:51,428 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:52,938 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:52,998 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:54,635 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:54,685 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:55,943 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:55,945 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:55,945 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:55,990 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:58,008 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:14:58,010 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:14:58,010 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:14:58,070 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:14:59,181 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > La especie Ulmus Parvifolia ha sido identificada en el registro. ¿Estás seguro de que quieres eliminarla? Esta acción no se puede deshacer. Por favor, confirma para proceder.
+acceptance-tests-app-1  | 2026-02-06 16:14:59,187 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-c36901ce7f7a4dc980d1b76305201e33 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:46506 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:45230 - "GET /api/species/search?name=Ulmus+Parvifolia HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:45232 - "GET /api/species/search?name=Ulmus+Parvifolia HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:45242 - "DELETE /api/species/3 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:45252 - "GET /api/species/search?name=Juniperus+Procumbens HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:45256 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:14:59,667 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-7b6029399165489b8588676f1dd48ba8 text=Actualiza la especie de bonsái Juniperus Procumbens para que el nombre científico sea Juniperus chinensis. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Created new session: bdd-species-7b6029399165489b8588676f1dd48ba8
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Actualiza la especie de bonsái Juniperus Procumbens para que el nombre científico sea Juniperus chinensis.
+acceptance-tests-app-1  | 2026-02-06 16:14:59,713 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:02,227 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:02,285 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:05,470 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:05,523 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:07,220 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:07,267 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:11,523 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:11,528 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:11,530 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:11,592 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:13,577 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Lo siento, pero actualmente no tengo ningún bonsái registrado en la colección con el nombre Juniperus Procumbens, por lo que no puedo actualizarlo. La lista de bonsáis está vacía en este momento.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | ¿Te gustaría dar de alta un nuevo bonsái con el nombre Juniperus chinensis o prefieres que usemos un nombre más creativo basado en algún anime o manga? Si decides registrar uno, por favor facilítame el ID de la especie si lo conoces.
+acceptance-tests-app-1  | 2026-02-06 16:15:13,583 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-7b6029399165489b8588676f1dd48ba8 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:39570 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:15:13,607 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-species-7b6029399165489b8588676f1dd48ba8 text=Sí, confirma la actualización de la especie Juniperus Procumbens. ***
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  |  ### Continue session: bdd-species-7b6029399165489b8588676f1dd48ba8
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | User > Sí, confirma la actualización de la especie Juniperus Procumbens.
+acceptance-tests-app-1  | 2026-02-06 16:15:13,653 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:16,908 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:16,988 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:20,226 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:20,304 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:21,594 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:21,659 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:25,597 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:25,598 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:25,599 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:25,659 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:27,069 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Lo siento, actualmente no tengo ningún bonsái registrado en la colección, por lo que no puedo realizar la actualización que solicitas. Además, mis herramientas me permiten gestionar y actualizar los registros de los bonsáis (nombre y especie asignada), pero no modificar directamente el catálogo de especies.
+acceptance-tests-app-1  | 
+acceptance-tests-app-1  | Si tienes algún bonsái en concreto que quieras registrar o si deseas que asigne una especie diferente a uno existente (una vez creado), estaré encantado de ayudarte. ¿Deseas dar de alta un nuevo bonsái ahora?
+acceptance-tests-app-1  | 2026-02-06 16:15:27,070 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd-species-7b6029399165489b8588676f1dd48ba8 ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:50148 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:53818 - "GET /api/species/search?name=Juniperus+Procumbens HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:53832 - "GET /api/species/search?name=Juniperus+Procumbens HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:53834 - "DELETE /api/species/4 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:53836 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:53838 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:15:27,283 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  |  ### Created new session: bdd
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  | User > Dime si mis bonsais deben estar protegidos esta noche en Madrid
-acceptance-tests-app-1  | 2026-02-04 15:08:59,623 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:01,715 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:01,716 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
-acceptance-tests-app-1  | 2026-02-04 15:09:01,781 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:03,098 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:03,164 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:04,983 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:04,985 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:04,985 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-db-1   | 2026-02-04 15:08:23.930 UTC [1] LOG:  database system is ready to accept connections
-acceptance-tests-app-1  | 2026-02-04 15:09:05,051 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:06,674 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:06,739 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:09,465 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:09,539 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:09,589 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:11,808 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:11,852 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:11,919 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:12,857 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, 8°C. Min/Max: 6°C/12°C. Max Frost Chance: 0%. Hourly: 00:00h: 7°C; 03:00h: 6°C; 06:00h: 8°C
-acceptance-tests-app-1  | 2026-02-04 15:09:12,925 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:13,129 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:13,195 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:15,577 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:15,578 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:15,578 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:19,857 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:19,859 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:19,859 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:19,935 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:23,790 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:23,790 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:23,790 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:23,843 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:27,087 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | sensei > Para esta noche en Madrid, no es necesario que protejas tu Juniperus procumbens (Sasuke).
+acceptance-tests-app-1  | 2026-02-06 16:15:27,328 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:29,975 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:30,022 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:31,300 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:31,350 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:32,330 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:32,330 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:32,330 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:32,375 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:33,994 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:34,041 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:36,610 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:36,658 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:36,705 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:37,988 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:38,940 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:38,991 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:39,012 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, 8°C. Min/Max: 6°C/12°C. Max Frost Chance: 0%. Hourly: 00:00h: 7°C; 03:00h: 6°C; 06:00h: 8°C
+acceptance-tests-app-1  | 2026-02-06 16:15:39,061 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:41,033 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:41,034 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:41,034 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:41,391 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:41,392 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:41,392 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:41,445 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:44,495 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:15:44,495 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:15:44,495 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:15:44,543 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:15:47,970 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Hola. Tras consultar con los expertos, tengo la información para tu bonsái Sasuke, que es un Juniperus procumbens.
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Aqui tienes el analisis detallado de nuestros especialistas:
+acceptance-tests-app-1  | Para esta noche en Madrid se espera una temperatura mínima de 6 grados y no hay riesgo de heladas. Esta especie es resistente y solo empieza a correr peligro cuando las temperaturas bajan de los 2 grados bajo cero.
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 1. Estado del tiempo (Madrid): Se esperan temperaturas minimas de entre 6 grados C y 8 grados C con cielos despejados. No hay riesgo de heladas ni vientos extremos para la jornada de hoy.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 2. Resistencia de la especie: El Juniperus procumbens es un arbol de exterior muy robusto. Segun nuestro botanico, tolera temperaturas de hasta -2 grados C en maceta sin mayores problemas, ya que necesita el frio invernal para su periodo de latencia.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 3. Recomendacion: Puedes dejarlo en su ubicacion habitual en el exterior. Al estar la temperatura muy por encima de su limite de resistencia, el arbol estara en perfectas condiciones.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Un pequeño consejo adicional: Aunque hoy no haga falta, recuerda que si en los proximos dias las temperaturas bajan de los 0 grados C, lo ideal es proteger la maceta (para evitar que el sustrato se congele por completo) y vigilar que el viento helado no deshidrate sus aciculas. Si notas que el follaje se vuelve algo purpureo o amarronado, es normal, es su escudo natural contra el frio.
-acceptance-tests-app-1  | 2026-02-04 15:09:27,088 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
-acceptance-tests-app-1  | INFO:     192.168.32.1:42604 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53176 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53188 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53196 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53202 - "DELETE /api/species/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53204 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:53210 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-02-04 15:09:31,161 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
+acceptance-tests-app-1  | Por lo tanto, no es necesario que protejas a Sasuke esta noche, puede quedarse perfectamente en el exterior.
+acceptance-tests-app-1  | 2026-02-06 16:15:47,971 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:53840 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43912 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43916 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43932 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43936 - "DELETE /api/species/5 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43472 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:43484 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-02-06 16:16:32,711 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  |  ### Continue session: bdd
 acceptance-tests-app-1  | 
 acceptance-tests-app-1  | User > Dime si mis bonsais deben estar protegidos esta noche en Madrid
-acceptance-tests-app-1  | 2026-02-04 15:09:31,214 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:34,473 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:34,543 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:36,407 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:36,480 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:37,923 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:37,925 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:37,925 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:37,994 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:39,320 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:39,389 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:41,658 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:41,730 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:41,780 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:44,157 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:44,232 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:45,077 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:46,122 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid, España: Current: Clear, -1°C. Min/Max: -3°C/2°C. Max Frost Chance: 95%. WARNING: High risk of frost (95%). Hourly: 00:00h: -2°C, Frost chance: 90%; 03:00h: -3°C, Frost chance: 95%; 06:00h: -1°C, Frost chance: 85%
-acceptance-tests-app-1  | 2026-02-04 15:09:46,184 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:48,810 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:48,812 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:48,812 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:51,483 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:51,484 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:51,484 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:51,549 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:09:57,083 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-02-04 15:09:57,085 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-02-04 15:09:57,085 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-02-04 15:09:57,144 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-02-04 15:10:00,256 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | sensei > Para el cuidado de tu Juniperus procumbens (Sasuke) esta noche en Madrid, he coordinado la informacion de nuestros especialistas en clima y botanica.
+acceptance-tests-app-1  | 2026-02-06 16:16:32,773 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:35,898 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:35,961 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:36,976 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:37,055 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:38,408 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:38,411 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:16:38,411 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:16:38,471 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:40,045 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:40,106 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:42,660 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:42,726 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:42,781 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:44,704 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:44,752 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:44,807 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:45,763 - bonsai_sensei.domain.services.cultivation.weather.weather_tool - INFO - Weather result: Weather in Madrid: Current: Clear, -1°C. Min/Max: -3°C/2°C. Max Frost Chance: 95%. WARNING: High risk of frost (95%). Hourly: 00:00h: -2°C, Frost chance: 90%; 03:00h: -3°C, Frost chance: 95%; 06:00h: -1°C, Frost chance: 85%
+acceptance-tests-app-1  | 2026-02-06 16:16:45,820 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:49,459 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:49,460 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:16:49,460 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:16:49,886 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:49,888 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:16:49,888 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:16:49,962 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:16:56,593 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-02-06 16:16:56,606 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-02-06 16:16:56,607 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-02-06 16:16:56,697 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-02-06 16:17:00,992 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | sensei > Hola. Tras consultar con los expertos sobre tu bonsái Sasuke, que es un Juniperus procumbens, te informo de que sí necesita protección esta noche en Madrid.
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Conclusion: SI, necesita proteccion esta noche.
+acceptance-tests-app-1  | Se espera una temperatura mínima de -3 grados y tu bonsái aguanta con seguridad hasta los -2 grados. Al estar en maceta, sus raíces están más expuestas y podrían dañarse por la helada.
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | La prevision para Madrid indica una temperatura minima de -3 grados C, lo cual supera el limite de resistencia de seguridad de esta especie cuando se cultiva en maceta.
+acceptance-tests-app-1  | Te recomiendo seguir estos pasos:
+acceptance-tests-app-1  | 1. No lo metas dentro de casa, ya que la calefacción es perjudicial.
+acceptance-tests-app-1  | 2. Protege la maceta envolviéndola con plástico de burbujas o una tela gruesa para aislar las raíces.
+acceptance-tests-app-1  | 3. Colócalo en un lugar resguardado del viento, como un balcón cubierto o pegado a una pared.
+acceptance-tests-app-1  | 4. Si tienes manta térmica para plantas, cúbrelo con ella.
+acceptance-tests-app-1  | 5. No lo riegues ahora, ya que el agua congelada en el sustrato dañaría las raíces.
 acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Detalles del Analisis:
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 1. Analisis del Clima (Madrid): Se espera un descenso hasta los -3 grados C con un riesgo de helada del 95 por ciento. Existe un riesgo alto de que el sustrato se congele por completo, lo que podria dañar las raices finas del bonsai.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | 2. Resistencia del Juniperus procumbens: Aunque es una especie resistente, el limite recomendado para ejemplares en maceta de bonsai es de -2 grados C. Al estar por debajo de ese limite, la planta entra en zona de riesgo.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Recomendaciones de Proteccion:
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Ubicacion: Traslada el bonsai a un lugar protegido pero frio, como un garaje, porche cubierto o invernadero frio. No lo metas dentro de casa con calefaccion, ya que el aire seco y el calor repentino serian mucho mas dañinos que el frio.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Proteccion de la maceta: Si no puedes moverlo, envuelve la maceta con plastico de burbujas o arpillera para aislar las raices.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Follaje: Puedes cubrir la parte aerea con una tela antiheladas o manta termica si va a estar a la intemperie.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Riego: Comprueba que el sustrato este ligeramente humedo. Un sustrato seco es mas vulnerable a las heladas, pero evita que este encharcado.
-acceptance-tests-app-1  | 
-acceptance-tests-app-1  | Nota botanica: No te asustes si notas que el follaje adquiere un tono algo marron o purpura; es su defensa natural contra el frio y recuperara su color verde en primavera.
-acceptance-tests-app-1  | 2026-02-04 15:10:00,258 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
-acceptance-tests-app-1  | INFO:     192.168.32.1:53214 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:58616 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:58628 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:58640 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:58646 - "DELETE /api/species/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | Es normal que el follaje se ponga algo purpúreo por el frío, recuperará su color verde en primavera. ¡Cuida bien de Sasuke!
+acceptance-tests-app-1  | 2026-02-06 16:17:00,994 - bonsai_sensei.api.advice - INFO - *** Advice response generated: user_id=bdd ***
+acceptance-tests-app-1  | INFO:     172.25.0.1:43490 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:41630 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:41642 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:41648 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.25.0.1:41664 - "DELETE /api/species/6 HTTP/1.1" 200 OK
