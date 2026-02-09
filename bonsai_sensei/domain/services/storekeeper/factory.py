@@ -25,6 +25,12 @@ def create_storekeeper_group(
     create_fertilizer_func = partial(
         fertilizer_catalog.create_fertilizer, create_session=session_factory
     )
+    update_fertilizer_func = partial(
+        fertilizer_catalog.update_fertilizer, create_session=session_factory
+    )
+    delete_fertilizer_func = partial(
+        fertilizer_catalog.delete_fertilizer, create_session=session_factory
+    )
     get_fertilizer_by_name_func = partial(
         fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory
     )
@@ -33,6 +39,12 @@ def create_storekeeper_group(
     )
     create_phytosanitary_func = partial(
         phytosanitary_registry.create_phytosanitary, create_session=session_factory
+    )
+    update_phytosanitary_func = partial(
+        phytosanitary_registry.update_phytosanitary, create_session=session_factory
+    )
+    delete_phytosanitary_func = partial(
+        phytosanitary_registry.delete_phytosanitary, create_session=session_factory
     )
     get_phytosanitary_by_name_func = partial(
         phytosanitary_registry.get_phytosanitary_by_name,
@@ -43,6 +55,8 @@ def create_storekeeper_group(
     fertilizer_storekeeper = create_fertilizer_storekeeper(
         model=model,
         create_fertilizer_func=create_fertilizer_func,
+        update_fertilizer_func=update_fertilizer_func,
+        delete_fertilizer_func=delete_fertilizer_func,
         list_fertilizers_func=list_fertilizers_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         searcher=fertilizer_searcher,
@@ -51,6 +65,8 @@ def create_storekeeper_group(
     phytosanitary_storekeeper = create_phytosanitary_storekeeper(
         model=model,
         create_phytosanitary_func=create_phytosanitary_func,
+        update_phytosanitary_func=update_phytosanitary_func,
+        delete_phytosanitary_func=delete_phytosanitary_func,
         list_phytosanitary_func=list_phytosanitary_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         searcher=phytosanitary_searcher,

@@ -40,5 +40,5 @@ def confirm_species_delete(context, name):
 @then(parsers.parse('species "{name}" should not exist'))
 def assert_species_missing(name):
     species = find_species_by_name(get, name)
-    assert species is None
+    assert species is None, f"Expected species '{name}' to be deleted."
 

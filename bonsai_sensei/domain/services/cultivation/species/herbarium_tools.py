@@ -21,6 +21,20 @@ def create_species_tool(
     ) -> dict:
         """Create a species and return JSON with care guide details.
 
+        Args:
+            common_name: Common name for the species.
+            scientific_name: Scientific name to register.
+            summary: Summary of the care guide.
+            sources: Source URLs for the care guide.
+            watering: Watering guidance.
+            light: Light requirements.
+            soil: Soil requirements.
+            pruning: Pruning guidance.
+            pests: Pest or disease guidance.
+
+        Returns:
+            A JSON-ready dictionary with creation results.
+
         Output JSON (success): {"common_name","scientific_name","created_name","care_guide":{...}}.
         Output JSON (error): {"common_name","scientific_name":null,"candidates":[],"needs_scientific_name":true}.
         """
@@ -63,6 +77,9 @@ def create_list_species_tool(get_all_species_func):
     def list_bonsai_species() -> dict:
         """Return JSON with status and species list.
 
+        Returns:
+            A JSON-ready dictionary with the species list.
+
         Output JSON: {"status":"success","species":[{"common_name","scientific_name"}]}.
         """
         species_list = get_all_species_func()
@@ -87,6 +104,12 @@ def create_get_species_by_name_tool(
     def get_bonsai_species_by_name(name: str) -> dict:
         """Lookup a species by common name and return JSON with status and record.
 
+        Args:
+            name: Common name of the species.
+
+        Returns:
+            A JSON-ready dictionary with the lookup result.
+
         Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name","care_guide"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
@@ -110,20 +133,29 @@ def create_get_species_by_name_tool(
 
 def create_update_bonsai_species_tool(
     update_species_func: Callable[[int, dict], Species | None],
+    get_species_by_name_func: Callable[[str], Species | None],
 ):
     @limit_tool_calls(agent_name="botanist")
     def update_bonsai_species(
-        species_id: int,
+        name: str,
         common_name: str | None = None,
         scientific_name: str | None = None,
     ) -> dict:
         """Update a species and return JSON with status and updated record.
 
+        Args:
+            name: Current common name of the species.
+            common_name: New common name to apply.
+            scientific_name: New scientific name to apply.
+
+        Returns:
+            A JSON-ready dictionary with the update result.
+
         Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
-        if not species_id:
-            return {"status": "error", "message": "species_id_required"}
+        if not name:
+            return {"status": "error", "message": "species_name_required"}
         species_data = {}
         if common_name is not None:
             species_data["name"] = common_name
@@ -131,7 +163,13 @@ def create_update_bonsai_species_tool(
             species_data["scientific_name"] = scientific_name
         if not species_data:
             return {"status": "error", "message": "species_update_required"}
-        updated = update_species_func(species_id=species_id, species_data=species_data)
+        species = get_species_by_name_func(name)
+        if not species:
+            return {"status": "error", "message": "species_not_found"}
+        updated = update_species_func(
+            species_id=species.id,
+            species_data=species_data,
+        )
         if not updated:
             return {"status": "error", "message": "species_not_found"}
         return {
@@ -146,20 +184,32 @@ def create_update_bonsai_species_tool(
     return update_bonsai_species
 
 
-def create_delete_bonsai_species_tool(delete_species_func: Callable[[int], bool]):
+def create_delete_bonsai_species_tool(
+    delete_species_func: Callable[[int], bool],
+    get_species_by_name_func: Callable[[str], Species | None],
+):
     @limit_tool_calls(agent_name="botanist")
-    def delete_bonsai_species(species_id: int) -> dict:
+    def delete_bonsai_species(name: str) -> dict:
         """Delete a species by id and return JSON with status and species_id.
+
+        Args:
+            name: Common name of the species to delete.
+
+        Returns:
+            A JSON-ready dictionary with the deletion result.
 
         Output JSON (success): {"status":"success","species_id": <id>}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
-        if not species_id:
-            return {"status": "error", "message": "species_id_required"}
-        deleted = delete_species_func(species_id=species_id)
+        if not name:
+            return {"status": "error", "message": "species_name_required"}
+        species = get_species_by_name_func(name)
+        if not species:
+            return {"status": "error", "message": "species_not_found"}
+        deleted = delete_species_func(species_id=species.id)
         if not deleted:
             return {"status": "error", "message": "species_not_found"}
-        return {"status": "success", "species_id": species_id}
+        return {"status": "success", "species_id": species.id}
 
     return delete_bonsai_species
 

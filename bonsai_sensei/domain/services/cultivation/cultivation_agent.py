@@ -9,7 +9,6 @@ una de las áreas clave para el cultivo.
 # OBJETIVO
 Se encarga de cualquier consulta relacionada con el cuidado de bonsáis,
 coordinando las respuestas de los agentes especialistas.
-
 """
 
 

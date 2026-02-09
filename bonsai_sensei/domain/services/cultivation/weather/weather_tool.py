@@ -7,26 +7,47 @@ logger = get_logger(__name__)
 
 def create_weather_tool(base_url: str):
     @limit_tool_calls(agent_name="weather_advisor")
-    async def get_weather(location: str) -> str:
+    async def get_weather(location: str) -> dict:
+        """Get a weather summary for a location via the external API.
+
+        Args:
+            location: Location to retrieve the weather for.
+
+        Returns:
+            A JSON-ready dictionary with the weather summary.
+        """
         if not location:
-            return "Please provide a location."
+            return {
+                "status": "error",
+                "message": "Please provide a location.",
+            }
 
         try:
             data = await _fetch_weather_data(location, base_url)
             if data:
                 result = _format_weather_report(location, data)
-                logger.info(f"Weather result: {result}")
-                return result
-            return f"Could not fetch weather for {location}."
-        except Exception as e:
-            logger.exception(f"Error calling wttr.in for location '{location}': {e}")
-            return f"Error retrieving weather information: {str(e)}"
+                logger.info("Weather result: %s", result.get("summary"))
+                return {"status": "success", "result": result}
+            return {
+                "status": "error",
+                "message": f"Could not fetch weather for {location}.",
+            }
+        except httpx.RequestError as exc:
+            logger.error(
+                "Error calling wttr.in for location '%s': %s",
+                location,
+                exc,
+            )
+            return {
+                "status": "error",
+                "message": f"Error retrieving weather information: {str(exc)}",
+            }
 
     return get_weather
 
 
 @limit_tool_calls(agent_name="weather_advisor")
-async def get_weather(location: str) -> str:
+async def get_weather(location: str) -> dict:
     """
     Fetches the weather forecast for a given location.
 
@@ -34,6 +55,9 @@ async def get_weather(location: str) -> str:
         location: The location to get the weather for. Can be a city name (e.g. "Madrid"),
                   coordinates (e.g. "40.4167,-3.70325"), or a postal code.
                   Using coordinates provides a much more precise forecast.
+
+    Returns:
+        A JSON-ready dictionary with the weather summary.
     """
     logger.info(f"Fetching weather for: {location}")
     return await create_weather_tool("https://wttr.in")(location)
@@ -69,8 +93,8 @@ def _extract_hourly_data(weather_today: dict) -> tuple[str, int]:
     return "; ".join(hourly_info), max_frost_chance
 
 
-def _format_weather_report(location: str, data: dict) -> str:
-    """Formats the raw JSON data into a human-readable string."""
+def _format_weather_report(location: str, data: dict) -> dict:
+    """Formats the raw JSON data into a structured JSON payload."""
     current = data["current_condition"][0]
     weather_today = data["weather"][0]
 
@@ -87,10 +111,21 @@ def _format_weather_report(location: str, data: dict) -> str:
         else ""
     )
 
-    result = (
-        f"Current: {desc}, {current_temp}°C. "
+    summary = (
+        f"Weather in {location}: Current: {desc}, {current_temp}°C. "
         f"Min/Max: {min_temp}°C/{max_temp}°C. "
         f"Max Frost Chance: {max_frost_chance}%.{frost_warning} "
         f"Hourly: {hourly_str}"
     )
-    return f"Weather in {location}: {result}"
+    return {
+        "location": location,
+        "current": {
+            "description": desc,
+            "temperature_c": current_temp,
+        },
+        "min_temp_c": min_temp,
+        "max_temp_c": max_temp,
+        "max_frost_chance": max_frost_chance,
+        "hourly": hourly_str,
+        "summary": summary,
+    }

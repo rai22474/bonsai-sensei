@@ -34,6 +34,7 @@ COMMUNICATION RULES:
 - If a step is skipped, state that briefly (e.g. "No extensions needed").
 - Do not explain project structure unless asked.
 - Keep explanations concise and focused.
+- When diagnosing test failures, run one test at a time.
 
 DEVELOPMENT RULES:
 - Use '.' as the working directory unless user specifies otherwise.
@@ -44,12 +45,14 @@ DEVELOPMENT RULES:
 - If the project setup information has additional rules, follow them strictly.
 - LANGUAGE RULES: Ensure all comments and logs are in English.
 - DOCUMENTATION RULES: Do not add docstrings to functions/methods if the name is self-explanatory. Only add docstrings if they explain "why" something is done or complex behavior that isn't obvious from the signature.
+- TOOL DOCSTRINGS: Always add docstrings for tool functions so ADK can use them for tool descriptions, even if the name is self-explanatory.
 - CODE CLEANLINESS: Do not use comments inside functions/methods. Instead, ensure function and variable names are self-explanatory. STRICTLY FORBIDDEN to generate comments explaining code logic.
 - ERROR HANDLING: Never catch generic Exceptions just for logging purposes. Let them bubble up to the global exception handler.
 - IMPORT RULES: Never use relative imports (e.g., `from .module import func`). Always use absolute imports (e.g., `from package.module import func`).
 - DESIGN RULES: Inject external dependencies into functions for testability (e.g., translators, HTTP clients).
 - DOMAIN RULES: Keep domain entities in `bonsai_sensei/domain`, not in `bonsai_sensei/database`.
 - TESTING RULES: Use a single assert per test.
+- TESTING RULES: Always include a descriptive message in asserts.
 - TESTING RULES: Prefer pytest fixtures for test data setup.
 - TESTING RULES: Name tests with a should_ prefix.
 - TESTING RULES: Place fixtures below tests in test files.

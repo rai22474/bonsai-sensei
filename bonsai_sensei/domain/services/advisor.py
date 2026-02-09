@@ -1,6 +1,5 @@
 from typing import Callable
 from functools import partial
-import os
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.adk.agents.invocation_context import LlmCallsLimitExceededError
 from bonsai_sensei.domain.services.tool_limiter import ToolCallsLimitExceededError
@@ -15,7 +14,11 @@ def create_advisor(
 ) -> Callable[..., str]:
     runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
-    return partial(_generate_advise, runner=runner, trace_handler=trace_handler)
+    return partial(
+        _generate_advise,
+        runner=runner,
+        trace_handler=trace_handler,
+    )
 
 
 async def _generate_advise(

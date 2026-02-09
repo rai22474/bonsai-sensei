@@ -10,7 +10,7 @@ from bonsai_sensei.domain.services.cultivation.weather.weather_tool import get_w
 async def should_include_header_in_integration_result(weather_integration_result):
     location = weather_integration_result["location"]
     assert_that(
-        weather_integration_result["result"],
+        weather_integration_result["result"]["result"]["summary"],
         starts_with(f"Weather in {location}:"),
     )
 
@@ -18,7 +18,7 @@ async def should_include_header_in_integration_result(weather_integration_result
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def should_include_temperature_unit_in_integration_result(weather_integration_result):
-    result = weather_integration_result["result"]
+    result = weather_integration_result["result"]["result"]["summary"]
     assert_that(result, any_of(contains_string("°C"), contains_string("°F")))
 
 

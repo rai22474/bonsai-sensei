@@ -13,6 +13,9 @@ def create_list_bonsai_tool(
     def list_bonsai() -> dict:
         """Return JSON with status and bonsai list.
 
+        Returns:
+            A JSON-ready dictionary with the bonsai list.
+
         Output JSON: {"status": "success", "bonsai": [{"id","name","species_id","species_name"}]}.
         """
         bonsai_items = list_bonsai_func()
@@ -32,7 +35,6 @@ def create_list_bonsai_tool(
         ]
         return {"status": "success", "bonsai": items}
 
-    list_bonsai.__doc__ = "List registered bonsai with their species names."
     return list_bonsai
 
 
@@ -43,6 +45,13 @@ def create_create_bonsai_tool(
     @limit_tool_calls(agent_name="gardener")
     def create_bonsai(name: str, species_id: int) -> dict:
         """Create a bonsai and return JSON with status and created record.
+
+        Args:
+            name: Bonsai name.
+            species_id: Species identifier.
+
+        Returns:
+            A JSON-ready dictionary with the creation result.
 
         Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
         Output JSON (error): {"status":"error","message": "..."}.
@@ -67,7 +76,6 @@ def create_create_bonsai_tool(
             },
         }
 
-    create_bonsai.__doc__ = "Create a bonsai record for a specific species."
     return create_bonsai
 
 
@@ -78,6 +86,12 @@ def create_get_bonsai_by_name_tool(
     @limit_tool_calls(agent_name="gardener")
     def get_bonsai_by_name(name: str) -> dict:
         """Lookup a bonsai by name and return JSON with status and record.
+
+        Args:
+            name: Bonsai name to look up.
+
+        Returns:
+            A JSON-ready dictionary with the lookup result.
 
         Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
         Output JSON (error): {"status":"error","message": "..."}.
@@ -101,7 +115,6 @@ def create_get_bonsai_by_name_tool(
             },
         }
 
-    get_bonsai_by_name.__doc__ = "Get a bonsai by name with its species."
     return get_bonsai_by_name
 
 
@@ -112,6 +125,14 @@ def create_update_bonsai_tool(
     @limit_tool_calls(agent_name="gardener")
     def update_bonsai(bonsai_id: int, name: str | None = None, species_id: int | None = None) -> dict:
         """Update a bonsai and return JSON with status and updated record.
+
+        Args:
+            bonsai_id: Bonsai identifier.
+            name: New bonsai name.
+            species_id: New species identifier.
+
+        Returns:
+            A JSON-ready dictionary with the update result.
 
         Output JSON (success): {"status":"success","bonsai":{"id","name","species_id","species_name"}}.
         Output JSON (error): {"status":"error","message": "..."}.
@@ -148,6 +169,12 @@ def create_delete_bonsai_tool(delete_bonsai_func: Callable[[int], bool]):
     @limit_tool_calls(agent_name="gardener")
     def delete_bonsai(bonsai_id: int) -> dict:
         """Delete a bonsai by id and return JSON with status and bonsai_id.
+
+        Args:
+            bonsai_id: Bonsai identifier.
+
+        Returns:
+            A JSON-ready dictionary with the deletion result.
 
         Output JSON (success): {"status":"success","bonsai_id": <id>}.
         Output JSON (error): {"status":"error","message": "..."}.

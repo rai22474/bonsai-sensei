@@ -98,11 +98,9 @@ def _create_list_species_tool(session_factory):
         herbarium.get_all_species, create_session=session_factory
     )
     tool = create_list_species_tool(get_all_species_partial)
-    tool.__name__ = "list_bonsai_species"
     return tool
 
 
 def _with_tool_metadata(tool, name: str, doc_source):
-    tool.__name__ = name
     tool.__doc__ = doc_source.__doc__
     return tool

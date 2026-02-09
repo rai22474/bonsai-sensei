@@ -39,6 +39,7 @@ Es muy importante que la información que proporciones sea precisa y fiable.
     - Valida que la especie exista en el registro de especies.
     - Pide confirmación una sola vez antes de eliminar.
     - Si el usuario confirma, elimina la especie sin solicitar más confirmaciones.
+    - No solicites confirmaciones adicionales después de la respuesta afirmativa.
     - Si el usuario rechaza, cancela la operación.
 """
 
@@ -57,9 +58,15 @@ def create_botanist(
     create_species.__name__ = "create_bonsai_species"
     get_species_by_name = create_get_species_by_name_tool(get_species_by_name_func)
     get_species_by_name.__name__ = "get_bonsai_species_by_name"
-    update_species = create_update_bonsai_species_tool(update_species_func)
+    update_species = create_update_bonsai_species_tool(
+        update_species_func,
+        get_species_by_name_func,
+    )
     update_species.__name__ = "update_bonsai_species"
-    delete_species = create_delete_bonsai_species_tool(delete_species_func)
+    delete_species = create_delete_bonsai_species_tool(
+        delete_species_func,
+        get_species_by_name_func,
+    )
     delete_species.__name__ = "delete_bonsai_species"
     care_guide_compiler = AgentTool(care_guide_agent)
 

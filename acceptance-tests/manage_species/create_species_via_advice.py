@@ -49,5 +49,5 @@ def confirm_species_creation(context, name, scientific_name):
 @then(parsers.parse('species "{name}" should exist'))
 def assert_species_exists(name):
     species = find_species_by_name(get, name)
-    assert species is not None
+    assert species is not None, f"Expected species '{name}' to exist after creation."
 

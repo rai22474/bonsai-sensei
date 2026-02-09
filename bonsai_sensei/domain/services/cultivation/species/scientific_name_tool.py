@@ -13,6 +13,16 @@ def resolve_scientific_name(
     translator: Translator,
     searcher: Searcher,
 ) -> Dict:
+    """Resolve scientific names for a common name via translation and lookup.
+
+    Args:
+        common_name: Common name to resolve.
+        translator: Translator used to normalize the query.
+        searcher: Searcher used to fetch candidates.
+
+    Returns:
+        A JSON-ready dictionary with the resolution results.
+    """
     return _resolve_scientific_name(
         common_name=common_name,
         translator=translator,
@@ -26,6 +36,14 @@ def create_scientific_name_resolver(
 ) -> Callable[[str], Dict]:
     @limit_tool_calls(agent_name="botanist")
     def resolve(common_name: str) -> Dict:
+        """Resolve scientific names for a common name using configured services.
+
+        Args:
+            common_name: Common name to resolve.
+
+        Returns:
+            A JSON-ready dictionary with the resolution results.
+        """
         return _resolve_scientific_name(
             common_name=common_name,
             translator=translator,

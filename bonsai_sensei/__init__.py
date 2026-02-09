@@ -159,7 +159,9 @@ async def lifespan(app: FastAPI):
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
     )
-    app.state.advisor = create_advisor(sensei_agent)
+    app.state.advisor = create_advisor(
+        sensei_agent,
+    )
     message_handler = partial(
         handle_user_message,
         message_processor=app.state.advisor,

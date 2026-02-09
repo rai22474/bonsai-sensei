@@ -8,6 +8,8 @@ cd "$ROOT_DIR"
 COMPOSE_FILE="acceptance-tests/docker-compose.acceptance.yml"
 ACCEPTANCE_PORT="8060"
 LOG_FILE="${ROOT_DIR}/acceptance-tests/docker-compose.logs.txt"
+TEST_TARGET="${1:-all}"
+SCENARIO_FILTER="${2:-}"
 
 if [ -f "${ROOT_DIR}/.env" ]; then
   set -a
@@ -76,7 +78,18 @@ if [ "$ready" = false ]; then
   exit 1
 fi
 
-if ! run_step "pytest acceptance-tests" env ACCEPTANCE_API_BASE="http://localhost:${ACCEPTANCE_PORT}" uv run pytest acceptance-tests -o python_files='*.py' -o python_functions='test_*' -o log_cli=true -o log_cli_level=INFO; then
+if [ "$TEST_TARGET" = "all" ]; then
+  PYTEST_TARGET="acceptance-tests"
+else
+  PYTEST_TARGET="$TEST_TARGET"
+fi
+
+PYTEST_ARGS=("$PYTEST_TARGET" -o python_files='*.py' -o python_functions='test_*' -o log_cli=true -o log_cli_level=INFO)
+if [ -n "$SCENARIO_FILTER" ]; then
+  PYTEST_ARGS+=("-k" "$SCENARIO_FILTER")
+fi
+
+if ! run_step "pytest ${PYTEST_TARGET}" env ACCEPTANCE_API_BASE="http://localhost:${ACCEPTANCE_PORT}" uv run pytest "${PYTEST_ARGS[@]}"; then
   run_step "docker compose logs" save_logs
   echo "Docker logs saved to ${LOG_FILE}."
   echo "Acceptance tests failed: pytest reported errors."

@@ -3,10 +3,12 @@ from google.adk.agents.llm_agent import Agent
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
-    create_create_fertilizer_tool,
+    create_delete_fertilizer_tool,
     create_get_fertilizer_by_name_tool,
     create_list_fertilizers_tool,
     create_fertilizer_info_tool,
+    create_register_fertilizer_tool,
+    create_update_fertilizer_tool,
 )
 
 FERTILIZER_INSTRUCTION = """
@@ -23,26 +25,41 @@ respondiendo a las solicitudes del usuario de manera precisa y eficiente.
   - Comprueba si el fertilizante ya está registrado. En ese caso, informa al usuario.
   - En caso contrario, busca en internet la ficha de uso y la dosis recomendada.
   - Muestra la información al usuario y pide aprobación explícita antes de crear.
-  - Si el usuario confirma, crea el fertilizante en el inventario.
+  - Si el usuario confirma, registra el fertilizante en el inventario con esa información sin volver a solicitar confirmación.
+    - No vuelvas a comprobar si existe después de confirmar; registra directamente.
   - Si el usuario rechaza, cancela la operación.
+* Para actualizar un fertilizante existente:
+    - Comprueba si el fertilizante está registrado.
+    - Pide confirmación antes de guardar los cambios.
+    - Si el usuario confirma, actualiza los datos sin volver a solicitar confirmación.
+    - Si el usuario rechaza, cancela la operación.
+* Para eliminar un fertilizante:
+    - Comprueba si el fertilizante está registrado.
+    - Pide confirmación antes de eliminarlo.
+    - Si el usuario confirma, elimina el fertilizante sin volver a solicitar confirmación.
+    - No vuelvas a comprobar si existe después de la confirmación.
+    - Si el usuario rechaza, cancela la operación.
 """
 
 
 def create_fertilizer_storekeeper(
     model: object,
     create_fertilizer_func: Callable[[Fertilizer], Fertilizer],
+    update_fertilizer_func: Callable[[str, dict], Fertilizer | None],
+    delete_fertilizer_func: Callable[[str], bool],
     list_fertilizers_func: Callable[[], list[Fertilizer]],
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
     searcher: Callable[[str], dict],
 ) -> Agent:
     fertilizer_info_tool = create_fertilizer_info_tool(searcher)
-    fertilizer_info_tool.__name__ = "fetch_fertilizer_info"
-    create_fertilizer_tool = create_create_fertilizer_tool(create_fertilizer_func)
-    create_fertilizer_tool.__name__ = "create_fertilizer"
+    register_fertilizer_tool = create_register_fertilizer_tool(
+        searcher,
+        create_fertilizer_func,
+    )
+    update_fertilizer_tool = create_update_fertilizer_tool(update_fertilizer_func)
+    delete_fertilizer_tool = create_delete_fertilizer_tool(delete_fertilizer_func)
     list_fertilizers_tool = create_list_fertilizers_tool(list_fertilizers_func)
-    list_fertilizers_tool.__name__ = "list_fertilizers"
     get_fertilizer_by_name_tool = create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func)
-    get_fertilizer_by_name_tool.__name__ = "get_fertilizer_by_name"
 
     return Agent(
         model=model,
@@ -52,7 +69,9 @@ def create_fertilizer_storekeeper(
         tools=[
             get_fertilizer_by_name_tool,
             fertilizer_info_tool,
-            create_fertilizer_tool,
+            register_fertilizer_tool,
+            update_fertilizer_tool,
+            delete_fertilizer_tool,
             list_fertilizers_tool,
         ],
     )

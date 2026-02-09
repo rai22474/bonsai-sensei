@@ -35,6 +35,10 @@ def post(path: str, payload: dict | None = None):
     return request_json("POST", path, payload)
 
 
+def put(path: str, payload: dict | None = None):
+    return request_json("PUT", path, payload)
+
+
 def delete(path: str):
     return request_json("DELETE", path)
 

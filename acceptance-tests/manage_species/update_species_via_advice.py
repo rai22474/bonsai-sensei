@@ -52,5 +52,7 @@ def confirm_species_update(context, name):
 def assert_species_scientific_name(name, scientific_name):
     species = find_species_by_name(get, name)
     actual = None if species is None else species.get("scientific_name")
-    assert actual == scientific_name
+    assert actual == scientific_name, (
+        f"Expected species '{name}' scientific name to be '{scientific_name}', got '{actual}'."
+    )
 
