@@ -1,4 +1,5 @@
 .env
+infra/deploy_local.example.env
 __pycache__/
 *.py[cod]
 *$py.class

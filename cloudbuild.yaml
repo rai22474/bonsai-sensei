@@ -1,0 +1,50 @@
+substitutions:
+  _REGION: europe-west1
+  _REPOSITORY: bonsai-sensei
+  _SERVICE: bonsai-sensei-api
+  _PULUMI_STACK: dev
+
+steps:
+  - id: Ensure Artifact Registry
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        if ! gcloud artifacts repositories describe ${_REPOSITORY} --location ${_REGION} >/dev/null 2>&1; then
+          gcloud artifacts repositories create ${_REPOSITORY} --repository-format=docker --location ${_REGION}
+        fi
+  - id: Build image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+      - .
+  - id: Push image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+  - id: Pulumi up
+    name: pulumi/pulumi-python
+    entrypoint: bash
+    env:
+      - PULUMI_ACCESS_TOKEN=$$PULUMI_ACCESS_TOKEN
+    args:
+      - -c
+      - |
+        cd infra
+        pip install .
+        pulumi stack select ${_PULUMI_STACK}
+        pulumi config set project $PROJECT_ID
+        pulumi config set region ${_REGION}
+        pulumi config set serviceName ${_SERVICE}
+        pulumi config set image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+        pulumi up --yes
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/pulumi-access-token/versions/latest
+      env: PULUMI_ACCESS_TOKEN

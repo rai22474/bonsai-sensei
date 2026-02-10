@@ -1,0 +1,3 @@
+name: bonsai-sensei
+runtime: python
+description: Bonsai Sensei infrastructure on GCP

@@ -1,0 +1,13 @@
+[project]
+name = "bonsai-sensei-infra"
+version = "0.1.0"
+description = "Pulumi infrastructure for Bonsai Sensei"
+requires-python = ">=3.12"
+dependencies = [
+    "pulumi>=3.110.0",
+    "pulumi-gcp>=7.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
