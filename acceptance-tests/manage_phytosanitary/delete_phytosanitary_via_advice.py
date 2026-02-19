@@ -20,7 +20,7 @@ def request_phytosanitary_deletion(context, name, external_stubs):
 @when(parsers.parse('I confirm the phytosanitary deletion for "{name}"'))
 def confirm_phytosanitary_deletion(context, name, external_stubs):
     advise(
-        text=f"Sí, confirma la eliminación del fitosanitario {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

@@ -14,10 +14,11 @@ def create_sensei_group(
         AgentTool(gardener_agent),
         AgentTool(storekeeper_agent),
     ]
-    return create_sensei(
+    sensei_agent = create_sensei(
         model=model,
         tools=sensei_tools,
     )
+    return sensei_agent
 
 
 def create_agents(
@@ -30,6 +31,7 @@ def create_agents(
     cultivation_agent = create_cultivation_group(model=model)
     gardener_agent = create_gardener_group(model=model)
     storekeeper_agent = create_storekeeper_group(model=model)
+    
     return create_sensei_group(
         model=model,
         cultivation_agent=cultivation_agent,

@@ -36,7 +36,7 @@ def request_bonsai_rename(context, bonsai_name, new_name):
 @when(parsers.parse('I confirm the bonsai update for "{bonsai_name}"'))
 def confirm_bonsai_update(context, bonsai_name):
     advise(
-        text=f"Sí, confirma la actualización del bonsái {bonsai_name}.",
+        text="Aceptar",
         user_id="bdd-bonsai",
     )
     context["bonsai_created"].append(bonsai_name)

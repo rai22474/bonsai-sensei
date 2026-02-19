@@ -33,7 +33,7 @@ def request_bonsai_creation(context, bonsai_name, species_name):
 @when(parsers.parse('I confirm the bonsai creation for "{bonsai_name}"'))
 def confirm_bonsai_creation(context, bonsai_name):
     advise(
-        text=f"Sí, confirma el alta del bonsái {bonsai_name}.",
+        text="Aceptar",
         user_id="bdd-bonsai",
     )
 

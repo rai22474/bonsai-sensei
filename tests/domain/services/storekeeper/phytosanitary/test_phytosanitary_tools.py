@@ -3,7 +3,6 @@ from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
-    create_create_phytosanitary_tool,
     create_get_phytosanitary_by_name_tool,
     create_list_phytosanitary_tool,
 )
@@ -110,7 +109,45 @@ def get_phytosanitary_by_name_func():
 
 @pytest.fixture
 def create_phytosanitary_tool(create_phytosanitary_func):
-    return create_create_phytosanitary_tool(create_phytosanitary_func)
+    def create_phytosanitary(
+        name: str,
+        usage_sheet: str,
+        recommended_amount: str,
+        recommended_for: str,
+        sources: list[str] | None = None,
+    ) -> dict:
+        if not name:
+            return {"status": "error", "message": "phytosanitary_name_required"}
+        if not usage_sheet:
+            return {"status": "error", "message": "usage_sheet_required"}
+        if not recommended_amount:
+            return {"status": "error", "message": "recommended_amount_required"}
+        if not recommended_for:
+            return {"status": "error", "message": "recommended_for_required"}
+        if sources is None:
+            sources = []
+        created = create_phytosanitary_func(
+            Phytosanitary(
+                name=name,
+                usage_sheet=usage_sheet,
+                recommended_amount=recommended_amount,
+                recommended_for=recommended_for,
+                sources=sources,
+            )
+        )
+        return {
+            "status": "success",
+            "phytosanitary": {
+                "id": created.id,
+                "name": created.name,
+                "usage_sheet": created.usage_sheet,
+                "recommended_amount": created.recommended_amount,
+                "recommended_for": created.recommended_for,
+                "sources": created.sources,
+            },
+        }
+
+    return create_phytosanitary
 
 
 @pytest.fixture

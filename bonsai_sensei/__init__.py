@@ -5,10 +5,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from functools import partial
-from telegram.ext import CommandHandler, MessageHandler, filters
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
-from bonsai_sensei.domain.services.bonsai.factory import create_gardener_group
+from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
@@ -23,8 +23,10 @@ from bonsai_sensei.api.phytosanitary import router as phytosanitary_router
 from bonsai_sensei.api.advice import router as advice_router
 from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
+from bonsai_sensei.telegram import error_handler, handle_confirmation_callback, handle_user_message, start
 from bonsai_sensei.telegram.bot import TelegramBot
-from bonsai_sensei.telegram.handlers import start, handle_user_message, error_handler
+
+from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
@@ -133,6 +135,7 @@ async def lifespan(app: FastAPI):
     app.state.phytosanitary_service = _create_phytosanitary_service(
         get_session_partial
     )
+    app.state.confirmation_store = ConfirmationStore()
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
     model_factory = (
@@ -142,14 +145,17 @@ async def lifespan(app: FastAPI):
     cultivation_group_factory = partial(
         create_cultivation_group,
         session_factory=get_session_partial,
+        confirmation_store=app.state.confirmation_store,
     )
     gardener_group_factory = partial(
         create_gardener_group,
         session_factory=get_session_partial,
+        confirmation_store=app.state.confirmation_store,
     )
     storekeeper_group_factory = partial(
         create_storekeeper_group,
         session_factory=get_session_partial,
+        confirmation_store=app.state.confirmation_store,
     )
     sensei_group_factory = partial(create_sensei_group)
     sensei_agent = create_agents(
@@ -160,15 +166,22 @@ async def lifespan(app: FastAPI):
         create_sensei_group=sensei_group_factory,
     )
     app.state.advisor = create_advisor(
-        sensei_agent,
+        sensei_agent=sensei_agent,
+        confirmation_store=app.state.confirmation_store
     )
     message_handler = partial(
         handle_user_message,
         message_processor=app.state.advisor,
     )
+    confirmation_handler = partial(
+        handle_confirmation_callback,
+        confirmation_store=app.state.confirmation_store,
+    )
+    
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
+        CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel)$"),
     ]
     bot_instance = TelegramBot(handlers=handlers, error_handler=error_handler)
 

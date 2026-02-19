@@ -23,7 +23,7 @@ def request_phytosanitary_creation(context, name, external_stubs):
 @when(parsers.parse('I confirm the phytosanitary creation for "{name}"'))
 def confirm_phytosanitary_creation(context, name, external_stubs):
     advise(
-        text=f"Sí, confirma el alta del fitosanitario {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

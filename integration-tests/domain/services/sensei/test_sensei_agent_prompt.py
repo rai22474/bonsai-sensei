@@ -15,10 +15,14 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
 from bonsai_sensei.domain.services.advisor import create_advisor
-from bonsai_sensei.domain.services.bonsai.gardener import GARDENER_INSTRUCTION
+from bonsai_sensei.domain.services.garden.gardener import GARDENER_INSTRUCTION
 from bonsai_sensei.domain.services.sensei import create_sensei
-from bonsai_sensei.domain.services.cultivation.species.botanist import SPECIES_INSTRUCTION
-from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import WEATHER_INSTRUCTION
+from bonsai_sensei.domain.services.cultivation.species.botanist import (
+    SPECIES_INSTRUCTION,
+)
+from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import (
+    WEATHER_INSTRUCTION,
+)
 from bonsai_sensei.model_factory import get_cloud_model_factory, get_local_model_factory
 
 
@@ -28,7 +32,9 @@ load_dotenv()
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def should_return_sensei_response_with_bonsai_summary(fake_advisor):
-    fake_advisor.gardener_llm.when_call().then("Bonsáis registrados:\n- Olmo 1 (Ulmus parvifolia)")
+    fake_advisor.gardener_llm.when_call().then(
+        "Bonsáis registrados:\n- Olmo 1 (Ulmus parvifolia)"
+    )
 
     result = await fake_advisor.run("Lista mis bonsáis")
 
@@ -117,11 +123,12 @@ async def fake_advisor():
         AgentTool(species_agent),
         AgentTool(weather_agent),
     ]
-    sensei_agent = create_sensei(
+    bonsai_coordinator = create_sensei(
         model=sensei_llm,
         tools=sensei_tools,
     )
-    advisor = create_advisor(sensei_agent, trace_handler=_trace_fake_advisor)
+
+    advisor = create_advisor(bonsai_coordinator)
     return FakeAdvisor(advisor, gardener_llm, species_llm)
 
 
@@ -217,108 +224,6 @@ def _next_scripted_text(
     return "OK"
 
 
-def _trace_fake_advisor(_: str, events: list) -> None:
-    for event in events:
-        _trace_agent_event(event)
-
-
-def _trace_agent_event(event) -> None:
-    agent_name = _first_attr(event, ["agent_name", "agent", "name", "author", "sender"])
-    input_value = _first_attr(
-        event, ["input", "inputs", "request", "user_messages", "prompt"]
-    )
-    output_text = _extract_event_text(event)
-    tool_calls = _extract_tool_calls(event)
-    tool_responses = _extract_tool_responses(event)
-    input_text = _normalize_text_value(input_value)
-    agent_label = str(agent_name) if agent_name else "unknown_agent"
-    if input_text or output_text:
-        print(
-            f"agent_trace agent={agent_label} input={input_text} output={output_text}"
-        )
-    for tool_call in tool_calls:
-        print(
-            f"tool_trace agent={agent_label} tool={tool_call['name']} args={tool_call['args']}"
-        )
-    for tool_response in tool_responses:
-        print(
-            f"tool_trace agent={agent_label} tool={tool_response['name']} output={tool_response['output']}"
-        )
-
-
-def _extract_event_text(event) -> str:
-    content = getattr(event, "content", None)
-    if not content:
-        return ""
-    parts = getattr(content, "parts", None) or []
-    texts = [part.text for part in parts if getattr(part, "text", None)]
-    return " ".join(texts).strip()
-
-
-def _first_attr(source: object, names: Iterable[str]):
-    for name in names:
-        value = getattr(source, name, None)
-        if value:
-            return value
-    return None
-
-
-def _normalize_text_value(value) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return " ".join(str(item) for item in value)
-    return str(value)
-
-
-def _extract_tool_calls(event) -> list[dict]:
-    content = getattr(event, "content", None)
-    if not content:
-        return []
-    parts = getattr(content, "parts", None) or []
-    calls = []
-    for part in parts:
-        call = getattr(part, "function_call", None)
-        if not call:
-            continue
-        name = getattr(call, "name", None) or getattr(call, "function_name", None)
-        args = getattr(call, "args", None) or getattr(call, "arguments", None)
-        calls.append(
-            {
-                "name": _normalize_text_value(name) or "unknown_tool",
-                "args": _normalize_text_value(args),
-            }
-        )
-    return calls
-
-
-def _extract_tool_responses(event) -> list[dict]:
-    content = getattr(event, "content", None)
-    if not content:
-        return []
-    parts = getattr(content, "parts", None) or []
-    responses = []
-    for part in parts:
-        response = getattr(part, "function_response", None)
-        if not response:
-            continue
-        name = getattr(response, "name", None) or getattr(
-            response, "function_name", None
-        )
-        output = (
-            getattr(response, "response", None)
-            or getattr(response, "result", None)
-            or getattr(response, "output", None)
-        )
-        responses.append(
-            {
-                "name": _normalize_text_value(name) or "unknown_tool",
-                "output": _normalize_text_value(output),
-            }
-        )
-    return responses
-
-
 class FakeAdvisor:
     def __init__(
         self,
@@ -332,13 +237,17 @@ class FakeAdvisor:
 
     async def run(self, text: str) -> dict:
         response = await self._advisor(text)
+        if hasattr(response, "text"):
+            response_text = response.text
+        else:
+            response_text = response
         log_lines = [
             f"input={text}",
-            f"response={response}",
+            f"response={response_text}",
         ]
         for line in log_lines:
             print(line)
         return {
-            "response": response,
+            "response": response_text,
             "log_lines": log_lines,
         }

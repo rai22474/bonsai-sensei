@@ -39,7 +39,7 @@ def request_species_update(context, name, scientific_name):
 @when(parsers.parse('I confirm the update for species "{name}"'))
 def confirm_species_update(context, name):
     advise(
-        text=f"Sí, confirma la actualización de la especie {name} del registro.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

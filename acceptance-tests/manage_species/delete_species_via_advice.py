@@ -32,7 +32,7 @@ def request_species_delete(context, name):
 @when(parsers.parse('I confirm the deletion for species "{name}"'))
 def confirm_species_delete(context, name):
     advise(
-        text=f"Sí, confirma la eliminación de la especie {name} del registro.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

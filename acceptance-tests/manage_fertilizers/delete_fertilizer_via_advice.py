@@ -20,7 +20,7 @@ def request_fertilizer_deletion(context, name, external_stubs):
 @when(parsers.parse('I confirm the fertilizer deletion for "{name}"'))
 def confirm_fertilizer_deletion(context, name, external_stubs):
     advise(
-        text=f"Sí, confirma la eliminación del fertilizante {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

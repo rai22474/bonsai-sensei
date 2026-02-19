@@ -37,7 +37,7 @@ def request_bonsai_delete(context, bonsai_name):
 @when(parsers.parse('I confirm the bonsai deletion for "{bonsai_name}"'))
 def confirm_bonsai_delete(context, bonsai_name):
     advise(
-        text=f"Sí, confirma la eliminación del bonsái {bonsai_name}.",
+        text="Aceptar",
         user_id="bdd-bonsai",
     )
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from bonsai_sensei.logging_config import get_logger
 
@@ -18,13 +18,8 @@ async def get_advice(request_body: AdviceRequest, request: Request):
         request_body.user_id,
         request_body.text,
     )
-    advisor = getattr(request.app.state, "advisor", None)
-    if not advisor:
-        logger.error("Advisor not initialized")
-        raise HTTPException(status_code=500, detail="Advisor not initialized")
+    
+    advisor = getattr(request.app.state, "advisor", None)  
     response = await advisor(request_body.text, user_id=request_body.user_id)
-    logger.info(
-        "*** Advice response generated: user_id=%s ***",
-        request_body.user_id,
-    )
+
     return {"response": response}

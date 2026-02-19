@@ -36,6 +36,6 @@ def ensure_fertilizer_exists(context, name, external_stubs):
         user_id=context["user_id"],
     )
     advise(
-        text=f"Sí, confirma el alta del fertilizante {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )

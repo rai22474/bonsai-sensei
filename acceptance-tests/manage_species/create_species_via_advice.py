@@ -39,8 +39,7 @@ def request_species_creation(context, name, scientific_name):
 def confirm_species_creation(context, name, scientific_name):
     advise(
         text=(
-            "Sí, confirma la creación de la especie "
-            f"{name} con nombre científico {scientific_name}."
+                "Aceptar",
         ),
         user_id=context["user_id"],
     )

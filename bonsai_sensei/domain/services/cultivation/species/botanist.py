@@ -1,13 +1,13 @@
 from typing import Callable
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import AgentTool
+from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.services.cultivation.species.confirm_create_species_tool import create_confirm_create_species_tool
+from bonsai_sensei.domain.services.cultivation.species.confirm_delete_species_tool import create_confirm_delete_species_tool
+from bonsai_sensei.domain.services.cultivation.species.confirm_update_species_tool import create_confirm_update_species_tool
+from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import create_get_species_by_name_tool
 from bonsai_sensei.domain.species import Species
-from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
-    create_species_tool,
-    create_get_species_by_name_tool,
-    create_delete_bonsai_species_tool,
-    create_update_bonsai_species_tool,
-)
+
 
 SPECIES_INSTRUCTION = """
 #ROL
@@ -27,48 +27,47 @@ Es muy importante que la información que proporciones sea precisa y fiable.
     - En caso que el nombre científico no sea válido, informa al usuario y procede como si no se hubiera proporcionado.
     - En caso solo llegue un nombre común, busca su nombre científico.
     - Devuelve la lista de posibles nombres científicos encontrados al usuario para que confirme cuál es el correcto.
-    - Pide confirmación al usuario antes de crear la especie.
-    - Si el usuario confirma, genera la guía de cuidados y crea la especie con el nombre científico.
-    - Si el usuario rechaza, cancela la operación.  
-* Si el usuario solicita actualizar una especie por nombre:
+    - Solicita confirmación con los datos completos de la especie a crear.
+  Si el usuario solicita actualizar una especie por nombre:
     - Valida que la especie exista en el registro de especies.
-    - Pide confirmación una sola vez antes de actualizar.
-    - Si el usuario confirma, actualiza la especie con los datos nuevos sin solicitar más confirmaciones.
-    - Si el usuario rechaza, cancela la operación.
+    - Solicita confirmación con los datos completos de la especie a actualizar.
 * Si el usuario solicita eliminar una especie por nombre:
     - Valida que la especie exista en el registro de especies.
-    - Pide confirmación una sola vez antes de eliminar.
-    - Si el usuario confirma, elimina la especie sin solicitar más confirmaciones.
-    - No solicites confirmaciones adicionales después de la respuesta afirmativa.
-    - Si el usuario rechaza, cancela la operación.
+    - Solicita confirmación con los datos completos de la especie a eliminar.
 """
 
 
 def create_botanist(
     model: object,
-    create_species_func: Callable[..., Species],
-    update_species_func: Callable[..., Species | None],
-    delete_species_func: Callable[..., bool],
     get_species_by_name_func: Callable[..., Species | None],
     resolve_scientific_name: Callable[..., dict],
     list_species: Callable[..., dict],
     care_guide_agent: Agent,
+    create_species_func: Callable[..., Species],
+    update_species_func: Callable[..., Species | None],
+    delete_species_func: Callable[..., bool],
+    confirmation_store: ConfirmationStore | None = None,
 ) -> Agent:
-    create_species = create_species_tool(create_species_func)
-    create_species.__name__ = "create_bonsai_species"
     get_species_by_name = create_get_species_by_name_tool(get_species_by_name_func)
     get_species_by_name.__name__ = "get_bonsai_species_by_name"
-    update_species = create_update_bonsai_species_tool(
-        update_species_func,
-        get_species_by_name_func,
-    )
-    update_species.__name__ = "update_bonsai_species"
-    delete_species = create_delete_bonsai_species_tool(
-        delete_species_func,
-        get_species_by_name_func,
-    )
-    delete_species.__name__ = "delete_bonsai_species"
+    
     care_guide_compiler = AgentTool(care_guide_agent)
+    confirm_create_tool = create_confirm_create_species_tool(
+        create_species_func=create_species_func,
+        confirmation_store=confirmation_store,
+    )
+    
+    confirm_update_tool = create_confirm_update_species_tool(
+        update_species_func=update_species_func,
+        get_species_by_name_func=get_species_by_name_func,
+        confirmation_store=confirmation_store,
+    )
+    
+    confirm_delete_tool = create_confirm_delete_species_tool(
+        delete_species_func=delete_species_func,
+        get_species_by_name_func=get_species_by_name_func,
+        confirmation_store=confirmation_store,
+    )
 
     return Agent(
         model=model,
@@ -77,11 +76,11 @@ def create_botanist(
         instruction=SPECIES_INSTRUCTION,
         tools=[
             resolve_scientific_name,
-            create_species,
             get_species_by_name,
-            update_species,
-            delete_species,
             list_species,
             care_guide_compiler,
+            confirm_create_tool,
+            confirm_update_tool,
+            confirm_delete_tool,
         ],
     )

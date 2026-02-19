@@ -5,6 +5,13 @@ An intelligent assistant for Bonsai care.
 ## Features
 
 - **Temperature-based Protection Advice**: Determine which bonsais need protection based on current weather conditions.
+- **Bonsai Collection Management**: Create, list, update, and delete bonsais in your collection.
+- **Species Registry**: Register species with care guides, update details, and delete entries.
+- **Fertilizer Inventory**: Track fertilizers, update usage details, and remove products.
+- **Phytosanitary Inventory**: Track phytosanitary products and their recommended uses.
+- **Guided Confirmations**: Confirm create/update/delete operations via explicit accept/cancel flows.
+- **Telegram Bot**: Chat with the assistant and receive confirmation prompts with buttons.
+- **REST API**: FastAPI endpoints for advice, bonsai, species, fertilizers, phytosanitary, and weather.
 
 ## Prerequisites
 

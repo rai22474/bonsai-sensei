@@ -15,7 +15,7 @@ def ensure_phytosanitary_exists(context, name, external_stubs):
         user_id=context["user_id"],
     )
     advise(
-        text=f"Sí, confirma el alta del fitosanitario {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 

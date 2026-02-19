@@ -20,7 +20,7 @@ def request_fertilizer_creation(context, name, external_stubs):
 @when(parsers.parse('I confirm the fertilizer creation for "{name}"'))
 def confirm_fertilizer_creation(context, name, external_stubs):
     advise(
-        text=f"Sí, confirma el alta del fertilizante {name}.",
+        text="Aceptar",
         user_id=context["user_id"],
     )
 
