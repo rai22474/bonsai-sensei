@@ -1,12 +1,11 @@
 from pytest_bdd import scenario, given, when, then, parsers
 
-from http_client import advise
+from http_client import accept_confirmation, advise
 from manage_bonsai.conftest import (
     create_bonsai_record,
     create_species_record,
     find_bonsai_by_name_api,
     get_species_record_id,
-    delete_bonsai_by_name,
 )
 
 
@@ -28,18 +27,17 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 @when(parsers.parse('I request to delete bonsai "{bonsai_name}"'))
 def request_bonsai_delete(context, bonsai_name):
-    advise(
+    response = advise(
         text=f"Elimina el bonsái {bonsai_name}.",
         user_id="bdd-bonsai",
     )
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @when(parsers.parse('I confirm the bonsai deletion for "{bonsai_name}"'))
 def confirm_bonsai_delete(context, bonsai_name):
-    advise(
-        text="Aceptar",
-        user_id="bdd-bonsai",
-    )
+    for confirmation in context.get("pending_confirmations", []):
+        accept_confirmation("bdd-bonsai", confirmation["id"])
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should not exist'))

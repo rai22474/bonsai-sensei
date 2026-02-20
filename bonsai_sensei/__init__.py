@@ -23,7 +23,10 @@ from bonsai_sensei.api.phytosanitary import router as phytosanitary_router
 from bonsai_sensei.api.advice import router as advice_router
 from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
-from bonsai_sensei.telegram import error_handler, handle_confirmation_callback, handle_user_message, start
+from bonsai_sensei.telegram.error_handler import error_handler
+from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
+from bonsai_sensei.telegram.handle_user_message import handle_user_message
+from bonsai_sensei.telegram.start import start
 from bonsai_sensei.telegram.bot import TelegramBot
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
@@ -181,7 +184,7 @@ async def lifespan(app: FastAPI):
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
-        CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel)$"),
+        CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
     ]
     bot_instance = TelegramBot(handlers=handlers, error_handler=error_handler)
 

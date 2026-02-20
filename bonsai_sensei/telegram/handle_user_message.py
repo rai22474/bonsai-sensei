@@ -1,7 +1,7 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
+from bonsai_sensei.domain.services.advisor import AdvisorResponse
 from bonsai_sensei.logging_config import get_logger
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 logger = get_logger(__name__)
 
@@ -15,34 +15,28 @@ async def handle_user_message(
 
     if not message_processor:
         logger.error("No message processor configured for message handler")
-        response = "Error interno: No puedo procesar tu mensaje."
+        await update.message.reply_text("Error interno: No puedo procesar tu mensaje.")
+        return
 
-    response = await message_processor(
+    response: AdvisorResponse = await message_processor(
         update.message.text, user_id=str(update.effective_user.id)
     )
 
-    if isinstance(response, str):
-        if response.requires_confirmation:
-            await update.message.reply_text(response.text, 
-                                            reply_markup=_create_confirmation_keyboard())
-            return
-        
-        await update.message.reply_text(response.text)
-        return
-    
-    await update.message.reply_text(response)
+    await update.message.reply_text(response.text)
 
-
-def _create_confirmation_keyboard():
-    keyboard = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton("Aceptar", callback_data="confirm:accept"),
-                    InlineKeyboardButton(
-                        "Cancelar", callback_data="confirm:cancel"
-                    ),
-                ]
-            ]
+    for pending in response.pending_confirmations:
+        await update.message.reply_text(
+            pending.summary,
+            reply_markup=_create_confirmation_keyboard(pending.id),
         )
 
-    return keyboard
+
+def _create_confirmation_keyboard(confirmation_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("Aceptar", callback_data=f"confirm:accept:{confirmation_id}"),
+                InlineKeyboardButton("Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
+            ]
+        ]
+    )

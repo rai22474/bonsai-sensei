@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, given, when, then, parsers
 
-from http_client import advise, delete, get
+from http_client import accept_confirmation, advise, delete, get
 from manage_species.species_api import delete_species_by_name, find_species_by_name
 
 
@@ -22,13 +22,14 @@ def ensure_species_absent(context, name, external_stubs):
 )
 def request_species_creation(context, name, scientific_name):
     context["created"].append(name)
-    advise(
+    response = advise(
         text=(
             "Da de alta la especie de bonsái "
             f"{name} con nombre científico {scientific_name}."
         ),
         user_id=context["user_id"],
     )
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @when(
@@ -37,12 +38,8 @@ def request_species_creation(context, name, scientific_name):
     )
 )
 def confirm_species_creation(context, name, scientific_name):
-    advise(
-        text=(
-                "Aceptar",
-        ),
-        user_id=context["user_id"],
-    )
+    for confirmation in context.get("pending_confirmations", []):
+        accept_confirmation(context["user_id"], confirmation["id"])
 
 
 @then(parsers.parse('species "{name}" should exist'))

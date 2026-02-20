@@ -19,6 +19,7 @@ def create_confirm_update_phytosanitary_tool(
         summary: str,
         target: str | None = None,
         usage_sheet: str | None = None,
+        recommended_amount: str | None = None,
         sources: list[str] | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
@@ -29,6 +30,7 @@ def create_confirm_update_phytosanitary_tool(
             summary: Short human-readable summary to show in the confirmation prompt.
             target: Optional new target (pest/disease).
             usage_sheet: Optional new usage instructions.
+            recommended_amount: Optional new recommended dosage amount.
             sources: Optional new list of source URLs.
 
         Returns:
@@ -46,7 +48,7 @@ def create_confirm_update_phytosanitary_tool(
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
-        if target is None and usage_sheet is None and sources is None:
+        if target is None and usage_sheet is None and recommended_amount is None and sources is None:
             return {"status": "error", "message": "phytosanitary_update_required"}
 
         command = Confirmation(
@@ -59,6 +61,7 @@ def create_confirm_update_phytosanitary_tool(
                 phytosanitary_data={
                     "usage_sheet": usage_sheet,
                     "recommended_for": target,
+                    "recommended_amount": recommended_amount,
                     "sources": sources,
                 },
             ),

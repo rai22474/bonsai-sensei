@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, when, then, given, parsers
 
-from http_client import advise
+from http_client import accept_confirmation, advise
 
 
 @scenario("../features/manage_fertilizers.feature", "List fertilizers via advice")
@@ -10,14 +10,12 @@ def test_list_fertilizers():
 
 @given(parsers.parse('fertilizer "{name}" exists'))
 def ensure_fertilizer_exists(context, name, external_stubs):
-    advise(
+    response = advise(
         text=f"Da de alta el fertilizante {name}.",
         user_id=context["user_id"],
     )
-    advise(
-        text="Aceptar",
-        user_id=context["user_id"],
-    )
+    for confirmation in response.get("pending_confirmations", []):
+        accept_confirmation(context["user_id"], confirmation["id"])
 
 
 @when("I request the fertilizer list")
@@ -26,7 +24,7 @@ def request_fertilizer_list(context):
         text="Qué fertilizantes tengo registrados?",
         user_id=context["user_id"],
     )
-    context["response"] = response.get("response", "")
+    context["response"] = response.get("text", "")
 
 
 @then(parsers.parse('fertilizer list includes "{name}"'))

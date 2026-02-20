@@ -19,19 +19,21 @@ async def handle_confirmation_callback(
         await query.edit_message_text("No hay confirmaciones configuradas.")
         return
 
-    decision = query.data or ""
-    accepted = decision == "confirm:accept"
+    parts = (query.data or "").split(":", 2)
+    if len(parts) < 3:
+        await query.edit_message_text("Confirmación inválida.")
+        return
 
-    response_text = _resolve_confirmation(
-        str(query.from_user.id),
-        accepted,
-        confirmation_store,
-    )
+    action, confirmation_id = parts[1], parts[2]
+    user_id = str(query.from_user.id)
 
-    await query.edit_message_text(response_text)
+    confirmation = confirmation_store.pop_pending_by_id(user_id, confirmation_id)
+    if not confirmation:
+        await query.edit_message_text("Confirmación no encontrada.")
+        return
 
-
-def _resolve_confirmation(user_id: str, accepted: bool, confirmation_store):
-    if accepted:
-        return "Confirmación aceptada."
-    return "Confirmación cancelada."
+    if action == "accept":
+        confirmation.execute()
+        await query.edit_message_text("Confirmación aceptada.")
+    else:
+        await query.edit_message_text("Confirmación cancelada.")

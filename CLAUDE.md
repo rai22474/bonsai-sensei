@@ -11,8 +11,9 @@
 
 # IMPORT RULES: 
 - Never use relative imports (e.g., `from .module import func`). Always use absolute imports (e.g., `from package.module import func`).
-DESIGN RULES: 
+DESIGN RULES:
 - Inject external dependencies into functions for testability (e.g., translators, HTTP clients).
+- Never use single-letter or abbreviated variable names (e.g., `c`, `e`, `f`). Always use descriptive names, including in list comprehensions and lambda expressions.
 
 # DOMAIN RULES: 
 - Keep domain entities in `bonsai_sensei/domain`, not in `bonsai_sensei/database`.

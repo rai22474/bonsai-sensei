@@ -51,3 +51,10 @@ def advise(text: str, user_id: str):
             "user_id": user_id,
         },
     )
+
+
+def accept_confirmation(user_id: str, confirmation_id: str):
+    return post(
+        f"/api/advice/confirmations/{confirmation_id}/accept",
+        {"user_id": user_id},
+    )

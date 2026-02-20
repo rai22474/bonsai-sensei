@@ -87,7 +87,7 @@ def bonsai_fixture(weather_stub_server):
 def ask_for_protection(context, bonsai_fixture, question):
     response = advise(question, "bdd")
     context["prompt"] = question
-    context["response"] = response.get("response", "")
+    context["response"] = response.get("text", "")
 
 
 @then("I get a protection recommendation")

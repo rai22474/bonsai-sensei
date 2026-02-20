@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, given, when, then, parsers
 
-from http_client import advise
+from http_client import accept_confirmation, advise
 from manage_bonsai.conftest import (
     create_bonsai_record,
     create_species_record,
@@ -27,18 +27,17 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 @when(parsers.parse('I request to rename bonsai "{bonsai_name}" to "{new_name}"'))
 def request_bonsai_rename(context, bonsai_name, new_name):
-    advise(
+    response = advise(
         text=f"Renombra el bonsái {bonsai_name} a {new_name}.",
         user_id="bdd-bonsai",
     )
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @when(parsers.parse('I confirm the bonsai update for "{bonsai_name}"'))
 def confirm_bonsai_update(context, bonsai_name):
-    advise(
-        text="Aceptar",
-        user_id="bdd-bonsai",
-    )
+    for confirmation in context.get("pending_confirmations", []):
+        accept_confirmation("bdd-bonsai", confirmation["id"])
     context["bonsai_created"].append(bonsai_name)
 
 

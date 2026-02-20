@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, when, then, parsers
 
-from http_client import advise, get
+from http_client import accept_confirmation, advise, get
 from manage_phytosanitary.phytosanitary_api import find_phytosanitary_by_name
 
 
@@ -15,18 +15,17 @@ def test_update_phytosanitary():
     )
 )
 def request_phytosanitary_update(context, name, amount, external_stubs):
-    advise(
+    response = advise(
         text=f"Actualiza el fitosanitario {name} con dosis recomendada {amount}.",
         user_id=context["user_id"],
     )
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @when(parsers.parse('I confirm the phytosanitary update for "{name}"'))
 def confirm_phytosanitary_update(context, name, external_stubs):
-    advise(
-        text="Aceptar",
-        user_id=context["user_id"],
-    )
+    for confirmation in context.get("pending_confirmations", []):
+        accept_confirmation(context["user_id"], confirmation["id"])
 
 
 @then(

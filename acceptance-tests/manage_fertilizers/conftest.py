@@ -5,7 +5,7 @@ import pytest
 from pytest_httpserver import HTTPServer
 from pytest_bdd import given, parsers
 
-from http_client import advise
+from http_client import accept_confirmation, advise
 
 STUB_PORT = 8070
 
@@ -31,11 +31,9 @@ def external_stubs():
 
 @given(parsers.parse('fertilizer "{name}" exists'))
 def ensure_fertilizer_exists(context, name, external_stubs):
-    advise(
+    response = advise(
         text=f"Da de alta el fertilizante {name}.",
         user_id=context["user_id"],
     )
-    advise(
-        text="Aceptar",
-        user_id=context["user_id"],
-    )
+    for confirmation in response.get("pending_confirmations", []):
+        accept_confirmation(context["user_id"], confirmation["id"])
