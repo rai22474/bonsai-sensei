@@ -44,23 +44,20 @@ def create_confirm_create_species_tool(
         Returns:
             A JSON-ready dictionary with creation results.
 
-        Output JSON (success): {"confirmation": True, "summary": <summary>}.
-        Output JSON (error): {"status":"error","message":"..."}.
+        Output JSON (success): {"confirmation": <summary>}.
+        Output JSON (error): {"status": "error", "message": "<reason>"}.
+        Error reasons: "user_id_required_for_confirmation", "scientific_name_required".
         """
 
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
+            return {"status": "error", 
+                    "message": "user_id_required_for_confirmation"}
 
         normalized_scientific = _normalize_scientific_name(scientific_name)
 
         if not normalized_scientific:
-            return {
-                "common_name": common_name,
-                "scientific_name": None,
-                "candidates": [],
-                "needs_scientific_name": True,
-            }
+            return {"status": "error", "message": "scientific_name_required"}
 
         care_guide_payload = {
             "summary": summary,

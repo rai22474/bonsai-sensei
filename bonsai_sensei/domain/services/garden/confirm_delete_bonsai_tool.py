@@ -31,7 +31,8 @@ def create_confirm_delete_bonsai_tool(
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
         Output JSON (success): {"confirmation": <summary>}.
-        Output JSON (error): {"status":"error","message":"..."}.
+        Output JSON (error): {"status": "error", "message": "<reason>"}.
+        Error reasons: "user_id_required_for_confirmation", "bonsai_id_required".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -51,6 +52,6 @@ def create_confirm_delete_bonsai_tool(
         )
         
         confirmation_store.set_pending(user_id, command)
-        return {"confirmation":  summary}
+        return {"confirmation": summary}
 
     return confirm_delete_bonsai

@@ -41,6 +41,7 @@ def create_gardener(
     list_bonsai_func: Callable[[], list[Bonsai]],
     get_bonsai_by_name_func: Callable[[str], Bonsai | None],
     list_species_func: Callable[[], list],
+    get_species_by_name_func: Callable[[str], object | None],
     create_bonsai_func: Callable[..., Bonsai | None],
     update_bonsai_func: Callable[..., Bonsai | None],
     delete_bonsai_func: Callable[..., bool],
@@ -58,12 +59,12 @@ def create_gardener(
     get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
     confirm_create_tool = create_confirm_create_bonsai_tool(
         create_bonsai_func=create_bonsai_func,
-        list_species_func=list_species_func,
+        get_species_by_name_func=get_species_by_name_func,
         confirmation_store=confirmation_store,
     )
     confirm_update_tool = create_confirm_update_bonsai_tool(
         update_bonsai_func=update_bonsai_func,
-        list_species_func=list_species_func,
+        get_species_by_name_func=get_species_by_name_func,
         confirmation_store=confirmation_store,
     )
     confirm_delete_tool = create_confirm_delete_bonsai_tool(
