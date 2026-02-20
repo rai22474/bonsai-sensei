@@ -47,13 +47,13 @@ def create_storekeeper_group(
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         searcher=fertilizer_searcher,
         confirmation_store=confirmation_store,
-        create_tool=partial(
+        create_fertilizer_func=partial(
             fertilizer_catalog.create_fertilizer, create_session=session_factory
         ),
-        update_tool=partial(
+        update_fertilizer_func=partial(
             fertilizer_catalog.update_fertilizer, create_session=session_factory
         ),
-        delete_tool=partial(
+        delete_fertilizer_func=partial(
             fertilizer_catalog.delete_fertilizer, create_session=session_factory
         ),
     )
@@ -66,13 +66,13 @@ def create_storekeeper_group(
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         searcher=phytosanitary_searcher,
         confirmation_store=confirmation_store,
-        create_tool=partial(
+        create_phytosanitary_func=partial(
             phytosanitary_registry.create_phytosanitary, create_session=session_factory
         ),
-        update_tool=partial(
+        update_phytosanitary_func=partial(
             phytosanitary_registry.update_phytosanitary, create_session=session_factory
         ),
-        delete_tool=partial(
+        delete_phytosanitary_func=partial(
             phytosanitary_registry.delete_phytosanitary, create_session=session_factory
         ),
     )

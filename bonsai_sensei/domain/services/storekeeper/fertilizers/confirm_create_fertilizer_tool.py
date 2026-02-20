@@ -4,10 +4,8 @@ import uuid
 
 from bonsai_sensei.domain.confirmation import Confirmation
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
-from bonsai_sensei.domain.services.resolve_user_id import (
-    resolve_confirmation_user_id,
-)
 from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 
 
@@ -25,7 +23,7 @@ def create_confirm_create_fertilizer_tool(
         sources: list[str] | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to create a fertilizer and return JSON with care data.
+        """Register a confirmation to create a fertilizer and return JSON with the result.
 
         Args:
             name: Fertilizer name.
@@ -37,12 +35,11 @@ def create_confirm_create_fertilizer_tool(
         Returns:
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
-            Output JSON (success): {"confirmation": <summary>}.
-            Output JSON (error): {"status":"error","message":"..."}.
+        Output JSON (success): {"confirmation": <summary>}.
+        Output JSON (error): {"status": "error", "message": "<reason>"}.
+        Error reasons: "user_id_required_for_confirmation", "fertilizer_name_required",
+            "usage_sheet_required", "recommended_amount_required".
         """
-        if sources is None:
-            sources = []
-
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
             return {"status": "error", "message": "user_id_required_for_confirmation"}
@@ -55,18 +52,19 @@ def create_confirm_create_fertilizer_tool(
 
         if not recommended_amount:
             return {"status": "error", "message": "recommended_amount_required"}
-        if sources is None:
-            sources = []
 
         command = Confirmation(
             id=uuid.uuid4().hex,
+            user_id=user_id,
             summary=summary,
             executor=partial(
                 create_fertilizer_func,
-                name=name,
-                usage_sheet=usage_sheet,
-                recommended_amount=recommended_amount,
-                sources=sources,
+                fertilizer=Fertilizer(
+                    name=name,
+                    usage_sheet=usage_sheet,
+                    recommended_amount=recommended_amount,
+                    sources=sources or [],
+                ),
             ),
         )
         confirmation_store.set_pending(user_id, command)

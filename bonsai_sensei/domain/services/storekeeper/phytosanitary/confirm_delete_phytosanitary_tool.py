@@ -28,8 +28,9 @@ def create_confirm_delete_phytosanitary_tool(
         Returns:
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
-        Output JSON (success): {"confirmation": True, "summary": <summary>, "registered": True}.
-        Output JSON (error): {"status":"error","message":"..."}.
+        Output JSON (success): {"confirmation": <summary>}.
+        Output JSON (error): {"status": "error", "message": "<reason>"}.
+        Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -40,11 +41,9 @@ def create_confirm_delete_phytosanitary_tool(
 
         command = Confirmation(
             id=uuid.uuid4().hex,
+            user_id=user_id,
             summary=summary,
-            executor=partial(
-                delete_phytosanitary_func,
-                name=name,
-            ),
+            executor=partial(delete_phytosanitary_func, name=name),
         )
         confirmation_store.set_pending(user_id, command)
         return {"confirmation": summary}

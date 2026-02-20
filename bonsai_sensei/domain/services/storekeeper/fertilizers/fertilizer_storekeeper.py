@@ -49,17 +49,17 @@ def create_fertilizer_storekeeper(
     list_fertilizers_tool = create_list_fertilizers_tool(list_fertilizers_func)
     get_fertilizer_by_name_tool = create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func)
     confirm_create_tool = create_confirm_create_fertilizer_tool(
-        create_tool=create_fertilizer_func,
+        create_fertilizer_func=create_fertilizer_func,
         confirmation_store=confirmation_store,
     )
 
     confirm_update_tool = create_confirm_update_fertilizer_tool(
-        update_tool=update_fertilizer_func,
+        update_fertilizer_func=update_fertilizer_func,
         confirmation_store=confirmation_store,
     )
 
     confirm_delete_tool = create_confirm_delete_fertilizer_tool(
-        delete_tool=delete_fertilizer_func,
+        delete_fertilizer_func=delete_fertilizer_func,
         confirmation_store=confirmation_store,
     )
 

@@ -56,17 +56,17 @@ def create_phytosanitary_storekeeper(
     )
 
     confirm_create_tool = create_confirm_create_phytosanitary_tool(
-        create_tool=create_phytosanitary_func,
+        create_phytosanitary_func=create_phytosanitary_func,
         confirmation_store=confirmation_store,
     )
 
     confirm_update_tool = create_confirm_update_phytosanitary_tool(
-        update_tool=update_phytosanitary_func,
+        update_phytosanitary_func=update_phytosanitary_func,
         confirmation_store=confirmation_store,
     )
 
     confirm_delete_tool = create_confirm_delete_phytosanitary_tool(
-        delete_tool=delete_phytosanitary_func,
+        delete_phytosanitary_func=delete_phytosanitary_func,
         confirmation_store=confirmation_store,
     )
 

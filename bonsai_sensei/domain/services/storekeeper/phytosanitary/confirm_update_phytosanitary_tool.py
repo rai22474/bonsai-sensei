@@ -34,31 +34,36 @@ def create_confirm_update_phytosanitary_tool(
         Returns:
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
-        Output JSON (success): {"confirmation": True, "summary": <summary>, "registered": True}.
-        Output JSON (error): {"status":"error","message":"..."}.
+        Output JSON (success): {"confirmation": <summary>}.
+        Output JSON (error): {"status": "error", "message": "<reason>"}.
+        Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required",
+            "phytosanitary_update_required".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
             return {"status": "error", "message": "user_id_required_for_confirmation"}
+
+        if not name:
+            return {"status": "error", "message": "phytosanitary_name_required"}
 
         if target is None and usage_sheet is None and sources is None:
             return {"status": "error", "message": "phytosanitary_update_required"}
 
         command = Confirmation(
             id=uuid.uuid4().hex,
+            user_id=user_id,
             summary=summary,
             executor=partial(
                 update_phytosanitary_func,
-                name,
-                {
+                name=name,
+                phytosanitary_data={
                     "usage_sheet": usage_sheet,
-                    "recommended_amount": None,
                     "recommended_for": target,
                     "sources": sources,
                 },
             ),
         )
-        
+
         confirmation_store.set_pending(user_id, command)
         return {"confirmation": summary}
 
