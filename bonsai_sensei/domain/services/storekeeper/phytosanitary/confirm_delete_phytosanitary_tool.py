@@ -28,7 +28,7 @@ def create_confirm_delete_phytosanitary_tool(
         Returns:
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
-        Output JSON (success): {"confirmation": <summary>}.
+        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
         Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required".
         """
@@ -46,6 +46,10 @@ def create_confirm_delete_phytosanitary_tool(
             executor=partial(delete_phytosanitary_func, name=name),
         )
         confirmation_store.set_pending(user_id, command)
-        return {"confirmation": summary}
+        return {
+            "status": "confirmation_pending",
+            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
+            "summary": summary,
+        }
 
     return confirm_delete_phytosanitary

@@ -22,16 +22,16 @@ Mantener y gestionar el inventario de fertilizantes y microelementos para bonsá
 respondiendo a las solicitudes del usuario de manera precisa y eficiente.
 
 # INSTRUCCIONES
-* En caso de alta de un nuevo producto fertilizante:
+* En caso que el usuario solicite el alta de un nuevo producto fertilizante:
   - Comprueba si el fertilizante ya está registrado. En ese caso, informa al usuario.
   - En caso contrario, busca en internet la ficha de uso y la dosis recomendada.
   - Solicita confirmación con los datos del fertilizante.
 * Para actualizar un fertilizante existente:
-    - Comprueba si el fertilizante está registrado.
-    - Solicita confirmación con los datos del fertilizante.
+  - Comprueba si el fertilizante está registrado.
+  - Solicita confirmación con los datos del fertilizante.
 * Para eliminar un fertilizante:
-    - Comprueba si el fertilizante está registrado.
-    - Solicita confirmación con los datos del fertilizante.
+  - Comprueba si el fertilizante está registrado.
+  - Solicita confirmación con los datos del fertilizante.
 """
 
 
