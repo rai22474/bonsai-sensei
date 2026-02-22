@@ -94,7 +94,11 @@ def should_return_confirmation_summary_when_create_is_valid(create_tool, tool_co
 
     assert_that(
         result,
-        equal_to({"confirmation": "Create Naruto bonsai"}),
+        equal_to({
+            "status": "confirmation_pending",
+            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
+            "summary": "Create Naruto bonsai",
+        }),
         "Valid input should return a confirmation dict with the summary",
     )
 
