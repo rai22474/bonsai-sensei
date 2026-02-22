@@ -35,6 +35,7 @@ from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
+from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import setup_monocle_observability
 
@@ -127,6 +128,14 @@ def _create_phytosanitary_service(session_factory):
     }
 
 
+def _create_bonsai_history_service(session_factory):
+    return {
+        "list_bonsai_events": partial(
+            bonsai_history.list_bonsai_events, create_session=session_factory
+        ),
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_session_partial = partial(get_session, engine=get_engine())
@@ -138,6 +147,7 @@ async def lifespan(app: FastAPI):
     app.state.phytosanitary_service = _create_phytosanitary_service(
         get_session_partial
     )
+    app.state.bonsai_history_service = _create_bonsai_history_service(get_session_partial)
     app.state.confirmation_store = ConfirmationStore()
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()

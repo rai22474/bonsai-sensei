@@ -21,6 +21,10 @@ def get_delete_bonsai_svc(request: Request) -> Callable:
     return request.app.state.garden_service["delete_bonsai"]
 
 
+def get_list_bonsai_events_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_history_service["list_bonsai_events"]
+
+
 @router.get("/bonsai", response_model=List[Bonsai])
 def get_bonsai_list(list_bonsai: Callable = Depends(get_list_bonsai_svc)):
     return list_bonsai()
@@ -59,3 +63,11 @@ def delete_existing_bonsai(
     if not success:
         raise HTTPException(status_code=404, detail="Bonsai not found")
     return {"status": "success", "message": f"Bonsai {bonsai_id} deleted"}
+
+
+@router.get("/bonsai/{bonsai_id}/events")
+def list_bonsai_events(
+    bonsai_id: int,
+    list_events_func: Callable = Depends(get_list_bonsai_events_svc),
+):
+    return list_events_func(bonsai_id=bonsai_id)
