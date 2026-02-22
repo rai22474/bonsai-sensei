@@ -18,6 +18,7 @@ services:
       - TREFLE_API_TOKEN=stub-token
       - TAVILY_API_BASE=http://host.docker.internal:8070
       - TAVILY_API_KEY=stub-key
+      - TELEGRAM_BOT_TOKEN=
     depends_on:
       db:
         condition: service_healthy
