@@ -8,6 +8,7 @@ from bonsai_sensei.domain.services.garden.bonsai_tools import (
     create_list_bonsai_events_tool,
 )
 from bonsai_sensei.domain.services.garden.confirm_apply_fertilizer_tool import create_confirm_apply_fertilizer_tool
+from bonsai_sensei.domain.services.garden.confirm_apply_phytosanitary_tool import create_confirm_apply_phytosanitary_tool
 from bonsai_sensei.domain.services.garden.confirm_create_bonsai_tool import create_confirm_create_bonsai_tool
 from bonsai_sensei.domain.services.garden.confirm_delete_bonsai_tool import create_confirm_delete_bonsai_tool
 from bonsai_sensei.domain.services.garden.confirm_update_bonsai_tool import create_confirm_update_bonsai_tool
@@ -38,6 +39,10 @@ Que características tienen y gestionar los registros de nuevos bonsáis.
     - Comprueba que el fertilizante esté registrado.
     - Solicita confirmación con el nombre del bonsái, el fertilizante y la cantidad aplicada.
     - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_fertilizer.
+* Si el usuario indica que ha aplicado un tratamiento fitosanitario a un bonsái:
+    - Llama directamente a confirm_apply_phytosanitary con el nombre del bonsái, el producto y la cantidad.
+      Esa herramienta valida internamente si el bonsái y el producto existen; NO intentes listarlos antes.
+    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_phytosanitary.
 * Si el usuario quiere consultar el historial de eventos de un bonsái (abonados, tratamientos, etc.):
     - Usa list_bonsai_events para obtener los eventos del bonsái por su nombre.
     - Presenta los eventos al usuario de forma legible, agrupados por tipo si hay varios.
@@ -56,6 +61,7 @@ def create_gardener(
     update_bonsai_func: Callable[..., Bonsai | None],
     delete_bonsai_func: Callable[..., bool],
     get_fertilizer_by_name_func: Callable[[str], object | None] = None,
+    get_phytosanitary_by_name_func: Callable[[str], object | None] = None,
     record_bonsai_event_func: Callable[..., object] = None,
     list_bonsai_events_func: Callable[[int], list[dict]] = None,
     confirmation_store: ConfirmationStore | None = None,
@@ -91,6 +97,13 @@ def create_gardener(
         confirmation_store=confirmation_store,
     )
     confirm_apply_fertilizer_tool.__name__ = "confirm_apply_fertilizer"
+    confirm_apply_phytosanitary_tool = create_confirm_apply_phytosanitary_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        record_bonsai_event_func=record_bonsai_event_func,
+        confirmation_store=confirmation_store,
+    )
+    confirm_apply_phytosanitary_tool.__name__ = "confirm_apply_phytosanitary"
     list_events_tool = create_list_bonsai_events_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=list_bonsai_events_func,
@@ -109,6 +122,7 @@ def create_gardener(
             confirm_update_tool,
             confirm_delete_tool,
             confirm_apply_fertilizer_tool,
+            confirm_apply_phytosanitary_tool,
             list_events_tool,
         ],
     )

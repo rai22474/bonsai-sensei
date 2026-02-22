@@ -3,6 +3,7 @@ from functools import partial
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import fertilizer_catalog
+from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.garden.gardener import create_gardener
@@ -23,6 +24,7 @@ def create_gardener_group(
     list_species_func = partial(herbarium.list_species, create_session=session_factory)
     get_species_by_name_func = partial(herbarium.get_species_by_name, create_session=session_factory)
     get_fertilizer_by_name_func = partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory)
+    get_phytosanitary_by_name_func = partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory)
     record_bonsai_event_func = partial(bonsai_history.record_bonsai_event, create_session=session_factory)
     list_bonsai_events_func = partial(bonsai_history.list_bonsai_events, create_session=session_factory)
     return create_gardener(
@@ -35,6 +37,7 @@ def create_gardener_group(
         update_bonsai_func=update_bonsai_func,
         delete_bonsai_func=delete_bonsai_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         list_bonsai_events_func=list_bonsai_events_func,
         confirmation_store=confirmation_store,

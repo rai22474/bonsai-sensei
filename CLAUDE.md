@@ -25,5 +25,6 @@ DESIGN RULES:
 - Name tests with a should_ prefix.
 - Place fixtures below tests in test files.
 - Always include failure messages in assert statements.
-- Only test public method, private methods are implementation details. 
+- Only test public method, private methods are implementation details.
+- Follow TDD: always write the acceptance test first, then implement the production code to make it pass.
 
