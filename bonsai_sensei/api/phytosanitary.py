@@ -17,6 +17,10 @@ def get_get_phytosanitary_by_name_svc(request: Request) -> Callable:
     return request.app.state.phytosanitary_service["get_phytosanitary_by_name"]
 
 
+def get_delete_phytosanitary_svc(request: Request) -> Callable:
+    return request.app.state.phytosanitary_service["delete_phytosanitary"]
+
+
 @router.get("/phytosanitary", response_model=List[Phytosanitary])
 def get_phytosanitary_list(
     list_phytosanitary: Callable = Depends(get_list_phytosanitary_svc),
@@ -42,3 +46,14 @@ def get_phytosanitary_by_name(
     if not phytosanitary:
         raise HTTPException(status_code=404, detail="Phytosanitary not found")
     return phytosanitary
+
+
+@router.delete("/phytosanitary/{phytosanitary_name}")
+def delete_existing_phytosanitary(
+    phytosanitary_name: str,
+    delete_phytosanitary_func: Callable = Depends(get_delete_phytosanitary_svc),
+):
+    success = delete_phytosanitary_func(name=phytosanitary_name)
+    if not success:
+        raise HTTPException(status_code=404, detail="Phytosanitary not found")
+    return {"status": "success", "message": f"Phytosanitary {phytosanitary_name} deleted"}

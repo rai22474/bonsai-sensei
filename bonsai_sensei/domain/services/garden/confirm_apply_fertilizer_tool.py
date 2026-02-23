@@ -75,6 +75,7 @@ def create_confirm_apply_fertilizer_tool(
                     payload={"fertilizer_name": fertilizer_name, "amount": amount},
                 ),
             ),
+            deduplication_key=f"apply_fertilizer:{bonsai_name}:{fertilizer_name}",
         )
 
         confirmation_store.set_pending(user_id, command)

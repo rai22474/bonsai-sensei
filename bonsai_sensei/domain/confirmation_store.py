@@ -8,6 +8,13 @@ class ConfirmationStore:
     def set_pending(self, user_id: str, command: Confirmation) -> None:
         if user_id not in self._pending:
             self._pending[user_id] = []
+        if command.deduplication_key is not None:
+            already_pending = any(
+                pending.deduplication_key == command.deduplication_key
+                for pending in self._pending[user_id]
+            )
+            if already_pending:
+                return
         self._pending[user_id].append(command)
 
     def get_pending(self, user_id: str) -> Confirmation | None:

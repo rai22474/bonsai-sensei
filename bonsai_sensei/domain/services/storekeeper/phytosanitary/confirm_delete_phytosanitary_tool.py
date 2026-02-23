@@ -44,6 +44,7 @@ def create_confirm_delete_phytosanitary_tool(
             user_id=user_id,
             summary=summary,
             executor=partial(delete_phytosanitary_func, name=name),
+            deduplication_key=f"delete_phytosanitary:{name}",
         )
         confirmation_store.set_pending(user_id, command)
         return {

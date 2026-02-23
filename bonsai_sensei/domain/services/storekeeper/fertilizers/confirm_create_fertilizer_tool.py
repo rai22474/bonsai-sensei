@@ -66,6 +66,7 @@ def create_confirm_create_fertilizer_tool(
                     sources=sources or [],
                 ),
             ),
+            deduplication_key=f"create_fertilizer:{name}",
         )
         confirmation_store.set_pending(user_id, command)
         return {

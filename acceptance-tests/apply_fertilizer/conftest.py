@@ -7,6 +7,7 @@ from pytest_bdd import given, parsers
 
 from http_client import accept_confirmation, advise, delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, find_bonsai_by_name
+from manage_fertilizers.fertilizer_api import delete_fertilizer_by_name
 from manage_species.species_api import delete_species_by_name
 
 STUB_PORT = 8070
@@ -18,6 +19,7 @@ def context():
         "user_id": f"bdd-fertilizer-apply-{uuid.uuid4().hex}",
         "bonsai_created": [],
         "species_created": [],
+        "fertilizers_registered": [],
         "bonsai_ids": {},
         "species_ids": {},
     }
@@ -30,6 +32,8 @@ def cleanup_records(context):
         delete_bonsai_by_name(get, delete, name)
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
+    for name in context["fertilizers_registered"]:
+        delete_fertilizer_by_name(delete, name)
 
 
 @pytest.fixture(autouse=True)
@@ -71,3 +75,4 @@ def ensure_fertilizer_registered(context, name, external_stubs):
     )
     for confirmation in response.get("pending_confirmations", []):
         accept_confirmation(context["user_id"], confirmation["id"])
+    context["fertilizers_registered"].append(name)

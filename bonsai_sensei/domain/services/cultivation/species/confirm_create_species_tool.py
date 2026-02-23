@@ -81,6 +81,7 @@ def create_confirm_create_species_tool(
                     care_guide=care_guide_payload,
                 ),
             ),
+            deduplication_key=f"create_species:{common_name}",
         )
 
         confirmation_store.set_pending(user_id, command)

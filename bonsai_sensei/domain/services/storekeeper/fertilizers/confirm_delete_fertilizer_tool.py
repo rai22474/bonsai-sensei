@@ -44,6 +44,7 @@ def create_confirm_delete_fertilizer_tool(
             user_id=user_id,
             summary=summary,
             executor=partial(delete_fertilizer_func, name=name),
+            deduplication_key=f"delete_fertilizer:{name}",
         )
 
         confirmation_store.set_pending(user_id, command)

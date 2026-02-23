@@ -14,7 +14,7 @@ class MockToolContext:
 
 
 def should_return_error_when_tool_context_is_none(delete_tool):
-    result = delete_tool(bonsai_id=1, summary="Delete bonsai", tool_context=None)
+    result = delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete bonsai", tool_context=None)
 
     assert_that(
         result,
@@ -26,6 +26,7 @@ def should_return_error_when_tool_context_is_none(delete_tool):
 def should_return_error_when_tool_context_has_no_user_id(delete_tool):
     result = delete_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Delete bonsai",
         tool_context=MockToolContext(user_id=None),
     )
@@ -38,7 +39,7 @@ def should_return_error_when_tool_context_has_no_user_id(delete_tool):
 
 
 def should_return_error_when_bonsai_id_is_missing(delete_tool, tool_context):
-    result = delete_tool(bonsai_id=0, summary="Delete bonsai", tool_context=tool_context)
+    result = delete_tool(bonsai_id=0, bonsai_name="Naruto", summary="Delete bonsai", tool_context=tool_context)
 
     assert_that(
         result,
@@ -47,8 +48,18 @@ def should_return_error_when_bonsai_id_is_missing(delete_tool, tool_context):
     )
 
 
+def should_return_error_when_bonsai_name_is_missing(delete_tool, tool_context):
+    result = delete_tool(bonsai_id=1, bonsai_name="", summary="Delete bonsai", tool_context=tool_context)
+
+    assert_that(
+        result,
+        equal_to({"status": "error", "message": "bonsai_name_required"}),
+        "Missing bonsai_name should return a bonsai_name_required error",
+    )
+
+
 def should_return_confirmation_summary_when_delete_is_valid(delete_tool, tool_context):
-    result = delete_tool(bonsai_id=1, summary="Delete Naruto", tool_context=tool_context)
+    result = delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
 
     assert_that(
         result,
@@ -64,7 +75,7 @@ def should_return_confirmation_summary_when_delete_is_valid(delete_tool, tool_co
 def should_store_pending_confirmation_in_store(
     delete_tool, tool_context, confirmation_store
 ):
-    delete_tool(bonsai_id=1, summary="Delete Naruto", tool_context=tool_context)
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
 
     assert_that(
         confirmation_store.get_pending("user-123"),
@@ -97,16 +108,29 @@ def should_execute_delete_with_correct_bonsai_id(executed_delete):
     )
 
 
-def should_store_both_confirmations_when_deleted_twice(
+def should_deduplicate_second_delete_for_same_bonsai(
     delete_tool, tool_context, confirmation_store
 ):
-    delete_tool(bonsai_id=1, summary="First delete", tool_context=tool_context)
-    delete_tool(bonsai_id=2, summary="Second delete", tool_context=tool_context)
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="First delete", tool_context=tool_context)
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Second delete", tool_context=tool_context)
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "A second delete for the same bonsai should be deduplicated",
+    )
+
+
+def should_store_both_deletes_for_different_bonsais(
+    delete_tool, tool_context, confirmation_store
+):
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+    delete_tool(bonsai_id=2, bonsai_name="Sakura", summary="Delete Sakura", tool_context=tool_context)
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Deletes for different bonsais should both be stored",
     )
 
 
@@ -140,13 +164,13 @@ def tool_context():
 
 @pytest.fixture
 def pending_confirmation(delete_tool, tool_context, confirmation_store):
-    delete_tool(bonsai_id=1, summary="Delete Naruto", tool_context=tool_context)
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
     return confirmation_store.get_pending("user-123")
 
 
 @pytest.fixture
 def executed_delete(delete_tool, tool_context, confirmation_store, captured_delete):
-    delete_tool(bonsai_id=1, summary="Delete Naruto", tool_context=tool_context)
+    delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
     pending = confirmation_store.get_pending("user-123")
     pending.execute()
     return captured_delete

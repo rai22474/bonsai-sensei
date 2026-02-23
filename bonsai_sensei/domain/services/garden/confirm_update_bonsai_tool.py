@@ -17,6 +17,7 @@ def create_confirm_update_bonsai_tool(
     @limit_tool_calls(agent_name="gardener")
     def confirm_update_bonsai(
         bonsai_id: int,
+        bonsai_name: str,
         summary: str,
         name: str | None = None,
         species_name: str | None = None,
@@ -26,6 +27,7 @@ def create_confirm_update_bonsai_tool(
 
         Args:
             bonsai_id: Identifier of the bonsai to update.
+            bonsai_name: Current name of the bonsai to update.
             summary: Short human-readable summary to show in the confirmation prompt.
             name: Optional new name for the bonsai.
             species_name: Optional common name of the new species to assign.
@@ -36,7 +38,7 @@ def create_confirm_update_bonsai_tool(
         Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
         Error reasons: "user_id_required_for_confirmation", "bonsai_id_required",
-            "species_not_found", "bonsai_update_required".
+            "bonsai_name_required", "species_not_found", "bonsai_update_required".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -44,6 +46,9 @@ def create_confirm_update_bonsai_tool(
 
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
+
+        if not bonsai_name:
+            return {"status": "error", "message": "bonsai_name_required"}
 
         bonsai_data = {}
         if name is not None:
@@ -67,6 +72,7 @@ def create_confirm_update_bonsai_tool(
                 bonsai_id=bonsai_id,
                 bonsai_data=bonsai_data,
             ),
+            deduplication_key=f"update_bonsai:{bonsai_name}",
         )
 
         confirmation_store.set_pending(user_id, command)

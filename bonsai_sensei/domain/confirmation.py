@@ -9,6 +9,7 @@ class Confirmation:
     summary: str
     executor: Callable[..., dict]
     sent: bool = False
+    deduplication_key: str | None = None
 
     def execute(self) -> str:
         return self.executor()

@@ -18,6 +18,7 @@ def create_confirm_delete_bonsai_tool(
     @limit_tool_calls(agent_name="gardener")
     def confirm_delete_bonsai(
         bonsai_id: int,
+        bonsai_name: str,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
@@ -25,6 +26,7 @@ def create_confirm_delete_bonsai_tool(
 
         Args:
             bonsai_id: Identifier of the bonsai to delete.
+            bonsai_name: Current name of the bonsai to delete.
             summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
@@ -32,7 +34,7 @@ def create_confirm_delete_bonsai_tool(
 
         Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "bonsai_id_required".
+        Error reasons: "user_id_required_for_confirmation", "bonsai_id_required", "bonsai_name_required".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -40,6 +42,9 @@ def create_confirm_delete_bonsai_tool(
 
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
+
+        if not bonsai_name:
+            return {"status": "error", "message": "bonsai_name_required"}
 
         command = Confirmation(
             id=uuid.uuid4().hex,
@@ -49,8 +54,9 @@ def create_confirm_delete_bonsai_tool(
                 delete_bonsai_func,
                 bonsai_id=bonsai_id
             ),
+            deduplication_key=f"delete_bonsai:{bonsai_name}",
         )
-        
+
         confirmation_store.set_pending(user_id, command)
         return {
             "status": "confirmation_pending",

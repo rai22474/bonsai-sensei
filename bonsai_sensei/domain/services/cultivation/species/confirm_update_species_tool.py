@@ -75,6 +75,7 @@ def create_confirm_update_species_tool(
                 species_id=existing_species.id,
                 species_data=species_data,
             ),
+            deduplication_key=f"update_species:{species_name}",
         )
         confirmation_store.set_pending(user_id, command)
         return {

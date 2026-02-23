@@ -75,6 +75,7 @@ def create_confirm_apply_phytosanitary_tool(
                     payload={"phytosanitary_name": phytosanitary_name, "amount": amount},
                 ),
             ),
+            deduplication_key=f"apply_phytosanitary:{bonsai_name}:{phytosanitary_name}",
         )
 
         confirmation_store.set_pending(user_id, command)

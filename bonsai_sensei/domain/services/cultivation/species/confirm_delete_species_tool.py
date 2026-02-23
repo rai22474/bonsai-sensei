@@ -58,6 +58,7 @@ def create_confirm_delete_species_tool(
                 delete_species_func,
                 species_id=existing_species.id,
             ),
+            deduplication_key=f"delete_species:{species_name}",
         )
 
         confirmation_store.set_pending(user_id, command)

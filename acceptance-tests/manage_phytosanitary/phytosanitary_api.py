@@ -35,3 +35,15 @@ def find_phytosanitary_by_name(
         if exc.status == 404:
             return None
         raise
+
+
+def delete_phytosanitary_by_name(
+    delete_func: Callable[[str], dict | None],
+    name: str,
+) -> None:
+    try:
+        delete_func(f"/api/phytosanitary/{name}")
+    except aiohttp.ClientResponseError as exc:
+        if exc.status == 404:
+            return
+        raise

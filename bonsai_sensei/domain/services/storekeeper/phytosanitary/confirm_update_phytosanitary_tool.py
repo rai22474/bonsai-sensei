@@ -65,6 +65,7 @@ def create_confirm_update_phytosanitary_tool(
                     "sources": sources,
                 },
             ),
+            deduplication_key=f"update_phytosanitary:{name}",
         )
 
         confirmation_store.set_pending(user_id, command)

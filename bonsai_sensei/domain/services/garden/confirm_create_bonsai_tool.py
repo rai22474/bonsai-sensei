@@ -60,6 +60,7 @@ def create_confirm_create_bonsai_tool(
             executor=partial(
                 create_bonsai_func, bonsai=Bonsai(name=name, species_id=species.id)
             ),
+            deduplication_key=f"create_bonsai:{name}",
         )
 
         confirmation_store.set_pending(user_id, command)

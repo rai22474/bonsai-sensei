@@ -17,6 +17,10 @@ def get_get_fertilizer_by_name_svc(request: Request) -> Callable:
     return request.app.state.fertilizer_service["get_fertilizer_by_name"]
 
 
+def get_delete_fertilizer_svc(request: Request) -> Callable:
+    return request.app.state.fertilizer_service["delete_fertilizer"]
+
+
 @router.get("/fertilizers", response_model=List[Fertilizer])
 def get_fertilizers_list(list_fertilizers: Callable = Depends(get_list_fertilizers_svc)):
     return list_fertilizers()
@@ -40,3 +44,14 @@ def get_fertilizer_by_name(
     if not fertilizer:
         raise HTTPException(status_code=404, detail="Fertilizer not found")
     return fertilizer
+
+
+@router.delete("/fertilizers/{fertilizer_name}")
+def delete_existing_fertilizer(
+    fertilizer_name: str,
+    delete_fertilizer_func: Callable = Depends(get_delete_fertilizer_svc),
+):
+    success = delete_fertilizer_func(name=fertilizer_name)
+    if not success:
+        raise HTTPException(status_code=404, detail="Fertilizer not found")
+    return {"status": "success", "message": f"Fertilizer {fertilizer_name} deleted"}

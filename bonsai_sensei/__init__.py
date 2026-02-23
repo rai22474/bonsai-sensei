@@ -108,6 +108,10 @@ def _create_fertilizer_service(session_factory):
             fertilizer_catalog.get_fertilizer_by_name,
             create_session=session_factory,
         ),
+        "delete_fertilizer": partial(
+            fertilizer_catalog.delete_fertilizer,
+            create_session=session_factory,
+        ),
     }
 
 
@@ -123,6 +127,10 @@ def _create_phytosanitary_service(session_factory):
         ),
         "get_phytosanitary_by_name": partial(
             phytosanitary_registry.get_phytosanitary_by_name,
+            create_session=session_factory,
+        ),
+        "delete_phytosanitary": partial(
+            phytosanitary_registry.delete_phytosanitary,
             create_session=session_factory,
         ),
     }

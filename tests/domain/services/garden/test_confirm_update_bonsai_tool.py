@@ -16,7 +16,7 @@ class MockToolContext:
 
 def should_return_error_when_tool_context_is_none(update_tool):
     result = update_tool(
-        bonsai_id=1, summary="Update bonsai", tool_context=None, name="New name"
+        bonsai_id=1, bonsai_name="Naruto", summary="Update bonsai", tool_context=None, name="New name"
     )
 
     assert_that(
@@ -29,6 +29,7 @@ def should_return_error_when_tool_context_is_none(update_tool):
 def should_return_error_when_tool_context_has_no_user_id(update_tool):
     result = update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Update bonsai",
         tool_context=MockToolContext(user_id=None),
         name="New name",
@@ -43,7 +44,7 @@ def should_return_error_when_tool_context_has_no_user_id(update_tool):
 
 def should_return_error_when_bonsai_id_is_missing(update_tool, tool_context):
     result = update_tool(
-        bonsai_id=0, summary="Update bonsai", tool_context=tool_context, name="New name"
+        bonsai_id=0, bonsai_name="Naruto", summary="Update bonsai", tool_context=tool_context, name="New name"
     )
 
     assert_that(
@@ -53,9 +54,21 @@ def should_return_error_when_bonsai_id_is_missing(update_tool, tool_context):
     )
 
 
+def should_return_error_when_bonsai_name_is_missing(update_tool, tool_context):
+    result = update_tool(
+        bonsai_id=1, bonsai_name="", summary="Update bonsai", tool_context=tool_context, name="New name"
+    )
+
+    assert_that(
+        result,
+        equal_to({"status": "error", "message": "bonsai_name_required"}),
+        "Missing bonsai_name should return a bonsai_name_required error",
+    )
+
+
 def should_return_error_when_no_fields_to_update(update_tool, tool_context):
     result = update_tool(
-        bonsai_id=1, summary="Update bonsai", tool_context=tool_context
+        bonsai_id=1, bonsai_name="Naruto", summary="Update bonsai", tool_context=tool_context
     )
 
     assert_that(
@@ -68,6 +81,7 @@ def should_return_error_when_no_fields_to_update(update_tool, tool_context):
 def should_return_error_when_species_not_found(update_tool, tool_context):
     result = update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Update bonsai",
         species_name="Unknown",
         tool_context=tool_context,
@@ -83,6 +97,7 @@ def should_return_error_when_species_not_found(update_tool, tool_context):
 def should_return_confirmation_summary_when_update_is_valid(update_tool, tool_context):
     result = update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Rename bonsai",
         name="Goku",
         tool_context=tool_context,
@@ -103,7 +118,7 @@ def should_store_pending_confirmation_in_store(
     update_tool, tool_context, confirmation_store
 ):
     update_tool(
-        bonsai_id=1, summary="Rename bonsai", name="Goku", tool_context=tool_context
+        bonsai_id=1, bonsai_name="Naruto", summary="Rename bonsai", name="Goku", tool_context=tool_context
     )
 
     assert_that(
@@ -150,6 +165,7 @@ def should_execute_update_with_species_id_resolved_from_name(
 ):
     update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Change species",
         species_name="Elm",
         tool_context=tool_context,
@@ -164,20 +180,37 @@ def should_execute_update_with_species_id_resolved_from_name(
     )
 
 
-def should_store_both_confirmations_when_updated_twice(
+def should_deduplicate_second_update_for_same_bonsai(
     update_tool, tool_context, confirmation_store
 ):
     update_tool(
-        bonsai_id=1, summary="First update", name="Goku", tool_context=tool_context
+        bonsai_id=1, bonsai_name="Naruto", summary="First update", name="Goku", tool_context=tool_context
     )
     update_tool(
-        bonsai_id=1, summary="Second update", name="Vegeta", tool_context=tool_context
+        bonsai_id=1, bonsai_name="Naruto", summary="Second update", name="Vegeta", tool_context=tool_context
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "A second update for the same bonsai should be deduplicated",
+    )
+
+
+def should_store_both_updates_for_different_bonsais(
+    update_tool, tool_context, confirmation_store
+):
+    update_tool(
+        bonsai_id=1, bonsai_name="Naruto", summary="Update Naruto", name="Goku", tool_context=tool_context
+    )
+    update_tool(
+        bonsai_id=2, bonsai_name="Sakura", summary="Update Sakura", name="Hinata", tool_context=tool_context
     )
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Updates for different bonsais should both be stored",
     )
 
 
@@ -229,6 +262,7 @@ def tool_context():
 def pending_confirmation(update_tool, tool_context, confirmation_store):
     update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Rename bonsai",
         name="Goku",
         tool_context=tool_context,
@@ -240,6 +274,7 @@ def pending_confirmation(update_tool, tool_context, confirmation_store):
 def executed_update(update_tool, tool_context, confirmation_store, captured_update):
     update_tool(
         bonsai_id=1,
+        bonsai_name="Naruto",
         summary="Rename bonsai",
         name="Goku",
         tool_context=tool_context,
