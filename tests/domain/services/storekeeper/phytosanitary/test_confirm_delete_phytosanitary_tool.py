@@ -95,7 +95,20 @@ def should_execute_delete_with_correct_name(executed_delete):
     )
 
 
-def should_store_both_confirmations_when_deleted_twice(
+def should_deduplicate_second_delete_for_same_phytosanitary(
+    delete_tool, tool_context, confirmation_store
+):
+    delete_tool(name="Neem Oil", summary="First delete", tool_context=tool_context)
+    delete_tool(name="Neem Oil", summary="Second delete", tool_context=tool_context)
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second delete for the same phytosanitary product should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_deletes_for_different_phytosanitary_products(
     delete_tool, tool_context, confirmation_store
 ):
     delete_tool(name="Neem Oil", summary="First delete", tool_context=tool_context)
@@ -104,7 +117,7 @@ def should_store_both_confirmations_when_deleted_twice(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Deletes for different phytosanitary products should each be stored as independent confirmations",
     )
 
 

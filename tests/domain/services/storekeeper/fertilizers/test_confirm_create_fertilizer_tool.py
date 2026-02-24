@@ -161,7 +161,32 @@ def should_execute_create_with_correct_usage_sheet(executed_create):
     )
 
 
-def should_store_both_confirmations_when_created_twice(
+def should_deduplicate_second_create_for_same_fertilizer(
+    create_tool, tool_context, confirmation_store
+):
+    create_tool(
+        name="GreenBoom",
+        usage_sheet="Apply once a month",
+        recommended_amount="5 ml/L",
+        summary="First create",
+        tool_context=tool_context,
+    )
+    create_tool(
+        name="GreenBoom",
+        usage_sheet="Apply once a month",
+        recommended_amount="5 ml/L",
+        summary="Second create",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second create for the same fertilizer should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_creates_for_different_fertilizers(
     create_tool, tool_context, confirmation_store
 ):
     create_tool(
@@ -182,7 +207,7 @@ def should_store_both_confirmations_when_created_twice(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Creates for different fertilizers should each be stored as independent confirmations",
     )
 
 

@@ -58,3 +58,23 @@ def accept_confirmation(user_id: str, confirmation_id: str):
         f"/api/advice/confirmations/{confirmation_id}/accept",
         {"user_id": user_id},
     )
+
+
+async def post_sse_async(path: str, payload: dict | None = None) -> list[dict]:
+    url = f"{BASE_URL}{path}"
+    timeout = aiohttp.ClientTimeout(total=300)
+    events = []
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(url, json=payload) as response:
+            async for raw_line in response.content:
+                line = raw_line.decode("utf-8").strip()
+                if line.startswith("data: "):
+                    event_data = json.loads(line[6:])
+                    events.append(event_data)
+                    if event_data.get("status") == "done":
+                        break
+    return events
+
+
+def post_sse(path: str, payload: dict | None = None) -> list[dict]:
+    return asyncio.run(post_sse_async(path, payload))

@@ -6,7 +6,6 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
-
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
@@ -23,6 +22,7 @@ from bonsai_sensei.api.phytosanitary import router as phytosanitary_router
 from bonsai_sensei.api.advice import router as advice_router
 from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
+from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
@@ -30,12 +30,15 @@ from bonsai_sensei.telegram.start import start
 from bonsai_sensei.telegram.bot import TelegramBot
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.services.cultivation.weather.weather_alert_scheduler import create_weather_alert_scheduler
+from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
+from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import setup_monocle_observability
 
@@ -144,6 +147,27 @@ def _create_bonsai_history_service(session_factory):
     }
 
 
+def _create_user_settings_service(session_factory):
+    return {
+        "save_user_settings": partial(
+            user_settings_store.save_user_settings, create_session=session_factory
+        ),
+        "get_user_settings": partial(
+            user_settings_store.get_user_settings, create_session=session_factory
+        ),
+        "list_all_user_settings": partial(
+            user_settings_store.list_all_user_settings, create_session=session_factory
+        ),
+        "delete_user_settings": partial(
+            user_settings_store.delete_user_settings, create_session=session_factory
+        ),
+    }
+
+
+def _save_telegram_chat_id(user_id: str, chat_id: str, save_user_settings):
+    save_user_settings(UserSettings(user_id=user_id, telegram_chat_id=chat_id))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_session_partial = partial(get_session, engine=get_engine())
@@ -156,6 +180,7 @@ async def lifespan(app: FastAPI):
         get_session_partial
     )
     app.state.bonsai_history_service = _create_bonsai_history_service(get_session_partial)
+    app.state.user_settings_service = _create_user_settings_service(get_session_partial)
     app.state.confirmation_store = ConfirmationStore()
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
@@ -190,15 +215,25 @@ async def lifespan(app: FastAPI):
         sensei_agent=sensei_agent,
         confirmation_store=app.state.confirmation_store
     )
+    save_telegram_chat_id_func = partial(
+        _save_telegram_chat_id,
+        save_user_settings=app.state.user_settings_service["save_user_settings"],
+    )
+    users_awaiting_location: set = set()
     message_handler = partial(
         handle_user_message,
         message_processor=app.state.advisor,
+        save_telegram_chat_id_func=save_telegram_chat_id_func,
+        get_user_settings_func=app.state.user_settings_service["get_user_settings"],
+        confirmation_store=app.state.confirmation_store,
+        save_user_settings_func=app.state.user_settings_service["save_user_settings"],
+        users_awaiting_location=users_awaiting_location,
     )
     confirmation_handler = partial(
         handle_confirmation_callback,
         confirmation_store=app.state.confirmation_store,
     )
-    
+
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
@@ -209,8 +244,15 @@ async def lifespan(app: FastAPI):
     app.state.bot = bot_instance
     await bot_instance.initialize()
 
+    scheduler = create_weather_alert_scheduler(
+        advisor=app.state.advisor,
+        list_all_user_settings_func=app.state.user_settings_service["list_all_user_settings"],
+        send_telegram_message_func=app.state.bot.send_message,
+    )
+
     yield
 
+    scheduler.shutdown()
     await bot_instance.shutdown()
 
 
@@ -224,4 +266,5 @@ app.include_router(fertilizers_router, prefix="/api", tags=["fertilizers"])
 app.include_router(phytosanitary_router, prefix="/api", tags=["phytosanitary"])
 app.include_router(advice_router, prefix="/api", tags=["advice"])
 app.include_router(weather_router, prefix="/api", tags=["weather"])
+app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

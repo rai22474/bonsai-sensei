@@ -1,3 +1,5 @@
+import uuid
+
 from pytest_bdd import scenario, given, when, then, parsers
 
 from http_client import accept_confirmation, advise, get
@@ -23,15 +25,16 @@ def test_list_fertilizer_applications():
     parsers.parse('"{fertilizer_name}" has been applied to "{bonsai_name}" with amount "{amount}"')
 )
 def apply_fertilizer_as_precondition(context, fertilizer_name, bonsai_name, amount):
+    setup_user_id = f"setup-{uuid.uuid4().hex}"
     response = advise(
         text=(
             f"He aplicado el fertilizante {fertilizer_name} al bonsái {bonsai_name} "
             f"con una cantidad de {amount}."
         ),
-        user_id=context["user_id"],
+        user_id=setup_user_id,
     )
     for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
+        accept_confirmation(setup_user_id, confirmation["id"])
 
 
 @when(

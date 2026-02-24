@@ -5,9 +5,9 @@ import pytest
 from pytest_httpserver import HTTPServer
 from pytest_bdd import given, parsers
 
-from http_client import accept_confirmation, advise, delete, get, post
+from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, find_bonsai_by_name
-from manage_fertilizers.fertilizer_api import delete_fertilizer_by_name
+from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertilizer_by_name
 from manage_species.species_api import delete_species_by_name
 
 STUB_PORT = 8070
@@ -68,11 +68,6 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 
 @given(parsers.parse('fertilizer "{name}" is registered'))
-def ensure_fertilizer_registered(context, name, external_stubs):
-    response = advise(
-        text=f"Da de alta el fertilizante {name}.",
-        user_id=context["user_id"],
-    )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
+def ensure_fertilizer_registered(context, name):
+    create_fertilizer(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", [])
     context["fertilizers_registered"].append(name)

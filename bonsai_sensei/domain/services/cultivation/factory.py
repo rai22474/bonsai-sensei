@@ -30,10 +30,14 @@ from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import (
 from bonsai_sensei.domain.services.cultivation.weather.weather_tool import (
     create_weather_tool,
 )
+from bonsai_sensei.domain.services.cultivation.weather.get_user_location_tool import (
+    create_get_user_location_tool,
+)
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
     create_list_species_tool,
 )
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain import user_settings_store
 
 
 def create_cultivation_group(
@@ -42,9 +46,7 @@ def create_cultivation_group(
     confirmation_store: ConfirmationStore | None = None,
 ):
     list_species_tool = _create_list_species_tool(session_factory=session_factory)
-
-    weather_agent = _create_weather_agent(model, list_species_tool)
-
+    weather_agent = _create_weather_agent(model, list_species_tool, session_factory)
     botanist = _create_botanist(
         model, session_factory, confirmation_store, list_species_tool
     )
@@ -102,12 +104,17 @@ def _create_botanist(model, session_factory, confirmation_store, list_species_to
     return botanist
 
 
-def _create_weather_agent(model, list_species_tool):
+def _create_weather_agent(model, list_species_tool, session_factory):
     weather_base_url = os.getenv("WEATHER_API_BASE", "https://wttr.in")
     weather_tool = create_weather_tool(weather_base_url)
+    get_user_location_tool = create_get_user_location_tool(
+        get_user_settings_func=partial(
+            user_settings_store.get_user_settings, create_session=session_factory
+        )
+    )
     weather_agent = create_weather_advisor(
         model=model,
-        tools=[weather_tool, list_species_tool],
+        tools=[weather_tool, list_species_tool, get_user_location_tool],
     )
 
     return weather_agent

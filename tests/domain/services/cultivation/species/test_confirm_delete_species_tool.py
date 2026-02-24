@@ -122,7 +122,7 @@ def should_execute_delete_with_correct_species_id(executed_delete):
     )
 
 
-def should_store_both_confirmations_when_deleted_twice(
+def should_deduplicate_second_delete_for_same_species(
     delete_tool, tool_context, confirmation_store
 ):
     delete_tool(species_name="Elm", summary="First delete", tool_context=tool_context)
@@ -130,8 +130,21 @@ def should_store_both_confirmations_when_deleted_twice(
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second delete for the same species should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_deletes_for_different_species(
+    delete_tool, tool_context, confirmation_store
+):
+    delete_tool(species_name="Elm", summary="Delete Elm", tool_context=tool_context)
+    delete_tool(species_name="Oak", summary="Delete Oak", tool_context=tool_context)
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Deletes for different species should each be stored as independent confirmations",
     )
 
 
@@ -155,13 +168,16 @@ def delete_species_func(captured_delete):
 
 @pytest.fixture
 def existing_species():
-    return Species(id=1, name="Elm", scientific_name="Ulmus", care_guide={})
+    return [
+        Species(id=1, name="Elm", scientific_name="Ulmus", care_guide={}),
+        Species(id=2, name="Oak", scientific_name="Quercus", care_guide={}),
+    ]
 
 
 @pytest.fixture
 def get_species_by_name_func(existing_species):
     def get_species_by_name(name: str) -> Species | None:
-        return existing_species if name == existing_species.name else None
+        return next((species for species in existing_species if species.name == name), None)
 
     return get_species_by_name
 

@@ -5,9 +5,9 @@ import pytest
 from pytest_httpserver import HTTPServer
 from pytest_bdd import given, parsers
 
-from http_client import accept_confirmation, advise, delete, get, post
+from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name
-from manage_phytosanitary.phytosanitary_api import delete_phytosanitary_by_name
+from manage_phytosanitary.phytosanitary_api import create_phytosanitary, delete_phytosanitary_by_name
 from manage_species.species_api import delete_species_by_name
 
 STUB_PORT = 8070
@@ -65,11 +65,6 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 
 @given(parsers.parse('phytosanitary product "{name}" is registered'))
-def ensure_phytosanitary_registered(context, name, external_stubs):
-    response = advise(
-        text=f"Da de alta el fitosanitario {name}.",
-        user_id=context["user_id"],
-    )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
+def ensure_phytosanitary_registered(context, name):
+    create_phytosanitary(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", "Hongos y plagas", [])
     context["phytosanitaries_registered"].append(name)

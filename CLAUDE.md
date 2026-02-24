@@ -27,4 +27,5 @@ DESIGN RULES:
 - Always include failure messages in assert statements.
 - Only test public method, private methods are implementation details.
 - Follow TDD: always write the acceptance test first, then implement the production code to make it pass.
+- In acceptance tests, `given` steps that set up preconditions should use the REST API directly (not `advise()`) to avoid accumulating LLM session history. When a `given` step must use `advise()`, it should use an isolated `user_id` (e.g., `f"setup-{uuid.uuid4().hex}"`) to avoid polluting the main test session.
 

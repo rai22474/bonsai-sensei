@@ -161,7 +161,32 @@ def should_execute_create_with_correct_target(executed_create):
     )
 
 
-def should_store_both_confirmations_when_created_twice(
+def should_deduplicate_second_create_for_same_phytosanitary(
+    create_tool, tool_context, confirmation_store
+):
+    create_tool(
+        name="Neem Oil",
+        target="Spider mites",
+        usage_sheet="Dilute 5ml per liter",
+        summary="First create",
+        tool_context=tool_context,
+    )
+    create_tool(
+        name="Neem Oil",
+        target="Spider mites",
+        usage_sheet="Dilute 5ml per liter",
+        summary="Second create",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second create for the same phytosanitary product should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_creates_for_different_phytosanitary_products(
     create_tool, tool_context, confirmation_store
 ):
     create_tool(
@@ -182,7 +207,7 @@ def should_store_both_confirmations_when_created_twice(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Creates for different phytosanitary products should each be stored as independent confirmations",
     )
 
 

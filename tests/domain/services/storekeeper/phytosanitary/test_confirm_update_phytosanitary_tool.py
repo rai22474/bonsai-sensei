@@ -146,7 +146,7 @@ def should_execute_update_with_correct_target(executed_update_with_target):
     )
 
 
-def should_store_both_confirmations_when_updated_twice(
+def should_deduplicate_second_update_for_same_phytosanitary(
     update_tool, tool_context, confirmation_store
 ):
     update_tool(
@@ -164,8 +164,31 @@ def should_store_both_confirmations_when_updated_twice(
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second update for the same phytosanitary product should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_updates_for_different_phytosanitary_products(
+    update_tool, tool_context, confirmation_store
+):
+    update_tool(
+        name="Neem Oil",
+        summary="Update Neem Oil",
+        usage_sheet="Sheet 1",
+        tool_context=tool_context,
+    )
+    update_tool(
+        name="Copper Sulfate",
+        summary="Update Copper Sulfate",
+        usage_sheet="Sheet 2",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Updates for different phytosanitary products should each be stored as independent confirmations",
     )
 
 

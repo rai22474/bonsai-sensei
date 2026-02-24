@@ -152,7 +152,30 @@ def should_execute_create_with_species_id_resolved_from_name(executed_bonsai):
     )
 
 
-def should_store_both_confirmations_when_created_twice(
+def should_deduplicate_second_create_for_same_bonsai(
+    create_tool, tool_context, confirmation_store
+):
+    create_tool(
+        name="Naruto",
+        species_name="Elm",
+        summary="First bonsai",
+        tool_context=tool_context,
+    )
+    create_tool(
+        name="Naruto",
+        species_name="Elm",
+        summary="Second bonsai",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second create for the same bonsai name should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_creates_for_different_bonsai(
     create_tool, tool_context, confirmation_store
 ):
     create_tool(
@@ -171,7 +194,7 @@ def should_store_both_confirmations_when_created_twice(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Creates for different bonsai should each be stored as independent confirmations",
     )
 
 

@@ -152,7 +152,7 @@ def should_execute_update_with_common_name_in_species_data(update_tool, tool_con
     )
 
 
-def should_store_both_confirmations_when_updated_twice(
+def should_deduplicate_second_update_for_same_species(
     update_tool, tool_context, confirmation_store
 ):
     update_tool(
@@ -168,8 +168,29 @@ def should_store_both_confirmations_when_updated_twice(
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second update for the same species should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_updates_for_different_species(
+    update_tool, tool_context, confirmation_store
+):
+    update_tool(
+        species={"name": "Elm", "scientific_name": "Ulmus minor"},
+        summary="Update Elm",
+        tool_context=tool_context,
+    )
+    update_tool(
+        species={"name": "Oak", "scientific_name": "Quercus robur"},
+        summary="Update Oak",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Updates for different species should each be stored as independent confirmations",
     )
 
 
@@ -194,13 +215,16 @@ def update_species_func(captured_update):
 
 @pytest.fixture
 def existing_species():
-    return Species(id=1, name="Elm", scientific_name="Ulmus", care_guide={})
+    return [
+        Species(id=1, name="Elm", scientific_name="Ulmus", care_guide={}),
+        Species(id=2, name="Oak", scientific_name="Quercus", care_guide={}),
+    ]
 
 
 @pytest.fixture
 def get_species_by_name_func(existing_species):
     def get_species_by_name(name: str) -> Species | None:
-        return existing_species if name == existing_species.name else None
+        return next((species for species in existing_species if species.name == name), None)
 
     return get_species_by_name
 

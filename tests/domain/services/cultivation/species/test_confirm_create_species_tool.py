@@ -142,7 +142,32 @@ def should_include_sources_in_care_guide_on_execute(executed_species):
     )
 
 
-def should_store_both_confirmations_when_created_twice(
+def should_deduplicate_second_create_for_same_species(
+    confirm_tool, tool_context, confirmation_store
+):
+    confirm_tool(
+        common_name="Elm",
+        scientific_name="Ulmus minor",
+        summary="First confirmation",
+        sources=[],
+        tool_context=tool_context,
+    )
+    confirm_tool(
+        common_name="Elm",
+        scientific_name="Ulmus minor",
+        summary="Second confirmation",
+        sources=[],
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second create for the same species should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_creates_for_different_species(
     confirm_tool, tool_context, confirmation_store
 ):
     confirm_tool(
@@ -163,7 +188,7 @@ def should_store_both_confirmations_when_created_twice(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Creates for different species should each be stored as independent confirmations",
     )
 
 

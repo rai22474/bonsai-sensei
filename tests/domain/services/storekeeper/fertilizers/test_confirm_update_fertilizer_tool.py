@@ -138,7 +138,7 @@ def should_execute_update_with_correct_usage_sheet(executed_update):
     )
 
 
-def should_store_both_confirmations_when_updated_twice(
+def should_deduplicate_second_update_for_same_fertilizer(
     update_tool, tool_context, confirmation_store
 ):
     update_tool(
@@ -156,8 +156,31 @@ def should_store_both_confirmations_when_updated_twice(
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
+        equal_to(1),
+        "Second update for the same fertilizer should be deduplicated, leaving only one confirmation",
+    )
+
+
+def should_store_both_updates_for_different_fertilizers(
+    update_tool, tool_context, confirmation_store
+):
+    update_tool(
+        name="GreenBoom",
+        summary="Update GreenBoom",
+        usage_sheet="Sheet 1",
+        tool_context=tool_context,
+    )
+    update_tool(
+        name="BlueForce",
+        summary="Update BlueForce",
+        usage_sheet="Sheet 2",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Both confirmations should be stored independently for the same user",
+        "Updates for different fertilizers should each be stored as independent confirmations",
     )
 
 
