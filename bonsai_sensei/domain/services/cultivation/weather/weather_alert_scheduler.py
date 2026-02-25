@@ -30,9 +30,9 @@ def create_weather_alert_scheduler(
     """Create and start an APScheduler that dispatches weather alerts at a configurable interval.
 
     The interval is read from the WEATHER_ALERT_INTERVAL_SECONDS environment variable
-    (defaults to 86400 seconds / 24 hours). The scheduler must be shut down by the caller.
+    (defaults to 900 seconds / 15 minutes). The scheduler must be shut down by the caller.
     """
-    interval_seconds = int(os.getenv("WEATHER_ALERT_INTERVAL_SECONDS", str(24 * 3600)))
+    interval_seconds = int(os.getenv("WEATHER_ALERT_INTERVAL_SECONDS", str(15 * 60)))
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         _dispatch_weather_alerts,
