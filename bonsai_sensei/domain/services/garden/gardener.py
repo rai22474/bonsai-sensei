@@ -10,6 +10,7 @@ from bonsai_sensei.domain.services.garden.bonsai_tools import (
 from bonsai_sensei.domain.services.garden.confirm_apply_fertilizer_tool import create_confirm_apply_fertilizer_tool
 from bonsai_sensei.domain.services.garden.confirm_apply_phytosanitary_tool import create_confirm_apply_phytosanitary_tool
 from bonsai_sensei.domain.services.garden.confirm_create_bonsai_tool import create_confirm_create_bonsai_tool
+from bonsai_sensei.domain.services.garden.confirm_record_transplant_tool import create_confirm_record_transplant_tool
 from bonsai_sensei.domain.services.garden.confirm_delete_bonsai_tool import create_confirm_delete_bonsai_tool
 from bonsai_sensei.domain.services.garden.confirm_update_bonsai_tool import create_confirm_update_bonsai_tool
 
@@ -39,6 +40,10 @@ Que características tienen y gestionar los registros de nuevos bonsáis.
     - Comprueba que el fertilizante esté registrado.
     - Solicita confirmación con el nombre del bonsái, el fertilizante y la cantidad aplicada.
     - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_fertilizer.
+* Si el usuario indica que ha realizado un trasplante a un bonsái:
+    - Llama directamente a confirm_record_transplant con el nombre del bonsái, el tamaño de la maceta y el sustrato.
+      Esa herramienta valida internamente si el bonsái existe; NO intentes listarlo antes.
+    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_record_transplant.
 * Si el usuario indica que ha aplicado un tratamiento fitosanitario a un bonsái:
     - Llama directamente a confirm_apply_phytosanitary con el nombre del bonsái, el producto y la cantidad.
       Esa herramienta valida internamente si el bonsái y el producto existen; NO intentes listarlos antes.
@@ -104,6 +109,12 @@ def create_gardener(
         confirmation_store=confirmation_store,
     )
     confirm_apply_phytosanitary_tool.__name__ = "confirm_apply_phytosanitary"
+    confirm_record_transplant_tool = create_confirm_record_transplant_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        record_bonsai_event_func=record_bonsai_event_func,
+        confirmation_store=confirmation_store,
+    )
+    confirm_record_transplant_tool.__name__ = "confirm_record_transplant"
     list_events_tool = create_list_bonsai_events_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=list_bonsai_events_func,
@@ -123,6 +134,7 @@ def create_gardener(
             confirm_delete_tool,
             confirm_apply_fertilizer_tool,
             confirm_apply_phytosanitary_tool,
+            confirm_record_transplant_tool,
             list_events_tool,
         ],
     )

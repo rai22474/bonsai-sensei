@@ -4,9 +4,9 @@ from hamcrest import assert_that, equal_to, not_none
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
-from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.services.garden.confirm_apply_phytosanitary_tool import (
-    create_confirm_apply_phytosanitary_tool,
+from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.garden.confirm_apply_fertilizer_tool import (
+    create_confirm_apply_fertilizer_tool,
 )
 
 
@@ -16,12 +16,12 @@ class MockToolContext:
         self.state = {}
 
 
-def should_return_error_when_tool_context_is_none(apply_phytosanitary_tool):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_tool_context_is_none(apply_fertilizer_tool):
+    result = apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio to Kaze",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow to Kaze",
         tool_context=None,
     )
 
@@ -32,12 +32,12 @@ def should_return_error_when_tool_context_is_none(apply_phytosanitary_tool):
     )
 
 
-def should_return_error_when_bonsai_name_is_empty(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_bonsai_name_is_empty(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow",
         tool_context=tool_context,
     )
 
@@ -48,28 +48,28 @@ def should_return_error_when_bonsai_name_is_empty(apply_phytosanitary_tool, tool
     )
 
 
-def should_return_error_when_phytosanitary_name_is_empty(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_fertilizer_name_is_empty(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="",
-        amount="3 ml",
-        summary="Apply treatment",
+        fertilizer_name="",
+        amount="5 ml",
+        summary="Apply fertilizer",
         tool_context=tool_context,
     )
 
     assert_that(
         result,
-        equal_to({"status": "error", "message": "phytosanitary_name_required"}),
-        "Empty phytosanitary name should return a phytosanitary_name_required error",
+        equal_to({"status": "error", "message": "fertilizer_name_required"}),
+        "Empty fertilizer name should return a fertilizer_name_required error",
     )
 
 
-def should_return_error_when_amount_is_empty(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_amount_is_empty(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
+        fertilizer_name="BioGrow",
         amount="",
-        summary="Apply NimBio",
+        summary="Apply BioGrow",
         tool_context=tool_context,
     )
 
@@ -80,12 +80,12 @@ def should_return_error_when_amount_is_empty(apply_phytosanitary_tool, tool_cont
     )
 
 
-def should_return_error_when_bonsai_not_found(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_bonsai_not_found(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="UnknownBonsai",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio to UnknownBonsai",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow to UnknownBonsai",
         tool_context=tool_context,
     )
 
@@ -96,28 +96,28 @@ def should_return_error_when_bonsai_not_found(apply_phytosanitary_tool, tool_con
     )
 
 
-def should_return_error_when_phytosanitary_not_found(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_error_when_fertilizer_not_found(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="UnknownProduct",
-        amount="3 ml",
-        summary="Apply UnknownProduct to Kaze",
+        fertilizer_name="UnknownFertilizer",
+        amount="5 ml",
+        summary="Apply UnknownFertilizer to Kaze",
         tool_context=tool_context,
     )
 
     assert_that(
         result,
-        equal_to({"status": "error", "message": "phytosanitary_not_found"}),
-        "Unknown phytosanitary name should return a phytosanitary_not_found error",
+        equal_to({"status": "error", "message": "fertilizer_not_found"}),
+        "Unknown fertilizer name should return a fertilizer_not_found error",
     )
 
 
-def should_return_confirmation_pending_when_valid(apply_phytosanitary_tool, tool_context):
-    result = apply_phytosanitary_tool(
+def should_return_confirmation_pending_when_valid(apply_fertilizer_tool, tool_context):
+    result = apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio 3 ml to Kaze",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow 5 ml to Kaze",
         tool_context=tool_context,
     )
 
@@ -126,20 +126,20 @@ def should_return_confirmation_pending_when_valid(apply_phytosanitary_tool, tool
         equal_to({
             "status": "confirmation_pending",
             "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
-            "summary": "Apply NimBio 3 ml to Kaze",
+            "summary": "Apply BioGrow 5 ml to Kaze",
         }),
         "Valid input should return a confirmation_pending dict with the summary",
     )
 
 
 def should_store_pending_confirmation_in_store(
-    apply_phytosanitary_tool, tool_context, confirmation_store
+    apply_fertilizer_tool, tool_context, confirmation_store
 ):
-    apply_phytosanitary_tool(
+    apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio 3 ml to Kaze",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow 5 ml to Kaze",
         tool_context=tool_context,
     )
 
@@ -150,14 +150,14 @@ def should_store_pending_confirmation_in_store(
     )
 
 
-def should_record_phytosanitary_event_on_execution(
-    apply_phytosanitary_tool, tool_context, confirmation_store, captured_events
+def should_record_fertilizer_event_on_execution(
+    apply_fertilizer_tool, tool_context, confirmation_store, captured_events
 ):
-    apply_phytosanitary_tool(
+    apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio 3 ml to Kaze",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow 5 ml to Kaze",
         tool_context=tool_context,
     )
     pending = confirmation_store.get_pending("user-123")
@@ -166,19 +166,19 @@ def should_record_phytosanitary_event_on_execution(
     recorded_event = captured_events[0]
     assert_that(
         recorded_event.event_type,
-        equal_to("phytosanitary_application"),
-        "Executed confirmation should record a phytosanitary_application event",
+        equal_to("fertilizer_application"),
+        "Executed confirmation should record a fertilizer_application event",
     )
 
 
 def should_record_event_with_correct_payload_on_execution(
-    apply_phytosanitary_tool, tool_context, confirmation_store, captured_events
+    apply_fertilizer_tool, tool_context, confirmation_store, captured_events
 ):
-    apply_phytosanitary_tool(
+    apply_fertilizer_tool(
         bonsai_name="Kaze",
-        phytosanitary_name="NimBio",
-        amount="3 ml",
-        summary="Apply NimBio 3 ml to Kaze",
+        fertilizer_name="BioGrow",
+        amount="5 ml",
+        summary="Apply BioGrow 5 ml to Kaze",
         tool_context=tool_context,
     )
     pending = confirmation_store.get_pending("user-123")
@@ -187,8 +187,8 @@ def should_record_event_with_correct_payload_on_execution(
     recorded_event = captured_events[0]
     assert_that(
         recorded_event.payload,
-        equal_to({"phytosanitary_id": 1, "phytosanitary_name": "NimBio", "amount": "3 ml"}),
-        "Recorded event payload should contain the phytosanitary id, name and amount",
+        equal_to({"fertilizer_id": 1, "fertilizer_name": "BioGrow", "amount": "5 ml"}),
+        "Recorded event payload should contain the fertilizer id, name and amount",
     )
 
 
@@ -217,8 +217,8 @@ def existing_bonsai():
 
 
 @pytest.fixture
-def existing_phytosanitary():
-    return Phytosanitary(id=1, name="NimBio")
+def existing_fertilizer():
+    return Fertilizer(id=1, name="BioGrow")
 
 
 @pytest.fixture
@@ -230,23 +230,23 @@ def get_bonsai_by_name_func(existing_bonsai):
 
 
 @pytest.fixture
-def get_phytosanitary_by_name_func(existing_phytosanitary):
-    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
-        return existing_phytosanitary if name == existing_phytosanitary.name else None
+def get_fertilizer_by_name_func(existing_fertilizer):
+    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+        return existing_fertilizer if name == existing_fertilizer.name else None
 
-    return get_phytosanitary_by_name
+    return get_fertilizer_by_name
 
 
 @pytest.fixture
-def apply_phytosanitary_tool(
+def apply_fertilizer_tool(
     get_bonsai_by_name_func,
-    get_phytosanitary_by_name_func,
+    get_fertilizer_by_name_func,
     record_bonsai_event_func,
     confirmation_store,
 ):
-    return create_confirm_apply_phytosanitary_tool(
+    return create_confirm_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
-        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         confirmation_store=confirmation_store,
     )

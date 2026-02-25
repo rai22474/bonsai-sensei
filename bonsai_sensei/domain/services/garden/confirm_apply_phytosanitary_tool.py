@@ -72,7 +72,7 @@ def create_confirm_apply_phytosanitary_tool(
                 bonsai_event=BonsaiEvent(
                     bonsai_id=bonsai.id,
                     event_type="phytosanitary_application",
-                    payload={"phytosanitary_name": phytosanitary_name, "amount": amount},
+                    payload={"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary_name, "amount": amount},
                 ),
             ),
             deduplication_key=f"apply_phytosanitary:{bonsai_name}:{phytosanitary_name}",
