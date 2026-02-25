@@ -43,6 +43,7 @@ Tu objetivo es coordinar las respuestas de otros agentes expertos en diferentes 
   a los bonsáis. El storekeeper solo gestiona el catálogo de productos.
 * En caso que el experto no haya podido proporcionar una respuesta útil, informa al usuario que no tienes la información necesaria.
 * Responde siempre en castellano.
+* Formatea siempre tus respuestas en HTML compatible con Telegram: usa <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea cuando mejoren la legibilidad. No uses Markdown.
 """
 
 

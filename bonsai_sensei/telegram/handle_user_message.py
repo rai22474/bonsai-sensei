@@ -2,6 +2,8 @@ import uuid
 from functools import partial
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import ParseMode
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from bonsai_sensei.domain.confirmation import Confirmation
@@ -55,13 +57,21 @@ async def handle_user_message(
 
     response: AdvisorResponse = await message_processor(update.message.text, user_id=user_id)
 
-    await update.message.reply_text(response.text)
+    await _reply_with_html(update, response.text)
 
     for pending in response.pending_confirmations:
         await update.message.reply_text(
             pending.summary,
             reply_markup=_create_confirmation_keyboard(pending.id),
         )
+
+
+async def _reply_with_html(update: Update, text: str) -> None:
+    try:
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    except BadRequest:
+        logger.warning("Failed to send message with HTML, falling back to plain text")
+        await update.message.reply_text(text)
 
 
 def _needs_location(user_id: str, get_user_settings_func, users_awaiting_location: set | None) -> bool:
