@@ -1,7 +1,7 @@
 import logging
 import os
 from sqlmodel import SQLModel, create_engine
-from bonsai_sensei.domain import species, bonsai, fertilizer, phytosanitary, bonsai_event, user_settings
+from bonsai_sensei.domain import species, bonsai, fertilizer, phytosanitary, bonsai_event, user_settings, planned_work
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

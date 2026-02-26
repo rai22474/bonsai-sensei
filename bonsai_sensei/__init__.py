@@ -23,6 +23,7 @@ from bonsai_sensei.api.advice import router as advice_router
 from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.api.user_settings import router as user_settings_router
+from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
@@ -39,6 +40,7 @@ from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import user_settings_store
+from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import setup_monocle_observability
 
@@ -164,6 +166,20 @@ def _create_user_settings_service(session_factory):
     }
 
 
+def _create_cultivation_plan_service(session_factory):
+    return {
+        "list_planned_works": partial(
+            cultivation_plan.list_planned_works, create_session=session_factory
+        ),
+        "create_planned_work": partial(
+            cultivation_plan.create_planned_work, create_session=session_factory
+        ),
+        "delete_planned_work": partial(
+            cultivation_plan.delete_planned_work, create_session=session_factory
+        ),
+    }
+
+
 def _save_telegram_chat_id(user_id: str, chat_id: str, save_user_settings):
     save_user_settings(UserSettings(user_id=user_id, telegram_chat_id=chat_id))
 
@@ -181,6 +197,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.bonsai_history_service = _create_bonsai_history_service(get_session_partial)
     app.state.user_settings_service = _create_user_settings_service(get_session_partial)
+    app.state.cultivation_plan_service = _create_cultivation_plan_service(get_session_partial)
     app.state.confirmation_store = ConfirmationStore()
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
@@ -267,4 +284,5 @@ app.include_router(phytosanitary_router, prefix="/api", tags=["phytosanitary"])
 app.include_router(advice_router, prefix="/api", tags=["advice"])
 app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
+app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

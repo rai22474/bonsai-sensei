@@ -13,6 +13,8 @@ from bonsai_sensei.domain.services.garden.confirm_create_bonsai_tool import crea
 from bonsai_sensei.domain.services.garden.confirm_record_transplant_tool import create_confirm_record_transplant_tool
 from bonsai_sensei.domain.services.garden.confirm_delete_bonsai_tool import create_confirm_delete_bonsai_tool
 from bonsai_sensei.domain.services.garden.confirm_update_bonsai_tool import create_confirm_update_bonsai_tool
+from bonsai_sensei.domain.services.garden.confirm_execute_planned_work_tool import create_confirm_execute_planned_work_tool
+from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
 
 
 GARDENER_INSTRUCTION = """
@@ -48,6 +50,11 @@ Que características tienen y gestionar los registros de nuevos bonsáis.
     - Llama directamente a confirm_apply_phytosanitary con el nombre del bonsái, el producto y la cantidad.
       Esa herramienta valida internamente si el bonsái y el producto existen; NO intentes listarlos antes.
     - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_phytosanitary.
+* Si el usuario indica que ha ejecutado un trabajo planificado:
+    - Usa list_planned_works_for_bonsai para obtener los trabajos planificados del bonsái.
+    - Identifica el trabajo correspondiente por tipo y detalles.
+    - Solicita confirmación con confirm_execute_planned_work usando el ID del trabajo encontrado.
+    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_execute_planned_work.
 * Si el usuario quiere consultar el historial de eventos de un bonsái (abonados, tratamientos, etc.):
     - Usa list_bonsai_events para obtener los eventos del bonsái por su nombre.
     - Presenta los eventos al usuario de forma legible, agrupados por tipo si hay varios.
@@ -69,6 +76,9 @@ def create_gardener(
     get_phytosanitary_by_name_func: Callable[[str], object | None] = None,
     record_bonsai_event_func: Callable[..., object] = None,
     list_bonsai_events_func: Callable[[int], list[dict]] = None,
+    list_planned_works_func: Callable[..., list] = None,
+    get_planned_work_func: Callable[..., object | None] = None,
+    delete_planned_work_func: Callable[..., bool] = None,
     confirmation_store: ConfirmationStore | None = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
@@ -121,10 +131,24 @@ def create_gardener(
     )
     list_events_tool.__name__ = "list_bonsai_events"
 
+    list_works_tool = create_list_planned_works_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_planned_works_func=list_planned_works_func,
+    )
+    list_works_tool.__name__ = "list_planned_works_for_bonsai"
+
+    confirm_execute_tool = create_confirm_execute_planned_work_tool(
+        get_planned_work_func=get_planned_work_func,
+        record_bonsai_event_func=record_bonsai_event_func,
+        delete_planned_work_func=delete_planned_work_func,
+        confirmation_store=confirmation_store,
+    )
+    confirm_execute_tool.__name__ = "confirm_execute_planned_work"
+
     return Agent(
         model=model,
         name="gardener",
-        description="Gestiona la colección de bonsáis y sus registros.",
+        description="Gestiona la colección de bonsáis, registra tratamientos aplicados y ejecuta trabajos planificados convirtiéndolos en eventos.",
         instruction=GARDENER_INSTRUCTION,
         tools=[
             list_bonsai_tool,
@@ -136,5 +160,7 @@ def create_gardener(
             confirm_apply_phytosanitary_tool,
             confirm_record_transplant_tool,
             list_events_tool,
+            list_works_tool,
+            confirm_execute_tool,
         ],
     )

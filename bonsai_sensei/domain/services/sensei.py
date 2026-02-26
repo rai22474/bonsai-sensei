@@ -2,6 +2,8 @@ from typing import List
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import AgentTool
 
+from bonsai_sensei.domain.services.current_date_tool import get_current_date
+
 SENSEI_INSTRUCTION = """
 #ROL
 Eres el coordinador de agentes expertos en bonsáis.
@@ -34,13 +36,27 @@ Tu objetivo es coordinar las respuestas de otros agentes expertos en diferentes 
     - Eliminar un bonsái de su colección.
     - Registrar los tratamientos realizados a un bonsái de su colección.
     - Consultar el historial de cuidados y tratamientos realizados a un bonsái de su colección.
+  - Gestionar el plan de trabajos de cultivo de un bonsái:
+    - Planificar una fertilización, trasplante o tratamiento fitosanitario futuro para un bonsái.
+    - Consultar los trabajos planificados pendientes de un bonsái.
+    - Reportar que ha ejecutado un trabajo planificado (convertirlo en evento).
 * Una vez identificada la intención del usuario, razona cual es el experto que mejor puede responder
   a su consulta o gestionar su solicitud.
   Delega al experto adecuado para que responda a la consulta o gestione la solicitud.
-  IMPORTANTE: Si el usuario reporta haber aplicado un fertilizante o tratamiento a un bonsái concreto
-  de su colección (p. ej. "he abonado el bonsái X con Y"), delega SIEMPRE al jardinero (gardener),
-  no al encargado de almacén (storekeeper). El jardinero es quien registra los tratamientos aplicados
-  a los bonsáis. El storekeeper solo gestiona el catálogo de productos.
+  IMPORTANTE — Reglas de enrutamiento:
+  - Si el usuario quiere PLANIFICAR un trabajo futuro (fertilización, trasplante o tratamiento para
+    una fecha futura), delega SIEMPRE al experto en cultivo (cultivation_agent). Solo el experto en
+    cultivo puede crear trabajos planificados.
+  - Si el usuario REPORTA haber aplicado ya un fertilizante o tratamiento a un bonsái (p. ej. "he
+    abonado el bonsái X con Y hoy"), delega al jardinero (gardener) para registrar el evento.
+  - Si el usuario indica que ha EJECUTADO un trabajo planificado (p. ej. "he realizado el trabajo
+    planificado de fertilización"), delega al jardinero (gardener), que se encarga de convertir el
+    trabajo planificado en evento.
+  - El storekeeper solo gestiona el catálogo de productos (fertilizantes, fitosanitarios), nunca
+    registra tratamientos ni planifica trabajos.
+* Cuando el usuario mencione fechas relativas (p. ej. "la próxima semana", "en dos meses", "el mes
+  que viene") o necesites saber si una fecha ya ha pasado, usa get_current_date para obtener la
+  fecha actual antes de delegar.
 * En caso que el experto no haya podido proporcionar una respuesta útil, informa al usuario que no tienes la información necesaria.
 * Responde siempre en castellano.
 * Formatea siempre tus respuestas en HTML compatible con Telegram: usa <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea cuando mejoren la legibilidad. No uses Markdown.
@@ -56,6 +72,6 @@ def create_sensei(
         name="sensei",
         description="Sensei que coordina agentes expertos en bonsáis.",
         instruction=SENSEI_INSTRUCTION,
-        tools=tools,
+        tools=[get_current_date, *tools],
         sub_agents=[],
     )

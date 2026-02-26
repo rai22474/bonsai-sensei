@@ -2,6 +2,11 @@ import os
 from functools import partial
 
 from bonsai_sensei.domain import herbarium
+from bonsai_sensei.domain import garden
+from bonsai_sensei.domain import fertilizer_catalog
+from bonsai_sensei.domain import phytosanitary_registry
+from bonsai_sensei.domain import cultivation_plan
+from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain.services.cultivation.cultivation_agent import (
     create_cultivation_agent,
 )
@@ -36,6 +41,21 @@ from bonsai_sensei.domain.services.cultivation.weather.get_user_location_tool im
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
     create_list_species_tool,
 )
+from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
+    create_list_planned_works_tool,
+    create_list_fertilizers_tool,
+    create_list_phytosanitary_tool,
+    create_list_bonsai_events_tool,
+)
+from bonsai_sensei.domain.services.cultivation.plan.confirm_create_planned_work_tool import (
+    create_confirm_create_planned_work_tool,
+)
+from bonsai_sensei.domain.services.cultivation.plan.fertilizer_advisor import (
+    create_fertilizer_advisor,
+)
+from bonsai_sensei.domain.services.cultivation.plan.phytosanitary_advisor import (
+    create_phytosanitary_advisor,
+)
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain import user_settings_store
 
@@ -51,10 +71,34 @@ def create_cultivation_group(
         model, session_factory, confirmation_store, list_species_tool
     )
 
+    list_bonsai_events_tool = _create_list_bonsai_events_tool(session_factory=session_factory)
+    fertilizer_advisor = _create_fertilizer_advisor(
+        model=model,
+        session_factory=session_factory,
+        list_bonsai_events_tool=list_bonsai_events_tool,
+    )
+    phytosanitary_advisor = _create_phytosanitary_advisor(
+        model=model,
+        session_factory=session_factory,
+        list_bonsai_events_tool=list_bonsai_events_tool,
+    )
+
+    list_planned_works_tool = _create_list_planned_works_tool(session_factory=session_factory)
+    confirm_create_tool = _create_confirm_create_planned_work_tool(
+        session_factory=session_factory,
+        confirmation_store=confirmation_store,
+    )
+    list_planned_works_tool.__name__ = "list_planned_works_for_bonsai"
+    confirm_create_tool.__name__ = "confirm_create_planned_work"
+
     return create_cultivation_agent(
         model=model,
         botanist=botanist,
         weather_advisor=weather_agent,
+        fertilizer_advisor=fertilizer_advisor,
+        phytosanitary_advisor=phytosanitary_advisor,
+        list_planned_works_tool=list_planned_works_tool,
+        confirm_create_planned_work_tool=confirm_create_tool,
     )
 
 
@@ -126,3 +170,67 @@ def _create_list_species_tool(session_factory):
     )
     tool = create_list_species_tool(get_all_species_partial)
     return tool
+
+
+def _create_list_bonsai_events_tool(session_factory):
+    return create_list_bonsai_events_tool(
+        get_bonsai_by_name_func=partial(
+            garden.get_bonsai_by_name, create_session=session_factory
+        ),
+        list_bonsai_events_func=partial(
+            bonsai_history.list_bonsai_events, create_session=session_factory
+        ),
+    )
+
+
+def _create_fertilizer_advisor(model, session_factory, list_bonsai_events_tool):
+    list_fertilizers_tool = create_list_fertilizers_tool(
+        list_fertilizers_func=partial(
+            fertilizer_catalog.list_fertilizers, create_session=session_factory
+        )
+    )
+    return create_fertilizer_advisor(
+        model=model,
+        tools=[list_fertilizers_tool, list_bonsai_events_tool],
+    )
+
+
+def _create_phytosanitary_advisor(model, session_factory, list_bonsai_events_tool):
+    list_phytosanitary_tool = create_list_phytosanitary_tool(
+        list_phytosanitary_func=partial(
+            phytosanitary_registry.list_phytosanitary, create_session=session_factory
+        )
+    )
+    return create_phytosanitary_advisor(
+        model=model,
+        tools=[list_phytosanitary_tool, list_bonsai_events_tool],
+    )
+
+
+def _create_list_planned_works_tool(session_factory):
+    return create_list_planned_works_tool(
+        get_bonsai_by_name_func=partial(
+            garden.get_bonsai_by_name, create_session=session_factory
+        ),
+        list_planned_works_func=partial(
+            cultivation_plan.list_planned_works, create_session=session_factory
+        ),
+    )
+
+
+def _create_confirm_create_planned_work_tool(session_factory, confirmation_store):
+    return create_confirm_create_planned_work_tool(
+        get_bonsai_by_name_func=partial(
+            garden.get_bonsai_by_name, create_session=session_factory
+        ),
+        get_fertilizer_by_name_func=partial(
+            fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory
+        ),
+        get_phytosanitary_by_name_func=partial(
+            phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory
+        ),
+        create_planned_work_func=partial(
+            cultivation_plan.create_planned_work, create_session=session_factory
+        ),
+        confirmation_store=confirmation_store,
+    )

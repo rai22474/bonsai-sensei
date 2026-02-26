@@ -5,6 +5,7 @@ from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
+from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.garden.gardener import create_gardener
 
@@ -27,6 +28,9 @@ def create_gardener_group(
     get_phytosanitary_by_name_func = partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory)
     record_bonsai_event_func = partial(bonsai_history.record_bonsai_event, create_session=session_factory)
     list_bonsai_events_func = partial(bonsai_history.list_bonsai_events, create_session=session_factory)
+    list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
+    get_planned_work_func = partial(cultivation_plan.get_planned_work, create_session=session_factory)
+    delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
     return create_gardener(
         model=model,
         list_bonsai_func=list_bonsai_func,
@@ -40,5 +44,8 @@ def create_gardener_group(
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         list_bonsai_events_func=list_bonsai_events_func,
+        list_planned_works_func=list_planned_works_func,
+        get_planned_work_func=get_planned_work_func,
+        delete_planned_work_func=delete_planned_work_func,
         confirmation_store=confirmation_store,
     )
