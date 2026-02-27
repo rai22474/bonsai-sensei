@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List
 from sqlmodel import select, Session
 
@@ -10,6 +11,19 @@ def list_planned_works(session: Session, bonsai_id: int) -> List[PlannedWork]:
     statement = (
         select(PlannedWork)
         .where(PlannedWork.bonsai_id == bonsai_id)
+        .order_by(PlannedWork.scheduled_date)
+    )
+    return session.exec(statement).all()
+
+
+@with_session
+def list_planned_works_in_date_range(
+    session: Session, start_date: date, end_date: date
+) -> List[PlannedWork]:
+    statement = (
+        select(PlannedWork)
+        .where(PlannedWork.scheduled_date >= start_date)
+        .where(PlannedWork.scheduled_date <= end_date)
         .order_by(PlannedWork.scheduled_date)
     )
     return session.exec(statement).all()

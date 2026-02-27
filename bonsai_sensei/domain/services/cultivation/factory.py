@@ -10,6 +10,9 @@ from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain.services.cultivation.cultivation_agent import (
     create_cultivation_agent,
 )
+from bonsai_sensei.domain.services.cultivation.plan.planning_agent import (
+    create_planning_agent,
+)
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
 from bonsai_sensei.domain.services.cultivation.species.care_guide_agent import (
     create_care_guide_agent,
@@ -46,9 +49,13 @@ from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
     create_list_fertilizers_tool,
     create_list_phytosanitary_tool,
     create_list_bonsai_events_tool,
+    create_list_weekend_planned_works_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.confirm_create_planned_work_tool import (
     create_confirm_create_planned_work_tool,
+)
+from bonsai_sensei.domain.services.cultivation.plan.confirm_delete_planned_work_tool import (
+    create_confirm_delete_planned_work_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.fertilizer_advisor import (
     create_fertilizer_advisor,
@@ -56,6 +63,7 @@ from bonsai_sensei.domain.services.cultivation.plan.fertilizer_advisor import (
 from bonsai_sensei.domain.services.cultivation.plan.phytosanitary_advisor import (
     create_phytosanitary_advisor,
 )
+from bonsai_sensei.domain.services.garden.bonsai_tools import create_list_bonsai_tool
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain import user_settings_store
 
@@ -91,14 +99,22 @@ def create_cultivation_group(
     list_planned_works_tool.__name__ = "list_planned_works_for_bonsai"
     confirm_create_tool.__name__ = "confirm_create_planned_work"
 
+    planning_agent = _create_planning_agent(
+        model=model,
+        fertilizer_advisor=fertilizer_advisor,
+        phytosanitary_advisor=phytosanitary_advisor,
+        session_factory=session_factory,
+        confirmation_store=confirmation_store,
+        list_planned_works_tool=list_planned_works_tool,
+        list_bonsai_events_tool=list_bonsai_events_tool,
+        confirm_create_tool=confirm_create_tool,
+    )
+
     return create_cultivation_agent(
         model=model,
         botanist=botanist,
         weather_advisor=weather_agent,
-        fertilizer_advisor=fertilizer_advisor,
-        phytosanitary_advisor=phytosanitary_advisor,
-        list_planned_works_tool=list_planned_works_tool,
-        confirm_create_planned_work_tool=confirm_create_tool,
+        planning_agent=planning_agent,
     )
 
 
@@ -233,4 +249,40 @@ def _create_confirm_create_planned_work_tool(session_factory, confirmation_store
             cultivation_plan.create_planned_work, create_session=session_factory
         ),
         confirmation_store=confirmation_store,
+    )
+
+
+def _create_planning_agent(
+    model, fertilizer_advisor, phytosanitary_advisor, session_factory, confirmation_store,
+    list_planned_works_tool, list_bonsai_events_tool, confirm_create_tool,
+):
+    confirm_delete_tool = create_confirm_delete_planned_work_tool(
+        get_planned_work_func=partial(
+            cultivation_plan.get_planned_work, create_session=session_factory
+        ),
+        delete_planned_work_func=partial(
+            cultivation_plan.delete_planned_work, create_session=session_factory
+        ),
+        confirmation_store=confirmation_store,
+    )
+    list_collection_tool = create_list_bonsai_tool(
+        list_bonsai_func=partial(garden.list_bonsai, create_session=session_factory),
+        list_species_func=partial(herbarium.list_species, create_session=session_factory),
+    )
+    list_weekend_tool = create_list_weekend_planned_works_tool(
+        list_planned_works_in_date_range_func=partial(
+            cultivation_plan.list_planned_works_in_date_range, create_session=session_factory
+        ),
+        list_bonsai_func=partial(garden.list_bonsai, create_session=session_factory),
+    )
+    return create_planning_agent(
+        model=model,
+        fertilizer_advisor=fertilizer_advisor,
+        phytosanitary_advisor=phytosanitary_advisor,
+        list_planned_works_tool=list_planned_works_tool,
+        list_bonsai_events_tool=list_bonsai_events_tool,
+        confirm_create_planned_work_tool=confirm_create_tool,
+        confirm_delete_planned_work_tool=confirm_delete_tool,
+        list_collection_tool=list_collection_tool,
+        list_weekend_planned_works_tool=list_weekend_tool,
     )

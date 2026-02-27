@@ -24,6 +24,7 @@ from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
+from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
@@ -32,6 +33,7 @@ from bonsai_sensei.telegram.bot import TelegramBot
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.cultivation.weather.weather_alert_scheduler import create_weather_alert_scheduler
+from bonsai_sensei.domain.services.cultivation.plan.weekend_plan_scheduler import create_weekend_plan_scheduler
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.domain import garden
@@ -171,6 +173,9 @@ def _create_cultivation_plan_service(session_factory):
         "list_planned_works": partial(
             cultivation_plan.list_planned_works, create_session=session_factory
         ),
+        "list_planned_works_in_date_range": partial(
+            cultivation_plan.list_planned_works_in_date_range, create_session=session_factory
+        ),
         "create_planned_work": partial(
             cultivation_plan.create_planned_work, create_session=session_factory
         ),
@@ -261,15 +266,23 @@ async def lifespan(app: FastAPI):
     app.state.bot = bot_instance
     await bot_instance.initialize()
 
-    scheduler = create_weather_alert_scheduler(
+    weather_scheduler = create_weather_alert_scheduler(
         advisor=app.state.advisor,
         list_all_user_settings_func=app.state.user_settings_service["list_all_user_settings"],
+        send_telegram_message_func=app.state.bot.send_message,
+    )
+    weekend_scheduler = create_weekend_plan_scheduler(
+        advisor=app.state.advisor,
+        list_all_user_settings_func=app.state.user_settings_service["list_all_user_settings"],
+        list_planned_works_in_date_range_func=app.state.cultivation_plan_service["list_planned_works_in_date_range"],
+        list_bonsai_func=app.state.garden_service["list_bonsai"],
         send_telegram_message_func=app.state.bot.send_message,
     )
 
     yield
 
-    scheduler.shutdown()
+    weather_scheduler.shutdown()
+    weekend_scheduler.shutdown()
     await bot_instance.shutdown()
 
 
@@ -285,4 +298,5 @@ app.include_router(advice_router, prefix="/api", tags=["advice"])
 app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
+app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

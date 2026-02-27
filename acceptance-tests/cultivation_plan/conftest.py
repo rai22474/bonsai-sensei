@@ -1,5 +1,6 @@
 import re
 import uuid
+from datetime import date, timedelta
 
 import pytest
 from pytest_bdd import given, parsers
@@ -12,6 +13,14 @@ from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertiliz
 from manage_species.species_api import delete_species_by_name
 
 STUB_PORT = 8073
+
+
+def _next_saturday() -> date:
+    today = date.today()
+    days_until_saturday = (5 - today.weekday()) % 7
+    if days_until_saturday == 0:
+        days_until_saturday = 7
+    return today + timedelta(days=days_until_saturday)
 
 
 @pytest.fixture
@@ -91,3 +100,23 @@ def create_planned_fertilization_as_precondition(
         "amount": amount,
     }
     create_planned_work(post, bonsai_id, "fertilizer_application", payload, scheduled_date)
+
+
+@given(
+    parsers.parse(
+        '"{bonsai_name}" has a planned fertilization of "{fertilizer_name}" with amount "{amount}" for next Saturday'
+    )
+)
+def create_planned_fertilization_for_next_saturday(
+    context, bonsai_name, fertilizer_name, amount
+):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    fertilizer = find_fertilizer_by_name(get, fertilizer_name)
+    payload = {
+        "fertilizer_id": fertilizer["id"],
+        "fertilizer_name": fertilizer_name,
+        "amount": amount,
+    }
+    create_planned_work(
+        post, bonsai_id, "fertilizer_application", payload, _next_saturday().isoformat()
+    )
