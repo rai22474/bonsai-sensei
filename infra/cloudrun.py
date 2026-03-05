@@ -9,17 +9,28 @@ def create_service(
     instance: gcp.sql.DatabaseInstance,
     secret: gcp.secretmanager.Secret,
     max_instances: int,
+    vpc: gcp.compute.Network,
+    subnet: gcp.compute.Subnetwork,
 ) -> gcp.cloudrunv2.Service:
     return gcp.cloudrunv2.Service(
         "bonsai-sensei-service",
         location=region,
         name=service_name,
-        ingress="INGRESS_TRAFFIC_ALL",
+        ingress="INGRESS_TRAFFIC_NONE",
         template=gcp.cloudrunv2.ServiceTemplateArgs(
             service_account=service_account.email,
             scaling=gcp.cloudrunv2.ServiceTemplateScalingArgs(
                 min_instance_count=0,
                 max_instance_count=max_instances,
+            ),
+            vpc_access=gcp.cloudrunv2.ServiceTemplateVpcAccessArgs(
+                network_interfaces=[
+                    gcp.cloudrunv2.ServiceTemplateVpcAccessNetworkInterfaceArgs(
+                        network=vpc.id,
+                        subnetwork=subnet.id,
+                    )
+                ],
+                egress="ALL_TRAFFIC",
             ),
             volumes=[
                 gcp.cloudrunv2.ServiceTemplateVolumeArgs(

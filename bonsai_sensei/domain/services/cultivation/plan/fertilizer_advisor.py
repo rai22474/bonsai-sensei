@@ -18,7 +18,8 @@ def create_fertilizer_advisor(model: object, tools: list) -> Agent:
     return Agent(
         model=model,
         name="fertilizer_advisor",
-        description="Experto en fertilizantes disponibles e historial de fertilizaciones. Recomienda qué fertilizante usar para planificar fertilizaciones futuras.",
+        description="""Experto en fertilizantes disponibles e historial de fertilizaciones. 
+        Recomienda qué fertilizante usar para planificar fertilizaciones futuras.""",
         instruction=FERTILIZER_ADVISOR_INSTRUCTION,
         tools=tools,
     )

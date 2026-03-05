@@ -30,6 +30,11 @@ async def get_advice(request_body: AdviceRequest, request: Request):
     return dataclasses.asdict(response)
 
 
+@router.delete("/advice/sessions/{user_id}", status_code=204)
+async def reset_session(user_id: str, request: Request):
+    await request.app.state.reset_session(user_id)
+
+
 @router.post("/advice/confirmations/{confirmation_id}/accept")
 async def accept_confirmation(
     confirmation_id: str, request_body: ConfirmationAcceptRequest, request: Request

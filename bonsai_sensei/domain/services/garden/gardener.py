@@ -38,9 +38,8 @@ Que características tienen y gestionar los registros de nuevos bonsáis.
     - Comprueba que el bonsái exista.
     - Solicita confirmación, con los datos del bonsai a eliminar.
 * Si el usuario indica que ha aplicado un fertilizante a un bonsái:
-    - Comprueba que el bonsái exista en la colección.
-    - Comprueba que el fertilizante esté registrado.
-    - Solicita confirmación con el nombre del bonsái, el fertilizante y la cantidad aplicada.
+    - Llama directamente a confirm_apply_fertilizer con el nombre del bonsái, el fertilizante y la cantidad.
+      Esa herramienta valida internamente si el bonsái y el fertilizante existen; NO intentes listarlos antes.
     - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_fertilizer.
 * Si el usuario indica que ha realizado un trasplante a un bonsái:
     - Llama directamente a confirm_record_transplant con el nombre del bonsái, el tamaño de la maceta y el sustrato.

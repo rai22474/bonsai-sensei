@@ -23,10 +23,20 @@ class AdvisorResponse:
 def create_advisor(
     sensei_agent,
     confirmation_store: ConfirmationStore | None = None,
-) -> Callable[..., AdvisorResponse]:
+) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
     runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
-    return partial(_generate_advise, runner=runner, confirmation_store=confirmation_store)
+    async def reset_session(user_id: str) -> None:
+        await runner.session_service.delete_session(
+            app_name="bonsai_sensei",
+            user_id=user_id,
+            session_id=str(user_id),
+        )
+
+    return (
+        partial(_generate_advise, runner=runner, confirmation_store=confirmation_store),
+        reset_session,
+    )
 
 
 async def _generate_advise(

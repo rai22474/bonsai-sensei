@@ -9,6 +9,7 @@ from infra.cloudsql import (
 )
 from infra.config import load_config
 from infra.iam import create_service_account, grant_cloudsql_client, grant_secret_accessor
+from infra.network import create_network
 from infra.outputs import export_outputs
 from infra.secrets import create_database_secret
 
@@ -16,6 +17,7 @@ from infra.secrets import create_database_secret
 def build_stack() -> None:
     config = load_config()
 
+    vpc, subnet = create_network(config["region"])
     repository = create_repository(config["region"])
     instance = create_instance(config["region"])
     create_database(instance, config["db_name"])
@@ -52,6 +54,8 @@ def build_stack() -> None:
         instance,
         secret,
         config["max_instances"],
+        vpc,
+        subnet,
     )
 
     export_outputs(service, instance, repository, secret)

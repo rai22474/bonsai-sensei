@@ -233,9 +233,9 @@ async def lifespan(app: FastAPI):
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
     )
-    app.state.advisor = create_advisor(
+    app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
-        confirmation_store=app.state.confirmation_store
+        confirmation_store=app.state.confirmation_store,
     )
     save_telegram_chat_id_func = partial(
         _save_telegram_chat_id,

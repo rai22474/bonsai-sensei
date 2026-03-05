@@ -3,7 +3,7 @@ import re
 import pytest
 from pytest_httpserver import HTTPServer
 
-from http_client import delete, put
+from http_client import delete, put, reset_session
 
 STUB_PORT = 8070
 TEST_USER_ID = "weather-alert-test-user"
@@ -47,6 +47,7 @@ def context():
 @pytest.fixture(autouse=True)
 def cleanup_user_settings():
     yield
+    reset_session(TEST_USER_ID)
     delete(f"/api/users/{TEST_USER_ID}/settings")
 
 

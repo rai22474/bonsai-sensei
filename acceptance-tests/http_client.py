@@ -60,6 +60,10 @@ def accept_confirmation(user_id: str, confirmation_id: str):
     )
 
 
+def reset_session(user_id: str) -> None:
+    delete(f"/api/advice/sessions/{user_id}")
+
+
 async def post_sse_async(path: str, payload: dict | None = None) -> list[dict]:
     url = f"{BASE_URL}{path}"
     timeout = aiohttp.ClientTimeout(total=300)
