@@ -236,6 +236,7 @@ async def lifespan(app: FastAPI):
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
         confirmation_store=app.state.confirmation_store,
+        get_user_settings_func=app.state.user_settings_service["get_user_settings"],
     )
     save_telegram_chat_id_func = partial(
         _save_telegram_chat_id,

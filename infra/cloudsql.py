@@ -2,7 +2,10 @@ import pulumi
 import pulumi_gcp as gcp
 
 
-def create_instance(region: str) -> gcp.sql.DatabaseInstance:
+def create_instance(
+    region: str,
+    api_deps: list | None = None,
+) -> gcp.sql.DatabaseInstance:
     return gcp.sql.DatabaseInstance(
         "bonsai-sensei-db",
         database_version="POSTGRES_15",
@@ -15,6 +18,7 @@ def create_instance(region: str) -> gcp.sql.DatabaseInstance:
             availability_type="ZONAL",
             activation_policy="ALWAYS",
         ),
+        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
     )
 
 

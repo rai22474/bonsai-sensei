@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Callable
 from functools import partial
+
 from google.adk.runners import InMemoryRunner, RunConfig
+from google.genai import types
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 
@@ -23,6 +26,7 @@ class AdvisorResponse:
 def create_advisor(
     sensei_agent,
     confirmation_store: ConfirmationStore | None = None,
+    get_user_settings_func: Callable | None = None,
 ) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
     runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
@@ -34,7 +38,12 @@ def create_advisor(
         )
 
     return (
-        partial(_generate_advise, runner=runner, confirmation_store=confirmation_store),
+        partial(
+            _generate_advise,
+            runner=runner,
+            confirmation_store=confirmation_store,
+            get_user_settings_func=get_user_settings_func,
+        ),
         reset_session,
     )
 
@@ -44,15 +53,43 @@ async def _generate_advise(
     runner: InMemoryRunner,
     user_id: str = "default_user",
     confirmation_store: ConfirmationStore | None = None,
+    get_user_settings_func: Callable | None = None,
 ) -> AdvisorResponse:
     run_config = RunConfig(max_llm_calls=DEFAULT_MAX_LLM_CALLS)
 
-    events = await runner.run_debug(
-        user_messages=text,
+    user_settings = get_user_settings_func(user_id) if get_user_settings_func else None
+    user_location = user_settings.location if user_settings and user_settings.location else ""
+
+    state_delta = {
+        "current_date": date.today().isoformat(),
+        "user_location": user_location,
+    }
+
+    session = await runner.session_service.get_session(
+        app_name="bonsai_sensei",
         user_id=user_id,
         session_id=str(user_id),
-        run_config=run_config,
     )
+    if session is None:
+        await runner.session_service.create_session(
+            app_name="bonsai_sensei",
+            user_id=user_id,
+            session_id=str(user_id),
+            state=state_delta,
+        )
+    else:
+        session.state.update(state_delta)
+
+    new_message = types.Content(role="user", parts=[types.Part(text=text)])
+
+    events = []
+    async for event in runner.run_async(
+        user_id=user_id,
+        session_id=str(user_id),
+        new_message=new_message,
+        run_config=run_config,
+    ):
+        events.append(event)
 
     response_text = "\n".join(_build_response_texts(events))
 

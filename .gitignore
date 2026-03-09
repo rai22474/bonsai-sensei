@@ -1,5 +1,7 @@
 .env
 infra/deploy_local.example.env
+infra/Pulumi.*.yaml
+infra/*.egg-info/
 __pycache__/
 *.py[cod]
 *$py.class

@@ -2,11 +2,13 @@ from typing import List
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import AgentTool
 
-from bonsai_sensei.domain.services.current_date_tool import get_current_date
-
 SENSEI_INSTRUCTION = """
 #ROL
 Eres el coordinador de agentes expertos en bonsáis.
+
+# CONTEXTO DEL SISTEMA
+Fecha de hoy: {current_date}
+Ubicación del usuario: {user_location?}
 
 # CONTEXTO
 El bonsái es un arte milenario de origen asiático que consiste en cultivar árboles en miniatura en macetas,
@@ -54,9 +56,6 @@ Tu objetivo es coordinar las respuestas de otros agentes expertos en diferentes 
     trabajo planificado en evento.
   - El storekeeper solo gestiona el catálogo de productos (fertilizantes, fitosanitarios), nunca
     registra tratamientos ni planifica trabajos.
-* Cuando el usuario mencione fechas relativas (p. ej. "la próxima semana", "en dos meses", "el mes
-  que viene") o necesites saber si una fecha ya ha pasado, usa get_current_date para obtener la
-  fecha actual antes de delegar.
 * En caso que el experto no haya podido proporcionar una respuesta útil, informa al usuario que no tienes la información necesaria.
 * Responde siempre en castellano.
 * Formatea siempre tus respuestas en HTML compatible con Telegram: usa <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea cuando mejoren la legibilidad. No uses Markdown.
@@ -72,6 +71,6 @@ def create_sensei(
         name="sensei",
         description="Sensei que coordina agentes expertos en bonsáis.",
         instruction=SENSEI_INSTRUCTION,
-        tools=[get_current_date, *tools],
+        tools=tools,
         sub_agents=[],
     )

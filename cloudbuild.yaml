@@ -3,6 +3,7 @@ substitutions:
   _REPOSITORY: bonsai-sensei
   _SERVICE: bonsai-sensei-api
   _PULUMI_STACK: dev
+  _COMMIT_SHA: local
 
 steps:
   - id: Ensure Artifact Registry
@@ -20,13 +21,13 @@ steps:
     args:
       - build
       - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$_COMMIT_SHA
       - .
   - id: Push image
     name: gcr.io/cloud-builders/docker
     args:
       - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$_COMMIT_SHA
   - id: Pulumi up
     name: pulumi/pulumi-python
     entrypoint: bash
@@ -41,7 +42,7 @@ steps:
         pulumi config set project $PROJECT_ID
         pulumi config set region ${_REGION}
         pulumi config set serviceName ${_SERVICE}
-        pulumi config set image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$SHORT_SHA
+        pulumi config set image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/bonsai-sensei:$_COMMIT_SHA
         pulumi up --yes
 
 availableSecrets:

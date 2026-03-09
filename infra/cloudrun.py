@@ -16,7 +16,7 @@ def create_service(
         "bonsai-sensei-service",
         location=region,
         name=service_name,
-        ingress="INGRESS_TRAFFIC_NONE",
+        ingress="INGRESS_TRAFFIC_INTERNAL_ONLY",
         template=gcp.cloudrunv2.ServiceTemplateArgs(
             service_account=service_account.email,
             scaling=gcp.cloudrunv2.ServiceTemplateScalingArgs(

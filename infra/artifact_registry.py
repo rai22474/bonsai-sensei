@@ -1,7 +1,11 @@
+import pulumi
 import pulumi_gcp as gcp
 
 
-def create_repository(region: str) -> gcp.artifactregistry.Repository:
+def create_repository(
+    region: str,
+    api_deps: list | None = None,
+) -> gcp.artifactregistry.Repository:
     return gcp.artifactregistry.Repository(
         "bonsai-sensei-repo",
         format="DOCKER",
@@ -17,4 +21,5 @@ def create_repository(region: str) -> gcp.artifactregistry.Repository:
                 ),
             )
         ],
+        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
     )
