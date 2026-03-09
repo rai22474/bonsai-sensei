@@ -36,6 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WIF_PROVIDER != ''
+    environment: dev
 
     permissions:
       contents: read
