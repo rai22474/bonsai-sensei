@@ -1,6 +1,6 @@
 from apis import enable_apis
 from artifact_registry import create_repository
-from cloudrun import create_service
+from cloudrun import create_migration_job, create_service
 from cloudsql import (
     create_database,
     create_database_url,
@@ -66,6 +66,17 @@ def build_stack() -> None:
         subnet,
     )
 
+    migration_job = create_migration_job(
+        config["region"],
+        config["image"],
+        service_account,
+        instance,
+        database_secret,
+        vpc,
+        subnet,
+        apis,
+    )
+
     pool = create_workload_identity_pool(apis)
     provider = create_github_provider(pool, config["github_owner"], config["github_repo"])
     deployer_sa = create_deployer_service_account(apis)
@@ -74,4 +85,4 @@ def build_stack() -> None:
     grant_deployer_sa_user_on_runner(service_account, deployer_sa)
     grant_workload_identity_user(pool, deployer_sa, config["github_owner"], config["github_repo"])
 
-    export_outputs(service, instance, repository, database_secret, provider, deployer_sa)
+    export_outputs(service, migration_job, instance, repository, database_secret, provider, deployer_sa)

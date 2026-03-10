@@ -4,6 +4,7 @@ import pulumi_gcp as gcp
 
 def export_outputs(
     service: gcp.cloudrunv2.Service,
+    migration_job: gcp.cloudrunv2.Job,
     instance: gcp.sql.DatabaseInstance,
     repository: gcp.artifactregistry.Repository,
     secret: gcp.secretmanager.Secret,
@@ -11,6 +12,7 @@ def export_outputs(
     deployer_sa: gcp.serviceaccount.Account,
 ) -> None:
     pulumi.export("service_url", service.uri)
+    pulumi.export("migration_job_name", migration_job.name)
     pulumi.export("database_connection_name", instance.connection_name)
     pulumi.export("artifact_registry", repository.repository_id)
     pulumi.export("secret_name", secret.secret_id)

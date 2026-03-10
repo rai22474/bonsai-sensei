@@ -1,3 +1,4 @@
+import pulumi
 import pulumi_gcp as gcp
 
 
@@ -106,4 +107,69 @@ def create_service(
                 )
             ],
         ),
+    )
+
+
+def create_migration_job(
+    region: str,
+    image: str,
+    service_account: gcp.serviceaccount.Account,
+    instance: gcp.sql.DatabaseInstance,
+    database_secret: gcp.secretmanager.Secret,
+    vpc: gcp.compute.Network,
+    subnet: gcp.compute.Subnetwork,
+    api_deps: list | None = None,
+) -> gcp.cloudrunv2.Job:
+    return gcp.cloudrunv2.Job(
+        "bonsai-sensei-migrate",
+        location=region,
+        name="bonsai-sensei-migrate",
+        template=gcp.cloudrunv2.JobTemplateArgs(
+            template=gcp.cloudrunv2.JobTemplateTemplateArgs(
+                service_account=service_account.email,
+                max_retries=0,
+                vpc_access=gcp.cloudrunv2.JobTemplateTemplateVpcAccessArgs(
+                    network_interfaces=[
+                        gcp.cloudrunv2.JobTemplateTemplateVpcAccessNetworkInterfaceArgs(
+                            network=vpc.id,
+                            subnetwork=subnet.id,
+                        )
+                    ],
+                    egress="ALL_TRAFFIC",
+                ),
+                volumes=[
+                    gcp.cloudrunv2.JobTemplateTemplateVolumeArgs(
+                        name="cloudsql",
+                        cloud_sql_instance=gcp.cloudrunv2.JobTemplateTemplateVolumeCloudSqlInstanceArgs(
+                            instances=[instance.connection_name],
+                        ),
+                    )
+                ],
+                containers=[
+                    gcp.cloudrunv2.JobTemplateTemplateContainerArgs(
+                        image=image,
+                        commands=["python"],
+                        args=["init_db.py"],
+                        envs=[
+                            gcp.cloudrunv2.JobTemplateTemplateContainerEnvArgs(
+                                name="DATABASE_URL",
+                                value_source=gcp.cloudrunv2.JobTemplateTemplateContainerEnvValueSourceArgs(
+                                    secret_key_ref=gcp.cloudrunv2.JobTemplateTemplateContainerEnvValueSourceSecretKeyRefArgs(
+                                        secret=database_secret.id,
+                                        version="latest",
+                                    )
+                                ),
+                            ),
+                        ],
+                        volume_mounts=[
+                            gcp.cloudrunv2.JobTemplateTemplateContainerVolumeMountArgs(
+                                name="cloudsql",
+                                mount_path="/cloudsql",
+                            )
+                        ],
+                    )
+                ],
+            )
+        ),
+        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
     )

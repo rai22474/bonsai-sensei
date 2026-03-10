@@ -73,9 +73,42 @@ jobs:
           docker push "${IMAGE_URI}"
           echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
 
-  deploy:
+  migrate:
     runs-on: ubuntu-latest
     needs: build
+    environment: dev
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      REGION: europe-west1
+      MIGRATION_JOB: bonsai-sensei-migrate
+
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOYER_SA }}
+
+      - name: Update migration job image
+        run: |
+          gcloud run jobs update ${{ env.MIGRATION_JOB }} \
+            --image "${{ needs.build.outputs.image_uri }}" \
+            --region ${{ env.REGION }} \
+            --quiet
+
+      - name: Run migration
+        run: |
+          gcloud run jobs execute ${{ env.MIGRATION_JOB }} \
+            --region ${{ env.REGION }} \
+            --wait
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, migrate]
     environment: dev
 
     permissions:
