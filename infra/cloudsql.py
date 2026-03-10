@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_gcp as gcp
+from urllib.parse import quote
 
 
 def create_instance(
@@ -53,5 +54,5 @@ def create_database_url(
     instance: gcp.sql.DatabaseInstance,
 ) -> pulumi.Output[str]:
     return pulumi.Output.all(db_password, instance.connection_name).apply(
-        lambda args: f"postgresql://{db_user}:{args[0]}@/{db_name}?host=/cloudsql/{args[1]}"
+        lambda args: f"postgresql://{db_user}:{quote(str(args[0]), safe='')}@/{db_name}?host=/cloudsql/{args[1]}"
     )
