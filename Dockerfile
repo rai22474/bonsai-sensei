@@ -14,6 +14,6 @@ RUN uv pip install --system -r pyproject.toml
 COPY bonsai_sensei/ bonsai_sensei/
 COPY scripts/init_db.py .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["uvicorn", "bonsai_sensei.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

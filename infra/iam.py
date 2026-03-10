@@ -35,15 +35,13 @@ def grant_secret_accessor(
     )
 
 
-def grant_cloudbuild_webhook_secret_accessor(
+def grant_vertex_ai_user(
     project: str,
-    webhook_secret: gcp.secretmanager.Secret,
-) -> gcp.secretmanager.SecretIamMember:
-    project_info = gcp.organizations.get_project(project_id=project)
-    cloudbuild_sa = f"serviceAccount:{project_info.number}@cloudbuild.gserviceaccount.com"
-    return gcp.secretmanager.SecretIamMember(
-        "bonsai-sensei-cloudbuild-webhook-secret-accessor",
-        secret_id=webhook_secret.secret_id,
-        role="roles/secretmanager.secretAccessor",
-        member=cloudbuild_sa,
+    service_account: gcp.serviceaccount.Account,
+) -> gcp.projects.IAMMember:
+    return gcp.projects.IAMMember(
+        "bonsai-sensei-vertex-ai-user",
+        project=project,
+        role="roles/aiplatform.user",
+        member=service_account.email.apply(lambda email: f"serviceAccount:{email}"),
     )

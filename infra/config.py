@@ -1,6 +1,8 @@
 import pulumi
 import pulumi_gcp as gcp
 
+_PLACEHOLDER = pulumi.Output.secret("changeme")
+
 
 def load_config() -> dict:
     config = pulumi.Config()
@@ -15,4 +17,7 @@ def load_config() -> dict:
         "max_instances": config.get_int("maxInstances") or 1,
         "github_owner": config.require("githubOwner"),
         "github_repo": config.get("githubRepo") or "bonsai-sensei",
+        "telegram_bot_token": config.get_secret("telegramBotToken") or _PLACEHOLDER,
+        "trefle_api_token": config.get_secret("trefleApiToken") or _PLACEHOLDER,
+        "tavily_api_key": config.get_secret("tavilyApiKey") or _PLACEHOLDER,
     }

@@ -3,11 +3,15 @@ import pulumi_gcp as gcp
 
 def create_service(
     region: str,
+    project: str,
     service_name: str,
     image: str,
     service_account: gcp.serviceaccount.Account,
     instance: gcp.sql.DatabaseInstance,
-    secret: gcp.secretmanager.Secret,
+    database_secret: gcp.secretmanager.Secret,
+    telegram_secret: gcp.secretmanager.Secret,
+    trefle_secret: gcp.secretmanager.Secret,
+    tavily_secret: gcp.secretmanager.Secret,
     max_instances: int,
     vpc: gcp.compute.Network,
     subnet: gcp.compute.Subnetwork,
@@ -48,11 +52,50 @@ def create_service(
                             name="DATABASE_URL",
                             value_source=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceArgs(
                                 secret_key_ref=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceSecretKeyRefArgs(
-                                    secret=secret.id,
+                                    secret=database_secret.id,
                                     version="latest",
                                 )
                             ),
-                        )
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="TELEGRAM_BOT_TOKEN",
+                            value_source=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceArgs(
+                                secret_key_ref=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceSecretKeyRefArgs(
+                                    secret=telegram_secret.id,
+                                    version="latest",
+                                )
+                            ),
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="TREFLE_API_TOKEN",
+                            value_source=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceArgs(
+                                secret_key_ref=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceSecretKeyRefArgs(
+                                    secret=trefle_secret.id,
+                                    version="latest",
+                                )
+                            ),
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="TAVILY_API_KEY",
+                            value_source=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceArgs(
+                                secret_key_ref=gcp.cloudrunv2.ServiceTemplateContainerEnvValueSourceSecretKeyRefArgs(
+                                    secret=tavily_secret.id,
+                                    version="latest",
+                                )
+                            ),
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="GOOGLE_GENAI_USE_VERTEXAI",
+                            value="true",
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="GOOGLE_CLOUD_PROJECT",
+                            value=project,
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="GOOGLE_CLOUD_LOCATION",
+                            value=region,
+                        ),
                     ],
                     volume_mounts=[
                         gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(

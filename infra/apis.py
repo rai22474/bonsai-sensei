@@ -6,7 +6,7 @@ REQUIRED_APIS = [
     "run.googleapis.com",
     "sqladmin.googleapis.com",
     "artifactregistry.googleapis.com",
-    "cloudbuild.googleapis.com",
+    "aiplatform.googleapis.com",
     "secretmanager.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",

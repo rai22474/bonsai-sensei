@@ -17,10 +17,10 @@ from github_actions import (
     grant_deployer_sa_user_on_runner,
     grant_workload_identity_user,
 )
-from iam import create_service_account, grant_cloudsql_client, grant_secret_accessor
+from iam import create_service_account, grant_cloudsql_client, grant_secret_accessor, grant_vertex_ai_user
 from network import create_network
 from outputs import export_outputs
-from secrets import create_database_secret
+from secrets import create_database_secret, create_telegram_secret, create_trefle_secret, create_tavily_secret
 
 
 def build_stack() -> None:
@@ -37,6 +37,7 @@ def build_stack() -> None:
     service_account = create_service_account(apis)
     grant_cloudsql_client(config["project"], service_account)
     grant_secret_accessor(config["project"], service_account)
+    grant_vertex_ai_user(config["project"], service_account)
 
     database_url = create_database_url(
         config["db_user"],
@@ -44,15 +45,22 @@ def build_stack() -> None:
         config["db_password"],
         instance,
     )
-    secret, _secret_version = create_database_secret(database_url, apis)
+    database_secret, _database_secret_version = create_database_secret(database_url, apis)
+    telegram_secret, _telegram_secret_version = create_telegram_secret(config["telegram_bot_token"], apis)
+    trefle_secret, _trefle_secret_version = create_trefle_secret(config["trefle_api_token"], apis)
+    tavily_secret, _tavily_secret_version = create_tavily_secret(config["tavily_api_key"], apis)
 
     service = create_service(
         config["region"],
+        config["project"],
         config["service_name"],
         config["image"],
         service_account,
         instance,
-        secret,
+        database_secret,
+        telegram_secret,
+        trefle_secret,
+        tavily_secret,
         config["max_instances"],
         vpc,
         subnet,
@@ -66,4 +74,4 @@ def build_stack() -> None:
     grant_deployer_sa_user_on_runner(service_account, deployer_sa)
     grant_workload_identity_user(pool, deployer_sa, config["github_owner"], config["github_repo"])
 
-    export_outputs(service, instance, repository, secret, provider, deployer_sa)
+    export_outputs(service, instance, repository, database_secret, provider, deployer_sa)
