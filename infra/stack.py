@@ -20,6 +20,7 @@ from github_actions import (
 from iam import create_service_account, grant_cloudsql_client, grant_secret_accessor, grant_vertex_ai_user
 from network import create_network
 from outputs import export_outputs
+from scheduler import create_db_schedule
 from secrets import create_database_secret, create_telegram_secret, create_trefle_secret, create_tavily_secret
 
 
@@ -76,6 +77,8 @@ def build_stack() -> None:
         subnet,
         apis,
     )
+
+    create_db_schedule(config["project"], config["region"], instance, apis)
 
     pool = create_workload_identity_pool(apis)
     provider = create_github_provider(pool, config["github_owner"], config["github_repo"])

@@ -10,6 +10,7 @@ REQUIRED_APIS = [
     "secretmanager.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
+    "cloudscheduler.googleapis.com",
 ]
 
 
