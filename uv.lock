@@ -262,7 +262,7 @@ requires-dist = [
     { name = "fastapi" },
     { name = "google-adk", specifier = ">=1.22.1" },
     { name = "litellm", specifier = ">=1.65.5" },
-    { name = "monocle-apptrace", specifier = ">=0.7.2" },
+    { name = "monocle-apptrace", specifier = ">=0.7.4" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-telegram-bot", specifier = ">=22.5" },
@@ -1851,7 +1851,7 @@ wheels = [
 
 [[package]]
 name = "monocle-apptrace"
-version = "0.7.2"
+version = "0.7.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
@@ -1861,9 +1861,9 @@ dependencies = [
     { name = "rfc3986" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/57/2b/17ab0cc8291e3839ae5b5eddddb3a27942106e9d3f1b62d644f2c5b059aa/monocle_apptrace-0.7.2.tar.gz", hash = "sha256:47ba14f183799662a6245a6a629f6486ba698926cca0746accc80d2185418321", size = 125395, upload-time = "2026-01-20T07:46:42.414Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/87/eb4dd2b6e0063a6ffdb0d1e15e43e17b62d5d5c10f253bb4ad6d93dff939/monocle_apptrace-0.7.6.tar.gz", hash = "sha256:1cb37b4cf2a5033f174fd5ac91b1bcc89ac4656453ad9a987c799df8a0b9ac36", size = 137362, upload-time = "2026-02-27T16:23:09.589Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/42/af46bc33dcad57ef14f7c2f4cafd89e08905149696b7c8d8b89326038ed9/monocle_apptrace-0.7.2-py3-none-any.whl", hash = "sha256:8f54c84035df4c7160cbd8044a2e72a756f2f4dc09c7399fddea60b1338000ad", size = 207410, upload-time = "2026-01-20T07:46:38.219Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/a0/8696d97c36d48c472dec981b6b653dfa18b963869b3916f330b0cafd7a08/monocle_apptrace-0.7.6-py3-none-any.whl", hash = "sha256:ff5b9039ce6faa032815f736c48b3a1197763f8e67bd63a43615bb71f6550c37", size = 221638, upload-time = "2026-02-27T16:23:05.814Z" },
 ]
 
 [[package]]

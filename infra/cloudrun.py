@@ -95,7 +95,7 @@ def create_service(
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="GOOGLE_CLOUD_LOCATION",
-                            value=region,
+                            value="global",
                         ),
                     ],
                     volume_mounts=[
