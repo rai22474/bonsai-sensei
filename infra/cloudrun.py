@@ -25,7 +25,7 @@ def create_service(
         template=gcp.cloudrunv2.ServiceTemplateArgs(
             service_account=service_account.email,
             scaling=gcp.cloudrunv2.ServiceTemplateScalingArgs(
-                min_instance_count=0,
+                min_instance_count=1,
                 max_instance_count=max_instances,
             ),
             vpc_access=gcp.cloudrunv2.ServiceTemplateVpcAccessArgs(
@@ -107,6 +107,7 @@ def create_service(
                 )
             ],
         ),
+        opts=pulumi.ResourceOptions(ignore_changes=["template.scaling.minInstanceCount"]),
     )
 
 

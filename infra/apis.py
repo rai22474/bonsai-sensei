@@ -11,6 +11,7 @@ REQUIRED_APIS = [
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "monitoring.googleapis.com",
 ]
 
 
