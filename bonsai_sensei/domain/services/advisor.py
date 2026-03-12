@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Callable
@@ -5,10 +6,23 @@ from functools import partial
 
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
+from opentelemetry import metrics, trace
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 
 DEFAULT_MAX_LLM_CALLS = 20
+
+_tracer = trace.get_tracer(__name__)
+_meter = metrics.get_meter(__name__)
+_execution_counter = _meter.create_counter(
+    "agent.execution.count",
+    description="Number of agent executions",
+)
+_execution_latency = _meter.create_histogram(
+    "agent.execution.latency",
+    unit="ms",
+    description="Agent execution latency in milliseconds",
+)
 
 
 @dataclass
@@ -82,14 +96,24 @@ async def _generate_advise(
 
     new_message = types.Content(role="user", parts=[types.Part(text=text)])
 
-    events = []
-    async for event in runner.run_async(
-        user_id=user_id,
-        session_id=str(user_id),
-        new_message=new_message,
-        run_config=run_config,
-    ):
-        events.append(event)
+    with _tracer.start_as_current_span("agent.run") as span:
+        span.set_attribute("session.id", user_id)
+        span.set_attribute("agent.name", "sensei")
+        span.set_attribute("model.max_llm_calls", DEFAULT_MAX_LLM_CALLS)
+        start_time = time.monotonic()
+        events = []
+        async for event in runner.run_async(
+            user_id=user_id,
+            session_id=str(user_id),
+            new_message=new_message,
+            run_config=run_config,
+        ):
+            events.append(event)
+        latency_ms = (time.monotonic() - start_time) * 1000
+        span.set_attribute("agent.event_count", len(events))
+
+    _execution_counter.add(1, {"user.id": user_id})
+    _execution_latency.record(latency_ms, {"user.id": user_id})
 
     response_text = "\n".join(_build_response_texts(events))
 

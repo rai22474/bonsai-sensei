@@ -7,6 +7,7 @@ from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_create_phytosanitary_tool(
@@ -14,6 +15,7 @@ def create_confirm_create_phytosanitary_tool(
     confirmation_store: ConfirmationStore,
 ):
 
+    @trace_tool_call
     @limit_tool_calls(agent_name="phytosanitary_storekeeper")
     def confirm_create_phytosanitary(
         name: str,

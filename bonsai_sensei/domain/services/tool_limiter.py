@@ -3,6 +3,7 @@ import hashlib
 import inspect
 import json
 from typing import Callable
+
 from google.adk.tools.tool_context import ToolContext
 
 
@@ -24,7 +25,7 @@ def limit_tool_calls(
             return _wrap_tool_calls(actual_tool, agent_name, limit)
 
         return decorator
-    
+
     return _wrap_tool_calls(tool, agent_name, limit)
 
 
@@ -70,34 +71,34 @@ def _check_tool_limit(
 ) -> None:
     if tool_context is None:
         return
-    
+
     counters = _get_tool_counters(tool_context)
     params_key = _build_params_key(agent_name, tool, args, kwargs)
     params_count = counters.get(params_key, 0)
     current_limit = limit if limit is not None else DEFAULT_TOOL_PARAM_LIMIT
-    
+
     if params_count >= current_limit:
         raise ToolCallsLimitExceededError(params_key)
-    
+
     counters[params_key] = params_count + 1
 
 
 def _get_tool_counters(tool_context: ToolContext | None) -> dict[str, int]:
     if tool_context is None:
         return {}
-    
+
     counters = tool_context.state.get("tool_call_counters")
 
     if not isinstance(counters, dict):
         counters = {}
         tool_context.state["tool_call_counters"] = counters
-    
+
     return counters
 
 
 def _extract_tool_context(args: tuple, kwargs: dict) -> ToolContext | None:
     tool_context = kwargs.get("tool_context")
-    
+
     if isinstance(tool_context, ToolContext):
         return tool_context
     for value in args:

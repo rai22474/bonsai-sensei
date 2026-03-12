@@ -8,6 +8,7 @@ from bonsai_sensei.domain.services.resolve_user_id import (
     resolve_confirmation_user_id,
 )
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 from bonsai_sensei.domain.species import Species
 
 
@@ -15,6 +16,7 @@ def create_confirm_create_species_tool(
     create_species_func,
     confirmation_store: ConfirmationStore,
 ):
+    @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     def confirm_create_bonsai_species(
         common_name: str,

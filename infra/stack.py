@@ -17,7 +17,14 @@ from github_actions import (
     grant_deployer_sa_user_on_runner,
     grant_workload_identity_user,
 )
-from iam import create_service_account, grant_cloudsql_client, grant_secret_accessor, grant_vertex_ai_user
+from iam import (
+    create_service_account,
+    grant_cloud_trace_agent,
+    grant_cloudsql_client,
+    grant_monitoring_metric_writer,
+    grant_secret_accessor,
+    grant_vertex_ai_user,
+)
 from network import create_network
 from outputs import export_outputs
 from monitoring import create_dashboard
@@ -40,6 +47,8 @@ def build_stack() -> None:
     grant_cloudsql_client(config["project"], service_account)
     grant_secret_accessor(config["project"], service_account)
     grant_vertex_ai_user(config["project"], service_account)
+    grant_cloud_trace_agent(config["project"], service_account)
+    grant_monitoring_metric_writer(config["project"], service_account)
 
     database_url = create_database_url(
         config["db_user"],

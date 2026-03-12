@@ -9,6 +9,7 @@ from bonsai_sensei.domain.services.resolve_user_id import (
     resolve_confirmation_user_id,
 )
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_create_bonsai_tool(
@@ -17,6 +18,7 @@ def create_confirm_create_bonsai_tool(
     confirmation_store: ConfirmationStore,
 ):
 
+    @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     def confirm_create_bonsai(
         name: str,

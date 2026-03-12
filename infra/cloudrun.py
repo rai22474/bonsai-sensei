@@ -97,6 +97,14 @@ def create_service(
                             name="GOOGLE_CLOUD_LOCATION",
                             value="global",
                         ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="OTEL_SERVICE_NAME",
+                            value=service_name,
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="DEPLOYMENT_ENV",
+                            value="production",
+                        ),
                     ],
                     volume_mounts=[
                         gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(

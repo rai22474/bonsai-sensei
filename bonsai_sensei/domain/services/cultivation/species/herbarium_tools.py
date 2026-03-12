@@ -2,10 +2,12 @@ from typing import Callable, Optional, List
 
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_list_species_tool(get_all_species_func: Callable[[], list[dict]]):
     
+    @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     def list_bonsai_species() -> dict:
         """Return a JSON payload with the list of known species.
@@ -43,6 +45,7 @@ def create_get_species_by_name_tool(
     get_species_by_name_func: Callable[[str], Species | None],
 ):
     
+    @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     def get_bonsai_species_by_name(name: str) -> dict:
         """Lookup a species by common name and return JSON with status and record.

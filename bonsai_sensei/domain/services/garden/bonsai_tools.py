@@ -3,12 +3,14 @@ from typing import Callable
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_list_bonsai_tool(
     list_bonsai_func: Callable[[], list[Bonsai]],
     list_species_func: Callable[[], list[Species]],
 ):
+    @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     def list_bonsai() -> dict:
         """Return JSON with status and bonsai list.
@@ -42,6 +44,7 @@ def create_get_bonsai_by_name_tool(
     get_bonsai_by_name_func: Callable[[str], Bonsai | None],
     list_species_func: Callable[[], list[Species]],
 ):
+    @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     def get_bonsai_by_name(name: str) -> dict:
         """Lookup a bonsai by name and return JSON with status and record.
@@ -81,6 +84,7 @@ def create_list_bonsai_events_tool(
     get_bonsai_by_name_func: Callable[[str], Bonsai | None],
     list_bonsai_events_func: Callable[[int], list[dict]],
 ):
+    @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     def list_bonsai_events(bonsai_name: str) -> dict:
         """List all recorded events for a bonsai by name and return JSON with status and events.

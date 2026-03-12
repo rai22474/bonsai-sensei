@@ -44,7 +44,8 @@ from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.database.session import get_session, get_engine
-from bonsai_sensei.observability import setup_monocle_observability
+from bonsai_sensei.observability import init_telemetry
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 
 async def _generic_exception_handler(request, exc):
@@ -192,7 +193,7 @@ def _save_telegram_chat_id(user_id: str, chat_id: str, save_user_settings):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_session_partial = partial(get_session, engine=get_engine())
-    setup_monocle_observability()
+    init_telemetry()
 
     app.state.herbarium_service = _create_herbarium_service(get_session_partial)
     app.state.garden_service = _create_garden_service(get_session_partial)
@@ -290,6 +291,7 @@ async def lifespan(app: FastAPI):
 configure_logging()
 
 app = FastAPI(lifespan=lifespan)
+FastAPIInstrumentor.instrument_app(app)
 app.add_exception_handler(Exception, _generic_exception_handler)
 app.include_router(species_router, prefix="/api", tags=["species"])
 app.include_router(bonsai_router, prefix="/api", tags=["bonsai"])

@@ -4,6 +4,7 @@ import pulumi_gcp as gcp
 
 _VERTEX_RESOURCE_TYPE = "aiplatform.googleapis.com/PublisherModel"
 _CLOUDRUN_RESOURCE_TYPE = "cloud_run_revision"
+_CUSTOM_METRIC_RESOURCE_TYPE = "global"
 _ALIGNMENT_PERIOD = "60s"
 
 
@@ -146,6 +147,46 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
                     aligner="ALIGN_MEAN",
                     reducer="REDUCE_SUM",
                     legend="Instances",
+                ),
+            ],
+        ),
+        _tile(
+            0, 12, 6, 4,
+            title="Agent Executions / min",
+            y_label="executions/min",
+            datasets=[
+                _dataset(
+                    "custom.googleapis.com/agent.execution.count",
+                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    legend="Executions",
+                ),
+            ],
+        ),
+        _tile(
+            6, 12, 6, 4,
+            title="Agent Execution Latency (ms)",
+            y_label="ms",
+            datasets=[
+                _dataset(
+                    "custom.googleapis.com/agent.execution.latency",
+                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_99",
+                    reducer="REDUCE_MEAN",
+                    legend="p99",
+                ),
+                _dataset(
+                    "custom.googleapis.com/agent.execution.latency",
+                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_95",
+                    reducer="REDUCE_MEAN",
+                    legend="p95",
+                ),
+                _dataset(
+                    "custom.googleapis.com/agent.execution.latency",
+                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_50",
+                    reducer="REDUCE_MEAN",
+                    legend="p50",
                 ),
             ],
         ),

@@ -1,11 +1,13 @@
 import httpx
 from bonsai_sensei.logging_config import get_logger
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 logger = get_logger(__name__)
 
 
 def create_weather_tool(base_url: str):
+    @trace_tool_call
     @limit_tool_calls(agent_name="weather_advisor")
     async def get_weather(location: str) -> dict:
         """Get a weather summary for a location via the external API.
@@ -46,6 +48,7 @@ def create_weather_tool(base_url: str):
     return get_weather
 
 
+@trace_tool_call
 @limit_tool_calls(agent_name="weather_advisor")
 async def get_weather(location: str) -> dict:
     """

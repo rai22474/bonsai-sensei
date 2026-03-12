@@ -3,9 +3,11 @@ import re
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
+from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_fetch_fertilizer_info_tool(searcher: Callable[[str], dict]):
+    @trace_tool_call
     @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def fetch_fertilizer_info(name: str) -> dict:
         """Fetch fertilizer info and return JSON with usage sheet and recommended amount.
@@ -44,6 +46,7 @@ def create_fetch_fertilizer_info_tool(searcher: Callable[[str], dict]):
 
 
 def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertilizer]]):
+    @trace_tool_call
     @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def list_fertilizers() -> dict:
         """Return JSON with all registered fertilizers.
@@ -72,6 +75,7 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
 def create_get_fertilizer_by_name_tool(
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
 ):
+    @trace_tool_call
     @limit_tool_calls(agent_name="fertilizer_storekeeper")
     def get_fertilizer_by_name(name: str) -> dict:
         """Lookup a fertilizer by name and return JSON with status and record.
