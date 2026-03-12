@@ -110,7 +110,7 @@ def create_cloudrun_schedule(
 
     gcp.serviceaccount.IAMMember(
         "bonsai-sensei-run-scheduler-sa-user",
-        service_account_id=runner_service_account.email,
+        service_account_id=runner_service_account.name,
         role="roles/iam.serviceAccountUser",
         member=scheduler_sa.email.apply(lambda email: f"serviceAccount:{email}"),
     )

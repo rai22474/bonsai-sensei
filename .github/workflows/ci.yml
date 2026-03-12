@@ -69,8 +69,10 @@ jobs:
         id: build
         run: |
           IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ env.REPOSITORY }}/bonsai-sensei:${{ github.sha }}"
-          docker build -t "${IMAGE_URI}" .
+          LATEST_URI="${{ env.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ env.REPOSITORY }}/bonsai-sensei:latest"
+          docker build -t "${IMAGE_URI}" -t "${LATEST_URI}" .
           docker push "${IMAGE_URI}"
+          docker push "${LATEST_URI}"
           echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
 
   migrate:
