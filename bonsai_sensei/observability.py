@@ -34,7 +34,7 @@ def _setup_tracing(resource: Resource) -> None:
         exporter = ConsoleSpanExporter()
     provider = TracerProvider(resource=resource)
     provider.add_span_processor(BatchSpanProcessor(exporter))
-    trace.set_global_tracer_provider(provider)
+    trace.set_tracer_provider(provider)
 
 
 def _setup_metrics(resource: Resource) -> None:
