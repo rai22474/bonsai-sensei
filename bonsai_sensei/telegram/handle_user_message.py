@@ -3,7 +3,7 @@ from functools import partial
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
 from bonsai_sensei.domain.confirmation import Confirmation
@@ -69,7 +69,7 @@ async def handle_user_message(
 async def _reply_with_html(update: Update, text: str) -> None:
     try:
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-    except BadRequest:
+    except (BadRequest, TimedOut):
         logger.warning("Failed to send message with HTML, falling back to plain text")
         await update.message.reply_text(text)
 
