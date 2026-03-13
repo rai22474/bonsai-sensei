@@ -13,3 +13,4 @@ postgres_data/
 ollama_data/
 .monocle/
 acceptance-tests/docker-compose.logs.txt
+acceptance-tests/docker-compose.logs.txt

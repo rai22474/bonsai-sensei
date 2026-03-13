@@ -14,6 +14,6 @@ def get_local_model_factory():
 
 def get_cloud_model_factory():
     def factory():
-        return os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
+        return os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
     return factory
