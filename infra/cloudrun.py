@@ -35,7 +35,7 @@ def create_service(
                         subnetwork=subnet.id,
                     )
                 ],
-                egress="ALL_TRAFFIC",
+                egress="PRIVATE_RANGES_ONLY",
             ),
             volumes=[
                 gcp.cloudrunv2.ServiceTemplateVolumeArgs(
@@ -95,7 +95,7 @@ def create_service(
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="GOOGLE_CLOUD_LOCATION",
-                            value="global",
+                            value="europe-west1",
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="OTEL_SERVICE_NAME",
@@ -144,7 +144,7 @@ def create_migration_job(
                             subnetwork=subnet.id,
                         )
                     ],
-                    egress="ALL_TRAFFIC",
+                    egress="PRIVATE_RANGES_ONLY",
                 ),
                 volumes=[
                     gcp.cloudrunv2.JobTemplateTemplateVolumeArgs(

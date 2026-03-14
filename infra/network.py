@@ -19,22 +19,7 @@ def create_network(
         region=region,
         network=vpc.id,
         ip_cidr_range="10.8.0.0/24",
-    )
-
-    router = gcp.compute.Router(
-        "bonsai-sensei-router",
-        name="bonsai-sensei-router",
-        region=region,
-        network=vpc.id,
-    )
-
-    gcp.compute.RouterNat(
-        "bonsai-sensei-nat",
-        name="bonsai-sensei-nat",
-        router=router.name,
-        region=region,
-        nat_ip_allocate_option="AUTO_ONLY",
-        source_subnetwork_ip_ranges_to_nat="ALL_SUBNETWORKS_ALL_IP_RANGES",
+        private_ip_google_access=True,
     )
 
     return vpc, subnet

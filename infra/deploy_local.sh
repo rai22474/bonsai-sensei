@@ -53,7 +53,7 @@ else
 fi
 
 cd infra
-uv venv .venv --quiet
+uv venv .venv --seed --quiet
 uv pip install --quiet --python .venv/bin/python -e .
 pulumi stack init "${PULUMI_STACK}" 2>/dev/null || pulumi stack select "${PULUMI_STACK}"
 pulumi config set gcp:project "${PROJECT_ID}"

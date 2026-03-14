@@ -4,7 +4,6 @@ import pulumi_gcp as gcp
 
 _VERTEX_RESOURCE_TYPE = "aiplatform.googleapis.com/PublisherModel"
 _CLOUDRUN_RESOURCE_TYPE = "cloud_run_revision"
-_CUSTOM_METRIC_RESOURCE_TYPE = "global"
 _ALIGNMENT_PERIOD = "60s"
 
 
@@ -156,8 +155,8 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             y_label="executions/min",
             datasets=[
                 _dataset(
-                    "custom.googleapis.com/agent.execution.count",
-                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    "workload.googleapis.com/agent.execution.count",
+                    _CLOUDRUN_RESOURCE_TYPE,
                     legend="Executions",
                 ),
             ],
@@ -168,22 +167,62 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             y_label="ms",
             datasets=[
                 _dataset(
-                    "custom.googleapis.com/agent.execution.latency",
-                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    "workload.googleapis.com/agent.execution.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
                     aligner="ALIGN_PERCENTILE_99",
                     reducer="REDUCE_MEAN",
                     legend="p99",
                 ),
                 _dataset(
-                    "custom.googleapis.com/agent.execution.latency",
-                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    "workload.googleapis.com/agent.execution.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
                     aligner="ALIGN_PERCENTILE_95",
                     reducer="REDUCE_MEAN",
                     legend="p95",
                 ),
                 _dataset(
-                    "custom.googleapis.com/agent.execution.latency",
-                    _CUSTOM_METRIC_RESOURCE_TYPE,
+                    "workload.googleapis.com/agent.execution.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_50",
+                    reducer="REDUCE_MEAN",
+                    legend="p50",
+                ),
+            ],
+        ),
+        _tile(
+            0, 16, 6, 4,
+            title="Telegram Messages / min",
+            y_label="messages/min",
+            datasets=[
+                _dataset(
+                    "workload.googleapis.com/telegram.message.count",
+                    _CLOUDRUN_RESOURCE_TYPE,
+                    legend="Messages",
+                ),
+            ],
+        ),
+        _tile(
+            6, 16, 6, 4,
+            title="Telegram Message Latency (ms)",
+            y_label="ms",
+            datasets=[
+                _dataset(
+                    "workload.googleapis.com/telegram.message.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_99",
+                    reducer="REDUCE_MEAN",
+                    legend="p99",
+                ),
+                _dataset(
+                    "workload.googleapis.com/telegram.message.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
+                    aligner="ALIGN_PERCENTILE_95",
+                    reducer="REDUCE_MEAN",
+                    legend="p95",
+                ),
+                _dataset(
+                    "workload.googleapis.com/telegram.message.latency",
+                    _CLOUDRUN_RESOURCE_TYPE,
                     aligner="ALIGN_PERCENTILE_50",
                     reducer="REDUCE_MEAN",
                     legend="p50",

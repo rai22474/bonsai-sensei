@@ -1,6 +1,8 @@
+import time
 import uuid
 from functools import partial
 
+from opentelemetry import metrics
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TimedOut
@@ -13,6 +15,17 @@ from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+_meter = metrics.get_meter(__name__)
+_message_counter = _meter.create_counter(
+    "telegram.message.count",
+    description="Number of Telegram messages processed",
+)
+_message_latency = _meter.create_histogram(
+    "telegram.message.latency",
+    unit="ms",
+    description="End-to-end Telegram message processing latency in milliseconds",
+)
 
 LOCATION_REQUEST_MESSAGE = (
     "¡Hola! Para enviarte alertas meteorológicas diarias y ayudarte a proteger tus bonsáis, "
@@ -55,6 +68,7 @@ async def handle_user_message(
         await update.message.reply_text("Error interno: No puedo procesar tu mensaje.")
         return
 
+    start_time = time.monotonic()
     response: AdvisorResponse = await message_processor(update.message.text, user_id=user_id)
 
     await _reply_with_html(update, response.text)
@@ -64,6 +78,10 @@ async def handle_user_message(
             pending.summary,
             reply_markup=_create_confirmation_keyboard(pending.id),
         )
+
+    latency_ms = (time.monotonic() - start_time) * 1000
+    _message_counter.add(1, {"user.id": user_id})
+    _message_latency.record(latency_ms, {"user.id": user_id})
 
 
 async def _reply_with_html(update: Update, text: str) -> None:
