@@ -13,6 +13,7 @@ REQUIRED_APIS = [
     "cloudscheduler.googleapis.com",
     "monitoring.googleapis.com",
     "cloudtrace.googleapis.com",
+    "dns.googleapis.com",
 ]
 
 

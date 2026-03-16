@@ -25,7 +25,7 @@ from iam import (
     grant_secret_accessor,
     grant_vertex_ai_user,
 )
-from network import create_network
+from network import create_network, create_private_google_access
 from outputs import export_outputs
 from monitoring import create_dashboard
 from scheduler import create_cloudrun_schedule, create_db_schedule
@@ -38,8 +38,9 @@ def build_stack() -> None:
     apis = enable_apis(config["project"])
 
     vpc, subnet = create_network(config["region"], apis)
+    create_private_google_access(vpc, apis)
     repository = create_repository(config["region"], apis)
-    instance = create_instance(config["region"], apis)
+    instance = create_instance(config["db_region"], apis)
     create_database(instance, config["db_name"])
     create_user(instance, config["db_user"], config["db_password"])
 
@@ -88,8 +89,8 @@ def build_stack() -> None:
         apis,
     )
 
-    create_db_schedule(config["project"], config["region"], instance, apis)
-    create_cloudrun_schedule(config["project"], config["region"], service, service_account, apis)
+    create_db_schedule(config["project"], config["scheduler_region"], instance, apis)
+    create_cloudrun_schedule(config["project"], config["scheduler_region"], service, service_account, apis)
     create_dashboard(apis)
 
     pool = create_workload_identity_pool(apis)

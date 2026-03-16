@@ -4,6 +4,7 @@ import pulumi_gcp as gcp
 
 _VERTEX_RESOURCE_TYPE = "aiplatform.googleapis.com/PublisherModel"
 _CLOUDRUN_RESOURCE_TYPE = "cloud_run_revision"
+_WORKLOAD_RESOURCE_TYPE = "generic_task"
 _ALIGNMENT_PERIOD = "60s"
 
 
@@ -156,7 +157,7 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             datasets=[
                 _dataset(
                     "workload.googleapis.com/agent.execution.count",
-                    _CLOUDRUN_RESOURCE_TYPE,
+                    _WORKLOAD_RESOURCE_TYPE,
                     legend="Executions",
                 ),
             ],
@@ -168,23 +169,23 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             datasets=[
                 _dataset(
                     "workload.googleapis.com/agent.execution.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_99",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_99",
                     legend="p99",
                 ),
                 _dataset(
                     "workload.googleapis.com/agent.execution.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_95",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_95",
                     legend="p95",
                 ),
                 _dataset(
                     "workload.googleapis.com/agent.execution.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_50",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_50",
                     legend="p50",
                 ),
             ],
@@ -196,7 +197,7 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             datasets=[
                 _dataset(
                     "workload.googleapis.com/telegram.message.count",
-                    _CLOUDRUN_RESOURCE_TYPE,
+                    _WORKLOAD_RESOURCE_TYPE,
                     legend="Messages",
                 ),
             ],
@@ -208,23 +209,23 @@ def create_dashboard(api_deps: list | None = None) -> gcp.monitoring.Dashboard:
             datasets=[
                 _dataset(
                     "workload.googleapis.com/telegram.message.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_99",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_99",
                     legend="p99",
                 ),
                 _dataset(
                     "workload.googleapis.com/telegram.message.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_95",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_95",
                     legend="p95",
                 ),
                 _dataset(
                     "workload.googleapis.com/telegram.message.latency",
-                    _CLOUDRUN_RESOURCE_TYPE,
-                    aligner="ALIGN_PERCENTILE_50",
-                    reducer="REDUCE_MEAN",
+                    _WORKLOAD_RESOURCE_TYPE,
+                    aligner="ALIGN_DELTA",
+                    reducer="REDUCE_PERCENTILE_50",
                     legend="p50",
                 ),
             ],

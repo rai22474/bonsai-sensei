@@ -8,7 +8,9 @@ def load_config() -> dict:
     config = pulumi.Config()
     return {
         "project": config.get("project") or gcp.config.project,
-        "region": config.get("region") or gcp.config.region or "europe-west1",
+        "region": config.get("region") or gcp.config.region or "europe-southwest1",
+        "scheduler_region": config.get("schedulerRegion") or "europe-west1",
+        "db_region": config.get("dbRegion") or config.get("region") or gcp.config.region or "europe-southwest1",
         "service_name": config.get("serviceName") or "bonsai-sensei-api",
         "db_name": config.get("dbName") or "bonsai_db",
         "db_user": config.get("dbUser") or "bonsai_user",

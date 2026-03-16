@@ -8,7 +8,11 @@ DATABASE_URL = os.getenv(
 
 @lru_cache()
 def get_engine():
-    return create_engine(DATABASE_URL)
+    return create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=1800,
+    )
 
 def get_session(engine):
     # expire_on_commit=False allows objects to persist detached after transaction commit/session close,

@@ -95,7 +95,7 @@ def create_service(
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="GOOGLE_CLOUD_LOCATION",
-                            value="europe-west1",
+                            value="global",
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="OTEL_SERVICE_NAME",
@@ -115,7 +115,10 @@ def create_service(
                 )
             ],
         ),
-        opts=pulumi.ResourceOptions(ignore_changes=["template.scaling.minInstanceCount"]),
+        opts=pulumi.ResourceOptions(
+            ignore_changes=["template.scaling.minInstanceCount"],
+            delete_before_replace=True,
+        ),
     )
 
 

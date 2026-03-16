@@ -28,7 +28,7 @@ _CLOUDRUN_SCALE_UPDATE_MASK = "template.scaling.minInstanceCount"
 
 def create_db_schedule(
     project: str,
-    region: str,
+    scheduler_region: str,
     instance: gcp.sql.DatabaseInstance,
     api_deps: list | None = None,
 ) -> None:
@@ -53,7 +53,7 @@ def create_db_schedule(
     gcp.cloudscheduler.Job(
         "bonsai-sensei-db-stop",
         name="bonsai-sensei-db-stop",
-        region=region,
+        region=scheduler_region,
         schedule=_STOP_SCHEDULE,
         time_zone=_TIMEZONE,
         http_target=gcp.cloudscheduler.JobHttpTargetArgs(
@@ -71,7 +71,7 @@ def create_db_schedule(
     gcp.cloudscheduler.Job(
         "bonsai-sensei-db-start",
         name="bonsai-sensei-db-start",
-        region=region,
+        region=scheduler_region,
         schedule=_START_SCHEDULE,
         time_zone=_TIMEZONE,
         http_target=gcp.cloudscheduler.JobHttpTargetArgs(
@@ -89,7 +89,7 @@ def create_db_schedule(
 
 def create_cloudrun_schedule(
     project: str,
-    region: str,
+    scheduler_region: str,
     service: gcp.cloudrunv2.Service,
     runner_service_account: gcp.serviceaccount.Account,
     api_deps: list | None = None,
@@ -115,7 +115,7 @@ def create_cloudrun_schedule(
         member=scheduler_sa.email.apply(lambda email: f"serviceAccount:{email}"),
     )
 
-    service_api_url = pulumi.Output.all(project, region, service.name).apply(
+    service_api_url = pulumi.Output.all(project, service.location, service.name).apply(
         lambda args: (
             f"https://run.googleapis.com/v2/projects/{args[0]}/locations/{args[1]}"
             f"/services/{args[2]}?updateMask={_CLOUDRUN_SCALE_UPDATE_MASK}"
@@ -125,7 +125,7 @@ def create_cloudrun_schedule(
     gcp.cloudscheduler.Job(
         "bonsai-sensei-run-stop",
         name="bonsai-sensei-run-stop",
-        region=region,
+        region=scheduler_region,
         schedule=_STOP_SCHEDULE,
         time_zone=_TIMEZONE,
         http_target=gcp.cloudscheduler.JobHttpTargetArgs(
@@ -143,7 +143,7 @@ def create_cloudrun_schedule(
     gcp.cloudscheduler.Job(
         "bonsai-sensei-run-start",
         name="bonsai-sensei-run-start",
-        region=region,
+        region=scheduler_region,
         schedule=_START_SCHEDULE,
         time_zone=_TIMEZONE,
         http_target=gcp.cloudscheduler.JobHttpTargetArgs(

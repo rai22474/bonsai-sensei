@@ -43,7 +43,7 @@ jobs:
       id-token: write
 
     env:
-      REGION: europe-west1
+      REGION: europe-southwest1
       REPOSITORY: bonsai-sensei
 
     outputs:
@@ -85,7 +85,7 @@ jobs:
       id-token: write
 
     env:
-      REGION: europe-west1
+      REGION: europe-southwest1
       MIGRATION_JOB: bonsai-sensei-migrate
 
     steps:
@@ -118,7 +118,7 @@ jobs:
       id-token: write
 
     env:
-      REGION: europe-west1
+      REGION: europe-southwest1
       SERVICE_NAME: bonsai-sensei-api
 
     steps:

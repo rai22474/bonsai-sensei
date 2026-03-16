@@ -20,6 +20,63 @@ def create_network(
         network=vpc.id,
         ip_cidr_range="10.8.0.0/24",
         private_ip_google_access=True,
+        opts=pulumi.ResourceOptions(delete_before_replace=True),
     )
 
     return vpc, subnet
+
+
+def create_private_google_access(
+    vpc: gcp.compute.Network,
+    api_deps: list | None = None,
+) -> None:
+    psc_address = gcp.compute.GlobalAddress(
+        "bonsai-sensei-psc-apis",
+        name="bonsai-sensei-psc-apis",
+        address_type="INTERNAL",
+        purpose="PRIVATE_SERVICE_CONNECT",
+        network=vpc.id,
+        address="10.100.0.2",
+        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
+    )
+
+    gcp.compute.GlobalForwardingRule(
+        "bonsai-sensei-psc-apis-fwd",
+        name="bonsaipscfwd",
+        target="all-apis",
+        network=vpc.id,
+        ip_address=psc_address.self_link,
+        load_balancing_scheme="",
+    )
+
+    dns_zone = gcp.dns.ManagedZone(
+        "bonsai-sensei-googleapis-zone",
+        name="bonsai-sensei-googleapis",
+        dns_name="googleapis.com.",
+        visibility="private",
+        private_visibility_config=gcp.dns.ManagedZonePrivateVisibilityConfigArgs(
+            networks=[
+                gcp.dns.ManagedZonePrivateVisibilityConfigNetworkArgs(
+                    network_url=vpc.self_link,
+                )
+            ]
+        ),
+    )
+
+    gcp.dns.RecordSet(
+        "bonsai-sensei-googleapis-wildcard",
+        name="*.googleapis.com.",
+        type="A",
+        ttl=300,
+        managed_zone=dns_zone.name,
+        rrdatas=[psc_address.address],
+    )
+
+    gcp.dns.RecordSet(
+        "bonsai-sensei-googleapis-root",
+        name="googleapis.com.",
+        type="A",
+        ttl=300,
+        managed_zone=dns_zone.name,
+        rrdatas=[psc_address.address],
+    )
