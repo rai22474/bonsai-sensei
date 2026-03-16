@@ -16,6 +16,7 @@ def create_service(
     max_instances: int,
     vpc: gcp.compute.Network,
     subnet: gcp.compute.Subnetwork,
+    vertex_location: str = "europe-west1",
 ) -> gcp.cloudrunv2.Service:
     return gcp.cloudrunv2.Service(
         "bonsai-sensei-service",
@@ -95,7 +96,7 @@ def create_service(
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="GOOGLE_CLOUD_LOCATION",
-                            value="global",
+                            value="europe-west1",
                         ),
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="OTEL_SERVICE_NAME",

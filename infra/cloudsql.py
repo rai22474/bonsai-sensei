@@ -19,7 +19,10 @@ def create_instance(
             availability_type="ZONAL",
             activation_policy="ALWAYS",
         ),
-        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
+        opts=pulumi.ResourceOptions(
+            depends_on=api_deps or [],
+            delete_before_replace=True,
+        ),
     )
 
 
@@ -31,6 +34,7 @@ def create_database(
         "bonsai-sensei-database",
         instance=instance.name,
         name=db_name,
+        opts=pulumi.ResourceOptions(delete_before_replace=True),
     )
 
 
@@ -44,6 +48,7 @@ def create_user(
         instance=instance.name,
         name=db_user,
         password=db_password,
+        opts=pulumi.ResourceOptions(delete_before_replace=True),
     )
 
 

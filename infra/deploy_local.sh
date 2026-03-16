@@ -11,7 +11,7 @@ fi
 
 PROJECT_ID="${PROJECT_ID:-}"
 REGION="${REGION:-europe-southwest1}"
-DB_REGION="${DB_REGION:-europe-west1}"
+DB_REGION="${DB_REGION:-europe-southwest1}"
 SCHEDULER_REGION="${SCHEDULER_REGION:-europe-west1}"
 SERVICE_NAME="${SERVICE_NAME:-bonsai-sensei-api}"
 REPOSITORY="${REPOSITORY:-bonsai-sensei}"

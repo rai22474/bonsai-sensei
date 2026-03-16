@@ -1,10 +1,11 @@
+import asyncio
 import time
 import uuid
 from functools import partial
 
 from opentelemetry import metrics
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import ParseMode
+from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
@@ -69,7 +70,11 @@ async def handle_user_message(
         return
 
     start_time = time.monotonic()
-    response: AdvisorResponse = await message_processor(update.message.text, user_id=user_id)
+    typing_task = asyncio.create_task(_refresh_typing_action(update))
+    try:
+        response: AdvisorResponse = await message_processor(update.message.text, user_id=user_id)
+    finally:
+        typing_task.cancel()
 
     await _reply_with_html(update, response.text)
 
@@ -82,6 +87,12 @@ async def handle_user_message(
     latency_ms = (time.monotonic() - start_time) * 1000
     _message_counter.add(1, {"user.id": user_id})
     _message_latency.record(latency_ms, {"user.id": user_id})
+
+
+async def _refresh_typing_action(update: Update) -> None:
+    while True:
+        await update.effective_chat.send_action(ChatAction.TYPING)
+        await asyncio.sleep(4)
 
 
 async def _reply_with_html(update: Update, text: str) -> None:
