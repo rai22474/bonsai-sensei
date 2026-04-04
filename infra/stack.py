@@ -25,7 +25,7 @@ from iam import (
     grant_secret_accessor,
     grant_vertex_ai_user,
 )
-from network import create_network, create_private_google_access
+from network import create_network, create_private_google_access, create_vpc_connector
 from outputs import export_outputs
 from monitoring import create_dashboard
 from scheduler import create_cloudrun_schedule, create_db_schedule
@@ -39,6 +39,7 @@ def build_stack() -> None:
 
     vpc, subnet = create_network(config["region"], apis)
     create_private_google_access(vpc, apis)
+    connector = create_vpc_connector(config["region"], vpc, apis)
     repository = create_repository(config["region"], apis)
     instance = create_instance(config["db_region"], apis)
     create_database(instance, config["db_name"])
@@ -57,10 +58,12 @@ def build_stack() -> None:
         config["db_password"],
         instance,
     )
-    database_secret, _database_secret_version = create_database_secret(database_url, apis)
-    telegram_secret, _telegram_secret_version = create_telegram_secret(config["telegram_bot_token"], apis)
-    trefle_secret, _trefle_secret_version = create_trefle_secret(config["trefle_api_token"], apis)
-    tavily_secret, _tavily_secret_version = create_tavily_secret(config["tavily_api_key"], apis)
+    database_secret, database_secret_version = create_database_secret(database_url, apis)
+    telegram_secret, telegram_secret_version = create_telegram_secret(config["telegram_bot_token"], apis)
+    trefle_secret, trefle_secret_version = create_trefle_secret(config["trefle_api_token"], apis)
+    tavily_secret, tavily_secret_version = create_tavily_secret(config["tavily_api_key"], apis)
+
+    secret_versions = [database_secret_version, telegram_secret_version, trefle_secret_version, tavily_secret_version]
 
     service = create_service(
         config["region"],
@@ -74,8 +77,8 @@ def build_stack() -> None:
         trefle_secret,
         tavily_secret,
         config["max_instances"],
-        vpc,
-        subnet,
+        connector,
+        secret_versions,
     )
 
     migration_job = create_migration_job(
@@ -84,9 +87,8 @@ def build_stack() -> None:
         service_account,
         instance,
         database_secret,
-        vpc,
-        subnet,
-        apis,
+        connector,
+        [*apis, *secret_versions],
     )
 
     create_db_schedule(config["project"], config["scheduler_region"], instance, apis)

@@ -14,6 +14,8 @@ REQUIRED_APIS = [
     "monitoring.googleapis.com",
     "cloudtrace.googleapis.com",
     "dns.googleapis.com",
+    "generativelanguage.googleapis.com",
+    "vpcaccess.googleapis.com",
 ]
 
 

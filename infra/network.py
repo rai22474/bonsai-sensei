@@ -26,6 +26,24 @@ def create_network(
     return vpc, subnet
 
 
+def create_vpc_connector(
+    region: str,
+    vpc: gcp.compute.Network,
+    api_deps: list | None = None,
+) -> gcp.vpcaccess.Connector:
+    return gcp.vpcaccess.Connector(
+        "bonsai-sensei-connector",
+        name="bonsai-connector",
+        region=region,
+        network=vpc.id,
+        ip_cidr_range="10.8.1.0/28",
+        min_instances=2,
+        max_instances=3,
+        machine_type="e2-micro",
+        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
+    )
+
+
 def create_private_google_access(
     vpc: gcp.compute.Network,
     api_deps: list | None = None,

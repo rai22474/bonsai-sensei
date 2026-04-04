@@ -7,7 +7,7 @@ def create_workload_identity_pool(api_deps: list | None = None) -> gcp.iam.Workl
         "github-pool",
         workload_identity_pool_id="github-pool",
         display_name="GitHub Actions Pool",
-        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
+        opts=pulumi.ResourceOptions(depends_on=api_deps or [], retain_on_delete=True),
     )
 
 
@@ -30,6 +30,7 @@ def create_github_provider(
             "attribute.repository": "assertion.repository",
         },
         attribute_condition=f'attribute.repository == "{github_owner}/{github_repo}"',
+        opts=pulumi.ResourceOptions(retain_on_delete=True),
     )
 
 
@@ -38,7 +39,7 @@ def create_deployer_service_account(api_deps: list | None = None) -> gcp.service
         "github-actions-deployer",
         account_id="github-actions-deployer",
         display_name="GitHub Actions Deployer",
-        opts=pulumi.ResourceOptions(depends_on=api_deps or []),
+        opts=pulumi.ResourceOptions(depends_on=api_deps or [], retain_on_delete=True),
     )
 
 
