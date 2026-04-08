@@ -12,6 +12,17 @@ from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 
 DEFAULT_MAX_LLM_CALLS = 20
 
+_PROGRESS_MESSAGES = {
+    "command_pipeline": "🗺️ Elaborando un plan de acción...",
+    "gardener": "🌱 Gestionando la colección de bonsáis...",
+    "botanist": "🌿 Consultando el herbario de especies...",
+    "planning_agent": "📅 Planificando trabajos de cultivo...",
+    "weather_advisor": "🌤️ Consultando el pronóstico meteorológico...",
+    "storekeeper": "📦 Consultando el catálogo de insumos...",
+    "fertilizer_advisor": "🧪 Seleccionando fertilizante...",
+    "phytosanitary_advisor": "🛡️ Seleccionando producto fitosanitario...",
+}
+
 _tracer = trace.get_tracer(__name__)
 _meter = metrics.get_meter(__name__)
 _execution_counter = _meter.create_counter(
@@ -68,6 +79,7 @@ async def _generate_advise(
     user_id: str = "default_user",
     confirmation_store: ConfirmationStore | None = None,
     get_user_settings_func: Callable | None = None,
+    progress_callback: Callable[[str], None] | None = None,
 ) -> AdvisorResponse:
     run_config = RunConfig(max_llm_calls=DEFAULT_MAX_LLM_CALLS)
 
@@ -114,6 +126,10 @@ async def _generate_advise(
             run_config=run_config,
         ):
             events.append(event)
+            if progress_callback:
+                progress_text = _extract_progress_message(event)
+                if progress_text:
+                    await progress_callback(progress_text)
         latency_ms = (time.monotonic() - start_time) * 1000
         span.set_attribute("agent.event_count", len(events))
 
@@ -135,6 +151,16 @@ async def _generate_advise(
     ]
 
     return AdvisorResponse(text=response_text, pending_confirmations=pending_confirmations)
+
+
+def _extract_progress_message(event) -> str | None:
+    if not (event.content and hasattr(event.content, "parts") and event.content.parts):
+        return None
+    for part in event.content.parts:
+        function_call = getattr(part, "function_call", None)
+        if function_call and function_call.name in _PROGRESS_MESSAGES:
+            return _PROGRESS_MESSAGES[function_call.name]
+    return None
 
 
 def _build_response_texts(events: list) -> list[str]:

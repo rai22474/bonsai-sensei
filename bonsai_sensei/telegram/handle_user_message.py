@@ -1,11 +1,10 @@
-import asyncio
 import time
 import uuid
 from functools import partial
 
 from opentelemetry import metrics
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import ChatAction, ParseMode
+from telegram.constants import ParseMode
 from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
@@ -70,11 +69,28 @@ async def handle_user_message(
         return
 
     start_time = time.monotonic()
-    typing_task = asyncio.create_task(_refresh_typing_action(update))
+    progress_message = await update.message.reply_text("⏳ Procesando...")
+    last_progress_text = "⏳ Procesando..."
+
+    async def update_progress(text: str) -> None:
+        nonlocal last_progress_text
+        if text == last_progress_text:
+            return
+        last_progress_text = text
+        try:
+            await progress_message.edit_text(text)
+        except Exception:
+            pass
+
     try:
-        response: AdvisorResponse = await message_processor(update.message.text, user_id=user_id)
+        response: AdvisorResponse = await message_processor(
+            update.message.text, user_id=user_id, progress_callback=update_progress
+        )
     finally:
-        typing_task.cancel()
+        try:
+            await progress_message.delete()
+        except Exception:
+            pass
 
     await _reply_with_html(update, response.text)
 
@@ -88,11 +104,6 @@ async def handle_user_message(
     _message_counter.add(1, {"user.id": user_id})
     _message_latency.record(latency_ms, {"user.id": user_id})
 
-
-async def _refresh_typing_action(update: Update) -> None:
-    while True:
-        await update.effective_chat.send_action(ChatAction.TYPING)
-        await asyncio.sleep(4)
 
 
 async def _reply_with_html(update: Update, text: str) -> None:
