@@ -2,6 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to, not_none
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.confirm_update_phytosanitary_tool import (
     create_confirm_update_phytosanitary_tool,
 )
@@ -55,6 +56,21 @@ def should_return_error_when_name_is_missing(update_tool, tool_context):
         result,
         equal_to({"status": "error", "message": "phytosanitary_name_required"}),
         "Missing name should return a phytosanitary_name_required error",
+    )
+
+
+def should_return_error_when_phytosanitary_not_found(update_tool_not_found, tool_context):
+    result = update_tool_not_found(
+        name="Neem Oil",
+        summary="Update Neem Oil",
+        usage_sheet="New instructions",
+        tool_context=tool_context,
+    )
+
+    assert_that(
+        result,
+        equal_to({"status": "error", "message": "phytosanitary_not_found"}),
+        "Non-existent product should return a phytosanitary_not_found error",
     )
 
 
@@ -212,8 +228,37 @@ def update_phytosanitary_func(captured_update):
 
 
 @pytest.fixture
-def update_tool(update_phytosanitary_func, confirmation_store):
-    return create_confirm_update_phytosanitary_tool(update_phytosanitary_func, confirmation_store)
+def get_phytosanitary_by_name_func():
+    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+        return Phytosanitary(name=name, usage_sheet="Sheet", recommended_for="Plagas")
+
+    return get_phytosanitary_by_name
+
+
+@pytest.fixture
+def get_phytosanitary_by_name_not_found():
+    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+        return None
+
+    return get_phytosanitary_by_name
+
+
+@pytest.fixture
+def update_tool(update_phytosanitary_func, get_phytosanitary_by_name_func, confirmation_store):
+    return create_confirm_update_phytosanitary_tool(
+        update_phytosanitary_func=update_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        confirmation_store=confirmation_store,
+    )
+
+
+@pytest.fixture
+def update_tool_not_found(update_phytosanitary_func, get_phytosanitary_by_name_not_found, confirmation_store):
+    return create_confirm_update_phytosanitary_tool(
+        update_phytosanitary_func=update_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_not_found,
+        confirmation_store=confirmation_store,
+    )
 
 
 @pytest.fixture

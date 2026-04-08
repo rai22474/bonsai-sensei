@@ -22,7 +22,7 @@ def create_weather_advisor(model: object, tools: List[Callable]) -> Agent:
     return Agent(
         model=model,
         name="weather_advisor",
-        description="Un experto en proteger bonsáis de riesgos climáticos.",
+        description="Consulta el pronóstico del tiempo y evalúa riesgos climáticos (heladas, calor extremo) para bonsáis. Úsalo únicamente cuando el usuario pregunta explícitamente por el tiempo o necesita saber si sus bonsáis están en riesgo climático. No lo uses para decidir fechas de planificación.",
         instruction=WEATHER_INSTRUCTION,
         tools=tools,
     )

@@ -22,6 +22,7 @@ def request_fertilizer_creation(context, name, external_stubs):
 def confirm_fertilizer_creation(context, name, external_stubs):
     for confirmation in context.get("pending_confirmations", []):
         accept_confirmation(context["user_id"], confirmation["id"])
+    context["fertilizers_created"].append(name)
 
 
 @then(parsers.parse('fertilizer "{name}" should exist'))

@@ -2,6 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to, not_none
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.confirm_delete_phytosanitary_tool import (
     create_confirm_delete_phytosanitary_tool,
 )
@@ -44,6 +45,18 @@ def should_return_error_when_name_is_missing(delete_tool, tool_context):
         result,
         equal_to({"status": "error", "message": "phytosanitary_name_required"}),
         "Missing name should return a phytosanitary_name_required error",
+    )
+
+
+def should_return_error_when_phytosanitary_not_found(delete_tool_not_found, tool_context):
+    result = delete_tool_not_found(
+        name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context
+    )
+
+    assert_that(
+        result,
+        equal_to({"status": "error", "message": "phytosanitary_not_found"}),
+        "Non-existent product should return a phytosanitary_not_found error",
     )
 
 
@@ -104,7 +117,7 @@ def should_deduplicate_second_delete_for_same_phytosanitary(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(1),
-        "Second delete for the same phytosanitary product should be deduplicated, leaving only one confirmation",
+        "Second delete for the same product should be deduplicated, leaving only one confirmation",
     )
 
 
@@ -117,7 +130,7 @@ def should_store_both_deletes_for_different_phytosanitary_products(
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
         equal_to(2),
-        "Deletes for different phytosanitary products should each be stored as independent confirmations",
+        "Deletes for different products should each be stored as independent confirmations",
     )
 
 
@@ -140,8 +153,37 @@ def delete_phytosanitary_func(captured_delete):
 
 
 @pytest.fixture
-def delete_tool(delete_phytosanitary_func, confirmation_store):
-    return create_confirm_delete_phytosanitary_tool(delete_phytosanitary_func, confirmation_store)
+def get_phytosanitary_by_name_func():
+    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+        return Phytosanitary(name=name, usage_sheet="Sheet", recommended_for="Plagas")
+
+    return get_phytosanitary_by_name
+
+
+@pytest.fixture
+def get_phytosanitary_by_name_not_found():
+    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+        return None
+
+    return get_phytosanitary_by_name
+
+
+@pytest.fixture
+def delete_tool(delete_phytosanitary_func, get_phytosanitary_by_name_func, confirmation_store):
+    return create_confirm_delete_phytosanitary_tool(
+        delete_phytosanitary_func=delete_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        confirmation_store=confirmation_store,
+    )
+
+
+@pytest.fixture
+def delete_tool_not_found(delete_phytosanitary_func, get_phytosanitary_by_name_not_found, confirmation_store):
+    return create_confirm_delete_phytosanitary_tool(
+        delete_phytosanitary_func=delete_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_not_found,
+        confirmation_store=confirmation_store,
+    )
 
 
 @pytest.fixture

@@ -13,6 +13,7 @@ from bonsai_sensei.domain.services.factory import create_agents, create_sensei_g
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
+    get_cloud_orchestrator_model_factory,
     get_local_model_factory,
 )
 from bonsai_sensei.api.species import router as species_router
@@ -149,6 +150,9 @@ def _create_bonsai_history_service(session_factory):
         "list_bonsai_events": partial(
             bonsai_history.list_bonsai_events, create_session=session_factory
         ),
+        "record_bonsai_event": partial(
+            bonsai_history.record_bonsai_event, create_session=session_factory
+        ),
     }
 
 
@@ -211,10 +215,12 @@ async def lifespan(app: FastAPI):
         get_local_model_factory() if provider == "local" else get_cloud_model_factory()
     )
     model = model_factory()
+    orchestrator_model = get_cloud_orchestrator_model_factory()() if provider == "cloud" else None
     cultivation_group_factory = partial(
         create_cultivation_group,
         session_factory=get_session_partial,
         confirmation_store=app.state.confirmation_store,
+        orchestrator_model=orchestrator_model,
     )
     gardener_group_factory = partial(
         create_gardener_group,
@@ -226,7 +232,7 @@ async def lifespan(app: FastAPI):
         session_factory=get_session_partial,
         confirmation_store=app.state.confirmation_store,
     )
-    sensei_group_factory = partial(create_sensei_group)
+    sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model)
     sensei_agent = create_agents(
         model=model,
         create_cultivation_group=cultivation_group_factory,

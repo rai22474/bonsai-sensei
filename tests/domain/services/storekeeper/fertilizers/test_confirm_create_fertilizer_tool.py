@@ -2,6 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to, not_none
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_create_fertilizer_tool import (
     create_confirm_create_fertilizer_tool,
 )
@@ -14,13 +15,7 @@ class MockToolContext:
 
 
 def should_return_error_when_tool_context_is_none(create_tool):
-    result = create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=None,
-    )
+    result = create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=None)
 
     assert_that(
         result,
@@ -32,8 +27,6 @@ def should_return_error_when_tool_context_is_none(create_tool):
 def should_return_error_when_tool_context_has_no_user_id(create_tool):
     result = create_tool(
         name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
         summary="Create GreenBoom",
         tool_context=MockToolContext(user_id=None),
     )
@@ -46,13 +39,7 @@ def should_return_error_when_tool_context_has_no_user_id(create_tool):
 
 
 def should_return_error_when_name_is_missing(create_tool, tool_context):
-    result = create_tool(
-        name="",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create fertilizer",
-        tool_context=tool_context,
-    )
+    result = create_tool(name="", summary="Create fertilizer", tool_context=tool_context)
 
     assert_that(
         result,
@@ -61,46 +48,20 @@ def should_return_error_when_name_is_missing(create_tool, tool_context):
     )
 
 
-def should_return_error_when_usage_sheet_is_missing(create_tool, tool_context):
-    result = create_tool(
-        name="GreenBoom",
-        usage_sheet="",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
+def should_return_error_when_fertilizer_already_exists(create_tool_with_existing, tool_context):
+    result = create_tool_with_existing(
+        name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context
     )
 
     assert_that(
         result,
-        equal_to({"status": "error", "message": "usage_sheet_required"}),
-        "Missing usage_sheet should return a usage_sheet_required error",
-    )
-
-
-def should_return_error_when_recommended_amount_is_missing(create_tool, tool_context):
-    result = create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
-    )
-
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "recommended_amount_required"}),
-        "Missing recommended_amount should return a recommended_amount_required error",
+        equal_to({"status": "error", "message": "fertilizer_already_exists"}),
+        "Existing fertilizer should return a fertilizer_already_exists error",
     )
 
 
 def should_return_confirmation_summary_when_create_is_valid(create_tool, tool_context):
-    result = create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
-    )
+    result = create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
 
     assert_that(
         result,
@@ -114,13 +75,7 @@ def should_return_confirmation_summary_when_create_is_valid(create_tool, tool_co
 
 
 def should_store_pending_confirmation_in_store(create_tool, tool_context, confirmation_store):
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
-    )
+    create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
 
     assert_that(
         confirmation_store.get_pending("user-123"),
@@ -153,31 +108,19 @@ def should_execute_create_with_correct_name(executed_create):
     )
 
 
-def should_execute_create_with_correct_usage_sheet(executed_create):
+def should_execute_create_with_usage_sheet_from_searcher(executed_create):
     assert_that(
         executed_create["fertilizer"].usage_sheet,
-        equal_to("Apply once a month"),
-        "Executor should pass the correct usage_sheet to create_fertilizer_func",
+        equal_to("Apply 5 ml per litre of water."),
+        "Executor should pass the usage_sheet returned by the searcher",
     )
 
 
 def should_deduplicate_second_create_for_same_fertilizer(
     create_tool, tool_context, confirmation_store
 ):
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="First create",
-        tool_context=tool_context,
-    )
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Second create",
-        tool_context=tool_context,
-    )
+    create_tool(name="GreenBoom", summary="First create", tool_context=tool_context)
+    create_tool(name="GreenBoom", summary="Second create", tool_context=tool_context)
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
@@ -189,20 +132,8 @@ def should_deduplicate_second_create_for_same_fertilizer(
 def should_store_both_creates_for_different_fertilizers(
     create_tool, tool_context, confirmation_store
 ):
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="First create",
-        tool_context=tool_context,
-    )
-    create_tool(
-        name="BlueForce",
-        usage_sheet="Apply twice a month",
-        recommended_amount="10 ml/L",
-        summary="Second create",
-        tool_context=tool_context,
-    )
+    create_tool(name="GreenBoom", summary="First create", tool_context=tool_context)
+    create_tool(name="BlueForce", summary="Second create", tool_context=tool_context)
 
     assert_that(
         len(confirmation_store.get_all_pending("user-123")),
@@ -230,8 +161,47 @@ def create_fertilizer_func(captured_create):
 
 
 @pytest.fixture
-def create_tool(create_fertilizer_func, confirmation_store):
-    return create_confirm_create_fertilizer_tool(create_fertilizer_func, confirmation_store)
+def searcher():
+    def search(query: str) -> dict:
+        return {"answer": "Apply 5 ml per litre of water.", "results": []}
+
+    return search
+
+
+@pytest.fixture
+def get_fertilizer_by_name_func():
+    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+        return None
+
+    return get_fertilizer_by_name
+
+
+@pytest.fixture
+def existing_fertilizer_func():
+    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+        return Fertilizer(name=name, usage_sheet="Old sheet", recommended_amount="5 ml/L")
+
+    return get_fertilizer_by_name
+
+
+@pytest.fixture
+def create_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, confirmation_store):
+    return create_confirm_create_fertilizer_tool(
+        create_fertilizer_func=create_fertilizer_func,
+        get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+        searcher=searcher,
+        confirmation_store=confirmation_store,
+    )
+
+
+@pytest.fixture
+def create_tool_with_existing(create_fertilizer_func, existing_fertilizer_func, searcher, confirmation_store):
+    return create_confirm_create_fertilizer_tool(
+        create_fertilizer_func=create_fertilizer_func,
+        get_fertilizer_by_name_func=existing_fertilizer_func,
+        searcher=searcher,
+        confirmation_store=confirmation_store,
+    )
 
 
 @pytest.fixture
@@ -241,25 +211,13 @@ def tool_context():
 
 @pytest.fixture
 def pending_confirmation(create_tool, tool_context, confirmation_store):
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
-    )
+    create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
     return confirmation_store.get_pending("user-123")
 
 
 @pytest.fixture
 def executed_create(create_tool, tool_context, confirmation_store, captured_create):
-    create_tool(
-        name="GreenBoom",
-        usage_sheet="Apply once a month",
-        recommended_amount="5 ml/L",
-        summary="Create GreenBoom",
-        tool_context=tool_context,
-    )
+    create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
     pending = confirmation_store.get_pending("user-123")
     pending.execute()
     return captured_create

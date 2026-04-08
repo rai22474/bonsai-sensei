@@ -5,14 +5,25 @@ import pytest
 from pytest_httpserver import HTTPServer
 from pytest_bdd import given, parsers
 
-from http_client import accept_confirmation, advise
+from http_client import delete, post
+from manage_phytosanitary.phytosanitary_api import create_phytosanitary, delete_phytosanitary_by_name
 
 STUB_PORT = 8070
 
 
 @pytest.fixture
 def context():
-    return {"user_id": f"bdd-phytosanitary-{uuid.uuid4().hex}"}
+    return {
+        "user_id": f"bdd-phytosanitary-{uuid.uuid4().hex}",
+        "phytosanitaries_created": [],
+    }
+
+
+@pytest.fixture(autouse=True)
+def cleanup_phytosanitaries(context):
+    yield
+    for name in context["phytosanitaries_created"]:
+        delete_phytosanitary_by_name(delete, name)
 
 
 @pytest.fixture
@@ -27,10 +38,6 @@ def external_stubs():
 
 
 @given(parsers.parse('phytosanitary product "{name}" exists'))
-def ensure_phytosanitary_exists(context, name, external_stubs):
-    response = advise(
-        text=f"Da de alta el fitosanitario {name}.",
-        user_id=context["user_id"],
-    )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
+def ensure_phytosanitary_exists(context, name):
+    create_phytosanitary(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", "Hongos y plagas", [])
+    context["phytosanitaries_created"].append(name)

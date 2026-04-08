@@ -5,14 +5,25 @@ import pytest
 from pytest_httpserver import HTTPServer
 from pytest_bdd import given, parsers
 
-from http_client import accept_confirmation, advise
+from http_client import delete, post
+from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertilizer_by_name
 
 STUB_PORT = 8070
 
 
 @pytest.fixture
 def context():
-    return {"user_id": f"bdd-fertilizer-{uuid.uuid4().hex}"}
+    return {
+        "user_id": f"bdd-fertilizer-{uuid.uuid4().hex}",
+        "fertilizers_created": [],
+    }
+
+
+@pytest.fixture(autouse=True)
+def cleanup_fertilizers(context):
+    yield
+    for name in context["fertilizers_created"]:
+        delete_fertilizer_by_name(delete, name)
 
 
 @pytest.fixture
@@ -30,10 +41,6 @@ def external_stubs():
 
 
 @given(parsers.parse('fertilizer "{name}" exists'))
-def ensure_fertilizer_exists(context, name, external_stubs):
-    response = advise(
-        text=f"Da de alta el fertilizante {name}.",
-        user_id=context["user_id"],
-    )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
+def ensure_fertilizer_exists(context, name):
+    create_fertilizer(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", [])
+    context["fertilizers_created"].append(name)

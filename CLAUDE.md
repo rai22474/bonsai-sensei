@@ -27,5 +27,8 @@ DESIGN RULES:
 - Always include failure messages in assert statements.
 - Only test public method, private methods are implementation details.
 - Follow TDD: always write the acceptance test first, then implement the production code to make it pass.
-- In acceptance tests, `given` steps that set up preconditions should use the REST API directly (not `advise()`) to avoid accumulating LLM session history. When a `given` step must use `advise()`, it should use an isolated `user_id` (e.g., `f"setup-{uuid.uuid4().hex}"`) to avoid polluting the main test session.
+- Acceptance test steps have strict boundaries on how they interact with the system:
+  - `given` steps: MUST use REST API only. NEVER call `advise()` or `accept_confirmation()`. These are preconditions that must be deterministic and fast. The LLM may normalize or paraphrase input (e.g., "10 g" → "10g"), breaking assertions. If the required REST endpoint does not exist, create it.
+  - `when` steps: MUST use `advise()` (and `accept_confirmation()` if needed). These are the user actions under test.
+  - `then` steps: MUST use REST API only. NEVER call `advise()`. Assertions must be based on deterministic data from the API, not on LLM-generated text unless that text is the explicit subject of the test.
 

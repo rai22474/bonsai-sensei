@@ -4,7 +4,6 @@ from http_client import accept_confirmation, advise
 from manage_bonsai.conftest import (
     create_species_record,
     find_bonsai_by_name_api,
-    get_species_record_id,
 )
 
 
@@ -20,12 +19,8 @@ def ensure_species_exists(context, name, scientific_name):
 
 @when(parsers.parse('I request to register bonsai "{bonsai_name}" for species "{species_name}"'))
 def request_bonsai_creation(context, bonsai_name, species_name):
-    species_id = get_species_record_id(context, species_name)
     response = advise(
-        text=(
-            f"Da de alta un bonsái llamado {bonsai_name} "
-            f"de la especie {species_name} con id {species_id}."
-        ),
+        text=f"Da de alta un bonsái llamado {bonsai_name} de la especie {species_name}.",
         user_id="bdd-bonsai",
     )
     context["pending_confirmations"] = response.get("pending_confirmations", [])

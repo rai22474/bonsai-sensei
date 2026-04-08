@@ -1,9 +1,7 @@
-import uuid
-
 from pytest_bdd import scenario, given, when, then, parsers
 
-from http_client import accept_confirmation, advise, get
-from manage_bonsai.bonsai_events_api import list_bonsai_events
+from http_client import accept_confirmation, advise, get, post
+from manage_bonsai.bonsai_events_api import list_bonsai_events, record_bonsai_event
 
 
 @scenario("../features/apply_phytosanitary.feature", "Apply phytosanitary treatment to a bonsai")
@@ -25,16 +23,14 @@ def test_list_phytosanitary_treatments():
     parsers.parse('"{phytosanitary_name}" phytosanitary treatment has been applied to "{bonsai_name}" with amount "{amount}"')
 )
 def apply_phytosanitary_as_precondition(context, phytosanitary_name, bonsai_name, amount):
-    setup_user_id = f"setup-{uuid.uuid4().hex}"
-    response = advise(
-        text=(
-            f"He aplicado el fitosanitario {phytosanitary_name} al bonsái {bonsai_name} "
-            f"con una cantidad de {amount}."
-        ),
-        user_id=setup_user_id,
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    phytosanitary_id = context["phytosanitary_ids"][phytosanitary_name]
+    record_bonsai_event(
+        post_func=post,
+        bonsai_id=bonsai_id,
+        event_type="phytosanitary_application",
+        payload={"phytosanitary_id": phytosanitary_id, "phytosanitary_name": phytosanitary_name, "amount": amount},
     )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(setup_user_id, confirmation["id"])
 
 
 @when(

@@ -7,16 +7,10 @@ from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import bonsai_history
-from bonsai_sensei.domain.services.cultivation.cultivation_agent import (
-    create_cultivation_agent,
-)
 from bonsai_sensei.domain.services.cultivation.plan.planning_agent import (
     create_planning_agent,
 )
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
-from bonsai_sensei.domain.services.cultivation.species.care_guide_agent import (
-    create_care_guide_agent,
-)
 from bonsai_sensei.domain.services.cultivation.species.care_guide_service import (
     create_care_guide_builder,
 )
@@ -72,12 +66,12 @@ def create_cultivation_group(
     model: object,
     session_factory,
     confirmation_store: ConfirmationStore | None = None,
+    orchestrator_model: object = None,
 ):
+    effective_orchestrator_model = orchestrator_model or model
     list_species_tool = _create_list_species_tool(session_factory=session_factory)
     weather_agent = _create_weather_agent(model, list_species_tool, session_factory)
-    botanist = _create_botanist(
-        model, session_factory, confirmation_store, list_species_tool
-    )
+    botanist = _create_botanist(model, session_factory, confirmation_store)
 
     list_bonsai_events_tool = _create_list_bonsai_events_tool(session_factory=session_factory)
     fertilizer_advisor = _create_fertilizer_advisor(
@@ -101,6 +95,7 @@ def create_cultivation_group(
 
     planning_agent = _create_planning_agent(
         model=model,
+        orchestrator_model=effective_orchestrator_model,
         fertilizer_advisor=fertilizer_advisor,
         phytosanitary_advisor=phytosanitary_advisor,
         session_factory=session_factory,
@@ -110,45 +105,30 @@ def create_cultivation_group(
         confirm_create_tool=confirm_create_tool,
     )
 
-    return create_cultivation_agent(
-        model=model,
-        botanist=botanist,
-        weather_advisor=weather_agent,
-        planning_agent=planning_agent,
-    )
+    return botanist, weather_agent, planning_agent
 
 
-def _create_botanist(model, session_factory, confirmation_store, list_species_tool):
+def _create_botanist(model, session_factory, confirmation_store):
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
 
     trefle_base_url = os.getenv("TREFLE_API_BASE", "https://trefle.io")
-    trefle_searcher = create_trefle_searcher(
-        os.getenv("TREFLE_API_TOKEN"), trefle_base_url
-    )
-    resolve_name_tool = create_scientific_name_resolver(
+    scientific_name_resolver = create_scientific_name_resolver(
         translator=translate_to_english,
-        searcher=trefle_searcher,
+        searcher=create_trefle_searcher(os.getenv("TREFLE_API_TOKEN"), trefle_base_url),
     )
 
     tavily_base_url = os.getenv("TAVILY_API_BASE")
-    tavily_searcher = create_tavily_searcher(
-        os.getenv("TAVILY_API_KEY"), tavily_base_url
-    )
-    care_guide_builder = create_care_guide_builder(tavily_searcher)
-
-    care_guide_agent = create_care_guide_agent(
-        model=model,
-        tools=[care_guide_builder],
+    care_guide_builder = create_care_guide_builder(
+        create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     )
 
-    botanist = create_botanist(
+    return create_botanist(
         model=model,
         get_species_by_name_func=get_species_by_name_func,
-        resolve_scientific_name=resolve_name_tool,
-        list_species=list_species_tool,
-        care_guide_agent=care_guide_agent,
+        scientific_name_resolver=scientific_name_resolver,
+        care_guide_builder=care_guide_builder,
         create_species_func=partial(
             herbarium.create_species, create_session=session_factory
         ),
@@ -160,8 +140,6 @@ def _create_botanist(model, session_factory, confirmation_store, list_species_to
         ),
         confirmation_store=confirmation_store,
     )
-
-    return botanist
 
 
 def _create_weather_agent(model, list_species_tool, session_factory):
@@ -253,8 +231,8 @@ def _create_confirm_create_planned_work_tool(session_factory, confirmation_store
 
 
 def _create_planning_agent(
-    model, fertilizer_advisor, phytosanitary_advisor, session_factory, confirmation_store,
-    list_planned_works_tool, list_bonsai_events_tool, confirm_create_tool,
+    model, orchestrator_model, fertilizer_advisor, phytosanitary_advisor, session_factory,
+    confirmation_store, list_planned_works_tool, list_bonsai_events_tool, confirm_create_tool,
 ):
     confirm_delete_tool = create_confirm_delete_planned_work_tool(
         get_planned_work_func=partial(
@@ -277,6 +255,7 @@ def _create_planning_agent(
     )
     return create_planning_agent(
         model=model,
+        orchestrator_model=orchestrator_model,
         fertilizer_advisor=fertilizer_advisor,
         phytosanitary_advisor=phytosanitary_advisor,
         list_planned_works_tool=list_planned_works_tool,

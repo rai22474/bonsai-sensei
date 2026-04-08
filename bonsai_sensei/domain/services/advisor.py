@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from typing import Callable
 from functools import partial
 
@@ -74,8 +74,13 @@ async def _generate_advise(
     user_settings = get_user_settings_func(user_id) if get_user_settings_func else None
     user_location = user_settings.location if user_settings and user_settings.location else ""
 
+    today = date.today()
+    days_until_saturday = (5 - today.weekday()) % 7 or 7
+    next_saturday = (today + timedelta(days=days_until_saturday)).isoformat()
+
     state_delta = {
-        "current_date": date.today().isoformat(),
+        "current_date": today.isoformat(),
+        "next_saturday": next_saturday,
         "user_location": user_location,
     }
 

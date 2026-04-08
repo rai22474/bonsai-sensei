@@ -14,6 +14,13 @@ def get_local_model_factory():
 
 def get_cloud_model_factory():
     def factory():
-        return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+        return os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
+
+    return factory
+
+
+def get_cloud_orchestrator_model_factory():
+    def factory():
+        return os.getenv("GEMINI_ORCHESTRATOR_MODEL", "gemini-3-flash-preview") or None
 
     return factory

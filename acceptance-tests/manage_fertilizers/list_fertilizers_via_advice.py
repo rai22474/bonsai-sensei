@@ -1,21 +1,11 @@
-from pytest_bdd import scenario, when, then, given, parsers
+from pytest_bdd import scenario, when, then, parsers
 
-from http_client import accept_confirmation, advise
+from http_client import advise
 
 
 @scenario("../features/manage_fertilizers.feature", "List fertilizers via advice")
 def test_list_fertilizers():
     return None
-
-
-@given(parsers.parse('fertilizer "{name}" exists'))
-def ensure_fertilizer_exists(context, name, external_stubs):
-    response = advise(
-        text=f"Da de alta el fertilizante {name}.",
-        user_id=context["user_id"],
-    )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(context["user_id"], confirmation["id"])
 
 
 @when("I request the fertilizer list")

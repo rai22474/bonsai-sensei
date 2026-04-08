@@ -1,7 +1,7 @@
 from functools import partial
 import uuid
 from google.adk.tools.tool_context import ToolContext
-from typing import Optional
+from typing import Callable
 from bonsai_sensei.domain.confirmation import Confirmation
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.resolve_user_id import (
@@ -14,62 +14,51 @@ from bonsai_sensei.domain.species import Species
 
 def create_confirm_create_species_tool(
     create_species_func,
+    get_species_by_name_func: Callable[[str], Species | None],
+    scientific_name_resolver: Callable[[str], dict],
+    care_guide_builder: Callable[[str, str], dict],
     confirmation_store: ConfirmationStore,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     def confirm_create_bonsai_species(
         common_name: str,
-        scientific_name: str,
         summary: str,
-        sources: list[str],
-        watering: str | None = None,
-        light: str | None = None,
-        soil: str | None = None,
-        pruning: str | None = None,
-        pests: str | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Create a confirmation to create a species and return JSON with care guide details.
+        """Create a confirmation to register a new bonsai species with its scientific name and care guide.
+
+        Resolves the scientific name and builds the care guide automatically using external sources.
 
         Args:
-            common_name: Common name for the species.
-            scientific_name: Scientific name to register.
-            summary: Summary of the care guide.
-            sources: Source URLs for the care guide.
-            watering: Watering guidance.
-            light: Light requirements.
-            soil: Soil requirements.
-            pruning: Pruning guidance.
-            pests: Pest or disease guidance.
+            common_name: Common name of the species to register.
+            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary with creation results.
+            A JSON-ready dictionary indicating whether the confirmation was registered.
 
         Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "scientific_name_required".
+        Error reasons: "user_id_required_for_confirmation", "species_name_required",
+            "species_already_exists", "scientific_name_not_found".
         """
-
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
-            return {"status": "error", 
-                    "message": "user_id_required_for_confirmation"}
+            return {"status": "error", "message": "user_id_required_for_confirmation"}
 
-        normalized_scientific = _normalize_scientific_name(scientific_name)
+        if not common_name:
+            return {"status": "error", "message": "species_name_required"}
 
-        if not normalized_scientific:
-            return {"status": "error", "message": "scientific_name_required"}
+        if get_species_by_name_func(common_name):
+            return {"status": "error", "message": "species_already_exists"}
 
-        care_guide_payload = {
-            "summary": summary,
-            "sources": sources,
-            "watering": watering,
-            "light": light,
-            "soil": soil,
-            "pruning": pruning,
-            "pests": pests,
-        }
+        resolution = scientific_name_resolver(common_name)
+        scientific_names = resolution.get("scientific_names", [])
+        if not scientific_names:
+            return {"status": "error", "message": "scientific_name_not_found"}
+
+        scientific_name = scientific_names[0]
+        care_guide = care_guide_builder(common_name, scientific_name)
 
         command = Confirmation(
             id=uuid.uuid4().hex,
@@ -79,8 +68,8 @@ def create_confirm_create_species_tool(
                 create_species_func,
                 Species(
                     name=common_name,
-                    scientific_name=normalized_scientific,
-                    care_guide=care_guide_payload,
+                    scientific_name=scientific_name,
+                    care_guide=care_guide,
                 ),
             ),
             deduplication_key=f"create_species:{common_name}",
@@ -94,18 +83,3 @@ def create_confirm_create_species_tool(
         }
 
     return confirm_create_bonsai_species
-
-
-def _normalize_scientific_name(scientific_name: Optional[str]) -> Optional[str]:
-    """Trim and validate a scientific name string.
-
-    Returns the trimmed name or None when the input is None or consists only of
-    whitespace. This centralizes the normalization rule used before creating
-    species records.
-    """
-
-    if scientific_name is None:
-        return None
-
-    trimmed = scientific_name.strip()
-    return trimmed if trimmed else None

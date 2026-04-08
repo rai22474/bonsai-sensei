@@ -1,9 +1,11 @@
 from google.adk.tools.tool_context import ToolContext
 from functools import partial
+from typing import Callable
 import uuid
 
 from bonsai_sensei.domain.confirmation import Confirmation
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
@@ -11,11 +13,12 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 def create_confirm_delete_phytosanitary_tool(
     delete_phytosanitary_func,
+    get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
     confirmation_store: ConfirmationStore,
 ):
     
     @trace_tool_call
-    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
+    @limit_tool_calls(agent_name="storekeeper")
     def confirm_delete_phytosanitary(
         name: str,
         summary: str,
@@ -32,7 +35,7 @@ def create_confirm_delete_phytosanitary_tool(
 
         Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required".
+        Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required", "phytosanitary_not_found".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -40,6 +43,9 @@ def create_confirm_delete_phytosanitary_tool(
 
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
+
+        if not get_phytosanitary_by_name_func(name):
+            return {"status": "error", "message": "phytosanitary_not_found"}
 
         command = Confirmation(
             id=uuid.uuid4().hex,

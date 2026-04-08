@@ -2,6 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to, not_none
 
 from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_delete_fertilizer_tool import (
     create_confirm_delete_fertilizer_tool,
 )
@@ -44,6 +45,18 @@ def should_return_error_when_name_is_missing(delete_tool, tool_context):
         result,
         equal_to({"status": "error", "message": "fertilizer_name_required"}),
         "Missing name should return a fertilizer_name_required error",
+    )
+
+
+def should_return_error_when_fertilizer_not_found(delete_tool_not_found, tool_context):
+    result = delete_tool_not_found(
+        name="GreenBoom", summary="Delete GreenBoom", tool_context=tool_context
+    )
+
+    assert_that(
+        result,
+        equal_to({"status": "error", "message": "fertilizer_not_found"}),
+        "Non-existent fertilizer should return a fertilizer_not_found error",
     )
 
 
@@ -140,8 +153,37 @@ def delete_fertilizer_func(captured_delete):
 
 
 @pytest.fixture
-def delete_tool(delete_fertilizer_func, confirmation_store):
-    return create_confirm_delete_fertilizer_tool(delete_fertilizer_func, confirmation_store)
+def get_fertilizer_by_name_func():
+    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+        return Fertilizer(name=name, usage_sheet="Sheet", recommended_amount="5 ml/L")
+
+    return get_fertilizer_by_name
+
+
+@pytest.fixture
+def get_fertilizer_by_name_not_found():
+    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+        return None
+
+    return get_fertilizer_by_name
+
+
+@pytest.fixture
+def delete_tool(delete_fertilizer_func, get_fertilizer_by_name_func, confirmation_store):
+    return create_confirm_delete_fertilizer_tool(
+        delete_fertilizer_func=delete_fertilizer_func,
+        get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+        confirmation_store=confirmation_store,
+    )
+
+
+@pytest.fixture
+def delete_tool_not_found(delete_fertilizer_func, get_fertilizer_by_name_not_found, confirmation_store):
+    return create_confirm_delete_fertilizer_tool(
+        delete_fertilizer_func=delete_fertilizer_func,
+        get_fertilizer_by_name_func=get_fertilizer_by_name_not_found,
+        confirmation_store=confirmation_store,
+    )
 
 
 @pytest.fixture

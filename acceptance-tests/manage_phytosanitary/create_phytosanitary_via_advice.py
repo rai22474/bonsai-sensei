@@ -25,6 +25,7 @@ def request_phytosanitary_creation(context, name, external_stubs):
 def confirm_phytosanitary_creation(context, name, external_stubs):
     for confirmation in context.get("pending_confirmations", []):
         accept_confirmation(context["user_id"], confirmation["id"])
+    context["phytosanitaries_created"].append(name)
 
 
 @then(parsers.parse('phytosanitary product "{name}" should exist'))

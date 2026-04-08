@@ -147,7 +147,7 @@ def create_gardener(
     return Agent(
         model=model,
         name="gardener",
-        description="Gestiona la colección de bonsáis, registra tratamientos aplicados y ejecuta trabajos planificados convirtiéndolos en eventos.",
+        description="Gestiona la colección de bonsáis (crear, actualizar, eliminar) y registra eventos ya ocurridos: fertilizaciones aplicadas, tratamientos fitosanitarios aplicados, trasplantes realizados y ejecución de trabajos planificados. No planifica trabajos futuros ni gestiona el catálogo de productos.",
         instruction=GARDENER_INSTRUCTION,
         tools=[
             list_bonsai_tool,

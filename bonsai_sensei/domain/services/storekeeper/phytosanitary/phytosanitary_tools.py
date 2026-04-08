@@ -9,7 +9,7 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_phytosanitary_info_tool(searcher: Callable[[str], dict]):
 
     @trace_tool_call
-    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
+    @limit_tool_calls(agent_name="storekeeper")
     def fetch_phytosanitary_info(name: str) -> dict:
         """Fetch phytosanitary info and return JSON with usage sheet and recommended amount.
 
@@ -52,7 +52,7 @@ def create_list_phytosanitary_tool(
     list_phytosanitary_func: Callable[[], list[Phytosanitary]],
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
+    @limit_tool_calls(agent_name="storekeeper")
     def list_phytosanitary() -> dict:
         """Return JSON with all registered phytosanitary items.
 
@@ -82,7 +82,7 @@ def create_get_phytosanitary_by_name_tool(
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="phytosanitary_storekeeper")
+    @limit_tool_calls(agent_name="storekeeper")
     def get_phytosanitary_by_name(name: str) -> dict:
         """Lookup a phytosanitary by name and return JSON with status and record.
 

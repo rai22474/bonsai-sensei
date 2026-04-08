@@ -5,9 +5,10 @@ import pytest
 from pytest_bdd import given, parsers
 from pytest_httpserver import HTTPServer
 
-from http_client import accept_confirmation, advise, delete, get, post
+from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name
-from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertilizer_by_name
+from manage_bonsai.bonsai_events_api import record_bonsai_event
+from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertilizer_by_name, find_fertilizer_by_name
 from manage_species.species_api import delete_species_by_name
 
 STUB_PORT = 8074
@@ -77,13 +78,11 @@ def ensure_fertilizer_registered(context, name):
 
 @given(parsers.parse('"{bonsai_name}" has been fertilized with "{fertilizer_name}"'))
 def apply_fertilizer_as_precondition(context, bonsai_name, fertilizer_name):
-    setup_user_id = f"setup-{uuid.uuid4().hex}"
-    response = advise(
-        text=(
-            f"He aplicado el fertilizante {fertilizer_name} al bonsái {bonsai_name} "
-            f"con una cantidad de 5 ml."
-        ),
-        user_id=setup_user_id,
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    fertilizer = find_fertilizer_by_name(get, fertilizer_name)
+    record_bonsai_event(
+        post_func=post,
+        bonsai_id=bonsai_id,
+        event_type="fertilizer_application",
+        payload={"fertilizer_id": fertilizer["id"], "fertilizer_name": fertilizer_name, "amount": "5 ml"},
     )
-    for confirmation in response.get("pending_confirmations", []):
-        accept_confirmation(setup_user_id, confirmation["id"])

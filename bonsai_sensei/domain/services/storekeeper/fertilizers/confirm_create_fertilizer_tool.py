@@ -1,5 +1,6 @@
 from google.adk.tools.tool_context import ToolContext
 from functools import partial
+from typing import Callable
 import uuid
 
 from bonsai_sensei.domain.confirmation import Confirmation
@@ -8,39 +9,35 @@ from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
+from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import _extract_recommended_amount
 
 
 def create_confirm_create_fertilizer_tool(
     create_fertilizer_func,
+    get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
+    searcher: Callable[[str], dict],
     confirmation_store: ConfirmationStore,
 ):
 
     @trace_tool_call
-    @limit_tool_calls(agent_name="fertilizer_storekeeper")
+    @limit_tool_calls(agent_name="storekeeper")
     def confirm_create_fertilizer(
         name: str,
-        usage_sheet: str,
-        recommended_amount: str,
         summary: str,
-        sources: list[str] | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to create a fertilizer and return JSON with the result.
+        """Search for the fertilizer guide online and register a confirmation to create it.
 
         Args:
             name: Fertilizer name.
-            usage_sheet: Usage instructions or full technical sheet text.
-            recommended_amount: Recommended dosage string.
             summary: Short human-readable summary to show in the confirmation prompt.
-            sources: Optional list of source URLs.
 
         Returns:
             A JSON-ready dictionary indicating whether the confirmation was registered.
 
         Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
         Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "fertilizer_name_required",
-            "usage_sheet_required", "recommended_amount_required".
+        Error reasons: "user_id_required_for_confirmation", "fertilizer_name_required", "fertilizer_already_exists".
         """
         user_id = resolve_confirmation_user_id(tool_context)
         if not user_id:
@@ -49,11 +46,14 @@ def create_confirm_create_fertilizer_tool(
         if not name:
             return {"status": "error", "message": "fertilizer_name_required"}
 
-        if not usage_sheet:
-            return {"status": "error", "message": "usage_sheet_required"}
+        if get_fertilizer_by_name_func(name):
+            return {"status": "error", "message": "fertilizer_already_exists"}
 
-        if not recommended_amount:
-            return {"status": "error", "message": "recommended_amount_required"}
+        search_response = searcher(f"{name} bonsai dosis de uso ficha tecnica fertilizante")
+        answer = str(search_response.get("answer", "")).strip()
+        sources = [str(item.get("url")) for item in search_response.get("results", []) if item.get("url")]
+        usage_sheet = answer or "No data available."
+        recommended_amount = _extract_recommended_amount(answer)
 
         command = Confirmation(
             id=uuid.uuid4().hex,
@@ -65,7 +65,7 @@ def create_confirm_create_fertilizer_tool(
                     name=name,
                     usage_sheet=usage_sheet,
                     recommended_amount=recommended_amount,
-                    sources=sources or [],
+                    sources=sources,
                 ),
             ),
             deduplication_key=f"create_fertilizer:{name}",

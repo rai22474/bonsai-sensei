@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict, Callable
 from bonsai_sensei.domain.bonsai import Bonsai
+from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 
 router = APIRouter()
 
@@ -23,6 +24,10 @@ def get_delete_bonsai_svc(request: Request) -> Callable:
 
 def get_list_bonsai_events_svc(request: Request) -> Callable:
     return request.app.state.bonsai_history_service["list_bonsai_events"]
+
+
+def get_record_bonsai_event_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_history_service["record_bonsai_event"]
 
 
 @router.get("/bonsai", response_model=List[Bonsai])
@@ -71,3 +76,14 @@ def list_bonsai_events(
     list_events_func: Callable = Depends(get_list_bonsai_events_svc),
 ):
     return list_events_func(bonsai_id=bonsai_id)
+
+
+@router.post("/bonsai/{bonsai_id}/events", response_model=BonsaiEvent)
+def record_bonsai_event(
+    bonsai_id: int,
+    event: BonsaiEvent,
+    record_event_func: Callable = Depends(get_record_bonsai_event_svc),
+):
+    event.id = None
+    event.bonsai_id = bonsai_id
+    return record_event_func(bonsai_event=event)
