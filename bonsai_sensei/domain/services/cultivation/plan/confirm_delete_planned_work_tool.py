@@ -56,7 +56,7 @@ def create_confirm_delete_planned_work_tool(
         confirmation_store.set_pending(user_id, command)
         return {
             "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
+            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
             "summary": summary,
         }
 

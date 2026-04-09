@@ -8,29 +8,6 @@ Translator = Callable[[str], str]
 Searcher = Callable[[str], List[Dict[str, str]]]
 
 
-@trace_tool_call
-@limit_tool_calls(agent_name="botanist")
-def resolve_scientific_name(
-    common_name: str,
-    translator: Translator,
-    searcher: Searcher,
-) -> Dict:
-    """Resolve scientific names for a common name via translation and lookup.
-
-    Args:
-        common_name: Common name to resolve.
-        translator: Translator used to normalize the query.
-        searcher: Searcher used to fetch candidates.
-
-    Returns:
-        A JSON-ready dictionary with the resolution results.
-    """
-    return _resolve_scientific_name(
-        common_name=common_name,
-        translator=translator,
-        searcher=searcher,
-    )
-
 
 def create_scientific_name_resolver(
     translator: Translator,
