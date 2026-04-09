@@ -1,4 +1,6 @@
 from google.adk.agents.llm_agent import LlmAgent
+from google.adk.planners import BuiltInPlanner
+from google.genai.types import ThinkingConfig
 
 KIKAKU_INSTRUCTION = """
 #ROL
@@ -47,4 +49,5 @@ def create_kikaku(model: object, available_actions: list[str]) -> LlmAgent:
         description="Estratega de planificación de cultivos que analiza la petición y genera un plan de acción en JSON.",
         instruction=instruction,
         output_key="cultivation_plan",
+        planner=BuiltInPlanner(thinking_config=ThinkingConfig(include_thoughts=False)),
     )

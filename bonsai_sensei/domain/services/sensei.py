@@ -1,4 +1,6 @@
 from google.adk.agents.llm_agent import Agent
+from google.adk.planners import BuiltInPlanner
+from google.genai.types import ThinkingConfig
 
 SENSEI_INSTRUCTION = """
 #ROL
@@ -42,4 +44,5 @@ def create_sensei(
         description="Sensei que coordina agentes expertos en bonsáis.",
         instruction=SENSEI_INSTRUCTION,
         tools=tools,
+        planner=BuiltInPlanner(thinking_config=ThinkingConfig(include_thoughts=False)),
     )

@@ -1,6 +1,7 @@
 import dataclasses
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+from bonsai_sensei.domain.services.advisor import apply_confirmation_decision
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -45,5 +46,6 @@ async def accept_confirmation(
     )
     if not confirmation:
         raise HTTPException(status_code=404, detail="confirmation_not_found")
-    result = confirmation.execute()
+    inject_confirmation_result = getattr(request.app.state, "inject_confirmation_result", None)
+    result = await apply_confirmation_decision(inject_confirmation_result, request_body.user_id, confirmation, accepted=True)
     return {"status": "accepted", "result": result}

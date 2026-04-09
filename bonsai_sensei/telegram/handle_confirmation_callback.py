@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
+from bonsai_sensei.domain.services.advisor import apply_confirmation_decision
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -9,6 +10,7 @@ async def handle_confirmation_callback(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     confirmation_store=None,
+    inject_confirmation_result=None,
 ):
     query = update.callback_query
     if not query:
@@ -32,8 +34,7 @@ async def handle_confirmation_callback(
         await query.edit_message_text("Confirmación no encontrada.")
         return
 
-    if action == "accept":
-        confirmation.execute()
-        await query.edit_message_text("Confirmación aceptada.")
-    else:
-        await query.edit_message_text("Confirmación cancelada.")
+    accepted = action == "accept"
+    await apply_confirmation_decision(inject_confirmation_result, user_id, confirmation, accepted)
+    response_text = "Confirmación aceptada." if accepted else "Confirmación cancelada."
+    await query.edit_message_text(response_text)

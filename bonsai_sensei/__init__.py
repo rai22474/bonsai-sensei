@@ -240,7 +240,7 @@ async def lifespan(app: FastAPI):
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
     )
-    app.state.advisor, app.state.reset_session = create_advisor(
+    app.state.advisor, app.state.reset_session, app.state.inject_confirmation_result = create_advisor(
         sensei_agent=sensei_agent,
         confirmation_store=app.state.confirmation_store,
         get_user_settings_func=app.state.user_settings_service["get_user_settings"],
@@ -262,6 +262,7 @@ async def lifespan(app: FastAPI):
     confirmation_handler = partial(
         handle_confirmation_callback,
         confirmation_store=app.state.confirmation_store,
+        inject_confirmation_result=app.state.inject_confirmation_result,
     )
 
     handlers = [

@@ -1,4 +1,6 @@
 from google.adk.agents.llm_agent import LlmAgent
+from google.adk.planners import BuiltInPlanner
+from google.genai.types import ThinkingConfig
 
 MITORI_INSTRUCTION = """
 #ROL
@@ -44,4 +46,5 @@ def create_mitori(model: object, agent_descriptions: list[str]) -> LlmAgent:
         description="Estratega que analiza la petición y genera un plan de acción revisado en JSON.",
         instruction=instruction,
         output_key="action_plan",
+        planner=BuiltInPlanner(thinking_config=ThinkingConfig(include_thoughts=False)),
     )
