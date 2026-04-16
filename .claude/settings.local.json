@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash acceptance-tests/run_bdd_acceptance.sh acceptance-tests/manage_bonsai/create_bonsai_via_advice.py)",
+      "WebFetch(domain:pydantic.dev)",
+      "WebFetch(domain:ai.pydantic.dev)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(uv pip:*)",
+      "Bash(uv run:*)",
+      "Bash(uv add:*)"
+    ]
+  }
+}
