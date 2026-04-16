@@ -1,23 +1,14 @@
 # Known Issues
 
-## ISSUE-001 — Conversational agents are single-turn within the pipeline
+## ISSUE-001 — No existe human-in-the-loop dentro de un plan en ejecución
 
-**Symptom:** When a user wants to have a back-and-forth conversation with an advisor (e.g., fertilizer_advisor) during plan creation, only one exchange is possible. The advisor returns its response to seko and seko moves to the next step.
+**Symptom:** Once a plan is executing (mitori → shokunin), there is no mechanism to pause, interact with the user, and resume. This manifests in several ways:
+- A plan with dependent steps (create species → create bonsai → generate cultivation plan) breaks silently: shokunin continues past a `confirmation_pending` step, so dependent steps run against state that doesn't exist yet.
+- After a confirmation is resolved, the original plan is gone. The next user message re-enters at sensei, which reconstructs a partial plan from a session summary — relying on LLM inference rather than a deterministic continuation.
+- Mid-plan dialogue is impossible: if an agent tool needs to ask the user a question (not just accept/cancel), it cannot. All user communication goes through sensei, which only activates between full execution cycles.
 
-**Root cause:** Seko executes each plan step once and moves on. It has no mechanism to pause for user feedback between steps (unlike the interrupt-based confirmation flow).
+**Root cause:** ADK's `InMemoryRunner` runs agents to completion. Sub-agents (AgentTools) have no way to pause execution, surface a message to the user, and resume from the same point. The confirmation pattern (ADR-006) is a workaround for the binary accept/cancel case only — it is not a general human-in-the-loop mechanism.
 
-**Workaround:** None currently. Users must provide all context upfront in their request.
+**Workaround:** Plans must be designed so that each confirmation is an independent, atomic operation with no dependent steps following it. Multi-step plans with dependencies that require user input between steps are not supported.
 
-**Related:** DEBT-002, ADR-001.
-
----
-
-## ISSUE-002 — sensei may misroute continuation messages in conversational flows
-
-**Symptom:** Not yet observed (conversational flows not implemented), but expected: if a user is in a multi-turn diagnostic conversation and sends a follow-up like "could it be fungal?", sensei may interpret it as a new query rather than a continuation.
-
-**Root cause:** Every message re-enters at sensei with no explicit conversation mode state.
-
-**Workaround:** Not applicable yet.
-
-**Related:** DEBT-002.
+**Related:** ADR-006, ADR-001.

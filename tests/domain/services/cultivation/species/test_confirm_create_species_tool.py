@@ -1,7 +1,5 @@
 import pytest
-from hamcrest import assert_that, equal_to, not_none
 
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.cultivation.species.confirm_create_species_tool import (
     create_confirm_create_species_tool,
 )
@@ -14,157 +12,82 @@ class MockToolContext:
         self.state = {}
 
 
-def should_return_error_when_tool_context_is_none(confirm_tool):
-    result = confirm_tool(common_name="Elm", summary="Create Elm", tool_context=None)
+@pytest.mark.asyncio
+async def should_return_error_when_species_name_is_missing(confirm_tool, tool_context):
+    result = await confirm_tool(common_name="", summary="Create species", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "Missing tool_context should return a user_id required error",
-    )
+    assert result == {"status": "error", "message": "species_name_required"}, \
+        "Missing common_name should return a species_name_required error"
 
 
-def should_return_error_when_tool_context_has_no_user_id(confirm_tool):
-    result = confirm_tool(
-        common_name="Elm",
-        summary="Create Elm",
-        tool_context=MockToolContext(user_id=None),
-    )
+@pytest.mark.asyncio
+async def should_return_error_when_species_already_exists(confirm_tool_with_existing, tool_context):
+    result = await confirm_tool_with_existing(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "tool_context without user_id should return a user_id required error",
-    )
+    assert result == {"status": "error", "message": "species_already_exists"}, \
+        "Existing species should return a species_already_exists error"
 
 
-def should_return_error_when_species_name_is_missing(confirm_tool, tool_context):
-    result = confirm_tool(common_name="", summary="Create species", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_return_error_when_scientific_name_not_found(confirm_tool_no_results, tool_context):
+    result = await confirm_tool_no_results(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "species_name_required"}),
-        "Missing common_name should return a species_name_required error",
-    )
+    assert result == {"status": "error", "message": "scientific_name_not_found"}, \
+        "No scientific name results should return a scientific_name_not_found error"
 
 
-def should_return_error_when_species_already_exists(confirm_tool_with_existing, tool_context):
-    result = confirm_tool_with_existing(
-        common_name="Elm", summary="Create Elm", tool_context=tool_context
-    )
+@pytest.mark.asyncio
+async def should_create_species_with_correct_common_name_when_user_confirms(confirm_tool, tool_context, captured_species):
+    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "species_already_exists"}),
-        "Existing species should return a species_already_exists error",
-    )
+    assert captured_species[0].name == "Elm", \
+        "Created species should use the common name"
 
 
-def should_return_error_when_scientific_name_not_found(confirm_tool_no_results, tool_context):
-    result = confirm_tool_no_results(
-        common_name="Elm", summary="Create Elm", tool_context=tool_context
-    )
+@pytest.mark.asyncio
+async def should_create_species_with_scientific_name_from_resolver_when_user_confirms(confirm_tool, tool_context, captured_species):
+    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "scientific_name_not_found"}),
-        "No scientific name results should return a scientific_name_not_found error",
-    )
+    assert captured_species[0].scientific_name == "Ulmus minor", \
+        "Created species should use the scientific name returned by the resolver"
 
 
-def should_return_confirmation_summary_when_create_is_valid(confirm_tool, tool_context):
-    result = confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_create_species_with_care_guide_from_builder_when_user_confirms(confirm_tool, tool_context, captured_species):
+    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
-            "summary": "Create Elm",
-        }),
-        "Valid input should return a confirmation dict with the summary",
-    )
+    assert captured_species[0].care_guide["summary"] == "Water regularly and place in full sun.", \
+        "Created species should use the care guide returned by the builder"
 
 
-def should_store_pending_confirmation_in_store(confirm_tool, tool_context, confirmation_store):
-    confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_return_success_when_user_confirms(confirm_tool, tool_context):
+    result = await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
 
-    assert_that(
-        confirmation_store.get_pending("user-123"),
-        not_none(),
-        "Pending confirmation should be stored in the store",
-    )
+    assert result["status"] == "success", \
+        "Tool should return success status when user confirms"
 
 
-def should_store_confirmation_with_correct_user_id(pending_confirmation):
-    assert_that(
-        pending_confirmation.user_id,
-        equal_to("user-123"),
-        "Stored confirmation should carry the correct user_id",
-    )
+@pytest.mark.asyncio
+async def should_not_create_species_when_user_cancels(tool_context, captured_species, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder):
+    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel)
+    await tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+
+    assert captured_species == [], \
+        "create_species_func should not be called when user cancels"
 
 
-def should_store_confirmation_with_correct_summary(pending_confirmation):
-    assert_that(
-        pending_confirmation.summary,
-        equal_to("Create Elm"),
-        "Stored confirmation summary should match the argument",
-    )
+@pytest.mark.asyncio
+async def should_return_cancelled_when_user_declines(tool_context, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder):
+    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel)
+    result = await tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+
+    assert result["status"] == "cancelled", \
+        "Tool should return cancelled status when user declines"
 
 
-def should_create_species_with_correct_common_name(executed_species):
-    assert_that(
-        executed_species.name,
-        equal_to("Elm"),
-        "Created species should use the common name",
-    )
-
-
-def should_create_species_with_scientific_name_from_resolver(executed_species):
-    assert_that(
-        executed_species.scientific_name,
-        equal_to("Ulmus minor"),
-        "Created species should use the scientific name returned by the resolver",
-    )
-
-
-def should_create_species_with_care_guide_from_builder(executed_species):
-    assert_that(
-        executed_species.care_guide["summary"],
-        equal_to("Water regularly and place in full sun."),
-        "Created species should use the care guide returned by the builder",
-    )
-
-
-def should_deduplicate_second_create_for_same_species(
-    confirm_tool, tool_context, confirmation_store
-):
-    confirm_tool(common_name="Elm", summary="First create", tool_context=tool_context)
-    confirm_tool(common_name="Elm", summary="Second create", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(1),
-        "Second create for the same species should be deduplicated, leaving only one confirmation",
-    )
-
-
-def should_store_both_creates_for_different_species(
-    confirm_tool, tool_context, confirmation_store
-):
-    confirm_tool(common_name="Elm", summary="First create", tool_context=tool_context)
-    confirm_tool(common_name="Pine", summary="Second create", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(2),
-        "Creates for different species should each be stored as independent confirmations",
-    )
-
-
-@pytest.fixture
-def confirmation_store():
-    return ConfirmationStore()
+async def ask_confirmation_cancel(question, tool_context=None):
+    return False
 
 
 @pytest.fixture
@@ -232,52 +155,46 @@ def care_guide_builder():
 
 
 @pytest.fixture
-def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, confirmation_store):
-    return create_confirm_create_species_tool(
-        create_species_func=create_species_func,
-        get_species_by_name_func=get_species_by_name_func,
-        scientific_name_resolver=scientific_name_resolver,
-        care_guide_builder=care_guide_builder,
-        confirmation_store=confirmation_store,
-    )
-
-
-@pytest.fixture
-def confirm_tool_with_existing(create_species_func, existing_species_func, scientific_name_resolver, care_guide_builder, confirmation_store):
-    return create_confirm_create_species_tool(
-        create_species_func=create_species_func,
-        get_species_by_name_func=existing_species_func,
-        scientific_name_resolver=scientific_name_resolver,
-        care_guide_builder=care_guide_builder,
-        confirmation_store=confirmation_store,
-    )
-
-
-@pytest.fixture
-def confirm_tool_no_results(create_species_func, get_species_by_name_func, scientific_name_resolver_no_results, care_guide_builder, confirmation_store):
-    return create_confirm_create_species_tool(
-        create_species_func=create_species_func,
-        get_species_by_name_func=get_species_by_name_func,
-        scientific_name_resolver=scientific_name_resolver_no_results,
-        care_guide_builder=care_guide_builder,
-        confirmation_store=confirmation_store,
-    )
-
-
-@pytest.fixture
 def tool_context():
     return MockToolContext(user_id="user-123")
 
 
 @pytest.fixture
-def pending_confirmation(confirm_tool, tool_context, confirmation_store):
-    confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
-    return confirmation_store.get_pending("user-123")
+def ask_confirmation_confirm():
+    async def ask_confirmation(question, tool_context=None):
+        return True
+
+    return ask_confirmation
 
 
 @pytest.fixture
-def executed_species(confirm_tool, tool_context, confirmation_store, captured_species):
-    confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
-    pending = confirmation_store.get_pending("user-123")
-    pending.execute()
-    return captured_species[0]
+def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm):
+    return create_confirm_create_species_tool(
+        create_species_func=create_species_func,
+        get_species_by_name_func=get_species_by_name_func,
+        scientific_name_resolver=scientific_name_resolver,
+        care_guide_builder=care_guide_builder,
+        ask_confirmation=ask_confirmation_confirm,
+    )
+
+
+@pytest.fixture
+def confirm_tool_with_existing(create_species_func, existing_species_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm):
+    return create_confirm_create_species_tool(
+        create_species_func=create_species_func,
+        get_species_by_name_func=existing_species_func,
+        scientific_name_resolver=scientific_name_resolver,
+        care_guide_builder=care_guide_builder,
+        ask_confirmation=ask_confirmation_confirm,
+    )
+
+
+@pytest.fixture
+def confirm_tool_no_results(create_species_func, get_species_by_name_func, scientific_name_resolver_no_results, care_guide_builder, ask_confirmation_confirm):
+    return create_confirm_create_species_tool(
+        create_species_func=create_species_func,
+        get_species_by_name_func=get_species_by_name_func,
+        scientific_name_resolver=scientific_name_resolver_no_results,
+        care_guide_builder=care_guide_builder,
+        ask_confirmation=ask_confirmation_confirm,
+    )

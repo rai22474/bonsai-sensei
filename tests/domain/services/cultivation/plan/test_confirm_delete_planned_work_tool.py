@@ -1,7 +1,5 @@
 import pytest
-from hamcrest import assert_that, equal_to, not_none
 
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.planned_work import PlannedWork
 from bonsai_sensei.domain.services.cultivation.plan.confirm_delete_planned_work_tool import (
     create_confirm_delete_planned_work_tool,
@@ -14,105 +12,65 @@ class MockToolContext:
         self.state = {}
 
 
-def should_return_error_when_tool_context_is_none(delete_tool):
-    result = delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=None)
+@pytest.mark.asyncio
+async def should_return_error_when_planned_work_not_found(delete_tool, tool_context):
+    result = await delete_tool(planned_work_id=999, summary="Remove work", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "Missing tool_context should return a user_id required error",
-    )
+    assert result == {"status": "error", "message": "planned_work_not_found"}, \
+        "Non-existent work_id should return a not_found error"
 
 
-def should_return_error_when_tool_context_has_no_user_id(delete_tool):
-    result = delete_tool(
-        planned_work_id=1,
-        summary="Remove planned fertilization",
-        tool_context=MockToolContext(user_id=None),
-    )
+@pytest.mark.asyncio
+async def should_delete_with_correct_work_id_when_user_confirms(delete_tool, tool_context, captured_delete):
+    await delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "tool_context without user_id should return a user_id required error",
-    )
+    assert captured_delete["work_id"] == 1, \
+        "Should pass the correct work_id to delete_planned_work_func"
 
 
-def should_return_error_when_planned_work_not_found(delete_tool, tool_context):
-    result = delete_tool(planned_work_id=999, summary="Remove work", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_include_work_details_in_confirmation_prompt(tool_context, get_planned_work_func, delete_planned_work_func):
+    captured_question = {}
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "planned_work_not_found"}),
-        "Non-existent work_id should return a not_found error",
-    )
+    async def ask_confirmation_capturing(question, tool_context=None):
+        captured_question["value"] = question
+        return True
 
+    tool = create_confirm_delete_planned_work_tool(get_planned_work_func, delete_planned_work_func, ask_confirmation_capturing)
+    await tool(planned_work_id=1, summary="Remove work", tool_context=tool_context)
 
-def should_return_confirmation_pending_when_work_exists(delete_tool, tool_context):
-    result = delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
-
-    assert_that(
-        result,
-        equal_to({
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
-            "summary": "Remove planned fertilization",
-        }),
-        "Valid input should return a confirmation dict with the summary",
-    )
+    assert "BioGrow" in captured_question["value"] and "15/03/2026" in captured_question["value"], \
+        "Confirmation prompt should include fertilizer name and scheduled date"
 
 
-def should_store_pending_confirmation_in_store(delete_tool, tool_context, confirmation_store):
-    delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_return_success_when_user_confirms(delete_tool, tool_context):
+    result = await delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
 
-    assert_that(
-        confirmation_store.get_pending("user-123"),
-        not_none(),
-        "Pending confirmation should be stored in the store",
-    )
+    assert result["status"] == "success", \
+        "Tool should return success status when user confirms"
 
 
-def should_store_confirmation_with_correct_user_id(pending_confirmation):
-    assert_that(
-        pending_confirmation.user_id,
-        equal_to("user-123"),
-        "Stored confirmation should carry the correct user_id",
-    )
+@pytest.mark.asyncio
+async def should_not_delete_when_user_cancels(tool_context, captured_delete, get_planned_work_func, delete_planned_work_func):
+    tool = create_confirm_delete_planned_work_tool(get_planned_work_func, delete_planned_work_func, ask_confirmation_cancel)
+    await tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
+
+    assert captured_delete == {}, \
+        "delete_planned_work_func should not be called when user cancels"
 
 
-def should_execute_delete_with_correct_work_id(executed_delete):
-    assert_that(
-        executed_delete["work_id"],
-        equal_to(1),
-        "Executor should pass the correct work_id to delete_planned_work_func",
-    )
+@pytest.mark.asyncio
+async def should_return_cancelled_when_user_declines(tool_context, get_planned_work_func, delete_planned_work_func):
+    tool = create_confirm_delete_planned_work_tool(get_planned_work_func, delete_planned_work_func, ask_confirmation_cancel)
+    result = await tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
+
+    assert result["status"] == "cancelled", \
+        "Tool should return cancelled status when user declines"
 
 
-def should_deduplicate_second_delete_for_same_work_id(delete_tool, tool_context, confirmation_store):
-    delete_tool(planned_work_id=1, summary="First delete", tool_context=tool_context)
-    delete_tool(planned_work_id=1, summary="Second delete", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(1),
-        "Second delete for the same work_id should be deduplicated, leaving only one confirmation",
-    )
-
-
-def should_store_both_deletes_for_different_work_ids(delete_tool, tool_context, confirmation_store):
-    delete_tool(planned_work_id=1, summary="First delete", tool_context=tool_context)
-    delete_tool(planned_work_id=2, summary="Second delete", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(2),
-        "Deletes for different work_ids should each be stored as independent confirmations",
-    )
-
-
-@pytest.fixture
-def confirmation_store():
-    return ConfirmationStore()
+async def ask_confirmation_cancel(question, tool_context=None):
+    return False
 
 
 @pytest.fixture
@@ -122,7 +80,12 @@ def captured_delete():
 
 @pytest.fixture
 def planned_work_stub():
-    work = PlannedWork(bonsai_id=10, work_type="fertilizer_application", payload={}, scheduled_date="2026-03-15")
+    work = PlannedWork(
+        bonsai_id=10,
+        work_type="fertilizer_application",
+        payload={"fertilizer_id": 1, "fertilizer_name": "BioGrow", "amount": "5 ml"},
+        scheduled_date="2026-03-15",
+    )
     work.id = 1
     return work
 
@@ -131,6 +94,7 @@ def planned_work_stub():
 def get_planned_work_func(planned_work_stub):
     def get_planned_work(work_id: int):
         return None if work_id == 999 else planned_work_stub
+
     return get_planned_work
 
 
@@ -138,16 +102,8 @@ def get_planned_work_func(planned_work_stub):
 def delete_planned_work_func(captured_delete):
     def delete_planned_work(work_id: int) -> None:
         captured_delete["work_id"] = work_id
+
     return delete_planned_work
-
-
-@pytest.fixture
-def delete_tool(get_planned_work_func, delete_planned_work_func, confirmation_store):
-    return create_confirm_delete_planned_work_tool(
-        get_planned_work_func=get_planned_work_func,
-        delete_planned_work_func=delete_planned_work_func,
-        confirmation_store=confirmation_store,
-    )
 
 
 @pytest.fixture
@@ -156,14 +112,17 @@ def tool_context():
 
 
 @pytest.fixture
-def pending_confirmation(delete_tool, tool_context, confirmation_store):
-    delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
-    return confirmation_store.get_pending("user-123")
+def ask_confirmation_confirm():
+    async def ask_confirmation(question, tool_context=None):
+        return True
+
+    return ask_confirmation
 
 
 @pytest.fixture
-def executed_delete(delete_tool, tool_context, confirmation_store, captured_delete):
-    delete_tool(planned_work_id=1, summary="Remove planned fertilization", tool_context=tool_context)
-    pending = confirmation_store.get_pending("user-123")
-    pending.execute()
-    return captured_delete
+def delete_tool(get_planned_work_func, delete_planned_work_func, ask_confirmation_confirm):
+    return create_confirm_delete_planned_work_tool(
+        get_planned_work_func=get_planned_work_func,
+        delete_planned_work_func=delete_planned_work_func,
+        ask_confirmation=ask_confirmation_confirm,
+    )

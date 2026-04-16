@@ -1,28 +1,23 @@
 from datetime import date
-from functools import partial
-import uuid
+from typing import Callable
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.planned_work import PlannedWork
 from google.adk.tools.tool_context import ToolContext
 
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_create_planned_work_tool(
-    get_bonsai_by_name_func,
-    get_fertilizer_by_name_func,
-    get_phytosanitary_by_name_func,
-    create_planned_work_func,
-    confirmation_store: ConfirmationStore,
+    get_bonsai_by_name_func: Callable,
+    get_fertilizer_by_name_func: Callable,
+    get_phytosanitary_by_name_func: Callable,
+    create_planned_work_func: Callable,
+    ask_confirmation: Callable,
 ):
-
     @trace_tool_call
     @limit_tool_calls(agent_name="cultivation_agent")
-    def confirm_create_planned_work(
+    async def confirm_create_planned_work(
         bonsai_name: str,
         work_type: str,
         scheduled_date: str,
@@ -36,7 +31,7 @@ def create_confirm_create_planned_work_tool(
         notes: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to create a planned work for a bonsai.
+        """Create a planned work for a bonsai after explicit user confirmation.
 
         Args:
             bonsai_name: Name of the bonsai to plan work for.
@@ -53,19 +48,14 @@ def create_confirm_create_planned_work_tool(
             notes: Optional notes about the planned work.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "bonsai_name_required",
-            "work_type_required", "scheduled_date_required", "invalid_scheduled_date_format",
-            "bonsai_not_found", "fertilizer_name_required", "fertilizer_not_found",
-            "phytosanitary_name_required", "phytosanitary_not_found".
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "bonsai_name_required", "work_type_required", "scheduled_date_required",
+                "invalid_scheduled_date_format", "bonsai_not_found", "fertilizer_name_required",
+                "fertilizer_not_found", "phytosanitary_name_required", "phytosanitary_not_found".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
 
@@ -117,28 +107,20 @@ def create_confirm_create_planned_work_tool(
                 if value
             }
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(
-                create_planned_work_func,
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+
+        if confirmed:
+            create_planned_work_func(
                 planned_work=PlannedWork(
                     bonsai_id=bonsai.id,
                     work_type=work_type,
                     payload=payload,
                     scheduled_date=scheduled_date_parsed,
                     notes=notes if notes else None,
-                ),
-            ),
-            deduplication_key=f"create_planned_work:{bonsai_name}:{work_type}:{scheduled_date}",
-        )
+                )
+            )
+            return {"status": "success", "message": f"Planned work for '{bonsai_name}' created."}
 
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_create_planned_work

@@ -1,7 +1,9 @@
+import asyncio
 import dataclasses
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from bonsai_sensei.domain.services.advisor import apply_confirmation_decision
+
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -25,10 +27,29 @@ async def get_advice(request_body: AdviceRequest, request: Request):
         request_body.text,
     )
 
-    advisor = getattr(request.app.state, "advisor", None)
-    response = await advisor(request_body.text, user_id=request_body.user_id)
+    user_id = request_body.user_id
+    advisor = request.app.state.advisor
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
 
-    return dataclasses.asdict(response)
+    task = asyncio.create_task(advisor(request_body.text, user_id=user_id))
+    active_tasks[user_id] = task
+
+    while not task.done():
+        await asyncio.sleep(0.05)
+        pending = pending_human_responses.get(user_id)
+        if pending and pending.get("type") == "confirmation":
+            return {
+                "text": "",
+                "pending_confirmations": [
+                    {"id": pending["confirmation_id"], "summary": pending.get("summary", "")}
+                ],
+            }
+
+    active_tasks.pop(user_id, None)
+    if task.exception():
+        raise task.exception()
+    return dataclasses.asdict(task.result())
 
 
 @router.delete("/advice/sessions/{user_id}", status_code=204)
@@ -40,12 +61,18 @@ async def reset_session(user_id: str, request: Request):
 async def accept_confirmation(
     confirmation_id: str, request_body: ConfirmationAcceptRequest, request: Request
 ):
-    confirmation_store = request.app.state.confirmation_store
-    confirmation = confirmation_store.pop_pending_by_id(
-        request_body.user_id, confirmation_id
-    )
-    if not confirmation:
-        raise HTTPException(status_code=404, detail="confirmation_not_found")
-    inject_confirmation_result = getattr(request.app.state, "inject_confirmation_result", None)
-    result = await apply_confirmation_decision(inject_confirmation_result, request_body.user_id, confirmation, accepted=True)
-    return {"status": "accepted", "result": result}
+    user_id = request_body.user_id
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+
+    pending = pending_human_responses.get(user_id)
+    if pending and pending.get("confirmation_id") == confirmation_id:
+        pending["response"] = True
+        pending["event"].set()
+        task = active_tasks.get(user_id)
+        if task:
+            await task
+            active_tasks.pop(user_id, None)
+        return {"status": "accepted"}
+
+    raise HTTPException(status_code=404, detail="confirmation_not_found")

@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Callable
 
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
@@ -6,14 +7,14 @@ from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.garden.gardener import create_gardener
 
 
 def create_gardener_group(
     model: object,
     session_factory,
-    confirmation_store: ConfirmationStore | None = None,
+    ask_human: Callable,
+    ask_confirmation: Callable,
 ):
     list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(
@@ -47,5 +48,6 @@ def create_gardener_group(
         list_planned_works_func=list_planned_works_func,
         get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
-        confirmation_store=confirmation_store,
+        ask_human=ask_human,
+        ask_confirmation=ask_confirmation,
     )

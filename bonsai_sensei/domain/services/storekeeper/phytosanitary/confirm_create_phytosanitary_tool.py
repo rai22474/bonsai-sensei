@@ -1,48 +1,39 @@
-from google.adk.tools.tool_context import ToolContext
-from functools import partial
 from typing import Callable
-import uuid
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from google.adk.tools.tool_context import ToolContext
+
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import _extract_recommended_amount
 
 
 def create_confirm_create_phytosanitary_tool(
-    create_phytosanitary_func,
+    create_phytosanitary_func: Callable,
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
     searcher: Callable[[str], dict],
-    confirmation_store: ConfirmationStore,
+    ask_confirmation: Callable,
 ):
-
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
-    def confirm_create_phytosanitary(
+    async def confirm_create_phytosanitary(
         name: str,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Search for the phytosanitary product guide online and register a confirmation to create it.
+        """Search for the phytosanitary product guide online and create it after user confirmation.
 
         Args:
             name: Product name.
             summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "phytosanitary_name_required", "phytosanitary_already_exists".
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "phytosanitary_name_required", "phytosanitary_already_exists".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
@@ -56,27 +47,20 @@ def create_confirm_create_phytosanitary_tool(
         recommended_amount = _extract_recommended_amount(answer)
         recommended_for = "Plagas comunes"
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(
-                create_phytosanitary_func,
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+
+        if confirmed:
+            create_phytosanitary_func(
                 phytosanitary=Phytosanitary(
                     name=name,
                     usage_sheet=usage_sheet,
                     recommended_amount=recommended_amount,
                     recommended_for=recommended_for,
                     sources=sources,
-                ),
-            ),
-            deduplication_key=f"create_phytosanitary:{name}",
-        )
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+                )
+            )
+            return {"status": "success", "message": f"Phytosanitary product '{name}' created."}
+
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_create_phytosanitary

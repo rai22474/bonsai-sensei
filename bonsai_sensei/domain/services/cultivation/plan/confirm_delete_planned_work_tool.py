@@ -1,12 +1,7 @@
-from functools import partial
 from typing import Callable
-import uuid
 
 from google.adk.tools.tool_context import ToolContext
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -14,50 +9,68 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_confirm_delete_planned_work_tool(
     get_planned_work_func: Callable,
     delete_planned_work_func: Callable,
-    confirmation_store: ConfirmationStore,
+    ask_confirmation: Callable,
 ):
-
     @trace_tool_call
     @limit_tool_calls(agent_name="planning_agent")
-    def confirm_delete_planned_work(
+    async def confirm_delete_planned_work(
         planned_work_id: int,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to delete a planned work and return JSON with the result.
+        """Delete a planned work after explicit user confirmation.
 
         Args:
             planned_work_id: ID of the planned work to delete.
             summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "planned_work_not_found".
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "planned_work_not_found".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         work = get_planned_work_func(work_id=planned_work_id)
         if not work:
             return {"status": "error", "message": "planned_work_not_found"}
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(delete_planned_work_func, work_id=planned_work_id),
-            deduplication_key=f"delete_planned_work:{planned_work_id}",
-        )
+        confirmation_prompt = _build_delete_confirmation(work)
+        confirmed = await ask_confirmation(confirmation_prompt, tool_context=tool_context)
 
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        if confirmed:
+            delete_planned_work_func(work_id=planned_work_id)
+            return {"status": "success", "message": f"Planned work {planned_work_id} deleted."}
+
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_delete_planned_work
+
+
+def _build_delete_confirmation(work) -> str:
+    from datetime import date, datetime
+    scheduled = work.scheduled_date
+    if isinstance(scheduled, str):
+        scheduled = datetime.strptime(scheduled, "%Y-%m-%d").date()
+    date_str = scheduled.strftime("%d/%m/%Y")
+    work_type = work.work_type
+    payload = work.payload or {}
+
+    if work_type == "fertilizer_application":
+        fertilizer_name = payload.get("fertilizer_name", "fertilizante desconocido")
+        amount = payload.get("amount")
+        detail = f"'{fertilizer_name}'" + (f" ({amount})" if amount else "")
+        return f"¿Eliminar aplicación de fertilizante {detail} del {date_str}?"
+
+    if work_type == "phytosanitary_application":
+        product_name = payload.get("phytosanitary_name", "producto desconocido")
+        amount = payload.get("amount")
+        detail = f"'{product_name}'" + (f" ({amount})" if amount else "")
+        return f"¿Eliminar aplicación fitosanitaria {detail} del {date_str}?"
+
+    if work_type == "transplant":
+        parts = [value for key in ("pot_size", "pot_type", "substrate") if (value := payload.get(key))]
+        detail = f" ({', '.join(parts)})" if parts else ""
+        return f"¿Eliminar trasplante{detail} del {date_str}?"
+
+    return f"¿Eliminar trabajo '{work_type}' del {date_str}?"

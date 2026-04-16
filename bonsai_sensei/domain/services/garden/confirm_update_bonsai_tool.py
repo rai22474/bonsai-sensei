@@ -1,23 +1,19 @@
-from google.adk.tools.tool_context import ToolContext
-from functools import partial
-import uuid
+from typing import Callable
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
+from google.adk.tools.tool_context import ToolContext
+
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_update_bonsai_tool(
-    update_bonsai_func,
-    get_species_by_name_func,
-    confirmation_store: ConfirmationStore,
-):
-
+    update_bonsai_func: Callable,
+    get_species_by_name_func: Callable,
+    ask_confirmation: Callable,
+) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    def confirm_update_bonsai(
+    async def confirm_update_bonsai(
         bonsai_id: int,
         bonsai_name: str,
         summary: str,
@@ -25,27 +21,22 @@ def create_confirm_update_bonsai_tool(
         species_name: str | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to update a bonsai and return JSON with the planned changes.
+        """Update a bonsai in the collection after explicit user confirmation.
 
         Args:
             bonsai_id: Identifier of the bonsai to update.
             bonsai_name: Current name of the bonsai to update.
-            summary: Short human-readable summary to show in the confirmation prompt.
+            summary: Human-readable description to show in the confirmation prompt.
             name: Optional new name for the bonsai.
             species_name: Optional common name of the new species to assign.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "bonsai_id_required",
-            "bonsai_name_required", "species_not_found", "bonsai_update_required".
+            A JSON-ready dictionary with status 'success' or 'cancelled'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "bonsai_id_required", "bonsai_name_required", "species_not_found", "bonsai_update_required".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
 
@@ -65,23 +56,12 @@ def create_confirm_update_bonsai_tool(
         if not bonsai_data:
             return {"status": "error", "message": "bonsai_update_required"}
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(
-                update_bonsai_func,
-                bonsai_id=bonsai_id,
-                bonsai_data=bonsai_data,
-            ),
-            deduplication_key=f"update_bonsai:{bonsai_name}",
-        )
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
 
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        if confirmed:
+            update_bonsai_func(bonsai_id=bonsai_id, bonsai_data=bonsai_data)
+            return {"status": "success", "message": f"Bonsai '{bonsai_name}' updated."}
+
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_update_bonsai

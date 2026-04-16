@@ -1,46 +1,38 @@
-import uuid
+from typing import Callable
 
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from google.adk.tools.tool_context import ToolContext
 
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_execute_planned_work_tool(
-    get_planned_work_func,
-    record_bonsai_event_func,
-    delete_planned_work_func,
-    confirmation_store: ConfirmationStore,
-):
-
+    get_planned_work_func: Callable,
+    record_bonsai_event_func: Callable,
+    delete_planned_work_func: Callable,
+    ask_confirmation: Callable,
+) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    def confirm_execute_planned_work(
+    async def confirm_execute_planned_work(
         work_id: int,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to execute a planned work, recording a bonsai event and removing it from the plan.
+        """Execute a planned work item after explicit user confirmation, recording the event and removing it from the plan.
 
         Args:
             work_id: ID of the planned work to execute.
-            summary: Short human-readable summary to show in the confirmation prompt.
+            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "work_id_required", "planned_work_not_found".
+            A JSON-ready dictionary with status 'success' or 'cancelled'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "work_id_required", "planned_work_not_found".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not work_id:
             return {"status": "error", "message": "work_id_required"}
 
@@ -48,34 +40,19 @@ def create_confirm_execute_planned_work_tool(
         if not planned_work:
             return {"status": "error", "message": "planned_work_not_found"}
 
-        captured_work_id = work_id
-        captured_bonsai_id = planned_work.bonsai_id
-        captured_work_type = planned_work.work_type
-        captured_payload = planned_work.payload
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
 
-        def execute_work():
+        if confirmed:
             record_bonsai_event_func(
                 bonsai_event=BonsaiEvent(
-                    bonsai_id=captured_bonsai_id,
-                    event_type=captured_work_type,
-                    payload=captured_payload,
+                    bonsai_id=planned_work.bonsai_id,
+                    event_type=planned_work.work_type,
+                    payload=planned_work.payload,
                 )
             )
-            delete_planned_work_func(work_id=captured_work_id)
+            delete_planned_work_func(work_id=work_id)
+            return {"status": "success", "message": f"Planned work {work_id} executed and removed from plan."}
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=execute_work,
-            deduplication_key=f"execute_planned_work:{work_id}",
-        )
-
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_execute_planned_work

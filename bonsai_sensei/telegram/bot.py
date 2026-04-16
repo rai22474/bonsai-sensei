@@ -1,4 +1,5 @@
 import os
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application
 from bonsai_sensei.logging_config import get_logger
 
@@ -11,7 +12,7 @@ class TelegramBot:
     def __init__(self, handlers: list = None, error_handler=None):
         self.application = None
         if TOKEN:
-            self.application = Application.builder().token(TOKEN).build()
+            self.application = Application.builder().token(TOKEN).concurrent_updates(True).build()
             if handlers:
                 for handler in handlers:
                     self.application.add_handler(handler)
@@ -37,5 +38,15 @@ class TelegramBot:
              logger.error("Cannot send message: Bot not configured")
              return
         await self.application.bot.send_message(chat_id=chat_id, text=text)
+
+    async def send_confirmation_message(self, chat_id: str, text: str, confirmation_id: str):
+        if not self.application:
+            logger.error("Cannot send confirmation message: Bot not configured")
+            return
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("Aceptar", callback_data=f"confirm:accept:{confirmation_id}"),
+            InlineKeyboardButton("Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
+        ]])
+        await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
 
 

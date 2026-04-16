@@ -1,7 +1,7 @@
 from typing import Callable
 from google.adk.agents.llm_agent import Agent
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.cultivation.species.confirm_create_species_tool import create_confirm_create_species_tool
+from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
 from bonsai_sensei.domain.services.cultivation.species.confirm_delete_species_tool import create_confirm_delete_species_tool
 from bonsai_sensei.domain.services.cultivation.species.confirm_update_species_tool import create_confirm_update_species_tool
 from bonsai_sensei.domain.species import Species
@@ -22,30 +22,31 @@ def create_botanist(
     create_species_func: Callable[..., Species],
     update_species_func: Callable[..., Species | None],
     delete_species_func: Callable[..., bool],
-    confirmation_store: ConfirmationStore | None = None,
+    ask_confirmation: Callable,
 ) -> Agent:
     return Agent(
         model=model,
         name="botanist",
         description="Gestiona el catálogo de especies del herbario: registrar, actualizar y eliminar especies. No toma decisiones de planificación ni determina fechas de cuidado.",
         instruction=BOTANIST_INSTRUCTION,
+        after_model_callback=limit_to_single_tool_call,
         tools=[
             create_confirm_create_species_tool(
                 create_species_func=create_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 scientific_name_resolver=scientific_name_resolver,
                 care_guide_builder=care_guide_builder,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_update_species_tool(
                 update_species_func=update_species_func,
                 get_species_by_name_func=get_species_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_delete_species_tool(
                 delete_species_func=delete_species_func,
                 get_species_by_name_func=get_species_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
         ],
     )

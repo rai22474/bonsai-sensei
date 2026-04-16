@@ -2,8 +2,8 @@ from typing import Callable
 from google.adk.agents.llm_agent import Agent
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_create_fertilizer_tool import create_confirm_create_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_delete_fertilizer_tool import create_confirm_delete_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_update_fertilizer_tool import create_confirm_update_fertilizer_tool
@@ -34,47 +34,48 @@ def create_storekeeper(
     create_phytosanitary_func: Callable[..., Phytosanitary],
     update_phytosanitary_func: Callable[..., Phytosanitary | None],
     delete_phytosanitary_func: Callable[..., bool],
-    confirmation_store: ConfirmationStore | None = None,
+    ask_confirmation: Callable,
 ) -> Agent:
     return Agent(
         model=model,
         name="storekeeper",
         description="Gestiona el catálogo de fertilizantes y productos fitosanitarios para bonsáis.",
         instruction=STOREKEEPER_INSTRUCTION,
+        after_model_callback=limit_to_single_tool_call,
         tools=[
             create_list_fertilizers_tool(list_fertilizers_func),
             create_confirm_create_fertilizer_tool(
                 create_fertilizer_func=create_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
                 searcher=fertilizer_searcher,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_update_fertilizer_tool(
                 update_fertilizer_func=update_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_delete_fertilizer_tool(
                 delete_fertilizer_func=delete_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_list_phytosanitary_tool(list_phytosanitary_func),
             create_confirm_create_phytosanitary_tool(
                 create_phytosanitary_func=create_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
                 searcher=phytosanitary_searcher,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_update_phytosanitary_tool(
                 update_phytosanitary_func=update_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
             create_confirm_delete_phytosanitary_tool(
                 delete_phytosanitary_func=delete_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
-                confirmation_store=confirmation_store,
+                ask_confirmation=ask_confirmation,
             ),
         ],
     )

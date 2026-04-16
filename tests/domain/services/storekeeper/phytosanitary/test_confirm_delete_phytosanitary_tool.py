@@ -1,7 +1,5 @@
 import pytest
-from hamcrest import assert_that, equal_to, not_none
 
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.confirm_delete_phytosanitary_tool import (
     create_confirm_delete_phytosanitary_tool,
@@ -14,129 +12,58 @@ class MockToolContext:
         self.state = {}
 
 
-def should_return_error_when_tool_context_is_none(delete_tool):
-    result = delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=None)
+@pytest.mark.asyncio
+async def should_return_error_when_name_is_missing(delete_tool, tool_context):
+    result = await delete_tool(name="", summary="Delete product", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "Missing tool_context should return a user_id required error",
-    )
+    assert result == {"status": "error", "message": "phytosanitary_name_required"}, \
+        "Missing name should return a phytosanitary_name_required error"
 
 
-def should_return_error_when_tool_context_has_no_user_id(delete_tool):
-    result = delete_tool(
-        name="Neem Oil",
-        summary="Delete Neem Oil",
-        tool_context=MockToolContext(user_id=None),
-    )
+@pytest.mark.asyncio
+async def should_return_error_when_phytosanitary_not_found(delete_tool_not_found, tool_context):
+    result = await delete_tool_not_found(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "user_id_required_for_confirmation"}),
-        "tool_context without user_id should return a user_id required error",
-    )
+    assert result == {"status": "error", "message": "phytosanitary_not_found"}, \
+        "Non-existent product should return a phytosanitary_not_found error"
 
 
-def should_return_error_when_name_is_missing(delete_tool, tool_context):
-    result = delete_tool(name="", summary="Delete product", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_delete_with_correct_name_when_user_confirms(delete_tool, tool_context, captured_delete):
+    await delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "phytosanitary_name_required"}),
-        "Missing name should return a phytosanitary_name_required error",
-    )
+    assert captured_delete["name"] == "Neem Oil", \
+        "Should pass the correct name to delete_phytosanitary_func"
 
 
-def should_return_error_when_phytosanitary_not_found(delete_tool_not_found, tool_context):
-    result = delete_tool_not_found(
-        name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context
-    )
+@pytest.mark.asyncio
+async def should_return_success_when_user_confirms(delete_tool, tool_context):
+    result = await delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({"status": "error", "message": "phytosanitary_not_found"}),
-        "Non-existent product should return a phytosanitary_not_found error",
-    )
+    assert result["status"] == "success", \
+        "Tool should return success status when user confirms"
 
 
-def should_return_confirmation_summary_when_delete_is_valid(delete_tool, tool_context):
-    result = delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_not_delete_when_user_cancels(tool_context, captured_delete, delete_phytosanitary_func, get_phytosanitary_by_name_func):
+    tool = create_confirm_delete_phytosanitary_tool(delete_phytosanitary_func, get_phytosanitary_by_name_func, ask_confirmation_cancel)
+    await tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
 
-    assert_that(
-        result,
-        equal_to({
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Do not call this tool again — inform the user of the pending confirmation and wait for their approval.",
-            "summary": "Delete Neem Oil",
-        }),
-        "Valid input should return a confirmation dict with the summary",
-    )
+    assert captured_delete == {}, \
+        "delete_phytosanitary_func should not be called when user cancels"
 
 
-def should_store_pending_confirmation_in_store(delete_tool, tool_context, confirmation_store):
-    delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
+@pytest.mark.asyncio
+async def should_return_cancelled_when_user_declines(tool_context, delete_phytosanitary_func, get_phytosanitary_by_name_func):
+    tool = create_confirm_delete_phytosanitary_tool(delete_phytosanitary_func, get_phytosanitary_by_name_func, ask_confirmation_cancel)
+    result = await tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
 
-    assert_that(
-        confirmation_store.get_pending("user-123"),
-        not_none(),
-        "Pending confirmation should be stored in the store",
-    )
-
-
-def should_store_confirmation_with_correct_user_id(pending_confirmation):
-    assert_that(
-        pending_confirmation.user_id,
-        equal_to("user-123"),
-        "Stored confirmation should carry the correct user_id",
-    )
+    assert result["status"] == "cancelled", \
+        "Tool should return cancelled status when user declines"
 
 
-def should_store_confirmation_with_correct_summary(pending_confirmation):
-    assert_that(
-        pending_confirmation.summary,
-        equal_to("Delete Neem Oil"),
-        "Stored confirmation summary should match the argument",
-    )
-
-
-def should_execute_delete_with_correct_name(executed_delete):
-    assert_that(
-        executed_delete["name"],
-        equal_to("Neem Oil"),
-        "Executor should pass the correct name to delete_phytosanitary_func",
-    )
-
-
-def should_deduplicate_second_delete_for_same_phytosanitary(
-    delete_tool, tool_context, confirmation_store
-):
-    delete_tool(name="Neem Oil", summary="First delete", tool_context=tool_context)
-    delete_tool(name="Neem Oil", summary="Second delete", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(1),
-        "Second delete for the same product should be deduplicated, leaving only one confirmation",
-    )
-
-
-def should_store_both_deletes_for_different_phytosanitary_products(
-    delete_tool, tool_context, confirmation_store
-):
-    delete_tool(name="Neem Oil", summary="First delete", tool_context=tool_context)
-    delete_tool(name="Copper Sulfate", summary="Second delete", tool_context=tool_context)
-
-    assert_that(
-        len(confirmation_store.get_all_pending("user-123")),
-        equal_to(2),
-        "Deletes for different products should each be stored as independent confirmations",
-    )
-
-
-@pytest.fixture
-def confirmation_store():
-    return ConfirmationStore()
+async def ask_confirmation_cancel(question, tool_context=None):
+    return False
 
 
 @pytest.fixture
@@ -169,37 +96,31 @@ def get_phytosanitary_by_name_not_found():
 
 
 @pytest.fixture
-def delete_tool(delete_phytosanitary_func, get_phytosanitary_by_name_func, confirmation_store):
-    return create_confirm_delete_phytosanitary_tool(
-        delete_phytosanitary_func=delete_phytosanitary_func,
-        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
-        confirmation_store=confirmation_store,
-    )
-
-
-@pytest.fixture
-def delete_tool_not_found(delete_phytosanitary_func, get_phytosanitary_by_name_not_found, confirmation_store):
-    return create_confirm_delete_phytosanitary_tool(
-        delete_phytosanitary_func=delete_phytosanitary_func,
-        get_phytosanitary_by_name_func=get_phytosanitary_by_name_not_found,
-        confirmation_store=confirmation_store,
-    )
-
-
-@pytest.fixture
 def tool_context():
     return MockToolContext(user_id="user-123")
 
 
 @pytest.fixture
-def pending_confirmation(delete_tool, tool_context, confirmation_store):
-    delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
-    return confirmation_store.get_pending("user-123")
+def ask_confirmation_confirm():
+    async def ask_confirmation(question, tool_context=None):
+        return True
+
+    return ask_confirmation
 
 
 @pytest.fixture
-def executed_delete(delete_tool, tool_context, confirmation_store, captured_delete):
-    delete_tool(name="Neem Oil", summary="Delete Neem Oil", tool_context=tool_context)
-    pending = confirmation_store.get_pending("user-123")
-    pending.execute()
-    return captured_delete
+def delete_tool(delete_phytosanitary_func, get_phytosanitary_by_name_func, ask_confirmation_confirm):
+    return create_confirm_delete_phytosanitary_tool(
+        delete_phytosanitary_func=delete_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        ask_confirmation=ask_confirmation_confirm,
+    )
+
+
+@pytest.fixture
+def delete_tool_not_found(delete_phytosanitary_func, get_phytosanitary_by_name_not_found, ask_confirmation_confirm):
+    return create_confirm_delete_phytosanitary_tool(
+        delete_phytosanitary_func=delete_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_not_found,
+        ask_confirmation=ask_confirmation_confirm,
+    )

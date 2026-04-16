@@ -1,5 +1,6 @@
 import os
 from functools import partial
+from typing import Callable
 
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
@@ -7,15 +8,12 @@ from bonsai_sensei.domain.services.storekeeper.storekeeper import create_storeke
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import (
     create_tavily_searcher,
 )
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 
 
 def create_storekeeper_group(
     model: object,
     session_factory,
-    confirmation_registry: dict[str, Confirmation] | None = None,
-    confirmation_store: ConfirmationStore | None = None,
+    ask_confirmation: Callable,
 ):
     tavily_api_key = os.getenv("TAVILY_API_KEY")
     tavily_base_url = os.getenv("TAVILY_API_BASE")
@@ -54,5 +52,5 @@ def create_storekeeper_group(
         delete_phytosanitary_func=partial(
             phytosanitary_registry.delete_phytosanitary, create_session=session_factory
         ),
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
     )

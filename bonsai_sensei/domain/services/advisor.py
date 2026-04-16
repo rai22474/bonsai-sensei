@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable
 from functools import partial
@@ -7,9 +7,6 @@ from functools import partial
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 from opentelemetry import metrics, trace
-
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 
 DEFAULT_MAX_LLM_CALLS = 20
 MAX_SESSION_EVENTS = 50
@@ -39,28 +36,14 @@ _execution_latency = _meter.create_histogram(
 
 
 @dataclass
-class SessionContext:
-    pending_confirmation_results: list[str]
-    session_summary: str | None
-
-
-@dataclass
-class PendingConfirmationInfo:
-    id: str
-    summary: str
-
-
-@dataclass
 class AdvisorResponse:
     text: str
-    pending_confirmations: list[PendingConfirmationInfo] = field(default_factory=list)
 
 
 def create_advisor(
     sensei_agent,
-    confirmation_store: ConfirmationStore | None = None,
     get_user_settings_func: Callable | None = None,
-) -> tuple[Callable[..., AdvisorResponse], Callable[..., None], Callable[..., None]]:
+) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
     runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
     async def reset_session(user_id: str) -> None:
@@ -70,30 +53,13 @@ def create_advisor(
             session_id=str(user_id),
         )
 
-    async def inject_confirmation_result(user_id: str, summary: str) -> None:
-        session = await runner.session_service.get_session(
-            app_name="bonsai_sensei",
-            user_id=user_id,
-            session_id=str(user_id),
-        )
-        if session is None:
-            return
-        pending = session.state.get("pending_confirmation_results", [])
-        pending.append(summary)
-        session.state["pending_confirmation_results"] = pending
-        no_more_pending = confirmation_store is None or not confirmation_store.get_all_pending(user_id)
-        if no_more_pending:
-            session.state["summarize_session"] = True
-
     return (
         partial(
             _generate_advise,
             runner=runner,
-            confirmation_store=confirmation_store,
             get_user_settings_func=get_user_settings_func,
         ),
         reset_session,
-        inject_confirmation_result,
     )
 
 
@@ -101,17 +67,15 @@ async def _generate_advise(
     text: str,
     runner: InMemoryRunner,
     user_id: str = "default_user",
-    confirmation_store: ConfirmationStore | None = None,
     get_user_settings_func: Callable | None = None,
     progress_callback: Callable[[str], None] | None = None,
 ) -> AdvisorResponse:
     state_delta = _build_context_state(user_id, get_user_settings_func)
-    session_context = await _sync_session(runner, user_id, state_delta)
-    message = _build_user_message(text, session_context)
+    await _sync_session(runner, user_id, state_delta)
+    message = _build_user_message(text)
     events = await _run_agent(runner, user_id, message, progress_callback)
     response_text = "\n".join(_build_response_texts(events))
-    pending_confirmations = _collect_pending_confirmations(confirmation_store, user_id)
-    return AdvisorResponse(text=response_text, pending_confirmations=pending_confirmations)
+    return AdvisorResponse(text=response_text)
 
 
 def _build_context_state(user_id: str, get_user_settings_func: Callable | None) -> dict:
@@ -127,14 +91,13 @@ def _build_context_state(user_id: str, get_user_settings_func: Callable | None) 
     }
 
 
-async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict) -> SessionContext:
+async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict) -> None:
     session = await runner.session_service.get_session(
         app_name="bonsai_sensei",
         user_id=user_id,
         session_id=str(user_id),
     )
-    if session is not None and _needs_session_reset(session):
-        session_summary = _build_session_summary(session)
+    if session is not None and len(session.events) > MAX_SESSION_EVENTS:
         await runner.session_service.delete_session(
             app_name="bonsai_sensei",
             user_id=user_id,
@@ -146,7 +109,7 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
             session_id=str(user_id),
             state=state_delta,
         )
-        return SessionContext(pending_confirmation_results=[], session_summary=session_summary)
+        return
     if session is None:
         await runner.session_service.create_session(
             app_name="bonsai_sensei",
@@ -154,21 +117,12 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
             session_id=str(user_id),
             state=state_delta,
         )
-        return SessionContext(pending_confirmation_results=[], session_summary=None)
+        return
     session.state.update(state_delta)
-    pending_confirmation_results = session.state.pop("pending_confirmation_results", [])
-    session_summary = session.state.pop("session_summary", None)
-    return SessionContext(
-        pending_confirmation_results=pending_confirmation_results,
-        session_summary=session_summary,
-    )
 
 
-def _build_user_message(text: str, session_context: SessionContext) -> types.Content:
-    message_text = _prepend_confirmation_context(text, session_context.pending_confirmation_results)
-    if session_context.session_summary:
-        message_text = f"[{session_context.session_summary}]\n\n{message_text}"
-    return types.Content(role="user", parts=[types.Part(text=message_text)])
+def _build_user_message(text: str) -> types.Content:
+    return types.Content(role="user", parts=[types.Part(text=text)])
 
 
 async def _run_agent(
@@ -200,60 +154,6 @@ async def _run_agent(
     _execution_counter.add(1, {"user.id": user_id})
     _execution_latency.record(latency_ms, {"user.id": user_id})
     return events
-
-
-def _collect_pending_confirmations(
-    confirmation_store: ConfirmationStore | None,
-    user_id: str,
-) -> list[PendingConfirmationInfo]:
-    if not confirmation_store:
-        return []
-    unsent_confirmations = confirmation_store.get_unsent(user_id)
-    for confirmation in unsent_confirmations:
-        confirmation.sent = True
-    return [
-        PendingConfirmationInfo(id=confirmation.id, summary=confirmation.summary)
-        for confirmation in unsent_confirmations
-    ]
-
-
-async def apply_confirmation_decision(
-    inject_confirmation_result: Callable,
-    user_id: str,
-    confirmation: Confirmation,
-    accepted: bool,
-) -> object:
-    if accepted:
-        result = confirmation.execute()
-        await inject_confirmation_result(user_id, f"Acción aceptada y ejecutada: {confirmation.summary}")
-        return result
-    await inject_confirmation_result(user_id, f"Acción cancelada por el usuario: {confirmation.summary}")
-    return None
-
-
-def _needs_session_reset(session) -> bool:
-    return session.state.get("summarize_session", False) or len(session.events) > MAX_SESSION_EVENTS
-
-
-def _build_session_summary(session) -> str | None:
-    confirmed_actions = session.state.get("pending_confirmation_results", [])
-    if not confirmed_actions:
-        return None
-    action_lines = "\n".join(f"- {action}" for action in confirmed_actions)
-    return f"Resumen de sesión anterior:\n{action_lines}"
-
-
-def _prepend_confirmation_context(text: str, confirmed_summaries: list[str]) -> str:
-    if not confirmed_summaries:
-        return text
-    context_lines = "\n".join(
-        f"- {summary}" for summary in confirmed_summaries
-    )
-    context_block = (
-        f"[Sistema: El usuario ha confirmado y ejecutado las siguientes acciones:\n"
-        f"{context_lines}]\n\n"
-    )
-    return context_block + text
 
 
 def _extract_progress_message(event) -> str | None:

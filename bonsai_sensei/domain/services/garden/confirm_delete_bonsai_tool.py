@@ -1,69 +1,52 @@
-from google.adk.tools.tool_context import ToolContext
-from functools import partial
-import uuid
+from typing import Callable
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
-from bonsai_sensei.domain.services.resolve_user_id import (
-    resolve_confirmation_user_id,
-)
+from google.adk.tools.tool_context import ToolContext
+
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_delete_bonsai_tool(
-    delete_bonsai_func,
-    confirmation_store: ConfirmationStore,
-):
-
+    delete_bonsai_func: Callable,
+    ask_confirmation: Callable,
+) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    def confirm_delete_bonsai(
+    async def confirm_delete_bonsai(
         bonsai_id: int,
         bonsai_name: str,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to delete a bonsai and return JSON with the result.
+        """Delete a bonsai from the collection after explicit user confirmation.
+
+        Asks the user to confirm before executing the deletion. If confirmed,
+        the bonsai is permanently removed. If declined, no action is taken.
 
         Args:
             bonsai_id: Identifier of the bonsai to delete.
-            bonsai_name: Current name of the bonsai to delete.
-            summary: Short human-readable summary to show in the confirmation prompt.
+            bonsai_name: Name of the bonsai to delete.
+            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "bonsai_id_required", "bonsai_name_required".
+            A JSON-ready dictionary with status 'success' or 'cancelled'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "bonsai_id_required", "bonsai_name_required".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
-
+        
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(
-                delete_bonsai_func,
-                bonsai_id=bonsai_id
-            ),
-            deduplication_key=f"delete_bonsai:{bonsai_name}",
-        )
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
 
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        if confirmed:
+            delete_bonsai_func(bonsai_id=bonsai_id)
+            return {"status": "success", "message": f"Bonsai '{bonsai_name}' deleted."}
+
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_delete_bonsai

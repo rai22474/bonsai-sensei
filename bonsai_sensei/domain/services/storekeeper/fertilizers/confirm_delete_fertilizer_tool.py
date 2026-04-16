@@ -1,65 +1,49 @@
-from google.adk.tools.tool_context import ToolContext
-from functools import partial
 from typing import Callable
-import uuid
 
-from bonsai_sensei.domain.confirmation import Confirmation
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
+from google.adk.tools.tool_context import ToolContext
+
 from bonsai_sensei.domain.fertilizer import Fertilizer
-from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_confirm_delete_fertilizer_tool(
-    delete_fertilizer_func,
+    delete_fertilizer_func: Callable,
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
-    confirmation_store: ConfirmationStore,
+    ask_confirmation: Callable,
 ):
-
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
-    def confirm_delete_fertilizer(
+    async def confirm_delete_fertilizer(
         name: str,
         summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Register a confirmation to delete a fertilizer and return JSON with the result.
+        """Delete a fertilizer from the catalog after explicit user confirmation.
 
         Args:
             name: Fertilizer name to delete.
             summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
-            A JSON-ready dictionary indicating whether the confirmation was registered.
-
-        Output JSON (success): {"status": "confirmation_pending", "reason": "<instruction>", "summary": "<summary>"}.
-        Output JSON (error): {"status": "error", "message": "<reason>"}.
-        Error reasons: "user_id_required_for_confirmation", "fertilizer_name_required", "fertilizer_not_found".
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
+            Output JSON (success): {"status": "success", "message": "<confirmation>"}.
+            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (error): {"status": "error", "message": "<reason>"}.
+            Error reasons: "fertilizer_name_required", "fertilizer_not_found".
         """
-        user_id = resolve_confirmation_user_id(tool_context)
-        if not user_id:
-            return {"status": "error", "message": "user_id_required_for_confirmation"}
-
         if not name:
             return {"status": "error", "message": "fertilizer_name_required"}
 
         if not get_fertilizer_by_name_func(name):
             return {"status": "error", "message": "fertilizer_not_found"}
 
-        command = Confirmation(
-            id=uuid.uuid4().hex,
-            user_id=user_id,
-            summary=summary,
-            executor=partial(delete_fertilizer_func, name=name),
-            deduplication_key=f"delete_fertilizer:{name}",
-        )
+        confirmed = await ask_confirmation(summary, tool_context=tool_context)
 
-        confirmation_store.set_pending(user_id, command)
-        return {
-            "status": "confirmation_pending",
-            "reason": "The operation has been queued and is awaiting user confirmation. Continue with the remaining steps of the plan. Do not call this tool again for the same operation.",
-            "summary": summary,
-        }
+        if confirmed:
+            delete_fertilizer_func(name=name)
+            return {"status": "success", "message": f"Fertilizer '{name}' deleted."}
+
+        return {"status": "cancelled", "message": "Operation cancelled by user."}
 
     return confirm_delete_fertilizer

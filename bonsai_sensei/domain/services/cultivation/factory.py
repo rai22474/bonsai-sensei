@@ -1,5 +1,6 @@
 import os
 from functools import partial
+from typing import Callable
 
 from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import garden
@@ -58,20 +59,19 @@ from bonsai_sensei.domain.services.cultivation.plan.phytosanitary_advisor import
     create_phytosanitary_advisor,
 )
 from bonsai_sensei.domain.services.garden.bonsai_tools import create_list_bonsai_tool
-from bonsai_sensei.domain.confirmation_store import ConfirmationStore
 from bonsai_sensei.domain import user_settings_store
 
 
 def create_cultivation_group(
     model: object,
     session_factory,
-    confirmation_store: ConfirmationStore | None = None,
+    ask_confirmation: Callable,
     orchestrator_model: object = None,
 ):
     effective_orchestrator_model = orchestrator_model or model
     list_species_tool = _create_list_species_tool(session_factory=session_factory)
     weather_agent = _create_weather_agent(model, list_species_tool, session_factory)
-    botanist = _create_botanist(model, session_factory, confirmation_store)
+    botanist = _create_botanist(model, session_factory, ask_confirmation)
 
     list_bonsai_events_tool = _create_list_bonsai_events_tool(session_factory=session_factory)
     fertilizer_advisor = _create_fertilizer_advisor(
@@ -88,7 +88,7 @@ def create_cultivation_group(
     list_planned_works_tool = _create_list_planned_works_tool(session_factory=session_factory)
     confirm_create_tool = _create_confirm_create_planned_work_tool(
         session_factory=session_factory,
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
     )
     list_planned_works_tool.__name__ = "list_planned_works_for_bonsai"
     confirm_create_tool.__name__ = "confirm_create_planned_work"
@@ -99,7 +99,7 @@ def create_cultivation_group(
         fertilizer_advisor=fertilizer_advisor,
         phytosanitary_advisor=phytosanitary_advisor,
         session_factory=session_factory,
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
         list_planned_works_tool=list_planned_works_tool,
         list_bonsai_events_tool=list_bonsai_events_tool,
         confirm_create_tool=confirm_create_tool,
@@ -108,7 +108,7 @@ def create_cultivation_group(
     return botanist, weather_agent, planning_agent
 
 
-def _create_botanist(model, session_factory, confirmation_store):
+def _create_botanist(model, session_factory, ask_confirmation):
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
@@ -138,7 +138,7 @@ def _create_botanist(model, session_factory, confirmation_store):
         delete_species_func=partial(
             herbarium.delete_species, create_session=session_factory
         ),
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
     )
 
 
@@ -212,7 +212,7 @@ def _create_list_planned_works_tool(session_factory):
     )
 
 
-def _create_confirm_create_planned_work_tool(session_factory, confirmation_store):
+def _create_confirm_create_planned_work_tool(session_factory, ask_confirmation):
     return create_confirm_create_planned_work_tool(
         get_bonsai_by_name_func=partial(
             garden.get_bonsai_by_name, create_session=session_factory
@@ -226,13 +226,13 @@ def _create_confirm_create_planned_work_tool(session_factory, confirmation_store
         create_planned_work_func=partial(
             cultivation_plan.create_planned_work, create_session=session_factory
         ),
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
     )
 
 
 def _create_planning_agent(
     model, orchestrator_model, fertilizer_advisor, phytosanitary_advisor, session_factory,
-    confirmation_store, list_planned_works_tool, list_bonsai_events_tool, confirm_create_tool,
+    ask_confirmation, list_planned_works_tool, list_bonsai_events_tool, confirm_create_tool,
 ):
     confirm_delete_tool = create_confirm_delete_planned_work_tool(
         get_planned_work_func=partial(
@@ -241,7 +241,7 @@ def _create_planning_agent(
         delete_planned_work_func=partial(
             cultivation_plan.delete_planned_work, create_session=session_factory
         ),
-        confirmation_store=confirmation_store,
+        ask_confirmation=ask_confirmation,
     )
     list_collection_tool = create_list_bonsai_tool(
         list_bonsai_func=partial(garden.list_bonsai, create_session=session_factory),
