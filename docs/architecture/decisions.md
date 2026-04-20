@@ -146,5 +146,49 @@ Confirmation message builders are injected into tools as `build_confirmation_mes
 **Consequences:**
 - Tools are testable in isolation using a stub builder — no dependence on specific text formats.
 - Changing confirmation language or format requires touching only the presentation layer.
-- Adding a new work type requires a new builder in `confirmation_messages.py`, not a change in domain code.
+- Adding a new work type requires a new builder in `telegram/messages/`, not a change in domain code.
 - The LLM no longer generates confirmation text, eliminating a source of non-determinism in the user-facing message.
+
+---
+
+## ADR-009 — Agent instruction style
+
+**Status:** Accepted
+
+**Context:**
+Agent instructions varied significantly in structure, verbosity and style across the codebase: some used `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` as repeated headers; some described tool internals (validations, lookups) already handled by the tools themselves; some had no sections at all, making behavioral rules hard to locate.
+
+Research on ADK best practices confirms that the `instruction` field shapes LLM behavior for the entire agent session. Tool docstrings are the right place for per-tool guidance; instructions should explain *when* and *why* to use tools, not *how* they work internally. Consistent structure improves readability and reduces the risk of instruction drift as the system grows.
+
+**Decision:**
+All agent instructions follow this fixed schema:
+
+```
+<Opening line> — one sentence: who the agent is and their domain. No # Rol header.
+
+# Contexto          (only if dynamic variables are present: dates, plan, available agents)
+<template variables or injected content>
+
+# <Domain section>  (only when two or more distinct operational modes exist, e.g. reads vs. writes)
+<content>
+
+# Comportamiento    (always present if there are non-obvious rules)
+<bullet points: sequencing, fallback, output format constraints>
+Do NOT describe what tools do internally — that belongs in tool docstrings.
+
+# Formato           (only for agents that talk directly to the user)
+<language and formatting rules>
+```
+
+Sections that would contain only one trivial line are omitted.
+
+**What is explicitly forbidden:**
+- `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` headers — the opening line replaces them.
+- Instructions that duplicate tool docstrings (e.g. "validates that the bonsai exists internally").
+- The phrase "Usa las herramientas disponibles para cada operación" as the only behavioral guidance.
+
+**Consequences:**
+- All instructions are shorter, consistent, and easier to maintain.
+- Tool docstrings remain the authoritative source for per-tool behavior.
+- Adding a new agent requires following the same schema, preventing instruction drift.
+- `# Comportamiento` is the only place to add sequencing constraints or non-obvious rules.
