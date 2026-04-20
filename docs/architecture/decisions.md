@@ -130,3 +130,21 @@ On reset, a summary of the confirmed actions is extracted from `pending_confirma
 - Session memory is bounded; no unbounded growth.
 - Conversational continuity is preserved across resets via the summary.
 - The summary only captures confirmed actions, not the full conversation history.
+
+---
+
+## ADR-008 — Confirmation messages belong to the presentation layer
+
+**Status:** Accepted
+
+**Context:**
+Tools that modify data require user confirmation before executing. Initially, each tool contained a private function (e.g. `_build_delete_confirmation`) responsible for formatting the confirmation prompt — mixing domain logic with presentation concerns. A `summary` parameter was also passed by the LLM to provide the confirmation text, which transferred presentation responsibility to the model itself.
+
+**Decision:**
+Confirmation message builders are injected into tools as `build_confirmation_message: Callable`. Implementations live in the presentation layer (`telegram/confirmation_messages.py`). The domain never formats text for the user. The `summary` parameter is eliminated from all tool signatures.
+
+**Consequences:**
+- Tools are testable in isolation using a stub builder — no dependence on specific text formats.
+- Changing confirmation language or format requires touching only the presentation layer.
+- Adding a new work type requires a new builder in `confirmation_messages.py`, not a change in domain code.
+- The LLM no longer generates confirmation text, eliminating a source of non-determinism in the user-facing message.

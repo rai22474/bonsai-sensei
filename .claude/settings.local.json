@@ -8,7 +8,10 @@
       "WebFetch(domain:github.com)",
       "Bash(uv pip:*)",
       "Bash(uv run:*)",
-      "Bash(uv add:*)"
+      "Bash(uv add:*)",
+      "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_fertilizer_application_tool.py -v)",
+      "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_phytosanitary_application_tool.py -v)",
+      "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_phytosanitary_application_tool.py tests/domain/services/cultivation/plan/test_confirm_create_transplant_tool.py -v)"
     ]
   }
 }

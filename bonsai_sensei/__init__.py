@@ -10,6 +10,12 @@ from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.human_input import create_ask_human, create_ask_confirmation
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
+from bonsai_sensei.telegram.confirmation_messages import (
+    build_fertilizer_confirmation,
+    build_phytosanitary_confirmation,
+    build_transplant_confirmation,
+    build_delete_confirmation,
+)
 from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
 from bonsai_sensei.model_factory import (
@@ -233,6 +239,10 @@ async def lifespan(app: FastAPI):
         create_cultivation_group,
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
+        build_fertilizer_confirmation=build_fertilizer_confirmation,
+        build_phytosanitary_confirmation=build_phytosanitary_confirmation,
+        build_transplant_confirmation=build_transplant_confirmation,
+        build_delete_confirmation=build_delete_confirmation,
         orchestrator_model=orchestrator_model,
     )
     gardener_group_factory = partial(
