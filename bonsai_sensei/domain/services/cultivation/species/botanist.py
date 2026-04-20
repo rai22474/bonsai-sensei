@@ -23,6 +23,9 @@ def create_botanist(
     update_species_func: Callable[..., Species | None],
     delete_species_func: Callable[..., bool],
     ask_confirmation: Callable,
+    build_create_species_confirmation: Callable,
+    build_delete_species_confirmation: Callable,
+    build_update_species_confirmation: Callable,
 ) -> Agent:
     return Agent(
         model=model,
@@ -37,16 +40,19 @@ def create_botanist(
                 scientific_name_resolver=scientific_name_resolver,
                 care_guide_builder=care_guide_builder,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_create_species_confirmation,
             ),
             create_confirm_update_species_tool(
                 update_species_func=update_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_update_species_confirmation,
             ),
             create_confirm_delete_species_tool(
                 delete_species_func=delete_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_delete_species_confirmation,
             ),
         ],
     )

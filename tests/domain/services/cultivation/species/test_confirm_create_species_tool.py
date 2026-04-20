@@ -14,7 +14,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_name_is_missing(confirm_tool, tool_context):
-    result = await confirm_tool(common_name="", summary="Create species", tool_context=tool_context)
+    result = await confirm_tool(common_name="", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "species_name_required"}, \
         "Missing common_name should return a species_name_required error"
@@ -22,7 +22,7 @@ async def should_return_error_when_species_name_is_missing(confirm_tool, tool_co
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_already_exists(confirm_tool_with_existing, tool_context):
-    result = await confirm_tool_with_existing(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    result = await confirm_tool_with_existing(common_name="Elm", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "species_already_exists"}, \
         "Existing species should return a species_already_exists error"
@@ -30,15 +30,30 @@ async def should_return_error_when_species_already_exists(confirm_tool_with_exis
 
 @pytest.mark.asyncio
 async def should_return_error_when_scientific_name_not_found(confirm_tool_no_results, tool_context):
-    result = await confirm_tool_no_results(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    result = await confirm_tool_no_results(common_name="Elm", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "scientific_name_not_found"}, \
         "No scientific name results should return a scientific_name_not_found error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(common_name, scientific_name, care_guide):
+        captured_calls.append((common_name, scientific_name, care_guide))
+        return "confirmation text"
+
+    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm, build_confirmation_message)
+    await tool(common_name="Elm", tool_context=tool_context)
+
+    assert len(captured_calls) == 1 and captured_calls[0][0] == "Elm" and captured_calls[0][1] == "Ulmus minor", \
+        "build_confirmation_message should be called with common_name and resolved scientific_name"
+
+
+@pytest.mark.asyncio
 async def should_create_species_with_correct_common_name_when_user_confirms(confirm_tool, tool_context, captured_species):
-    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    await confirm_tool(common_name="Elm", tool_context=tool_context)
 
     assert captured_species[0].name == "Elm", \
         "Created species should use the common name"
@@ -46,7 +61,7 @@ async def should_create_species_with_correct_common_name_when_user_confirms(conf
 
 @pytest.mark.asyncio
 async def should_create_species_with_scientific_name_from_resolver_when_user_confirms(confirm_tool, tool_context, captured_species):
-    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    await confirm_tool(common_name="Elm", tool_context=tool_context)
 
     assert captured_species[0].scientific_name == "Ulmus minor", \
         "Created species should use the scientific name returned by the resolver"
@@ -54,7 +69,7 @@ async def should_create_species_with_scientific_name_from_resolver_when_user_con
 
 @pytest.mark.asyncio
 async def should_create_species_with_care_guide_from_builder_when_user_confirms(confirm_tool, tool_context, captured_species):
-    await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    await confirm_tool(common_name="Elm", tool_context=tool_context)
 
     assert captured_species[0].care_guide["summary"] == "Water regularly and place in full sun.", \
         "Created species should use the care guide returned by the builder"
@@ -62,25 +77,25 @@ async def should_create_species_with_care_guide_from_builder_when_user_confirms(
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(confirm_tool, tool_context):
-    result = await confirm_tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+    result = await confirm_tool(common_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_create_species_when_user_cancels(tool_context, captured_species, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder):
-    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel)
-    await tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+async def should_not_create_species_when_user_cancels(tool_context, captured_species, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, build_confirmation_message):
+    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel, build_confirmation_message)
+    await tool(common_name="Elm", tool_context=tool_context)
 
     assert captured_species == [], \
         "create_species_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder):
-    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel)
-    result = await tool(common_name="Elm", summary="Create Elm", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, build_confirmation_message):
+    tool = create_confirm_create_species_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(common_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -168,33 +183,44 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm):
+def build_confirmation_message():
+    def build(common_name, scientific_name, care_guide):
+        return f"Confirm create species '{common_name}' ({scientific_name})"
+
+    return build
+
+
+@pytest.fixture
+def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=get_species_by_name_func,
         scientific_name_resolver=scientific_name_resolver,
         care_guide_builder=care_guide_builder,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )
 
 
 @pytest.fixture
-def confirm_tool_with_existing(create_species_func, existing_species_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm):
+def confirm_tool_with_existing(create_species_func, existing_species_func, scientific_name_resolver, care_guide_builder, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=existing_species_func,
         scientific_name_resolver=scientific_name_resolver,
         care_guide_builder=care_guide_builder,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )
 
 
 @pytest.fixture
-def confirm_tool_no_results(create_species_func, get_species_by_name_func, scientific_name_resolver_no_results, care_guide_builder, ask_confirmation_confirm):
+def confirm_tool_no_results(create_species_func, get_species_by_name_func, scientific_name_resolver_no_results, care_guide_builder, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=get_species_by_name_func,
         scientific_name_resolver=scientific_name_resolver_no_results,
         care_guide_builder=care_guide_builder,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )

@@ -11,19 +11,18 @@ def create_confirm_delete_fertilizer_tool(
     delete_fertilizer_func: Callable,
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     async def confirm_delete_fertilizer(
         name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Delete a fertilizer from the catalog after explicit user confirmation.
 
         Args:
             name: Fertilizer name to delete.
-            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
@@ -38,7 +37,7 @@ def create_confirm_delete_fertilizer_tool(
         if not get_fertilizer_by_name_func(name):
             return {"status": "error", "message": "fertilizer_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name), tool_context=tool_context)
 
         if confirmed:
             delete_fertilizer_func(name=name)

@@ -11,13 +11,13 @@ def create_confirm_create_bonsai_tool(
     create_bonsai_func: Callable,
     get_species_by_name_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     async def confirm_create_bonsai(
         name: str,
         species_name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Create a new bonsai in the collection after explicit user confirmation.
@@ -25,7 +25,6 @@ def create_confirm_create_bonsai_tool(
         Args:
             name: Bonsai name.
             species_name: Common name of the species to assign to the bonsai.
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -44,7 +43,7 @@ def create_confirm_create_bonsai_tool(
         if not species:
             return {"status": "error", "message": "species_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name, species_name), tool_context=tool_context)
 
         if confirmed:
             create_bonsai_func(bonsai=Bonsai(name=name, species_id=species.id))

@@ -71,8 +71,11 @@ async def accept_confirmation(
         pending["event"].set()
         task = active_tasks.get(user_id)
         if task:
-            await task
-            active_tasks.pop(user_id, None)
+            try:
+                await asyncio.wait_for(asyncio.shield(task), timeout=30)
+                active_tasks.pop(user_id, None)
+            except asyncio.TimeoutError:
+                pass
         return {"status": "accepted"}
 
     raise HTTPException(status_code=404, detail="confirmation_not_found")

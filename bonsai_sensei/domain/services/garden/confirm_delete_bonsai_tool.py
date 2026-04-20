@@ -9,13 +9,13 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_confirm_delete_bonsai_tool(
     delete_bonsai_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     async def confirm_delete_bonsai(
         bonsai_id: int,
         bonsai_name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Delete a bonsai from the collection after explicit user confirmation.
@@ -26,7 +26,6 @@ def create_confirm_delete_bonsai_tool(
         Args:
             bonsai_id: Identifier of the bonsai to delete.
             bonsai_name: Name of the bonsai to delete.
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -41,7 +40,7 @@ def create_confirm_delete_bonsai_tool(
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(bonsai_id, bonsai_name), tool_context=tool_context)
 
         if confirmed:
             delete_bonsai_func(bonsai_id=bonsai_id)

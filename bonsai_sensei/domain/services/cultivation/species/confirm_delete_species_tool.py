@@ -10,19 +10,18 @@ def create_confirm_delete_species_tool(
     delete_species_func: Callable,
     get_species_by_name_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     async def confirm_delete_species(
         species_name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Delete a species from the herbarium after explicit user confirmation.
 
         Args:
             species_name: The common name of the species to delete.
-            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
@@ -38,7 +37,7 @@ def create_confirm_delete_species_tool(
         if not existing_species:
             return {"status": "error", "message": "species_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(species_name), tool_context=tool_context)
 
         if confirmed:
             delete_species_func(species_id=existing_species.id)

@@ -10,13 +10,13 @@ def create_confirm_update_bonsai_tool(
     update_bonsai_func: Callable,
     get_species_by_name_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     async def confirm_update_bonsai(
         bonsai_id: int,
         bonsai_name: str,
-        summary: str,
         name: str | None = None,
         species_name: str | None = None,
         tool_context: ToolContext | None = None,
@@ -26,7 +26,6 @@ def create_confirm_update_bonsai_tool(
         Args:
             bonsai_id: Identifier of the bonsai to update.
             bonsai_name: Current name of the bonsai to update.
-            summary: Human-readable description to show in the confirmation prompt.
             name: Optional new name for the bonsai.
             species_name: Optional common name of the new species to assign.
 
@@ -56,7 +55,7 @@ def create_confirm_update_bonsai_tool(
         if not bonsai_data:
             return {"status": "error", "message": "bonsai_update_required"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(bonsai_id, bonsai_name, bonsai_data), tool_context=tool_context)
 
         if confirmed:
             update_bonsai_func(bonsai_id=bonsai_id, bonsai_data=bonsai_data)

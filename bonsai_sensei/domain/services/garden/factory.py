@@ -13,8 +13,14 @@ from bonsai_sensei.domain.services.garden.gardener import create_gardener
 def create_gardener_group(
     model: object,
     session_factory,
-    ask_human: Callable,
     ask_confirmation: Callable,
+    build_create_bonsai_confirmation: Callable,
+    build_delete_bonsai_confirmation: Callable,
+    build_update_bonsai_confirmation: Callable,
+    build_apply_fertilizer_confirmation: Callable,
+    build_apply_phytosanitary_confirmation: Callable,
+    build_record_transplant_confirmation: Callable,
+    build_execute_planned_work_confirmation: Callable,
 ):
     list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(
@@ -48,6 +54,12 @@ def create_gardener_group(
         list_planned_works_func=list_planned_works_func,
         get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
-        ask_human=ask_human,
         ask_confirmation=ask_confirmation,
+        build_create_bonsai_confirmation=build_create_bonsai_confirmation,
+        build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
+        build_update_bonsai_confirmation=build_update_bonsai_confirmation,
+        build_apply_fertilizer_confirmation=build_apply_fertilizer_confirmation,
+        build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
+        build_record_transplant_confirmation=build_record_transplant_confirmation,
+        build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
     )

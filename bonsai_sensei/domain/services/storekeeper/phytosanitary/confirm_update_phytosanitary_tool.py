@@ -11,12 +11,12 @@ def create_confirm_update_phytosanitary_tool(
     update_phytosanitary_func: Callable,
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     async def confirm_update_phytosanitary(
         name: str,
-        summary: str,
         target: str | None = None,
         usage_sheet: str | None = None,
         recommended_amount: str | None = None,
@@ -27,7 +27,6 @@ def create_confirm_update_phytosanitary_tool(
 
         Args:
             name: Product name to update.
-            summary: Short human-readable summary to show in the confirmation prompt.
             target: Optional new target (pest/disease).
             usage_sheet: Optional new usage instructions.
             recommended_amount: Optional new recommended dosage amount.
@@ -56,7 +55,7 @@ def create_confirm_update_phytosanitary_tool(
             "sources": sources,
         }
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name, phytosanitary_data), tool_context=tool_context)
 
         if confirmed:
             update_phytosanitary_func(name=name, phytosanitary_data=phytosanitary_data)

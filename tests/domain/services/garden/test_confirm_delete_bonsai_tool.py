@@ -13,7 +13,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_id_is_missing(delete_tool, tool_context):
-    result = await delete_tool(bonsai_id=0, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+    result = await delete_tool(bonsai_id=0, bonsai_name="Naruto", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "bonsai_id_required"}, \
         "Missing bonsai_id should return bonsai_id_required error"
@@ -21,15 +21,30 @@ async def should_return_error_when_bonsai_id_is_missing(delete_tool, tool_contex
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_name_is_missing(delete_tool, tool_context):
-    result = await delete_tool(bonsai_id=1, bonsai_name="", summary="Delete bonsai", tool_context=tool_context)
+    result = await delete_tool(bonsai_id=1, bonsai_name="", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "bonsai_name_required"}, \
         "Missing bonsai_name should return bonsai_name_required error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, delete_bonsai_func, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(bonsai_id, bonsai_name):
+        captured_calls.append((bonsai_id, bonsai_name))
+        return "confirmation text"
+
+    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)
+    await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
+
+    assert captured_calls == [(1, "Naruto")], \
+        "build_confirmation_message should be called with bonsai_id and bonsai_name"
+
+
+@pytest.mark.asyncio
 async def should_execute_delete_when_user_confirms(delete_tool, tool_context, captured_delete):
-    await delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+    await delete_tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert captured_delete.get("bonsai_id") == 1, \
         "delete_bonsai_func should be called with the correct bonsai_id when user confirms"
@@ -37,25 +52,25 @@ async def should_execute_delete_when_user_confirms(delete_tool, tool_context, ca
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(delete_tool, tool_context):
-    result = await delete_tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+    result = await delete_tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_execute_delete_when_user_cancels(tool_context, captured_delete, delete_bonsai_func):
-    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel)
-    await tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+async def should_not_execute_delete_when_user_cancels(tool_context, captured_delete, delete_bonsai_func, build_confirmation_message):
+    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
+    await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert "bonsai_id" not in captured_delete, \
         "delete_bonsai_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, delete_bonsai_func):
-    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel)
-    result = await tool(bonsai_id=1, bonsai_name="Naruto", summary="Delete Naruto", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, delete_bonsai_func, build_confirmation_message):
+    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -92,5 +107,13 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def delete_tool(delete_bonsai_func, ask_confirmation_confirm):
-    return create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm)
+def build_confirmation_message():
+    def build(bonsai_id, bonsai_name):
+        return f"Confirm delete bonsai '{bonsai_name}' (id={bonsai_id})"
+
+    return build
+
+
+@pytest.fixture
+def delete_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message):
+    return create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)

@@ -11,6 +11,7 @@ def create_confirm_record_transplant_tool(
     get_bonsai_by_name_func: Callable,
     record_bonsai_event_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
@@ -19,7 +20,6 @@ def create_confirm_record_transplant_tool(
         pot_size: str,
         pot_type: str,
         substrate: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Record a transplant event on a bonsai after explicit user confirmation.
@@ -29,7 +29,6 @@ def create_confirm_record_transplant_tool(
             pot_size: Size of the new pot (e.g. "20 cm", "small").
             pot_type: Type/material of the new pot (e.g. "cerámica", "plástico", "mica").
             substrate: Substrate used in the transplant (e.g. "akadama y pomice").
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -47,7 +46,7 @@ def create_confirm_record_transplant_tool(
 
         payload = {key: value for key, value in {"pot_size": pot_size, "pot_type": pot_type, "substrate": substrate}.items() if value}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, pot_size, pot_type, substrate), tool_context=tool_context)
 
         if confirmed:
             record_bonsai_event_func(

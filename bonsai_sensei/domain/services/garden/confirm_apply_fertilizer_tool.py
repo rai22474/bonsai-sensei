@@ -12,6 +12,7 @@ def create_confirm_apply_fertilizer_tool(
     get_fertilizer_by_name_func: Callable,
     record_bonsai_event_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
@@ -19,7 +20,6 @@ def create_confirm_apply_fertilizer_tool(
         bonsai_name: str,
         fertilizer_name: str,
         amount: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Record a fertilizer application on a bonsai after explicit user confirmation.
@@ -28,7 +28,6 @@ def create_confirm_apply_fertilizer_tool(
             bonsai_name: Name of the bonsai that received the fertilizer.
             fertilizer_name: Name of the fertilizer that was applied.
             amount: Amount of fertilizer applied (e.g. "5 ml", "10 g").
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -55,7 +54,7 @@ def create_confirm_apply_fertilizer_tool(
         if not fertilizer:
             return {"status": "error", "message": "fertilizer_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, fertilizer_name, amount), tool_context=tool_context)
 
         if confirmed:
             record_bonsai_event_func(

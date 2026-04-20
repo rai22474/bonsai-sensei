@@ -8,13 +8,35 @@ from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
-from bonsai_sensei.domain.services.human_input import create_ask_human, create_ask_confirmation
+from bonsai_sensei.domain.services.human_input import create_ask_confirmation
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
-from bonsai_sensei.telegram.confirmation_messages import (
+from bonsai_sensei.telegram.messages.gardener_messages import (
+    build_create_bonsai_confirmation,
+    build_delete_bonsai_confirmation,
+    build_update_bonsai_confirmation,
+    build_apply_fertilizer_confirmation,
+    build_apply_phytosanitary_confirmation,
+    build_record_transplant_confirmation,
+    build_execute_planned_work_confirmation,
+)
+from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilizer_confirmation,
     build_phytosanitary_confirmation,
     build_transplant_confirmation,
     build_delete_confirmation,
+)
+from bonsai_sensei.telegram.messages.storekeeper_messages import (
+    build_create_fertilizer_confirmation,
+    build_delete_fertilizer_confirmation,
+    build_update_fertilizer_confirmation,
+    build_create_phytosanitary_confirmation,
+    build_delete_phytosanitary_confirmation,
+    build_update_phytosanitary_confirmation,
+)
+from bonsai_sensei.telegram.messages.botanist_messages import (
+    build_create_species_confirmation,
+    build_delete_species_confirmation,
+    build_update_species_confirmation,
 )
 from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
@@ -226,13 +248,9 @@ async def lifespan(app: FastAPI):
 
     bot_instance = TelegramBot(error_handler=error_handler)
 
-    async def send_message_func(user_id: str, text: str):
-        await bot_instance.send_message(chat_id=user_id, text=text)
-
     async def send_confirmation_func(user_id: str, question: str, confirmation_id: str):
         await bot_instance.send_confirmation_message(chat_id=user_id, text=question, confirmation_id=confirmation_id)
 
-    ask_human_func = create_ask_human(send_message_func, app.state.pending_human_responses)
     ask_confirmation_func = create_ask_confirmation(send_confirmation_func, app.state.pending_human_responses)
 
     cultivation_group_factory = partial(
@@ -243,18 +261,33 @@ async def lifespan(app: FastAPI):
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,
         build_delete_confirmation=build_delete_confirmation,
+        build_create_species_confirmation=build_create_species_confirmation,
+        build_delete_species_confirmation=build_delete_species_confirmation,
+        build_update_species_confirmation=build_update_species_confirmation,
         orchestrator_model=orchestrator_model,
     )
     gardener_group_factory = partial(
         create_gardener_group,
         session_factory=get_session_partial,
-        ask_human=ask_human_func,
         ask_confirmation=ask_confirmation_func,
+        build_create_bonsai_confirmation=build_create_bonsai_confirmation,
+        build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
+        build_update_bonsai_confirmation=build_update_bonsai_confirmation,
+        build_apply_fertilizer_confirmation=build_apply_fertilizer_confirmation,
+        build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
+        build_record_transplant_confirmation=build_record_transplant_confirmation,
+        build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
     )
     storekeeper_group_factory = partial(
         create_storekeeper_group,
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
+        build_create_fertilizer_confirmation=build_create_fertilizer_confirmation,
+        build_delete_fertilizer_confirmation=build_delete_fertilizer_confirmation,
+        build_update_fertilizer_confirmation=build_update_fertilizer_confirmation,
+        build_create_phytosanitary_confirmation=build_create_phytosanitary_confirmation,
+        build_delete_phytosanitary_confirmation=build_delete_phytosanitary_confirmation,
+        build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
     )
     sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model)
     sensei_agent = create_agents(

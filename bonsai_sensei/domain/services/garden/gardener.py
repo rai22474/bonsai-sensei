@@ -18,47 +18,19 @@ from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import cr
 
 
 GARDENER_INSTRUCTION = """
-#ROL
-Eres un jardinero encargado de gestionar la colección de bonsáis.
+Eres el jardinero responsable de la colección de bonsáis.
 
-# OBJETIVO
-Principalmente se encarga de saber qué bonsáis tiene el usuario en su colección.
-Que características tienen y gestionar los registros de nuevos bonsáis.
+Gestionas el catálogo de bonsáis (crear, actualizar, eliminar) y registras eventos ya ocurridos (fertilizaciones, tratamientos fitosanitarios, trasplantes y ejecución de trabajos planificados).
 
-# INSTRUCCIONES
-* Si el usuario quiere dar de alta un nuevo bonsái, sigue este flujo:
-    - Debes validar que el nombre del bonsái no esté ya registrado.
-      Si ya existe, informa al usuario y cancela la operación.
-    - En caso que no proporcione el nombre del bonsai inventa uno basado en animes o manga populares y proponlo al usuario.
-    - Solicita confirmación, con los datos del bonsai a crear.
-* Si el usuario quiere actualizar un bonsái:
-    - Comprueba que el bonsái exista.
-    - Solicita confirmación, con los datos del bonsai a actualizar.
-* Si el usuario quiere eliminar un bonsái:
-    - Comprueba que el bonsái exista.
-    - Solicita confirmación, con los datos del bonsai a eliminar.
-* Si el usuario indica que ha aplicado un fertilizante a un bonsái:
-    - Llama directamente a confirm_apply_fertilizer con el nombre del bonsái, el fertilizante y la cantidad.
-      Esa herramienta valida internamente si el bonsái y el fertilizante existen; NO intentes listarlos antes.
-    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_fertilizer.
-* Si el usuario indica que ha realizado un trasplante a un bonsái:
-    - Llama directamente a confirm_record_transplant con el nombre del bonsái, el tamaño de la maceta y el sustrato.
-      Esa herramienta valida internamente si el bonsái existe; NO intentes listarlo antes.
-    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_record_transplant.
-* Si el usuario indica que ha aplicado un tratamiento fitosanitario a un bonsái:
-    - Llama directamente a confirm_apply_phytosanitary con el nombre del bonsái, el producto y la cantidad.
-      Esa herramienta valida internamente si el bonsái y el producto existen; NO intentes listarlos antes.
-    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_apply_phytosanitary.
-* Si el usuario indica que ha ejecutado un trabajo planificado:
-    - Usa list_planned_works_for_bonsai para obtener los trabajos planificados del bonsái.
-    - Identifica el trabajo correspondiente por tipo y detalles.
-    - Solicita confirmación con confirm_execute_planned_work usando el ID del trabajo encontrado.
-    - Una vez registrada la confirmación, NO vuelvas a llamar a confirm_execute_planned_work.
-* Si el usuario quiere consultar el historial de eventos de un bonsái (abonados, tratamientos, etc.):
-    - Usa list_bonsai_events para obtener los eventos del bonsái por su nombre.
-    - Presenta los eventos al usuario de forma legible, agrupados por tipo si hay varios.
-* Si falta información esencial, usa ask_human para pedírsela al usuario directamente.
-* Responde siempre en español.
+# Normas generales
+- Cada herramienta de confirmación gestiona sus propias validaciones. Llámala directamente con los datos del usuario; no hagas lookups previos.
+- Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
+- Si el usuario no proporciona un nombre para el bonsái, propón uno inspirado en anime o manga.
+- Si falta información esencial, pídela en tu respuesta.
+- Responde siempre en español.
+
+# Ejecución de trabajos planificados
+Para ejecutar un trabajo planificado usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a confirm_execute_planned_work.
 """
 
 
@@ -71,8 +43,14 @@ def create_gardener(
     create_bonsai_func: Callable[..., Bonsai | None],
     update_bonsai_func: Callable[..., Bonsai | None],
     delete_bonsai_func: Callable[..., bool],
-    ask_human: Callable,
     ask_confirmation: Callable,
+    build_create_bonsai_confirmation: Callable,
+    build_delete_bonsai_confirmation: Callable,
+    build_update_bonsai_confirmation: Callable,
+    build_apply_fertilizer_confirmation: Callable,
+    build_apply_phytosanitary_confirmation: Callable,
+    build_record_transplant_confirmation: Callable,
+    build_execute_planned_work_confirmation: Callable,
     get_fertilizer_by_name_func: Callable[[str], object | None] = None,
     get_phytosanitary_by_name_func: Callable[[str], object | None] = None,
     record_bonsai_event_func: Callable[..., object] = None,
@@ -95,21 +73,25 @@ def create_gardener(
         create_bonsai_func=create_bonsai_func,
         get_species_by_name_func=get_species_by_name_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_create_bonsai_confirmation,
     )
     confirm_update_tool = create_confirm_update_bonsai_tool(
         update_bonsai_func=update_bonsai_func,
         get_species_by_name_func=get_species_by_name_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_update_bonsai_confirmation,
     )
     confirm_delete_tool = create_confirm_delete_bonsai_tool(
         delete_bonsai_func=delete_bonsai_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_delete_bonsai_confirmation,
     )
     confirm_apply_fertilizer_tool = create_confirm_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_apply_fertilizer_confirmation,
     )
     confirm_apply_fertilizer_tool.__name__ = "confirm_apply_fertilizer"
     confirm_apply_phytosanitary_tool = create_confirm_apply_phytosanitary_tool(
@@ -117,12 +99,14 @@ def create_gardener(
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_apply_phytosanitary_confirmation,
     )
     confirm_apply_phytosanitary_tool.__name__ = "confirm_apply_phytosanitary"
     confirm_record_transplant_tool = create_confirm_record_transplant_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_record_transplant_confirmation,
     )
     confirm_record_transplant_tool.__name__ = "confirm_record_transplant"
     list_events_tool = create_list_bonsai_events_tool(
@@ -140,6 +124,7 @@ def create_gardener(
         record_bonsai_event_func=record_bonsai_event_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_execute_planned_work_confirmation,
     )
     confirm_execute_tool.__name__ = "confirm_execute_planned_work"
 
@@ -150,7 +135,6 @@ def create_gardener(
         instruction=GARDENER_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[
-            ask_human,
             list_bonsai_tool,
             get_bonsai_by_name_tool,
             confirm_create_tool,

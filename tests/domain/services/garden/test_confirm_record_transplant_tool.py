@@ -15,7 +15,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_name_is_empty(record_transplant_tool, tool_context):
-    result = await record_transplant_tool(bonsai_name="", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant", tool_context=tool_context)
+    result = await record_transplant_tool(bonsai_name="", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "bonsai_name_required"}, \
         "Empty bonsai name should return bonsai_name_required error"
@@ -23,15 +23,30 @@ async def should_return_error_when_bonsai_name_is_empty(record_transplant_tool, 
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_not_found(record_transplant_tool, tool_context):
-    result = await record_transplant_tool(bonsai_name="Unknown", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant", tool_context=tool_context)
+    result = await record_transplant_tool(bonsai_name="Unknown", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "bonsai_not_found"}, \
         "Unknown bonsai name should return bonsai_not_found error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(bonsai_name, pot_size, pot_type, substrate):
+        captured_calls.append((bonsai_name, pot_size, pot_type, substrate))
+        return "confirmation text"
+
+    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
+
+    assert captured_calls == [("Kaze", "20 cm", "cerámica", "akadama y pomice")], \
+        "build_confirmation_message should be called with bonsai_name, pot_size, pot_type, and substrate"
+
+
+@pytest.mark.asyncio
 async def should_record_transplant_event_when_user_confirms(record_transplant_tool, tool_context, captured_events):
-    await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant Kaze", tool_context=tool_context)
+    await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert captured_events[0].event_type == "transplant", \
         "Should record a transplant event when user confirms"
@@ -39,7 +54,7 @@ async def should_record_transplant_event_when_user_confirms(record_transplant_to
 
 @pytest.mark.asyncio
 async def should_record_event_with_correct_payload_when_user_confirms(record_transplant_tool, tool_context, captured_events):
-    await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant Kaze", tool_context=tool_context)
+    await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert captured_events[0].payload == {"pot_size": "20 cm", "pot_type": "cerámica", "substrate": "akadama y pomice"}, \
         "Recorded event should contain pot size, pot type and substrate"
@@ -47,25 +62,25 @@ async def should_record_event_with_correct_payload_when_user_confirms(record_tra
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(record_transplant_tool, tool_context):
-    result = await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant Kaze", tool_context=tool_context)
+    result = await record_transplant_tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_record_event_when_user_cancels(tool_context, captured_events, get_bonsai_by_name_func, record_bonsai_event_func):
-    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel)
-    await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant", tool_context=tool_context)
+async def should_not_record_event_when_user_cancels(tool_context, captured_events, get_bonsai_by_name_func, record_bonsai_event_func, build_confirmation_message):
+    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert captured_events == [], \
         "record_bonsai_event_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, record_bonsai_event_func):
-    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel)
-    result = await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", summary="Transplant", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, record_bonsai_event_func, build_confirmation_message):
+    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -116,5 +131,13 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm):
-    return create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm)
+def build_confirmation_message():
+    def build(bonsai_name, pot_size, pot_type, substrate):
+        return f"Confirm transplant '{bonsai_name}': pot={pot_size} {pot_type}, substrate={substrate}"
+
+    return build
+
+
+@pytest.fixture
+def record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message):
+    return create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)

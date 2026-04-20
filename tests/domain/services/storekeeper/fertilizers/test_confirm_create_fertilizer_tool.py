@@ -14,7 +14,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_name_is_missing(create_tool, tool_context):
-    result = await create_tool(name="", summary="Create fertilizer", tool_context=tool_context)
+    result = await create_tool(name="", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "fertilizer_name_required"}, \
         "Missing name should return a fertilizer_name_required error"
@@ -22,15 +22,30 @@ async def should_return_error_when_name_is_missing(create_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_return_error_when_fertilizer_already_exists(create_tool_with_existing, tool_context):
-    result = await create_tool_with_existing(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+    result = await create_tool_with_existing(name="GreenBoom", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "fertilizer_already_exists"}, \
         "Existing fertilizer should return a fertilizer_already_exists error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(name, usage_sheet, recommended_amount):
+        captured_calls.append((name, usage_sheet, recommended_amount))
+        return "confirmation text"
+
+    tool = create_confirm_create_fertilizer_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_confirm, build_confirmation_message)
+    await tool(name="GreenBoom", tool_context=tool_context)
+
+    assert captured_calls == [("GreenBoom", "Apply 5 ml per litre of water.", "5 ml ")], \
+        "build_confirmation_message should be called with name, usage_sheet and recommended_amount from searcher"
+
+
+@pytest.mark.asyncio
 async def should_create_with_correct_name_when_user_confirms(create_tool, tool_context, captured_create):
-    await create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+    await create_tool(name="GreenBoom", tool_context=tool_context)
 
     assert captured_create["fertilizer"].name == "GreenBoom", \
         "Should pass the correct name to create_fertilizer_func"
@@ -38,7 +53,7 @@ async def should_create_with_correct_name_when_user_confirms(create_tool, tool_c
 
 @pytest.mark.asyncio
 async def should_create_with_usage_sheet_from_searcher_when_user_confirms(create_tool, tool_context, captured_create):
-    await create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+    await create_tool(name="GreenBoom", tool_context=tool_context)
 
     assert captured_create["fertilizer"].usage_sheet == "Apply 5 ml per litre of water.", \
         "Should pass the usage_sheet returned by the searcher"
@@ -46,25 +61,25 @@ async def should_create_with_usage_sheet_from_searcher_when_user_confirms(create
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(create_tool, tool_context):
-    result = await create_tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+    result = await create_tool(name="GreenBoom", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_create_when_user_cancels(tool_context, captured_create, create_fertilizer_func, get_fertilizer_by_name_func, searcher):
-    tool = create_confirm_create_fertilizer_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_cancel)
-    await tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+async def should_not_create_when_user_cancels(tool_context, captured_create, create_fertilizer_func, get_fertilizer_by_name_func, searcher, build_confirmation_message):
+    tool = create_confirm_create_fertilizer_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_cancel, build_confirmation_message)
+    await tool(name="GreenBoom", tool_context=tool_context)
 
     assert captured_create == {}, \
         "create_fertilizer_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, create_fertilizer_func, get_fertilizer_by_name_func, searcher):
-    tool = create_confirm_create_fertilizer_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_cancel)
-    result = await tool(name="GreenBoom", summary="Create GreenBoom", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, create_fertilizer_func, get_fertilizer_by_name_func, searcher, build_confirmation_message):
+    tool = create_confirm_create_fertilizer_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(name="GreenBoom", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -125,20 +140,30 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def create_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_confirm):
+def build_confirmation_message():
+    def build(name, usage_sheet, recommended_amount):
+        return f"Confirm create fertilizer '{name}': {usage_sheet} ({recommended_amount})"
+
+    return build
+
+
+@pytest.fixture
+def create_tool(create_fertilizer_func, get_fertilizer_by_name_func, searcher, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_create_fertilizer_tool(
         create_fertilizer_func=create_fertilizer_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         searcher=searcher,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )
 
 
 @pytest.fixture
-def create_tool_with_existing(create_fertilizer_func, existing_fertilizer_func, searcher, ask_confirmation_confirm):
+def create_tool_with_existing(create_fertilizer_func, existing_fertilizer_func, searcher, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_create_fertilizer_tool(
         create_fertilizer_func=create_fertilizer_func,
         get_fertilizer_by_name_func=existing_fertilizer_func,
         searcher=searcher,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )

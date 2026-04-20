@@ -13,19 +13,18 @@ def create_confirm_create_fertilizer_tool(
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
     searcher: Callable[[str], dict],
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     async def confirm_create_fertilizer(
         name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Search for the fertilizer guide online and create it after user confirmation.
 
         Args:
             name: Fertilizer name.
-            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
@@ -46,7 +45,7 @@ def create_confirm_create_fertilizer_tool(
         usage_sheet = answer or "No data available."
         recommended_amount = _extract_recommended_amount(answer)
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name, usage_sheet, recommended_amount), tool_context=tool_context)
 
         if confirmed:
             create_fertilizer_func(

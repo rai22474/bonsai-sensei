@@ -12,6 +12,7 @@ def create_confirm_apply_phytosanitary_tool(
     get_phytosanitary_by_name_func: Callable,
     record_bonsai_event_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
@@ -19,7 +20,6 @@ def create_confirm_apply_phytosanitary_tool(
         bonsai_name: str,
         phytosanitary_name: str,
         amount: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Record a phytosanitary treatment on a bonsai after explicit user confirmation.
@@ -28,7 +28,6 @@ def create_confirm_apply_phytosanitary_tool(
             bonsai_name: Name of the bonsai that received the treatment.
             phytosanitary_name: Name of the phytosanitary product that was applied.
             amount: Amount of product applied (e.g. "5 ml", "10 g").
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -55,7 +54,7 @@ def create_confirm_apply_phytosanitary_tool(
         if not phytosanitary:
             return {"status": "error", "message": "phytosanitary_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, phytosanitary_name, amount), tool_context=tool_context)
 
         if confirmed:
             record_bonsai_event_func(

@@ -13,12 +13,12 @@ def create_confirm_create_species_tool(
     scientific_name_resolver: Callable[[str], dict],
     care_guide_builder: Callable[[str, str], dict],
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     async def confirm_create_bonsai_species(
         common_name: str,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Create a new bonsai species with its scientific name and care guide after user confirmation.
@@ -27,7 +27,6 @@ def create_confirm_create_species_tool(
 
         Args:
             common_name: Common name of the species to register.
-            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
@@ -50,7 +49,7 @@ def create_confirm_create_species_tool(
         scientific_name = scientific_names[0]
         care_guide = care_guide_builder(common_name, scientific_name)
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(common_name, scientific_name, care_guide), tool_context=tool_context)
 
         if confirmed:
             create_species_func(

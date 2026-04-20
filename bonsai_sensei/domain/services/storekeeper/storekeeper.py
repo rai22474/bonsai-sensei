@@ -35,6 +35,12 @@ def create_storekeeper(
     update_phytosanitary_func: Callable[..., Phytosanitary | None],
     delete_phytosanitary_func: Callable[..., bool],
     ask_confirmation: Callable,
+    build_create_fertilizer_confirmation: Callable,
+    build_delete_fertilizer_confirmation: Callable,
+    build_update_fertilizer_confirmation: Callable,
+    build_create_phytosanitary_confirmation: Callable,
+    build_delete_phytosanitary_confirmation: Callable,
+    build_update_phytosanitary_confirmation: Callable,
 ) -> Agent:
     return Agent(
         model=model,
@@ -49,16 +55,19 @@ def create_storekeeper(
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
                 searcher=fertilizer_searcher,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_create_fertilizer_confirmation,
             ),
             create_confirm_update_fertilizer_tool(
                 update_fertilizer_func=update_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_update_fertilizer_confirmation,
             ),
             create_confirm_delete_fertilizer_tool(
                 delete_fertilizer_func=delete_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_delete_fertilizer_confirmation,
             ),
             create_list_phytosanitary_tool(list_phytosanitary_func),
             create_confirm_create_phytosanitary_tool(
@@ -66,16 +75,19 @@ def create_storekeeper(
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
                 searcher=phytosanitary_searcher,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_create_phytosanitary_confirmation,
             ),
             create_confirm_update_phytosanitary_tool(
                 update_phytosanitary_func=update_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_update_phytosanitary_confirmation,
             ),
             create_confirm_delete_phytosanitary_tool(
                 delete_phytosanitary_func=delete_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
                 ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_delete_phytosanitary_confirmation,
             ),
         ],
     )

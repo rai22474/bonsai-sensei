@@ -14,6 +14,12 @@ def create_storekeeper_group(
     model: object,
     session_factory,
     ask_confirmation: Callable,
+    build_create_fertilizer_confirmation: Callable,
+    build_delete_fertilizer_confirmation: Callable,
+    build_update_fertilizer_confirmation: Callable,
+    build_create_phytosanitary_confirmation: Callable,
+    build_delete_phytosanitary_confirmation: Callable,
+    build_update_phytosanitary_confirmation: Callable,
 ):
     tavily_api_key = os.getenv("TAVILY_API_KEY")
     tavily_base_url = os.getenv("TAVILY_API_BASE")
@@ -53,4 +59,10 @@ def create_storekeeper_group(
             phytosanitary_registry.delete_phytosanitary, create_session=session_factory
         ),
         ask_confirmation=ask_confirmation,
+        build_create_fertilizer_confirmation=build_create_fertilizer_confirmation,
+        build_delete_fertilizer_confirmation=build_delete_fertilizer_confirmation,
+        build_update_fertilizer_confirmation=build_update_fertilizer_confirmation,
+        build_create_phytosanitary_confirmation=build_create_phytosanitary_confirmation,
+        build_delete_phytosanitary_confirmation=build_delete_phytosanitary_confirmation,
+        build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
     )

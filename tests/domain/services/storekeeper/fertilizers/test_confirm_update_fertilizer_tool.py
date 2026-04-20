@@ -14,7 +14,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_name_is_missing(update_tool, tool_context):
-    result = await update_tool(name="", summary="Update fertilizer", usage_sheet="New sheet", tool_context=tool_context)
+    result = await update_tool(name="", usage_sheet="New sheet", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "fertilizer_name_required"}, \
         "Missing name should return a fertilizer_name_required error"
@@ -22,7 +22,7 @@ async def should_return_error_when_name_is_missing(update_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_return_error_when_fertilizer_not_found(update_tool_not_found, tool_context):
-    result = await update_tool_not_found(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+    result = await update_tool_not_found(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "fertilizer_not_found"}, \
         "Non-existent fertilizer should return a fertilizer_not_found error"
@@ -30,15 +30,30 @@ async def should_return_error_when_fertilizer_not_found(update_tool_not_found, t
 
 @pytest.mark.asyncio
 async def should_return_error_when_no_fields_to_update(update_tool, tool_context):
-    result = await update_tool(name="GreenBoom", summary="Update GreenBoom", tool_context=tool_context)
+    result = await update_tool(name="GreenBoom", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "fertilizer_update_required"}, \
         "No update fields should return a fertilizer_update_required error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(name, fertilizer_data):
+        captured_calls.append((name, fertilizer_data))
+        return "confirmation text"
+
+    tool = create_confirm_update_fertilizer_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    await tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+
+    assert captured_calls == [("GreenBoom", {"usage_sheet": "New sheet", "recommended_amount": None, "sources": None})], \
+        "build_confirmation_message should be called with name and fertilizer_data"
+
+
+@pytest.mark.asyncio
 async def should_update_with_correct_name_when_user_confirms(update_tool, tool_context, captured_update):
-    await update_tool(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+    await update_tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert captured_update["name"] == "GreenBoom", \
         "Should pass the correct name to update_fertilizer_func"
@@ -46,7 +61,7 @@ async def should_update_with_correct_name_when_user_confirms(update_tool, tool_c
 
 @pytest.mark.asyncio
 async def should_update_with_correct_usage_sheet_when_user_confirms(update_tool, tool_context, captured_update):
-    await update_tool(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+    await update_tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert captured_update["fertilizer_data"]["usage_sheet"] == "New sheet", \
         "Should include the new usage_sheet in fertilizer_data"
@@ -54,25 +69,25 @@ async def should_update_with_correct_usage_sheet_when_user_confirms(update_tool,
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(update_tool, tool_context):
-    result = await update_tool(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+    result = await update_tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_update_when_user_cancels(tool_context, captured_update, update_fertilizer_func, get_fertilizer_by_name_func):
-    tool = create_confirm_update_fertilizer_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel)
-    await tool(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+async def should_not_update_when_user_cancels(tool_context, captured_update, update_fertilizer_func, get_fertilizer_by_name_func, build_confirmation_message):
+    tool = create_confirm_update_fertilizer_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    await tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert captured_update == {}, \
         "update_fertilizer_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, update_fertilizer_func, get_fertilizer_by_name_func):
-    tool = create_confirm_update_fertilizer_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel)
-    result = await tool(name="GreenBoom", summary="Update GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, update_fertilizer_func, get_fertilizer_by_name_func, build_confirmation_message):
+    tool = create_confirm_update_fertilizer_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(name="GreenBoom", usage_sheet="New sheet", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -126,18 +141,28 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def update_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm):
+def build_confirmation_message():
+    def build(name, fertilizer_data):
+        return f"Confirm update fertilizer '{name}': {fertilizer_data}"
+
+    return build
+
+
+@pytest.fixture
+def update_tool(update_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_update_fertilizer_tool(
         update_fertilizer_func=update_fertilizer_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )
 
 
 @pytest.fixture
-def update_tool_not_found(update_fertilizer_func, get_fertilizer_by_name_not_found, ask_confirmation_confirm):
+def update_tool_not_found(update_fertilizer_func, get_fertilizer_by_name_not_found, ask_confirmation_confirm, build_confirmation_message):
     return create_confirm_update_fertilizer_tool(
         update_fertilizer_func=update_fertilizer_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_not_found,
         ask_confirmation=ask_confirmation_confirm,
+        build_confirmation_message=build_confirmation_message,
     )

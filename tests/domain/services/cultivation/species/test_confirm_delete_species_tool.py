@@ -14,7 +14,7 @@ class MockToolContext:
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_name_is_empty(delete_tool, tool_context):
-    result = await delete_tool(species_name="", summary="Delete species", tool_context=tool_context)
+    result = await delete_tool(species_name="", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "species_name_required"}, \
         "Empty species name should return a species_name_required error"
@@ -22,15 +22,30 @@ async def should_return_error_when_species_name_is_empty(delete_tool, tool_conte
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_not_found(delete_tool, tool_context):
-    result = await delete_tool(species_name="Unknown", summary="Delete species", tool_context=tool_context)
+    result = await delete_tool(species_name="Unknown", tool_context=tool_context)
 
     assert result == {"status": "error", "message": "species_not_found"}, \
         "Unknown species name should return a species_not_found error"
 
 
 @pytest.mark.asyncio
+async def should_build_confirmation_message_with_correct_args(tool_context, delete_species_func, get_species_by_name_func, ask_confirmation_confirm):
+    captured_calls = []
+
+    def build_confirmation_message(species_name):
+        captured_calls.append(species_name)
+        return "confirmation text"
+
+    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    await tool(species_name="Elm", tool_context=tool_context)
+
+    assert captured_calls == ["Elm"], \
+        "build_confirmation_message should be called with the species name"
+
+
+@pytest.mark.asyncio
 async def should_delete_with_correct_species_id_when_user_confirms(delete_tool, tool_context, captured_delete):
-    await delete_tool(species_name="Elm", summary="Delete Elm", tool_context=tool_context)
+    await delete_tool(species_name="Elm", tool_context=tool_context)
 
     assert captured_delete["species_id"] == 1, \
         "Should pass the existing species id to delete_species_func"
@@ -38,25 +53,25 @@ async def should_delete_with_correct_species_id_when_user_confirms(delete_tool, 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(delete_tool, tool_context):
-    result = await delete_tool(species_name="Elm", summary="Delete Elm", tool_context=tool_context)
+    result = await delete_tool(species_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "success", \
         "Tool should return success status when user confirms"
 
 
 @pytest.mark.asyncio
-async def should_not_delete_when_user_cancels(tool_context, captured_delete, delete_species_func, get_species_by_name_func):
-    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel)
-    await tool(species_name="Elm", summary="Delete Elm", tool_context=tool_context)
+async def should_not_delete_when_user_cancels(tool_context, captured_delete, delete_species_func, get_species_by_name_func, build_confirmation_message):
+    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    await tool(species_name="Elm", tool_context=tool_context)
 
     assert captured_delete == {}, \
         "delete_species_func should not be called when user cancels"
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, delete_species_func, get_species_by_name_func):
-    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel)
-    result = await tool(species_name="Elm", summary="Delete Elm", tool_context=tool_context)
+async def should_return_cancelled_when_user_declines(tool_context, delete_species_func, get_species_by_name_func, build_confirmation_message):
+    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    result = await tool(species_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
         "Tool should return cancelled status when user declines"
@@ -109,5 +124,13 @@ def ask_confirmation_confirm():
 
 
 @pytest.fixture
-def delete_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm):
-    return create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm)
+def build_confirmation_message():
+    def build(species_name):
+        return f"Confirm delete species '{species_name}'"
+
+    return build
+
+
+@pytest.fixture
+def delete_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message):
+    return create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)

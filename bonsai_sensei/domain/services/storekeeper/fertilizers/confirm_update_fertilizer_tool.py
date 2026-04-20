@@ -11,12 +11,12 @@ def create_confirm_update_fertilizer_tool(
     update_fertilizer_func: Callable,
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     async def confirm_update_fertilizer(
         name: str,
-        summary: str,
         usage_sheet: str | None = None,
         recommended_amount: str | None = None,
         sources: list[str] | None = None,
@@ -26,7 +26,6 @@ def create_confirm_update_fertilizer_tool(
 
         Args:
             name: Fertilizer name to update.
-            summary: Short human-readable summary to show in the confirmation prompt.
             usage_sheet: Optional new usage instructions.
             recommended_amount: Optional new recommended amount.
             sources: Optional new list of source URLs.
@@ -53,7 +52,7 @@ def create_confirm_update_fertilizer_tool(
             "sources": sources,
         }
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name, fertilizer_data), tool_context=tool_context)
 
         if confirmed:
             update_fertilizer_func(name=name, fertilizer_data=fertilizer_data)

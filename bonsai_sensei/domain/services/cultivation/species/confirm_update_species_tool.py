@@ -10,12 +10,12 @@ def create_confirm_update_species_tool(
     update_species_func: Callable,
     get_species_by_name_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
     async def confirm_update_species(
         species: dict,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Update a species in the herbarium after explicit user confirmation.
@@ -24,7 +24,6 @@ def create_confirm_update_species_tool(
             species: A mapping with fields to update. Use 'name' or 'common_name' to
                 identify the species to update. Use 'common_name' to rename it and
                 'scientific_name' to update its scientific name.
-            summary: Short human-readable summary to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
@@ -53,7 +52,7 @@ def create_confirm_update_species_tool(
         if not existing_species:
             return {"status": "error", "message": "species_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(species_name, species_data), tool_context=tool_context)
 
         if confirmed:
             update_species_func(species_id=existing_species.id, species_data=species_data)

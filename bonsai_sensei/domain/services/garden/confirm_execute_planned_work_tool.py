@@ -12,19 +12,18 @@ def create_confirm_execute_planned_work_tool(
     record_bonsai_event_func: Callable,
     delete_planned_work_func: Callable,
     ask_confirmation: Callable,
+    build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
     async def confirm_execute_planned_work(
         work_id: int,
-        summary: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
         """Execute a planned work item after explicit user confirmation, recording the event and removing it from the plan.
 
         Args:
             work_id: ID of the planned work to execute.
-            summary: Human-readable description to show in the confirmation prompt.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -40,7 +39,7 @@ def create_confirm_execute_planned_work_tool(
         if not planned_work:
             return {"status": "error", "message": "planned_work_not_found"}
 
-        confirmed = await ask_confirmation(summary, tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(planned_work), tool_context=tool_context)
 
         if confirmed:
             record_bonsai_event_func(
