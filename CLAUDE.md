@@ -1,3 +1,30 @@
+# AGENT INSTRUCTION RULES:
+All agent instructions follow this fixed schema:
+
+```
+<Opening line> — one sentence: who the agent is and their domain. No # Rol header.
+
+# Contexto          (only if dynamic variables are present: dates, plan, available agents)
+<template variables or injected content>
+
+# <Domain section>  (only when two or more distinct operational modes exist, e.g. reads vs. writes)
+<content>
+
+# Comportamiento    (always present if there are non-obvious rules)
+<bullet points: sequencing, fallback, output format constraints>
+Do NOT describe what tools do internally — that belongs in tool docstrings.
+
+# Formato           (only for agents that talk directly to the user)
+<language and formatting rules>
+```
+
+Sections that would contain only one trivial line are omitted.
+
+Forbidden:
+- `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` headers — the opening line replaces them.
+- Instructions that duplicate tool docstrings (e.g. "validates that the bonsai exists internally").
+- The phrase "Usa las herramientas disponibles para cada operación" as the only behavioral guidance.
+
 # LANGUAGE RULES: 
 - Ensure all comments and logs are in English.
 

@@ -1,13 +1,13 @@
-# Technical Debt
+# Deuda Técnica
 
-## DEBT-002 — OpenTelemetry exports to console in local/acceptance environments
+## DEBT-002 — OpenTelemetry exporta a consola en entornos local y de aceptación
 
-**Area:** `bonsai_sensei/observability.py`, `docker-compose.yml`
+**Área:** `bonsai_sensei/observability.py`, `docker-compose.yml`
 
-**Problem:** When `GOOGLE_CLOUD_PROJECT` is not set, all spans and metrics are exported to stdout via `ConsoleSpanExporter` and `ConsoleMetricExporter`. This floods application logs with large JSON telemetry payloads, making them hard to read. The acceptance test Docker logs are particularly affected.
+**Problema:** Cuando `GOOGLE_CLOUD_PROJECT` no está configurado, todos los spans y métricas se exportan a stdout via `ConsoleSpanExporter` y `ConsoleMetricExporter`. Esto inunda los logs de la aplicación con grandes payloads JSON de telemetría, haciéndolos difíciles de leer. Los logs de Docker en los tests de aceptación se ven especialmente afectados.
 
-**Trade-off:** The console output is currently useful for automated diagnosis — grep on Docker logs lets Claude (and developers) inspect exact tool call args and responses during acceptance test failures (e.g. catching LLM passing IDs instead of names). Removing it without a replacement would lose that observability.
+**Trade-off:** La salida por consola es actualmente útil para diagnóstico automatizado — hacer grep sobre los logs de Docker permite a Claude (y a los desarrolladores) inspeccionar los args y respuestas exactos de las llamadas a tools durante fallos en los tests de aceptación (p.ej. detectar cuando el LLM pasa IDs en vez de nombres). Eliminarlo sin un reemplazo supondría perder esa observabilidad.
 
-**Desired state:** Route traces to Jaeger (or another OTLP-compatible backend) in local and acceptance environments. Keep console output available selectively for debugging. Requires deciding whether diagnosis via log grep is worth preserving or whether Jaeger UI covers the need.
+**Estado deseado:** Enrutar los traces a Jaeger (u otro backend compatible con OTLP) en entornos local y de aceptación. Mantener la salida por consola disponible selectivamente para depuración. Requiere decidir si el diagnóstico via grep de logs vale la pena preservarlo o si la UI de Jaeger cubre la necesidad.
 
-**Effort:** Low — add `opentelemetry-exporter-otlp-proto-http` dependency, add OTLP branch in `_setup_tracing`/`_setup_metrics`, add Jaeger service to `docker-compose.yml` and `docker-compose.acceptance.yml`.
+**Esfuerzo:** Bajo — añadir dependencia `opentelemetry-exporter-otlp-proto-http`, añadir rama OTLP en `_setup_tracing`/`_setup_metrics`, añadir servicio Jaeger a `docker-compose.yml` y `docker-compose.acceptance.yml`.

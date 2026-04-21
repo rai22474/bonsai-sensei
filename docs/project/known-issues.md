@@ -1,47 +1,47 @@
-# Known Issues
+# Issues Conocidos
 
-## ISSUE-001 — Care guide is created but structured fields are never populated
+## ISSUE-001 — La guía de cultivo se crea pero los campos estructurados nunca se rellenan
 
-**Symptom:** When a species is created, the care guide is built and stored, but only the `summary` field contains data (a raw text blob from Tavily). The structured fields — `watering`, `light`, `soil`, `pruning`, `pests` — are always `null`. When a user asks for cultivation advice, the LLM has to interpret an unstructured text blob instead of consuming typed fields.
+**Síntoma:** Cuando se crea una especie, la guía de cultivo se construye y almacena, pero solo el campo `summary` contiene datos (un blob de texto plano de Tavily). Los campos estructurados — `watering`, `light`, `soil`, `pruning`, `pests` — son siempre `null`. Cuando el usuario pide consejo de cultivo, el LLM tiene que interpretar un blob de texto no estructurado en lugar de consumir campos tipados.
 
-**Root cause:** `care_guide_service.py` builds the guide with `watering: None, light: None, ...` hardcoded — it never parses or extracts structured data from the Tavily response. The consultation tool (`get_bonsai_species_by_name`) returns the raw `care_guide` dict as-is, including all null fields.
+**Causa raíz:** `care_guide_service.py` construye la guía con `watering: None, light: None, ...` hardcodeados — nunca parsea ni extrae datos estructurados de la respuesta de Tavily. El tool de consulta (`get_bonsai_species_by_name`) devuelve el dict `care_guide` tal cual, incluyendo todos los campos nulos.
 
-**Workaround:** None. The LLM may extract partial information from the summary text, but results are inconsistent.
+**Workaround:** Ninguno. El LLM puede extraer información parcial del texto del summary, pero los resultados son inconsistentes.
 
-**Related:** `bonsai_sensei/domain/services/cultivation/species/care_guide_service.py`, `bonsai_sensei/domain/services/cultivation/species/herbarium_tools.py`.
-
----
-
-## ISSUE-002 — Conversation context is lost too quickly
-
-**Symptom:** After a short conversation (a few exchanges involving tool calls), the system loses context of what was being discussed. The next message is handled as if the conversation just started.
-
-**Root cause:** The session resets whenever `len(session.events) > MAX_SESSION_EVENTS` (currently 50). A single agent turn with tool calls can generate 5–10 events (user message, model response, tool call, tool response, final model response). A 5–6 step conversation can hit the limit. On reset, the session is recreated with only `current_date`, `next_saturday`, and `user_location` — no conversation summary is carried forward. The old summary-on-reset mechanism (from ADR-007) was removed when the confirmation flow was refactored.
-
-**Workaround:** None. Users must re-state context after a reset.
-
-**Related:** `bonsai_sensei/domain/services/advisor.py` (`MAX_SESSION_EVENTS`, `_sync_session`), ADR-007.
+**Relacionado:** `bonsai_sensei/domain/services/cultivation/species/care_guide_service.py`, `bonsai_sensei/domain/services/cultivation/species/herbarium_tools.py`.
 
 ---
 
-## ISSUE-003 — Ambiguous common species name triggers creation without disambiguation
+## ISSUE-002 — El contexto de conversación se pierde demasiado rápido
 
-**Symptom:** When a user asks to create a species with a generic name (e.g., "juniper"), the tool resolves multiple scientific names but silently picks the first one (`scientific_names[0]`) and proceeds directly to confirmation. The user is never asked which specific variety they want.
+**Síntoma:** Tras una conversación corta (unos pocos intercambios con llamadas a tools), el sistema pierde el contexto de lo que se estaba discutiendo. El siguiente mensaje se trata como si la conversación acabara de empezar.
 
-**Root cause:** `confirm_create_species_tool.py` takes the first entry from `scientific_names` without checking if there are multiple candidates. The right behavior is to ask the user to choose when more than one match exists.
+**Causa raíz:** La sesión se resetea cuando `len(session.events) > MAX_SESSION_EVENTS` (actualmente 50). Un único turno de agente con tool calls puede generar 5–10 eventos (mensaje de usuario, respuesta del modelo, tool call, respuesta del tool, respuesta final del modelo). Una conversación de 5–6 pasos puede alcanzar el límite. Al resetear, la sesión se recrea solo con `current_date`, `next_saturday` y `user_location` — no se lleva ningún resumen de conversación hacia adelante.
 
-**Workaround:** Users must provide the exact variety name upfront (e.g., "Juniperus chinensis" or "chinese juniper").
+**Workaround:** Ninguno. Los usuarios deben re-contextualizar tras un reset.
 
-**Related:** `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py` (line 49).
+**Relacionado:** `bonsai_sensei/domain/services/advisor.py` (`MAX_SESSION_EVENTS`, `_sync_session`), ADR-004.
 
 ---
 
-## ISSUE-004 — Confirmation responses leave a clutter of messages in the chat
+## ISSUE-003 — Un nombre común ambiguo de especie lanza la creación sin pedir precisión
 
-**Symptom:** After accepting or cancelling a confirmation, the inline button message is edited to "Confirmación aceptada." / "Confirmación cancelada." — but these edited messages stay in the chat permanently. In a session with several confirmations, the chat fills with a stack of these status messages with no way to dismiss them.
+**Síntoma:** Cuando un usuario pide crear una especie con un nombre genérico (p.ej. "junípero"), el tool resuelve múltiples nombres científicos pero coge el primero silenciosamente (`scientific_names[0]`) y continúa directamente hacia la confirmación. Al usuario nunca se le pregunta qué variedad concreta quiere.
 
-**Root cause:** `handle_confirmation_callback.py` calls `query.edit_message_text(...)` which replaces the button with a static text message. There is no mechanism to collapse, delete, or group these follow-up status messages.
+**Causa raíz:** `confirm_create_species_tool.py` toma la primera entrada de `scientific_names` sin comprobar si hay múltiples candidatos. El comportamiento correcto es preguntar al usuario que elija cuando existe más de una coincidencia.
 
-**Workaround:** None. Users must scroll past the accumulated confirmation status messages.
+**Workaround:** Los usuarios deben proporcionar el nombre de la variedad exacta desde el principio (p.ej. "Juniperus chinensis" o "junípero chino").
 
-**Related:** `bonsai_sensei/telegram/handle_confirmation_callback.py`.
+**Relacionado:** `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py` (línea 49).
+
+---
+
+## ISSUE-004 — Las respuestas de confirmación acumulan mensajes en el chat
+
+**Síntoma:** Tras aceptar o cancelar una confirmación, el mensaje con botones inline se edita a "Confirmación aceptada." / "Confirmación cancelada." — pero estos mensajes editados permanecen en el chat de forma permanente. En una sesión con varias confirmaciones, el chat se llena de una pila de estos mensajes de estado sin forma de descartarlos.
+
+**Causa raíz:** `handle_confirmation_callback.py` llama a `query.edit_message_text(...)`, que sustituye el botón por un texto estático. No hay mecanismo para colapsar, eliminar o agrupar estos mensajes de estado.
+
+**Workaround:** Ninguno. Los usuarios deben hacer scroll por encima de los mensajes de confirmación acumulados.
+
+**Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`.

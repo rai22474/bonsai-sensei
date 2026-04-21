@@ -1,194 +1,110 @@
-# Architecture Decisions
+# Decisiones de Arquitectura
 
-## ADR-001 — Staying on ADK; LangGraph migration discarded
+## ADR-001 — Continuar con ADK; migración a LangGraph descartada
 
-**Status:** Decided
+**Estado:** Decidido
 
-**Context:**
-The system was originally built with Google ADK. A migration to LangGraph was considered to use its `interrupt` mechanism, which allows pausing graph execution mid-node and resuming exactly where it stopped after receiving user input. This would enable true human-in-the-loop within a plan execution — something ADK cannot do natively (see ISSUE-001).
+**Contexto:**
+El sistema se construyó originalmente con Google ADK. Se consideró migrar a LangGraph para usar su mecanismo `interrupt`, que permite pausar la ejecución de un grafo en mitad de un nodo y reanudarla exactamente donde se detuvo tras recibir input del usuario. Esto habría habilitado un human-in-the-loop real dentro de la ejecución de un plan, algo que ADK no soporta de forma nativa.
 
-**Decision:**
-Remain on ADK. LangGraph's `interrupt` solves the mid-execution dialogue problem, but it imposes a strict graph model where all agent interactions must be explicitly wired as nodes and edges. This rigidity prevents rich conversational flows: agents lose the ability to have free, multi-turn exchanges driven by context. The cost is too high for a system whose core value is conversational decision support (see ADR-005).
+**Decisión:**
+Continuar con ADK. El `interrupt` de LangGraph resuelve el problema del diálogo mid-ejecución, pero impone un modelo de grafo estricto donde todas las interacciones entre agentes deben estar cableadas explícitamente como nodos y aristas. Esta rigidez impide flujos conversacionales ricos: los agentes pierden la capacidad de mantener intercambios libres y multi-turno guiados por contexto. El coste es demasiado alto para un sistema cuyo valor central es el soporte conversacional a la toma de decisiones (ver `docs/project/vision.md`).
 
-The human-in-the-loop problem (formerly ISSUE-001) was solved without LangGraph via async tool suspension: tools are `async` functions that `await ask_confirmation()` / `await ask_human()`, which suspend execution via `asyncio.Event` until the user responds. The ADK runner's event loop remains free to process incoming Telegram messages that unblock the suspended tool.
+El problema del human-in-the-loop se resolvió sin LangGraph mediante suspensión async de tools: los tools son funciones `async` que hacen `await ask_confirmation()` / `await ask_human()`, suspendiendo la ejecución vía `asyncio.Event` hasta que el usuario responde. El event loop del runner de ADK queda libre para procesar los mensajes entrantes de Telegram que desbloquean el tool suspendido.
 
-**Consequences:**
-- The ADK `InMemoryRunner` and `BuiltInPlanner` remain the execution backbone.
-- Multi-turn conversations work naturally via ADK session state.
-- Tools with user interaction use `ask_confirmation` / `ask_human` (ADR-006) — true async blocking, not a session-state workaround.
-- Plans with dependent steps that require user confirmation between steps are supported.
-
----
-
-## ADR-002 — sensei → command_pipeline (mitori + shokunin) as SequentialAgent
-
-**Status:** Accepted
-
-**Context:**
-Queries and commands require different handling. Queries are direct (tools answer immediately). Commands require planning (what steps?) and execution (run each step with the right agent).
-
-**Decision:**
-- `sensei` (root Agent): routes between direct query tools and `command_pipeline` via AgentTool. Presents results to the user. Never delegates presentation to another agent.
-- `command_pipeline` (SequentialAgent): composed of `mitori → shokunin`.
-  - `mitori` (LlmAgent with BuiltInPlanner): analyzes the request and generates an `action_plan` JSON with ordered steps and agent assignments. Output stored in `output_key="action_plan"`.
-  - `shokunin` (LlmAgent): reads `action_plan` from state and executes each step by calling the appropriate specialist AgentTools.
-
-**Consequences:**
-- sensei has a single responsibility: route and present.
-- mitori has a single responsibility: plan.
-- shokunin has a single responsibility: execute.
-- Format and tone instructions live only in sensei's prompt.
+**Consecuencias:**
+- El `InMemoryRunner` y el `BuiltInPlanner` de ADK siguen siendo el motor de ejecución.
+- Las conversaciones multi-turno funcionan de forma natural via estado de sesión de ADK.
+- Los tools con interacción de usuario usan `ask_confirmation` / `ask_human` (ADR-003) — bloqueo async real, no un workaround de session state.
+- Los planes con pasos dependientes que requieren confirmación del usuario entre pasos están soportados.
 
 ---
 
-## ADR-003 — Plan cleanup belongs to the executor, not the planner
+## ADR-002 — sensei → command_pipeline (mitori + shokunin) como SequentialAgent
 
-**Status:** Accepted
+**Estado:** Aceptado
 
-**Context:**
-`mitori` writes `action_plan` via `output_key`. `shokunin` reads and executes it. The question is who resets plan state after execution.
+**Contexto:**
+Las consultas y los comandos requieren tratamiento diferente. Las consultas son directas (los tools responden inmediatamente). Los comandos requieren planificación (¿qué pasos?) y ejecución (ejecutar cada paso con el agente adecuado).
 
-**Decision:**
-State cleanup (`action_plan`, `current_step`) belongs to the executor that knows when the plan has finished. Shokunin resets plan state once all steps are completed. The same principle applies to `kikaku`/`seko`: seko should own `cultivation_plan` and `cultivation_step` cleanup, not kikaku.
+**Decisión:**
+- `sensei` (Agent raíz): enruta entre tools de consulta directa y `command_pipeline` via AgentTool. Presenta los resultados al usuario. Nunca delega la presentación a otro agente.
+- `command_pipeline` (SequentialAgent): compuesto por `mitori → shokunin`.
+  - `mitori` (LlmAgent con BuiltInPlanner): analiza la petición y genera un JSON `action_plan` con pasos ordenados y asignaciones de agente. Output guardado en `output_key="action_plan"`.
+  - `shokunin` (LlmAgent): lee `action_plan` del estado y ejecuta cada paso llamando a los AgentTools especialistas correspondientes.
 
-**Consequences:**
-- Presenters and planners have no state-management responsibility.
-- Known outstanding debt: kikaku still resets `cultivation_plan` in its `after_agent` hook (see DEBT-001).
+**Cuándo no usar el pipeline:**
+Los agentes conversacionales y de asesoramiento (p.ej. `fertilizer_advisor`, `phytosanitary_advisor`) no usan este patrón. Usan `create_agent` solo con `system_prompt` — sin pipeline de planificación, sin enrutamiento explícito, sin campos de estado. El pipeline está reservado para operaciones de comando que necesitan coordinación multi-agente. Todo lo demás debe ser lo más libre posible (ver `docs/project/vision.md`).
 
----
-
-## ADR-004 — Free-form agents for conversational nodes
-
-**Status:** Accepted
-
-**Context:**
-Nodes like `fertilizer_advisor` and `phytosanitary_advisor` are conversational by nature. Applying the same rigid pipeline pattern (mitori+shokunin, explicit planning) to them adds overhead without benefit.
-
-**Decision:**
-Conversational and advisory agents use `create_agent` with `system_prompt` only — no multi-step planning pipeline, no explicit routing, no state fields. They have tools for reading data and respond freely. This keeps them simple and readable.
-
-**Consequences:**
-- These nodes are easy to add and reason about.
-- Multi-turn conversation within a single graph execution works naturally.
-- They are not candidates for the mitori/shokunin pipeline unless they require confirmations or multi-agent coordination.
+**Consecuencias:**
+- sensei tiene una única responsabilidad: enrutar y presentar.
+- mitori tiene una única responsabilidad: planificar.
+- shokunin tiene una única responsabilidad: ejecutar.
+- Las instrucciones de formato y tono viven únicamente en el prompt de sensei.
+- Los nodos conversacionales son fáciles de añadir: una llamada a `create_agent` con tools y un prompt.
 
 ---
 
-## ADR-005 — System vision: conversational decision support
+## ADR-003 — Patrón de confirmación: suspensión async del tool
 
-**Status:** Accepted
+**Estado:** Aceptado
 
-**Context:**
-The system's core value is helping users make decisions in the complex domain of bonsai cultivation. Structured operations (creating plans, registering treatments) are secondary — they exist to maintain a knowledge base that enriches conversations.
+**Contexto:**
+Los comandos que modifican datos (crear, actualizar, eliminar, aplicar) requieren aprobación explícita del usuario antes de ejecutarse. La solución debe funcionar dentro del modelo de ejecución de ADK, que ejecuta los agentes hasta completar sin soporte nativo de interrupciones.
 
-**Decision:**
-Architectural decisions should favor conversational flexibility over pipeline control. Strict planning pipelines (mitori/shokunin) are reserved for command operations that need agent coordination. Everything else should be as free-form as possible.
+**Decisión:**
+Los tools de confirmación son funciones `async`. Cuando se necesita aprobación del usuario, el tool:
+1. Registra una entrada de respuesta pendiente en `pending_human_responses` (indexada por user ID).
+2. Envía el prompt de confirmación (con botones aceptar/cancelar) al usuario via Telegram.
+3. Suspende la ejecución con `await asyncio.wait_for(event.wait(), timeout)`.
 
-**Consequences:**
-- Two major use cases not yet implemented: diagnostic conversation flow and standard plan generation per species/design. Both should follow the free-form agent pattern (ADR-004), not the mitori/shokunin pipeline.
-- Adding `active_mode` state or complex routing for conversational flows should be avoided unless strictly necessary.
+Mientras el tool está suspendido, el event loop del runner de ADK queda libre. Cuando el usuario responde:
+- **Pulsación de botón**: `handle_confirmation_callback` asigna `pending_human_responses[user_id]["response"] = accepted` y llama a `event.set()`.
+- **Respuesta de texto**: `handle_user_message` asigna la respuesta y llama a `event.set()`.
 
----
+El tool se reanuda, lee la respuesta y ejecuta u omite la operación.
 
-## ADR-006 — Confirmation pattern: async injection via session state
+Las preguntas abiertas (no binarias aceptar/cancelar) usan `ask_human` siguiendo el mismo patrón, con una respuesta de texto plano en vez de un callback de botón.
 
-**Status:** Accepted
+Las confirmaciones del mismo usuario se serializan mediante un `asyncio.Lock` por usuario, evitando condiciones de carrera entre confirmaciones simultáneas.
 
-**Context:**
-ADK does not support mid-execution interrupts. Commands that modify data (create, update, delete, apply) require explicit user approval before executing. The solution must work within ADK's execution model.
-
-**Decision:**
-1. **Registration**: confirmation tools register a `Confirmation` in `ConfirmationStore` (with an `execute` callback) and return a `"confirmation_pending"` marker instead of executing immediately.
-2. **Detection**: shokunin detects `confirmation_pending` in a step result, records it, and continues to the next step without re-calling the tool.
-3. **Presentation**: after `advise()` completes, pending confirmations are returned in `AdvisorResponse.pending_confirmations` and presented to the user as inline action buttons.
-4. **Resolution**: when the user accepts or cancels, `apply_confirmation_decision` runs the `Confirmation.execute()` callback (or skips it) and calls `inject_confirmation_result`, which appends a summary string to `session.state["pending_confirmation_results"]`. When all confirmations are resolved, `summarize_session=True` is also set.
-5. **Context propagation**: at the start of the next `advise()` call, `_sync_session` pops `pending_confirmation_results` from state. `_build_user_message` prepends them as a system context block so the LLM knows which actions were already executed.
-
-**Consequences:**
-- Per-step confirmations are possible without LangGraph interrupts.
-- The LLM always has confirmation outcomes as explicit context on the next turn.
-- The user experience is asynchronous: the agent responds immediately, confirmations arrive as follow-up buttons.
-- This pattern supports binary decisions (accept/cancel) via `ask_confirmation` and open-ended questions via `ask_human`. Dependent-step plans are supported.
+**Consecuencias:**
+- Los planes con pasos dependientes funcionan: cada paso bloquea hasta que el usuario responde antes de que se ejecute el siguiente.
+- El plan original no se pierde entre confirmaciones — la ejecución se pausa, no termina.
+- El diálogo mid-plan es posible via `ask_human`.
+- Se aplica un timeout de 5 minutos (`DEFAULT_TIMEOUT_SECONDS`); las confirmaciones sin resolver lanzan `TimeoutError`.
 
 ---
 
-## ADR-007 — Session management: reset with summary on overflow or completion
+## ADR-004 — Gestión de sesión: reset por desbordamiento de eventos
 
-**Status:** Accepted
+**Estado:** Aceptado
 
-**Context:**
-ADK's `InMemoryRunner` accumulates events in session. Long sessions degrade performance and may hit token limits. After all confirmations are resolved, the session's work is complete and old state is noise.
+**Contexto:**
+El `InMemoryRunner` de ADK acumula eventos en la sesión. Las sesiones largas degradan el rendimiento y pueden alcanzar límites de tokens.
 
-**Decision:**
-Sessions are reset (deleted and recreated) when either:
-- `session.state["summarize_session"] == True` (set when all pending confirmations are resolved), or
-- `len(session.events) > MAX_SESSION_EVENTS` (currently 50).
+**Decisión:**
+Las sesiones se resetean (se eliminan y recrean) cuando `len(session.events) > MAX_SESSION_EVENTS` (actualmente 50). Al resetear, la sesión se recrea solo con el estado de contexto base (`current_date`, `next_saturday`, `user_location`). No se lleva ningún resumen de conversación hacia adelante.
 
-On reset, a summary of the confirmed actions is extracted from `pending_confirmation_results` and carried forward as a `session_summary` string. This summary is prepended to the next user message as `[Resumen de sesión anterior: ...]` so the LLM retains continuity.
-
-**Consequences:**
-- Session memory is bounded; no unbounded growth.
-- Conversational continuity is preserved across resets via the summary.
-- The summary only captures confirmed actions, not the full conversation history.
+**Consecuencias:**
+- La memoria de sesión está acotada; no hay crecimiento ilimitado.
+- El contexto conversacional se pierde al resetear — esto es un issue conocido (ISSUE-002).
+- 50 eventos se alcanza rápidamente en conversaciones con muchas llamadas a tools (cada tool call genera múltiples eventos).
 
 ---
 
-## ADR-008 — Confirmation messages belong to the presentation layer
+## ADR-005 — Los mensajes de confirmación pertenecen a la capa de presentación
 
-**Status:** Accepted
+**Estado:** Aceptado
 
-**Context:**
-Tools that modify data require user confirmation before executing. Initially, each tool contained a private function (e.g. `_build_delete_confirmation`) responsible for formatting the confirmation prompt — mixing domain logic with presentation concerns. A `summary` parameter was also passed by the LLM to provide the confirmation text, which transferred presentation responsibility to the model itself.
+**Contexto:**
+Los tools que modifican datos requieren confirmación del usuario antes de ejecutarse. Inicialmente, cada tool contenía una función privada (p.ej. `_build_delete_confirmation`) responsable de formatear el prompt de confirmación — mezclando lógica de dominio con concerns de presentación. También se pasaba un parámetro `summary` generado por el LLM para proveer el texto de confirmación, lo que transfería la responsabilidad de presentación al modelo.
 
-**Decision:**
-Confirmation message builders are injected into tools as `build_confirmation_message: Callable`. Implementations live in the presentation layer (`telegram/confirmation_messages.py`). The domain never formats text for the user. The `summary` parameter is eliminated from all tool signatures.
+**Decisión:**
+Los builders de mensajes de confirmación se inyectan en los tools como `build_confirmation_message: Callable`. Las implementaciones viven en la capa de presentación (`telegram/confirmation_messages.py`). El dominio nunca formatea texto para el usuario. El parámetro `summary` se elimina de todas las firmas de tools.
 
-**Consequences:**
-- Tools are testable in isolation using a stub builder — no dependence on specific text formats.
-- Changing confirmation language or format requires touching only the presentation layer.
-- Adding a new work type requires a new builder in `telegram/messages/`, not a change in domain code.
-- The LLM no longer generates confirmation text, eliminating a source of non-determinism in the user-facing message.
-
----
-
-## ADR-009 — Agent instruction style
-
-**Status:** Accepted
-
-**Context:**
-Agent instructions varied significantly in structure, verbosity and style across the codebase: some used `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` as repeated headers; some described tool internals (validations, lookups) already handled by the tools themselves; some had no sections at all, making behavioral rules hard to locate.
-
-Research on ADK best practices confirms that the `instruction` field shapes LLM behavior for the entire agent session. Tool docstrings are the right place for per-tool guidance; instructions should explain *when* and *why* to use tools, not *how* they work internally. Consistent structure improves readability and reduces the risk of instruction drift as the system grows.
-
-**Decision:**
-All agent instructions follow this fixed schema:
-
-```
-<Opening line> — one sentence: who the agent is and their domain. No # Rol header.
-
-# Contexto          (only if dynamic variables are present: dates, plan, available agents)
-<template variables or injected content>
-
-# <Domain section>  (only when two or more distinct operational modes exist, e.g. reads vs. writes)
-<content>
-
-# Comportamiento    (always present if there are non-obvious rules)
-<bullet points: sequencing, fallback, output format constraints>
-Do NOT describe what tools do internally — that belongs in tool docstrings.
-
-# Formato           (only for agents that talk directly to the user)
-<language and formatting rules>
-```
-
-Sections that would contain only one trivial line are omitted.
-
-**What is explicitly forbidden:**
-- `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` headers — the opening line replaces them.
-- Instructions that duplicate tool docstrings (e.g. "validates that the bonsai exists internally").
-- The phrase "Usa las herramientas disponibles para cada operación" as the only behavioral guidance.
-
-**Consequences:**
-- All instructions are shorter, consistent, and easier to maintain.
-- Tool docstrings remain the authoritative source for per-tool behavior.
-- Adding a new agent requires following the same schema, preventing instruction drift.
-- `# Comportamiento` is the only place to add sequencing constraints or non-obvious rules.
+**Consecuencias:**
+- Los tools son testeables en aislamiento usando un builder stub — sin dependencia de formatos de texto específicos.
+- Cambiar el idioma o formato de las confirmaciones requiere tocar únicamente la capa de presentación.
+- Añadir un nuevo tipo de trabajo requiere un nuevo builder en `telegram/messages/`, no un cambio en el código de dominio.
+- El LLM ya no genera el texto de confirmación, eliminando una fuente de no-determinismo en el mensaje al usuario.

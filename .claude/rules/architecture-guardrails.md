@@ -1,5 +1,6 @@
 Antes de proponer o implementar cambios:
 - revisar `docs/architecture/decisions.md`
+- revisar `docs/project/vision.md` si la tarea afecta a flujos conversacionales o al diseño de agentes
 - revisar `docs/project/technical-debt.md` si la tarea toca módulos existentes
 - revisar `docs/project/known-issues.md` si hay errores raros o tests inestables
 
