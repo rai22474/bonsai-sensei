@@ -10,13 +10,13 @@ The system was originally built with Google ADK. A migration to LangGraph was co
 **Decision:**
 Remain on ADK. LangGraph's `interrupt` solves the mid-execution dialogue problem, but it imposes a strict graph model where all agent interactions must be explicitly wired as nodes and edges. This rigidity prevents rich conversational flows: agents lose the ability to have free, multi-turn exchanges driven by context. The cost is too high for a system whose core value is conversational decision support (see ADR-005).
 
-ISSUE-001 is accepted as a known architectural constraint. Plans must be designed as atomic, independent operations that do not require mid-execution user input.
+The human-in-the-loop problem (formerly ISSUE-001) was solved without LangGraph via async tool suspension: tools are `async` functions that `await ask_confirmation()` / `await ask_human()`, which suspend execution via `asyncio.Event` until the user responds. The ADK runner's event loop remains free to process incoming Telegram messages that unblock the suspended tool.
 
 **Consequences:**
 - The ADK `InMemoryRunner` and `BuiltInPlanner` remain the execution backbone.
 - Multi-turn conversations work naturally via ADK session state.
-- Confirmations are handled via a session-state injection workaround (ADR-006), which only supports binary accept/cancel decisions.
-- Plans with dependent steps that require user input between steps are not supported.
+- Tools with user interaction use `ask_confirmation` / `ask_human` (ADR-006) — true async blocking, not a session-state workaround.
+- Plans with dependent steps that require user confirmation between steps are supported.
 
 ---
 
@@ -108,7 +108,7 @@ ADK does not support mid-execution interrupts. Commands that modify data (create
 - Per-step confirmations are possible without LangGraph interrupts.
 - The LLM always has confirmation outcomes as explicit context on the next turn.
 - The user experience is asynchronous: the agent responds immediately, confirmations arrive as follow-up buttons.
-- This pattern only supports binary decisions (accept/cancel). Mid-plan dialogue and dependent-step plans are not supported (see ISSUE-001).
+- This pattern supports binary decisions (accept/cancel) via `ask_confirmation` and open-ended questions via `ask_human`. Dependent-step plans are supported.
 
 ---
 
