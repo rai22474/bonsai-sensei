@@ -60,6 +60,10 @@ def accept_confirmation(user_id: str, confirmation_id: str):
     )
 
 
+def send_text_response(user_id: str, text: str):
+    return post("/api/advice/text-response", {"user_id": user_id, "text": text})
+
+
 def reset_session(user_id: str) -> None:
     delete(f"/api/advice/sessions/{user_id}")
 

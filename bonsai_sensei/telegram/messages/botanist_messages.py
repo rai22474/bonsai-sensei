@@ -1,4 +1,4 @@
-def build_create_species_confirmation(common_name: str, scientific_name: str, care_guide: dict) -> str:
+def build_create_species_confirmation(common_name: str, scientific_name: str) -> str:
     return f"¿Crear especie '{common_name}' ({scientific_name})?"
 
 

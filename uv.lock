@@ -237,6 +237,7 @@ name = "bonsai-sensei"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "alembic" },
     { name = "apscheduler" },
     { name = "deep-translator" },
     { name = "fastapi" },
@@ -271,6 +272,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "alembic", specifier = ">=1.18.1" },
     { name = "apscheduler", specifier = ">=3.10.4" },
     { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "fastapi" },

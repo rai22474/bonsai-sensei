@@ -17,3 +17,15 @@ Feature: Manage bonsai species via advice
     When I request to delete species "Ulmus Parvifolia"
     And I confirm the deletion for species "Ulmus Parvifolia"
     Then species "Ulmus Parvifolia" should not exist
+
+  Scenario: Care guide is generated as wiki page after species creation
+    Given no species named "Ficus Retusa" exists
+    When I request to register species "Ficus Retusa" with scientific name "Ficus retusa"
+    And I confirm the species creation for "Ficus Retusa" with scientific name "Ficus retusa"
+    Then the wiki page for species "Ficus Retusa" should contain watering information
+
+  Scenario: User is asked to choose variety when species name is ambiguous
+    Given no species named "Junípero" exists
+    When I request to register ambiguous species "Junípero" and select variety "Juniperus chinensis"
+    And I confirm the species creation for "Junípero" with scientific name "Juniperus chinensis"
+    Then species "Junípero" should exist with scientific name "Juniperus chinensis"

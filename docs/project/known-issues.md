@@ -1,6 +1,6 @@
 # Issues Conocidos
 
-## ISSUE-001 — La guía de cultivo se crea pero los campos estructurados nunca se rellenan
+## ~~ISSUE-001~~ — Resuelta: la guía de cultivo ahora es una página wiki markdown
 
 **Síntoma:** Cuando se crea una especie, la guía de cultivo se construye y almacena, pero solo el campo `summary` contiene datos (un blob de texto plano de Tavily). Los campos estructurados — `watering`, `light`, `soil`, `pruning`, `pests` — son siempre `null`. Cuando el usuario pide consejo de cultivo, el LLM tiene que interpretar un blob de texto no estructurado en lugar de consumir campos tipados.
 

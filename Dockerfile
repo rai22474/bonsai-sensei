@@ -12,6 +12,8 @@ COPY pyproject.toml .
 RUN uv pip install --system -r pyproject.toml
 
 COPY bonsai_sensei/ bonsai_sensei/
+COPY alembic/ alembic/
+COPY alembic.ini .
 COPY scripts/init_db.py .
 
 EXPOSE 8080

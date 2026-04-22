@@ -19,19 +19,12 @@ def should_return_species_by_name(get_species_tool):
                     "id": 1,
                     "common_name": "Olmo",
                     "scientific_name": "Ulmus",
-                    "care_guide": {"watering": "Regular"},
+                    "wiki_path": "species/olmo.md",
                 },
             }
         ),
+        "Tool should return species with wiki_path",
     )
-
-
-@pytest.fixture
-def create_species_func():
-    def create_species(species: Species) -> Species:
-        return species
-
-    return create_species
 
 
 @pytest.fixture
@@ -40,23 +33,10 @@ def get_species_tool():
         id=1,
         name="Olmo",
         scientific_name="Ulmus",
-        care_guide={"watering": "Regular"},
+        wiki_path="species/olmo.md",
     )
 
     def get_species_by_name(name: str) -> Species | None:
         return species_item if name == species_item.name else None
 
     return create_get_species_by_name_tool(get_species_by_name)
-
-
-@pytest.fixture
-def sample_guide():
-    return {
-        "summary": "Guide summary",
-        "sources": ["https://example.com"],
-        "watering": "Water regularly",
-        "light": "Bright indirect light",
-        "soil": "Well-draining soil",
-        "pruning": "Prune in spring",
-        "pests": "Aphids",
-    }

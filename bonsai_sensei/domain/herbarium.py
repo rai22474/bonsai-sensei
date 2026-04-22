@@ -40,7 +40,9 @@ def get_species_by_name(session: Session, name: str) -> Species | None:
 def search_species_by_name(session: Session, name: str) -> List[Species]:
     if not name:
         return []
-    statement = select(Species).where(Species.name.ilike(f"%{name}%"))
+    statement = select(Species).where(
+        Species.name.ilike(f"%{name}%") | Species.scientific_name.ilike(f"%{name}%")
+    )
     return session.exec(statement).all()
 
 

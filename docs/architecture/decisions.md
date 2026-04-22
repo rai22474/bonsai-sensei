@@ -93,6 +93,48 @@ Las sesiones se resetean (se eliminan y recrean) cuando `len(session.events) > M
 
 ---
 
+## ADR-006 — Wiki markdown como base de conocimiento del agente
+
+**Estado:** Aceptado
+
+**Contexto:**
+El conocimiento sobre el cultivo de bonsáis (especies, enfermedades, fertilizantes, fitosanitarios) es relacional: las fichas se referencian entre sí. Almacenarlo en campos estructurados de la BD obliga al agente a cruzar datos manualmente y pierde la navegabilidad entre entidades. El patrón "LLM Wiki" de Karpathy propone compilar el conocimiento en páginas markdown persistentes que el LLM edita y consulta directamente.
+
+Referencias: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f, https://gist.github.com/rohitg00/2067ab416f7bbe447c1977edaaa681e2
+
+**Decisión:**
+El conocimiento del dominio se almacena como ficheros markdown en disco (`WIKI_PATH`), no como campos estructurados en la BD. La BD solo guarda el path relativo al fichero (`wiki_path`). El agente usa el tool `read_wiki_page` para leer y navegar entre páginas. Los links entre páginas usan la sintaxis `[[ruta/pagina.md]]`; el agente puede seguirlos llamando al tool con esa ruta. Las páginas se generan automáticamente al crear entidades (via Tavily) y pueden actualizarse incrementalmente via el agente.
+
+**Consecuencias:**
+- Las fichas son legibles directamente por humanos fuera del sistema (Obsidian, cualquier editor markdown).
+- El agente navega relaciones semánticas (especie → enfermedad → fitosanitario) sin lógica especial — solo leyendo links.
+- Añadir un nuevo tipo de entidad (enfermedad, estilo de diseño) requiere un nuevo compiler de wiki y un subdirectorio, no cambios de schema.
+- Requiere un volumen persistente (`WIKI_PATH`) — no funciona en entornos con filesystem efímero (p.ej. Cloud Run sin volumen montado).
+- El endpoint `GET /api/wiki?path=...` expone las páginas para tests de aceptación y lectura externa.
+
+---
+
+## ADR-007 — El compilador de wiki es un agente con runner propio, no una función de plantilla
+
+**Estado:** Aceptado
+
+**Contexto:**
+La primera implementación del compilador de wiki usaba una función que lanzaba una consulta Tavily por sección (`## Riego`, `## Luz`...) y volcaba las respuestas en una plantilla fija. Esto no está alineado con el patrón Karpathy: el LLM no sintetiza nada, no decide cuántas búsquedas hacer, no genera wikilinks a entidades relacionadas. La estructura resultante es rígida e igual para todas las especies.
+
+**Decisión:**
+El compilador de wiki es un agente ADK con su propio `InMemoryRunner`, independiente del runner del sensei. Usa Tavily como tool de búsqueda y un tool `write_wiki_page` para escribir el fichero en disco. El agente decide qué buscar, cuántas veces, cómo estructurar la ficha y qué wikilinks añadir (`[[../diseases/spider-mite.md]]`). El runner es de sesión única (una sesión por compilación) y se descarta al terminar.
+
+El compilador no pertenece al flujo conversacional (sensei → botanist): es gestión de conocimiento, no interacción con el usuario. Por eso tiene runner propio en lugar de ser un AgentTool del botanist.
+
+**Consecuencias:**
+- Las fichas varían según la especie — un junípero y un ficus no tienen por qué tener las mismas secciones.
+- El agente puede generar wikilinks a entidades relacionadas si las detecta en las fuentes.
+- Los tests del compilador verifican que se creó el fichero y que contiene estructura mínima esperada — no el texto exacto.
+- La función `build()` pasa a ser `async`; el confirm tool hace `await wiki_page_builder(...)`.
+- Un fallo del compilador no bloquea la creación de la especie — se puede crear sin wiki_path y compilar después.
+
+---
+
 ## ADR-005 — Los mensajes de confirmación pertenecen a la capa de presentación
 
 **Estado:** Aceptado

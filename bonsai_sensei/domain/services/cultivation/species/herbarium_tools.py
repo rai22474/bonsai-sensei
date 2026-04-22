@@ -41,6 +41,40 @@ def create_list_species_tool(get_all_species_func: Callable[[], list[dict]]):
     return list_bonsai_species
 
 
+def create_search_species_tool(
+    search_species_func: Callable[[str], list],
+):
+    @trace_tool_call
+    @limit_tool_calls(agent_name="botanist")
+    def search_bonsai_species(query: str) -> dict:
+        """Search species in the herbarium by partial common or scientific name.
+
+        Use this to find a species and obtain its wiki_path before reading its care guide.
+
+        Args:
+            query: Partial common or scientific name to search for.
+
+        Returns:
+            A JSON-ready dictionary with matching species.
+            Output JSON: {"status": "success", "species": [{"common_name", "scientific_name", "wiki_path"}, ...]}.
+            Output JSON (no results): {"status": "success", "species": []}.
+        """
+        results = search_species_func(query)
+        return {
+            "status": "success",
+            "species": [
+                {
+                    "common_name": species.name,
+                    "scientific_name": species.scientific_name or "",
+                    "wiki_path": species.wiki_path or "",
+                }
+                for species in results
+            ],
+        }
+
+    return search_bonsai_species
+
+
 def create_get_species_by_name_tool(
     get_species_by_name_func: Callable[[str], Species | None],
 ):
@@ -56,7 +90,7 @@ def create_get_species_by_name_tool(
         Returns:
             A JSON-ready dictionary with the lookup result.
 
-        Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name","care_guide"}}.
+        Output JSON (success): {"status":"success","species":{"id","common_name","scientific_name","wiki_path"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -70,7 +104,7 @@ def create_get_species_by_name_tool(
                 "id": species.id,
                 "common_name": species.name,
                 "scientific_name": species.scientific_name or "",
-                "care_guide": species.care_guide or {},
+                "wiki_path": species.wiki_path,
             },
         }
 

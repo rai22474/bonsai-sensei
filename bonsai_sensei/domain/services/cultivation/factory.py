@@ -12,9 +12,10 @@ from bonsai_sensei.domain.services.cultivation.plan.planning_agent import (
     create_planning_agent,
 )
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
-from bonsai_sensei.domain.services.cultivation.species.care_guide_service import (
-    create_care_guide_builder,
+from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import (
+    create_species_wiki_compiler,
 )
+from bonsai_sensei.domain.services.wiki_page_tool import create_read_wiki_page_tool
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher import (
     create_trefle_searcher,
 )
@@ -139,6 +140,9 @@ def _create_botanist(model, session_factory, ask_confirmation, build_create_spec
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
+    search_species_func = partial(
+        herbarium.search_species_by_name, create_session=session_factory
+    )
 
     trefle_base_url = os.getenv("TREFLE_API_BASE", "https://trefle.io")
     scientific_name_resolver = create_scientific_name_resolver(
@@ -147,15 +151,21 @@ def _create_botanist(model, session_factory, ask_confirmation, build_create_spec
     )
 
     tavily_base_url = os.getenv("TAVILY_API_BASE")
-    care_guide_builder = create_care_guide_builder(
-        create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
+    wiki_root = os.getenv("WIKI_PATH", "./wiki")
+    wiki_page_builder = create_species_wiki_compiler(
+        model=model,
+        wiki_root=wiki_root,
+        searcher=create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url),
     )
+    read_wiki_page_tool = create_read_wiki_page_tool(wiki_root=wiki_root)
 
     return create_botanist(
         model=model,
         get_species_by_name_func=get_species_by_name_func,
+        search_species_func=search_species_func,
         scientific_name_resolver=scientific_name_resolver,
-        care_guide_builder=care_guide_builder,
+        wiki_page_builder=wiki_page_builder,
+        read_wiki_page_tool=read_wiki_page_tool,
         create_species_func=partial(
             herbarium.create_species, create_session=session_factory
         ),

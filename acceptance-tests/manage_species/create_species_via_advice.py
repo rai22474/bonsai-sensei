@@ -9,8 +9,18 @@ def test_create_species_via_advice():
     return None
 
 
+@scenario("../features/manage_species.feature", "Care guide is generated as wiki page after species creation")
+def test_care_guide_generated_as_wiki_page():
+    return None
+
+
+@scenario("../features/manage_species.feature", "User is asked to choose variety when species name is ambiguous")
+def test_user_asked_to_choose_variety_when_ambiguous():
+    return None
+
+
 @given(parsers.parse('no species named "{name}" exists'))
-def ensure_species_absent(context, name, external_stubs):
+def ensure_species_absent(context, name):
     context["created"].append(name)
     delete_species_by_name(get, delete, name)
 
@@ -20,7 +30,7 @@ def ensure_species_absent(context, name, external_stubs):
         'I request to register species "{name}" with scientific name "{scientific_name}"'
     )
 )
-def request_species_creation(context, name, scientific_name):
+def request_species_creation(context, name, scientific_name, external_stubs):
     context["created"].append(name)
     response = advise(
         text=(
@@ -42,8 +52,42 @@ def confirm_species_creation(context, name, scientific_name):
         accept_confirmation(context["user_id"], confirmation["id"])
 
 
+@when(parsers.parse('I request to register ambiguous species "{name}" and select variety "{scientific_name}"'))
+def request_ambiguous_species_and_select_variety(context, name, scientific_name, external_stubs_ambiguous):
+    context["created"].append(name)
+    advise(
+        text=f"Da de alta la especie de bonsái {name}.",
+        user_id=context["user_id"],
+    )
+    response = advise(
+        text=f"Quiero registrar {name} con nombre científico {scientific_name}.",
+        user_id=context["user_id"],
+    )
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
+
+
 @then(parsers.parse('species "{name}" should exist'))
 def assert_species_exists(name):
     species = find_species_by_name(get, name)
     assert species is not None, f"Expected species '{name}' to exist after creation."
+
+
+@then(parsers.parse('species "{name}" should exist with scientific name "{scientific_name}"'))
+def assert_species_exists_with_scientific_name(name, scientific_name):
+    species = find_species_by_name(get, name)
+    assert species is not None, f"Expected species '{name}' to exist after creation."
+    assert species.get("scientific_name") == scientific_name, (
+        f"Expected scientific name '{scientific_name}', got '{species.get('scientific_name')}'"
+    )
+
+
+@then(parsers.parse('the wiki page for species "{name}" should contain watering information'))
+def assert_wiki_page_has_watering(name):
+    species = find_species_by_name(get, name)
+    wiki_path = (species or {}).get("wiki_path")
+    assert wiki_path, f"Expected species '{name}' to have a wiki_path, got: {species}"
+    content = get(f"/api/wiki?path={wiki_path}").get("content", "")
+    assert "## Riego" in content or "watering" in content.lower(), (
+        f"Expected wiki page for '{name}' to contain watering section, got: {content[:300]}"
+    )
 

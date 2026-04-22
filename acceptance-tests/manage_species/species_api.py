@@ -26,10 +26,6 @@ def create_species(
     payload = {
         "name": name,
         "scientific_name": scientific_name,
-        "care_guide": {
-            "summary": "Guía de prueba.",
-            "temperature_range_celsius": {"min": -2, "max": 25},
-        },
     }
     return post_func("/api/species", payload) or {}
 

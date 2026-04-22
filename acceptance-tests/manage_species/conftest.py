@@ -41,4 +41,24 @@ def external_stubs():
     server.stop()
 
 
+@pytest.fixture
+def external_stubs_ambiguous():
+    server = HTTPServer(host="0.0.0.0", port=STUB_PORT)
+    server.start()
+    server.expect_request(
+        re.compile(r"/api/v1/plants/search.*")
+    ).respond_with_json(
+        {"data": [
+            {"scientific_name": "Juniperus chinensis"},
+            {"scientific_name": "Juniperus communis"},
+            {"scientific_name": "Juniperus procumbens"},
+        ]}
+    )
+    server.expect_request("/search").respond_with_json(
+        {"answer": "Guía de cuidado disponible.", "results": []}
+    )
+    yield server
+    server.stop()
+
+
 

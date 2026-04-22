@@ -55,6 +55,7 @@ from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
+from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
@@ -367,4 +368,5 @@ app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
+app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

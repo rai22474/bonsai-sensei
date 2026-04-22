@@ -13,7 +13,7 @@ Ubicación del usuario: {{user_location?}}
 {available_agents}
 
 # Comportamiento
-Si falta información esencial, responde pidiéndola al usuario y no generes ningún plan.
+Genera siempre un plan. Si la petición es ambigua, delégala al agente más probable — él sabrá cómo resolverla o pedir aclaraciones.
 
 Diseña un plan en JSON con esta estructura:
 {{
