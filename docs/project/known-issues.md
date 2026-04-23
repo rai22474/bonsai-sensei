@@ -24,7 +24,7 @@
 
 ---
 
-## ISSUE-003 — Un nombre común ambiguo de especie lanza la creación sin pedir precisión
+## ~~ISSUE-003~~ — Resuelta: nombre ambiguo devuelve candidatos y el usuario elige
 
 **Síntoma:** Cuando un usuario pide crear una especie con un nombre genérico (p.ej. "junípero"), el tool resuelve múltiples nombres científicos pero coge el primero silenciosamente (`scientific_names[0]`) y continúa directamente hacia la confirmación. Al usuario nunca se le pregunta qué variedad concreta quiere.
 
@@ -33,6 +33,62 @@
 **Workaround:** Los usuarios deben proporcionar el nombre de la variedad exacta desde el principio (p.ej. "Juniperus chinensis" o "junípero chino").
 
 **Relacionado:** `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py` (línea 49).
+
+---
+
+## ~~ISSUE-005~~ — Resuelta: eliminada dependencia de Google Cloud y Monocle
+
+**Síntoma:** El despliegue requiere credenciales de Google Cloud (`application_default_credentials.json`) montadas como volumen. El `docker-compose.yml` incluye referencias a GCP que bloquean el despliegue en infraestructura sin cuenta Google (nuevo mini PC).
+
+**Causa raíz:** El modelo LLM usa Vertex AI por defecto (`MODEL_PROVIDER=cloud`). La autenticación depende de GCP application default credentials. La telemetría usa Monocle (que escribe ficheros JSON locales) en lugar del stack OpenTelemetry estándar.
+
+**Workaround:** Usar `MODEL_PROVIDER=ollama` con un modelo local, pero Vertex AI sigue siendo la ruta de producción.
+
+**Objetivo:** Eliminar la dependencia de GCP para el despliegue. Usar directamente la Gemini API con API key en lugar de Vertex AI. Eliminar Monocle y usar OpenTelemetry estándar con exportador OTLP hacia Jaeger.
+
+**Relacionado:** `docker-compose.yml`, `bonsai_sensei/observability.py`, `bonsai_sensei/__init__.py`.
+
+---
+
+## ~~ISSUE-006~~ — Resuelta: telemetría migrada a OpenTelemetry estándar con Jaeger
+
+**Síntoma:** Las trazas se vuelcan en ficheros JSON locales en `.monocle/`. Para diagnosticar hay que parsear ficheros manualmente o leer logs de Docker. No hay UI de trazas distribuidas ni capacidad de búsqueda por span/trace.
+
+**Causa raíz:** El stack de observabilidad usa Monocle (`monocle-apptrace`) en lugar del exportador OTLP estándar de OpenTelemetry. No hay Jaeger ni Tempo en el docker-compose.
+
+**Workaround:** Parsear los ficheros `.monocle/*.json` o filtrar `docker logs` con grep.
+
+**Objetivo:** Reemplazar Monocle por el exportador OTLP estándar (`opentelemetry-exporter-otlp`). Añadir Jaeger al `docker-compose.yml` como backend de trazas. Exponer la UI de Jaeger en un puerto local. Opcionalmente, integrar el MCP de Jaeger para que el agente pueda consultar trazas directamente.
+
+**Relacionado:** `bonsai_sensei/observability.py`, `docker-compose.yml`.
+
+---
+
+## ISSUE-008 — Referenciar una especie por nombre científico puede crear una especie duplicada
+
+**Síntoma:** Cuando el usuario pide añadir un bonsái indicando el nombre científico de la especie (en lugar del nombre común), el sistema no encuentra la especie en el catálogo y, en lugar de fallar con un error claro, crea una nueva especie usando el nombre científico como nombre común.
+
+**Causa raíz:** `get_species_by_name_func` busca únicamente por `Species.name` (nombre común). Si el LLM pasa el nombre científico como `common_name`, la búsqueda devuelve `None` y el flujo de creación se activa. No hay búsqueda por `scientific_name` como fallback.
+
+**Workaround:** El usuario debe indicar siempre el nombre común registrado en el catálogo.
+
+**Objetivo:** En las tools que reciben un nombre de especie, hacer búsqueda también por `scientific_name` si la búsqueda por nombre común no devuelve resultados. Alternativamente, usar `search_bonsai_species` (búsqueda parcial) para resolver el nombre antes de operar.
+
+**Relacionado:** `bonsai_sensei/domain/herbarium.py` (`get_species_by_name`), `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py`, `bonsai_sensei/domain/services/garden/`.
+
+---
+
+## ISSUE-007 — Borrar una especie no comprueba si hay bonsáis que la usan
+
+**Síntoma:** Si el usuario elimina una especie que tiene bonsáis asociados, la operación se ejecuta sin error. Los bonsáis quedan con una referencia a una especie inexistente, corrompiendo el estado de la colección.
+
+**Causa raíz:** `confirm_delete_species_tool.py` llama directamente a `delete_species_func` sin verificar previamente si existe algún bonsái con esa especie. No hay restricción de integridad referencial que lo impida.
+
+**Workaround:** Ninguno. El usuario debe eliminar o reasignar manualmente los bonsáis antes de borrar la especie.
+
+**Objetivo:** En `confirm_delete_species_tool.py`, antes de pedir confirmación, comprobar si hay bonsáis con esa especie usando `list_bonsai_by_species_func`. Si los hay, devolver `{"status": "error", "message": "species_has_bonsai"}` con la lista de nombres afectados.
+
+**Relacionado:** `bonsai_sensei/domain/services/cultivation/species/confirm_delete_species_tool.py`, `bonsai_sensei/domain/garden.py`.
 
 ---
 
