@@ -21,6 +21,8 @@ services:
       - GOOGLE_TRANSLATE_ENABLED=false
       - TELEGRAM_BOT_TOKEN=
       - WIKI_PATH=/app/wiki
+    volumes:
+      - wiki_data_acceptance:/app/wiki
     depends_on:
       db:
         condition: service_healthy
@@ -41,7 +43,6 @@ services:
       retries: 5
     volumes:
       - postgres_data_acceptance:/var/lib/postgresql/data
-      - wiki_data_acceptance:/app/wiki
 
 volumes:
   postgres_data_acceptance:

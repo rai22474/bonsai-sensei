@@ -135,6 +135,26 @@ El compilador no pertenece al flujo conversacional (sensei → botanist): es ges
 
 ---
 
+## ADR-008 — La wiki se monta como bind mount en el host, no como volumen Docker
+
+**Estado:** Aceptado
+
+**Contexto:**
+La wiki de especies (ADR-006) se almacena en disco en `WIKI_PATH`. Inicialmente se usó un named volume Docker (`wiki_data`), que es opaco: para leer o editar las páginas hay que entrar al contenedor o usar `docker volume inspect`. Dado que el despliegue es en un servidor propio (Ryzen 5) con filesystem persistente, esto supone una fricción innecesaria para revisar o editar fichas desde el host.
+
+**Decisión:**
+El wiki se monta como bind mount en `./wiki` (relativo al directorio del compose). El contenedor sigue usando `WIKI_PATH=/app/wiki` — no hay cambio de código. El directorio `./wiki` en el host es accesible directamente con cualquier editor o desde Obsidian.
+
+En el compose de acceptance tests se mantiene un named volume (`wiki_data_acceptance`) porque los datos son efímeros y no necesitan ser accesibles desde el host.
+
+**Consecuencias:**
+- Las fichas markdown son editables e inspeccionables directamente en el host sin acceder al contenedor.
+- El directorio `./wiki` debe excluirse del repositorio vía `.gitignore` (contiene datos de usuario generados en runtime, no código fuente).
+- Requiere que el directorio exista en el host antes del primer `docker compose up` (Docker lo crea automáticamente si no existe).
+- No funciona en entornos con filesystem efímero (ya excluidos por ADR-006).
+
+---
+
 ## ADR-005 — Los mensajes de confirmación pertenecen a la capa de presentación
 
 **Estado:** Aceptado
