@@ -1,8 +1,0 @@
-name: bonsai-sensei
-runtime:
-  name: python
-  options:
-    virtualenv: .venv
-description: Bonsai Sensei infrastructure on GCP
-backend:
-  url: file://~
