@@ -18,7 +18,7 @@ from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.gardener import GARDENER_INSTRUCTION
 from bonsai_sensei.domain.services.sensei import create_sensei
 from bonsai_sensei.domain.services.cultivation.species.botanist import (
-    SPECIES_INSTRUCTION,
+    BOTANIST_INSTRUCTION,
 )
 from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import (
     WEATHER_INSTRUCTION,
@@ -115,7 +115,7 @@ async def fake_advisor():
     species_agent = Agent(
         model=species_llm,
         name="botanist",
-        instruction=SPECIES_INSTRUCTION,
+        instruction=BOTANIST_INSTRUCTION,
     )
 
     sensei_tools = [
