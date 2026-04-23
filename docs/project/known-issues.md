@@ -49,3 +49,15 @@
 **Objetivo:** En las tools que reciben un nombre de especie, hacer búsqueda también por `scientific_name` si la búsqueda por nombre común no devuelve resultados. Alternativamente, usar `search_bonsai_species` (búsqueda parcial) para resolver el nombre antes de operar.
 
 **Relacionado:** `bonsai_sensei/domain/herbarium.py` (`get_species_by_name`), `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py`, `bonsai_sensei/domain/services/garden/`.
+
+---
+
+## ISSUE-009 — El LLM entra en bucle al cancelar una operación sin poder justificarlo
+
+**Síntoma:** Cuando el usuario cancela una confirmación y el LLM no tiene contexto suficiente para entender el motivo (o el tool devuelve una cancelación sin mensaje explicativo), el agente reintenta ejecutar la misma operación en el siguiente turno, entrando en un bucle de plan → confirmación → cancelación.
+
+**Causa raíz:** Cuando el usuario cancela, el tool devuelve un resultado genérico (`{"status": "cancelled"}`). Sin un motivo explícito, el LLM interpreta la cancelación como un fallo transitorio o un malentendido, y repite la llamada en lugar de detener el flujo y pedir aclaración al usuario.
+
+**Workaround:** El usuario debe indicar explícitamente que no quiere continuar o cambiar el tema de conversación.
+
+**Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`, ADR-003.
