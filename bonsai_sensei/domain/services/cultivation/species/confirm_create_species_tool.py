@@ -2,6 +2,7 @@ from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
 
+from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 from bonsai_sensei.domain.species import Species
@@ -57,11 +58,14 @@ def create_confirm_create_species_tool(
             if not scientific_names:
                 return {"status": "error", "message": "scientific_name_not_found"}
             if len(scientific_names) > 1:
-                scientific_name = await ask_selection(
+                selection = await ask_selection(
                     f"Se encontraron varios nombres científicos para '{common_name}'. ¿Cuál es el correcto?",
                     scientific_names,
                     tool_context=tool_context,
                 )
+                if isinstance(selection, SelectionNoneResult):
+                    return {"status": "cancelled", "reason": selection.reason}
+                scientific_name = selection
             else:
                 scientific_name = scientific_names[0]
 

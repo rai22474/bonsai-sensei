@@ -11,6 +11,11 @@ DEFAULT_TIMEOUT_SECONDS = 300
 
 
 @dataclass
+class SelectionNoneResult:
+    reason: str
+
+
+@dataclass
 class ConfirmationResult:
     accepted: bool
     reason: str = field(default="")
@@ -111,11 +116,11 @@ def create_ask_selection(
         question: str,
         options: list[str],
         tool_context: ToolContext | None = None,
-    ) -> str:
+    ) -> str | SelectionNoneResult:
         """Present a list of options to the user and wait for their selection.
 
         Sends the options as an interactive selector and blocks execution until
-        the user picks one.
+        the user picks one or selects "Ninguna de las anteriores".
 
         Args:
             question: The prompt explaining what the user should select.
@@ -123,7 +128,8 @@ def create_ask_selection(
             tool_context: ADK tool context providing the user identifier.
 
         Returns:
-            The selected option string.
+            The selected option string, or SelectionNoneResult if the user
+            indicated none of the options were appropriate.
         """
         user_id = resolve_confirmation_user_id(tool_context)
         selection_id = uuid.uuid4().hex

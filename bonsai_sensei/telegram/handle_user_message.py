@@ -8,9 +8,10 @@ from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
 from bonsai_sensei.domain.services.advisor import AdvisorResponse
-from bonsai_sensei.domain.services.human_input import ConfirmationResult
+from bonsai_sensei.domain.services.human_input import ConfirmationResult, SelectionNoneResult
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import get_logger
+from bonsai_sensei.telegram.messages._formatting import random_processing_message
 
 logger = get_logger(__name__)
 
@@ -41,6 +42,7 @@ async def handle_user_message(
     save_user_settings_func=None,
     users_awaiting_location: set | None = None,
     pending_human_responses: dict | None = None,
+    pending_confirmation_cleanups: dict | None = None,
 ):
     user_id = str(update.effective_user.id)
     chat_id = str(update.effective_chat.id)
@@ -54,6 +56,15 @@ async def handle_user_message(
         pending = pending_human_responses[user_id]
         if pending.get("type") == "awaiting_cancel_reason":
             pending["response"] = ConfirmationResult(accepted=False, reason=update.message.text)
+            processing_message = await update.message.reply_text(random_processing_message())
+            if pending_confirmation_cleanups is not None:
+                pending_confirmation_cleanups.setdefault(user_id, []).append(processing_message.delete)
+            pending["event"].set()
+        elif pending.get("type") == "awaiting_none_reason":
+            pending["response"] = SelectionNoneResult(reason=update.message.text)
+            processing_message = await update.message.reply_text(random_processing_message())
+            if pending_confirmation_cleanups is not None:
+                pending_confirmation_cleanups.setdefault(user_id, []).append(processing_message.delete)
             pending["event"].set()
         else:
             pending["response"] = update.message.text
@@ -78,8 +89,9 @@ async def handle_user_message(
         return
 
     start_time = time.monotonic()
-    progress_message = await update.message.reply_text("⏳ Procesando...")
-    last_progress_text = "⏳ Procesando..."
+    initial_progress_text = random_processing_message()
+    progress_message = await update.message.reply_text(initial_progress_text)
+    last_progress_text = initial_progress_text
 
     async def update_progress(text: str) -> None:
         nonlocal last_progress_text
@@ -100,6 +112,11 @@ async def handle_user_message(
             await progress_message.delete()
         except Exception:
             pass
+        for cleanup in (pending_confirmation_cleanups or {}).pop(user_id, []):
+            try:
+                await cleanup()
+            except Exception:
+                pass
 
     await _reply_with_html(update, response.text)
 

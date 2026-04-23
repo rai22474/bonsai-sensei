@@ -55,8 +55,9 @@ class TelegramBot:
             logger.error("Cannot send selection message: Bot not configured")
             return
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(f"🌿 {option}", callback_data=f"selection:{selection_id}:{index}")]
-            for index, option in enumerate(options)
+            *[[InlineKeyboardButton(f"🌿 {option}", callback_data=f"selection:{selection_id}:{index}")]
+              for index, option in enumerate(options)],
+            [InlineKeyboardButton("🚫 Ninguna de las anteriores", callback_data=f"selection:{selection_id}:none")],
         ])
         await self.application.bot.send_message(
             chat_id=chat_id,

@@ -239,6 +239,7 @@ async def lifespan(app: FastAPI):
     app.state.user_settings_service = _create_user_settings_service(get_session_partial)
     app.state.cultivation_plan_service = _create_cultivation_plan_service(get_session_partial)
     app.state.pending_human_responses = {}
+    app.state.pending_confirmation_cleanups = {}
     app.state.active_tasks = {}
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
@@ -323,23 +324,27 @@ async def lifespan(app: FastAPI):
         save_user_settings_func=app.state.user_settings_service["save_user_settings"],
         users_awaiting_location=users_awaiting_location,
         pending_human_responses=app.state.pending_human_responses,
+        pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
     )
     confirmation_handler = partial(
         handle_confirmation_callback,
         pending_human_responses=app.state.pending_human_responses,
+        pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
         send_cancel_reason_prompt=bot_instance.send_force_reply_message,
     )
 
     selection_handler = partial(
         handle_selection_callback,
         pending_human_responses=app.state.pending_human_responses,
+        pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
+        send_none_reason_prompt=bot_instance.send_force_reply_message,
     )
 
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
-        CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:\d+$"),
+        CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
     ]
     if bot_instance.application:
         for handler in handlers:

@@ -12,15 +12,11 @@
 
 ---
 
-## ISSUE-004 — Las respuestas de confirmación acumulan mensajes en el chat
+## ~~ISSUE-004~~ — Las respuestas de confirmación acumulan mensajes en el chat ✅ Resuelto
 
-**Síntoma:** Tras aceptar o cancelar una confirmación, el mensaje con botones inline se edita a "Confirmación aceptada." / "Confirmación cancelada." — pero estos mensajes editados permanecen en el chat de forma permanente. En una sesión con varias confirmaciones, el chat se llena de una pila de estos mensajes de estado sin forma de descartarlos.
+**Solución:** Al aceptar, el mensaje de confirmación se edita a "⏳ Procesando..." para dar feedback inmediato. Al cancelar, se edita a "Cancelando...". En ambos casos se registra `pending["on_resume"] = query.message.delete` para que `ask_confirmation` elimine el mensaje en cuanto el agente retoma la ejecución. El resultado es que el mensaje desaparece solo cuando el tool se reanuda, sin acumulación permanente en el chat.
 
-**Causa raíz:** `handle_confirmation_callback.py` llama a `query.edit_message_text(...)`, que sustituye el botón por un texto estático. No hay mecanismo para colapsar, eliminar o agrupar estos mensajes de estado.
-
-**Workaround:** Ninguno. Los usuarios deben hacer scroll por encima de los mensajes de confirmación acumulados.
-
-**Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`.
+**Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`, `bonsai_sensei/domain/services/human_input.py`.
 
 ---
 
@@ -49,15 +45,3 @@
 **Objetivo:** En las tools que reciben un nombre de especie, hacer búsqueda también por `scientific_name` si la búsqueda por nombre común no devuelve resultados. Alternativamente, usar `search_bonsai_species` (búsqueda parcial) para resolver el nombre antes de operar.
 
 **Relacionado:** `bonsai_sensei/domain/herbarium.py` (`get_species_by_name`), `bonsai_sensei/domain/services/cultivation/species/confirm_create_species_tool.py`, `bonsai_sensei/domain/services/garden/`.
-
----
-
-## ISSUE-009 — El LLM entra en bucle al cancelar una operación sin poder justificarlo
-
-**Síntoma:** Cuando el usuario cancela una confirmación y el LLM no tiene contexto suficiente para entender el motivo (o el tool devuelve una cancelación sin mensaje explicativo), el agente reintenta ejecutar la misma operación en el siguiente turno, entrando en un bucle de plan → confirmación → cancelación.
-
-**Causa raíz:** Cuando el usuario cancela, el tool devuelve un resultado genérico (`{"status": "cancelled"}`). Sin un motivo explícito, el LLM interpreta la cancelación como un fallo transitorio o un malentendido, y repite la llamada en lugar de detener el flujo y pedir aclaración al usuario.
-
-**Workaround:** El usuario debe indicar explícitamente que no quiere continuar o cambiar el tema de conversación.
-
-**Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`, ADR-003.
