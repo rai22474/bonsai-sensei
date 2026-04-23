@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from dataclasses import dataclass, field
 from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
@@ -7,6 +8,15 @@ from google.adk.tools.tool_context import ToolContext
 from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 
 DEFAULT_TIMEOUT_SECONDS = 300
+
+
+@dataclass
+class ConfirmationResult:
+    accepted: bool
+    reason: str = field(default="")
+
+    def __bool__(self) -> bool:
+        return self.accepted
 
 
 def create_ask_human(
@@ -51,11 +61,12 @@ def create_ask_confirmation(
         question: str,
         tool_context: ToolContext | None = None,
         user_id: str | None = None,
-    ) -> bool:
+    ) -> ConfirmationResult:
         """Ask the human user a yes/no confirmation question and wait for their answer.
 
         Sends the question with accept/cancel options and blocks execution until
-        the user responds. Returns True if accepted, False if cancelled.
+        the user responds. Evaluates as truthy if accepted, falsy if cancelled.
+        An optional cancellation reason is available via result.reason.
         Confirmations for the same user are serialized: if two tools request
         confirmation simultaneously, the second waits until the first is resolved.
 
@@ -65,7 +76,7 @@ def create_ask_confirmation(
             user_id: Explicit user identifier, takes precedence over tool_context.
 
         Returns:
-            True if the user accepted, False if the user cancelled.
+            ConfirmationResult — truthy if accepted, falsy if cancelled.
         """
         resolved_user_id = user_id or resolve_confirmation_user_id(tool_context)
         if resolved_user_id not in confirmation_locks:

@@ -43,6 +43,6 @@ def create_confirm_delete_species_tool(
             delete_species_func(species_id=existing_species.id)
             return {"status": "success", "message": f"Species '{species_name}' deleted."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_delete_species

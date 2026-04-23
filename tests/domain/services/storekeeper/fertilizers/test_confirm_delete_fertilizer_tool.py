@@ -1,5 +1,6 @@
 import pytest
 
+from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_delete_fertilizer_tool import (
     create_confirm_delete_fertilizer_tool,
@@ -78,7 +79,7 @@ async def should_return_cancelled_when_user_declines(tool_context, delete_fertil
 
 
 async def ask_confirmation_cancel(question, tool_context=None):
-    return False
+    return ConfirmationResult(accepted=False)
 
 
 @pytest.fixture

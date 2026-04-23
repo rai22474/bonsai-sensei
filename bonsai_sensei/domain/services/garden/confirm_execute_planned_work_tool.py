@@ -52,6 +52,6 @@ def create_confirm_execute_planned_work_tool(
             delete_planned_work_func(work_id=work_id)
             return {"status": "success", "message": f"Planned work {work_id} executed and removed from plan."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_execute_planned_work

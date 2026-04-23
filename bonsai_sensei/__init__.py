@@ -320,6 +320,7 @@ async def lifespan(app: FastAPI):
     confirmation_handler = partial(
         handle_confirmation_callback,
         pending_human_responses=app.state.pending_human_responses,
+        send_cancel_reason_prompt=bot_instance.send_force_reply_message,
     )
 
     handlers = [

@@ -8,6 +8,7 @@ from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
 from bonsai_sensei.domain.services.advisor import AdvisorResponse
+from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import get_logger
 
@@ -50,8 +51,13 @@ async def handle_user_message(
         save_telegram_chat_id_func(user_id, chat_id)
 
     if pending_human_responses and user_id in pending_human_responses:
-        pending_human_responses[user_id]["response"] = update.message.text
-        pending_human_responses[user_id]["event"].set()
+        pending = pending_human_responses[user_id]
+        if pending.get("type") == "awaiting_cancel_reason":
+            pending["response"] = ConfirmationResult(accepted=False, reason=update.message.text)
+            pending["event"].set()
+        else:
+            pending["response"] = update.message.text
+            pending["event"].set()
         return
 
     if _is_location_response(user_id, users_awaiting_location):

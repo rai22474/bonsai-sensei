@@ -49,6 +49,6 @@ def create_confirm_create_bonsai_tool(
             create_bonsai_func(bonsai=Bonsai(name=name, species_id=species.id))
             return {"status": "success", "message": f"Bonsai '{name}' created."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_create_bonsai

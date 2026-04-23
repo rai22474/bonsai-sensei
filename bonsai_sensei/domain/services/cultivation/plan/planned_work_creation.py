@@ -27,7 +27,7 @@ async def execute_planned_work_creation(
 
     confirmed = await ask_confirmation(confirmation_message, tool_context=tool_context)
     if not confirmed:
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     create_planned_work_func(
         planned_work=PlannedWork(

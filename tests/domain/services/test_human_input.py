@@ -1,7 +1,11 @@
 import asyncio
 import pytest
 
-from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_human
+from bonsai_sensei.domain.services.human_input import (
+    ConfirmationResult,
+    create_ask_confirmation,
+    create_ask_human,
+)
 
 
 class MockToolContext:
@@ -53,27 +57,40 @@ async def should_include_confirmation_id_in_send_call(ask_confirmation, sent_con
 
 
 @pytest.mark.asyncio
-async def should_return_true_when_user_accepts(tool_context, pending_responses):
+async def should_return_truthy_when_user_accepts(tool_context, pending_responses):
     async def send_and_accept(user_id, question, confirmation_id):
-        pending_responses[user_id]["response"] = True
+        pending_responses[user_id]["response"] = ConfirmationResult(accepted=True)
         pending_responses[user_id]["event"].set()
 
     ask = create_ask_confirmation(send_and_accept, pending_responses)
     result = await ask("Delete Naruto?", tool_context=tool_context)
 
-    assert result is True, "ask_confirmation should return True when user accepts"
+    assert result, "ask_confirmation should return truthy when user accepts"
 
 
 @pytest.mark.asyncio
-async def should_return_false_when_user_cancels(tool_context, pending_responses):
+async def should_return_falsy_when_user_cancels(tool_context, pending_responses):
     async def send_and_cancel(user_id, question, confirmation_id):
-        pending_responses[user_id]["response"] = False
+        pending_responses[user_id]["response"] = ConfirmationResult(accepted=False)
         pending_responses[user_id]["event"].set()
 
     ask = create_ask_confirmation(send_and_cancel, pending_responses)
     result = await ask("Delete Naruto?", tool_context=tool_context)
 
-    assert result is False, "ask_confirmation should return False when user cancels"
+    assert not result, "ask_confirmation should return falsy when user cancels"
+
+
+@pytest.mark.asyncio
+async def should_propagate_cancellation_reason(tool_context, pending_responses):
+    async def send_and_cancel_with_reason(user_id, question, confirmation_id):
+        pending_responses[user_id]["response"] = ConfirmationResult(accepted=False, reason="wrong bonsai")
+        pending_responses[user_id]["event"].set()
+
+    ask = create_ask_confirmation(send_and_cancel_with_reason, pending_responses)
+    result = await ask("Delete Naruto?", tool_context=tool_context)
+
+    assert result.reason == "wrong bonsai", \
+        "ask_confirmation should propagate the cancellation reason"
 
 
 @pytest.mark.asyncio
@@ -121,7 +138,7 @@ def ask_human(sent_messages, pending_responses):
 def ask_confirmation(sent_confirmations, pending_responses):
     async def send_confirmation(user_id, question, confirmation_id):
         sent_confirmations.append((user_id, question, confirmation_id))
-        pending_responses[user_id]["response"] = True
+        pending_responses[user_id]["response"] = ConfirmationResult(accepted=True)
         pending_responses[user_id]["event"].set()
 
     return create_ask_confirmation(send_confirmation, pending_responses)

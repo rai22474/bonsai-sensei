@@ -1,5 +1,5 @@
 import os
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application
 from bonsai_sensei.logging_config import get_logger
 
@@ -44,9 +44,19 @@ class TelegramBot:
             logger.error("Cannot send confirmation message: Bot not configured")
             return
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("Aceptar", callback_data=f"confirm:accept:{confirmation_id}"),
-            InlineKeyboardButton("Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
+            InlineKeyboardButton("✅ Aceptar", callback_data=f"confirm:accept:{confirmation_id}"),
+            InlineKeyboardButton("❌ Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
         ]])
         await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+
+    async def send_force_reply_message(self, chat_id: str, text: str):
+        if not self.application:
+            logger.error("Cannot send force reply message: Bot not configured")
+            return
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=ForceReply(selective=True, input_field_placeholder="Escribe el motivo..."),
+        )
 
 

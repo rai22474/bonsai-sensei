@@ -58,6 +58,6 @@ def create_confirm_update_fertilizer_tool(
             update_fertilizer_func(name=name, fertilizer_data=fertilizer_data)
             return {"status": "success", "message": f"Fertilizer '{name}' updated."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_update_fertilizer

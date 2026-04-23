@@ -60,6 +60,6 @@ def create_confirm_create_phytosanitary_tool(
             )
             return {"status": "success", "message": f"Phytosanitary product '{name}' created."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_create_phytosanitary

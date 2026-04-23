@@ -1,5 +1,6 @@
 import pytest
 
+from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.planned_work import PlannedWork
 from bonsai_sensei.domain.services.cultivation.plan.confirm_delete_planned_work_tool import (
     create_confirm_delete_planned_work_tool,
@@ -76,7 +77,7 @@ async def should_return_cancelled_when_user_declines(tool_context, get_planned_w
 
 
 async def ask_confirmation_cancel(question, tool_context=None):
-    return False
+    return ConfirmationResult(accepted=False)
 
 
 @pytest.fixture

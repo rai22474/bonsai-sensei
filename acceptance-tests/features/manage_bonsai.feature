@@ -19,3 +19,10 @@ Feature: Manage bonsai via advice
     When I request to delete bonsai "Sora"
     And I confirm the bonsai deletion for "Sora"
     Then bonsai "Sora" should not exist
+
+  Scenario: Cancel a bonsai deletion preserves the bonsai
+    Given species "Zelkova Serrata" exists with scientific name "Zelkova serrata"
+    And a bonsai named "Yuki" exists for species "Zelkova Serrata"
+    When I request to delete bonsai "Yuki"
+    And I cancel the deletion with reason "Me equivoqué, era otro bonsái"
+    Then bonsai "Yuki" should still exist

@@ -76,6 +76,6 @@ def create_confirm_create_species_tool(
             )
             return {"status": "success", "message": f"Species '{common_name}' created."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_create_bonsai_species

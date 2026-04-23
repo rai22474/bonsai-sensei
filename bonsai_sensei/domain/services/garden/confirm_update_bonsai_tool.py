@@ -61,6 +61,6 @@ def create_confirm_update_bonsai_tool(
             update_bonsai_func(bonsai_id=bonsai_id, bonsai_data=bonsai_data)
             return {"status": "success", "message": f"Bonsai '{bonsai_name}' updated."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_update_bonsai

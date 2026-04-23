@@ -66,6 +66,6 @@ def create_confirm_apply_phytosanitary_tool(
             )
             return {"status": "success", "message": f"Phytosanitary '{phytosanitary_name}' treatment recorded on '{bonsai_name}'."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_apply_phytosanitary

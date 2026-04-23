@@ -58,6 +58,6 @@ def create_confirm_update_species_tool(
             update_species_func(species_id=existing_species.id, species_data=species_data)
             return {"status": "success", "message": f"Species '{species_name}' updated."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_update_species

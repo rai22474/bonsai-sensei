@@ -61,6 +61,6 @@ def create_confirm_update_phytosanitary_tool(
             update_phytosanitary_func(name=name, phytosanitary_data=phytosanitary_data)
             return {"status": "success", "message": f"Phytosanitary product '{name}' updated."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_update_phytosanitary

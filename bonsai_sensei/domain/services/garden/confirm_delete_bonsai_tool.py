@@ -46,6 +46,6 @@ def create_confirm_delete_bonsai_tool(
             delete_bonsai_func(bonsai_id=bonsai_id)
             return {"status": "success", "message": f"Bonsai '{bonsai_name}' deleted."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_delete_bonsai

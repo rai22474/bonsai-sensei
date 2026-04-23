@@ -60,6 +60,13 @@ def accept_confirmation(user_id: str, confirmation_id: str):
     )
 
 
+def reject_confirmation(user_id: str, confirmation_id: str, reason: str = ""):
+    return post(
+        f"/api/advice/confirmations/{confirmation_id}/reject",
+        {"user_id": user_id, "reason": reason},
+    )
+
+
 def send_text_response(user_id: str, text: str):
     return post("/api/advice/text-response", {"user_id": user_id, "text": text})
 

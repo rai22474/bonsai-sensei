@@ -43,6 +43,6 @@ def create_confirm_delete_fertilizer_tool(
             delete_fertilizer_func(name=name)
             return {"status": "success", "message": f"Fertilizer '{name}' deleted."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_delete_fertilizer

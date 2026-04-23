@@ -43,6 +43,6 @@ def create_confirm_delete_phytosanitary_tool(
             delete_phytosanitary_func(name=name)
             return {"status": "success", "message": f"Phytosanitary product '{name}' deleted."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_delete_phytosanitary

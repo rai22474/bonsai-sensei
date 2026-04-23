@@ -58,6 +58,6 @@ def create_confirm_record_transplant_tool(
             )
             return {"status": "success", "message": f"Transplant recorded for '{bonsai_name}'."}
 
-        return {"status": "cancelled", "message": "Operation cancelled by user."}
+        return {"status": "cancelled", "reason": confirmed.reason}
 
     return confirm_record_transplant

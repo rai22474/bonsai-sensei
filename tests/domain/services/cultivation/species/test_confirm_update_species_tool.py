@@ -1,5 +1,6 @@
 import pytest
 
+from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.services.cultivation.species.confirm_update_species_tool import (
     create_confirm_update_species_tool,
 )
@@ -102,7 +103,7 @@ async def should_return_cancelled_when_user_declines(tool_context, update_specie
 
 
 async def ask_confirmation_cancel(question, tool_context=None):
-    return False
+    return ConfirmationResult(accepted=False)
 
 
 @pytest.fixture
