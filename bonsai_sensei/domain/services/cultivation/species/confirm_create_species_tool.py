@@ -13,6 +13,7 @@ def create_confirm_create_species_tool(
     scientific_name_resolver: Callable[[str], dict],
     wiki_page_builder: Callable[[str, str], str],
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_confirmation_message: Callable,
 ):
     @trace_tool_call
@@ -38,10 +39,9 @@ def create_confirm_create_species_tool(
                 If omitted, the tool resolves it from external botanical sources.
 
         Returns:
-            A JSON-ready dictionary with status 'success', 'cancelled', 'ambiguous', or 'error'.
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
             Output JSON (success): {"status": "success", "message": "<confirmation>"}.
-            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
-            Output JSON (ambiguous): {"status": "ambiguous", "candidates": ["<name>", ...]}.
+            Output JSON (cancelled): {"status": "cancelled", "reason": "<reason>"}.
             Output JSON (error): {"status": "error", "message": "<reason>"}.
             Error reasons: "species_name_required", "species_already_exists", "scientific_name_not_found".
         """
@@ -57,8 +57,13 @@ def create_confirm_create_species_tool(
             if not scientific_names:
                 return {"status": "error", "message": "scientific_name_not_found"}
             if len(scientific_names) > 1:
-                return {"status": "ambiguous", "candidates": scientific_names}
-            scientific_name = scientific_names[0]
+                scientific_name = await ask_selection(
+                    f"Se encontraron varios nombres científicos para '{common_name}'. ¿Cuál es el correcto?",
+                    scientific_names,
+                    tool_context=tool_context,
+                )
+            else:
+                scientific_name = scientific_names[0]
 
         confirmed = await ask_confirmation(
             build_confirmation_message(common_name, scientific_name),

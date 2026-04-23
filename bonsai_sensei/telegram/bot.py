@@ -1,3 +1,4 @@
+import html
 import os
 from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application
@@ -48,6 +49,21 @@ class TelegramBot:
             InlineKeyboardButton("❌ Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
         ]])
         await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+
+    async def send_selection_message(self, chat_id: str, question: str, options: list[str], selection_id: str):
+        if not self.application:
+            logger.error("Cannot send selection message: Bot not configured")
+            return
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"🌿 {option}", callback_data=f"selection:{selection_id}:{index}")]
+            for index, option in enumerate(options)
+        ])
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=f"<b>{html.escape(question)}</b>",
+            reply_markup=keyboard,
+            parse_mode="HTML",
+        )
 
     async def send_force_reply_message(self, chat_id: str, text: str):
         if not self.application:

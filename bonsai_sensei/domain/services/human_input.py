@@ -100,3 +100,48 @@ def create_ask_confirmation(
             return pending_responses.pop(resolved_user_id)["response"]
 
     return ask_confirmation
+
+
+def create_ask_selection(
+    send_selection_func: Callable,
+    pending_responses: dict,
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+) -> Callable:
+    async def ask_selection(
+        question: str,
+        options: list[str],
+        tool_context: ToolContext | None = None,
+    ) -> str:
+        """Present a list of options to the user and wait for their selection.
+
+        Sends the options as an interactive selector and blocks execution until
+        the user picks one.
+
+        Args:
+            question: The prompt explaining what the user should select.
+            options: The list of options to present.
+            tool_context: ADK tool context providing the user identifier.
+
+        Returns:
+            The selected option string.
+        """
+        user_id = resolve_confirmation_user_id(tool_context)
+        selection_id = uuid.uuid4().hex
+        event = asyncio.Event()
+        pending_responses[user_id] = {
+            "event": event,
+            "response": None,
+            "type": "selection",
+            "selection_id": selection_id,
+            "question": question,
+            "options": options,
+        }
+        await send_selection_func(user_id, question, options, selection_id)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
+        except TimeoutError:
+            pending_responses.pop(user_id, None)
+            raise
+        return pending_responses.pop(user_id)["response"]
+
+    return ask_selection

@@ -15,7 +15,6 @@ Cada especie tiene una ficha de cultivo en la wiki que puedes consultar con read
 
 # Comportamiento
 Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
-Cuando una herramienta devuelva status 'ambiguous', presenta las opciones al usuario sin volver a llamar a la herramienta.
 """
 
 
@@ -30,6 +29,7 @@ def create_botanist(
     update_species_func: Callable[..., Species | None],
     delete_species_func: Callable[..., bool],
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
@@ -47,6 +47,7 @@ def create_botanist(
                 scientific_name_resolver=scientific_name_resolver,
                 wiki_page_builder=wiki_page_builder,
                 ask_confirmation=ask_confirmation,
+                ask_selection=ask_selection,
                 build_confirmation_message=build_create_species_confirmation,
             ),
             create_confirm_update_species_tool(

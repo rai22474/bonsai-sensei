@@ -26,6 +26,7 @@ Feature: Manage bonsai species via advice
 
   Scenario: User is asked to choose variety when species name is ambiguous
     Given no species named "Junípero" exists
-    When I request to register ambiguous species "Junípero" and select variety "Juniperus chinensis"
+    When I request to register ambiguous species "Junípero"
+    And I choose scientific name "Juniperus chinensis" from the selection
     And I confirm the species creation for "Junípero" with scientific name "Juniperus chinensis"
     Then species "Junípero" should exist with scientific name "Juniperus chinensis"

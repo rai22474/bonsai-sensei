@@ -51,6 +51,17 @@ async def get_advice(request_body: AdviceRequest, request: Request):
                     {"id": pending["confirmation_id"], "summary": pending.get("summary", "")}
                 ],
             }
+        if pending and pending.get("type") == "selection":
+            return {
+                "text": "",
+                "pending_selections": [
+                    {
+                        "id": pending["selection_id"],
+                        "question": pending.get("question", ""),
+                        "options": pending.get("options", []),
+                    }
+                ],
+            }
 
     active_tasks.pop(user_id, None)
     if task.exception():
@@ -109,3 +120,54 @@ async def reject_confirmation(
         return {"status": "rejected"}
 
     raise HTTPException(status_code=404, detail="confirmation_not_found")
+
+
+class SelectionChooseRequest(BaseModel):
+    user_id: str
+    option: str
+
+
+@router.post("/advice/selections/{selection_id}/choose")
+async def choose_selection(
+    selection_id: str, request_body: SelectionChooseRequest, request: Request
+):
+    user_id = request_body.user_id
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+
+    pending = pending_human_responses.get(user_id)
+    if pending and pending.get("selection_id") == selection_id:
+        pending["response"] = request_body.option
+        pending["event"].set()
+        task = active_tasks.get(user_id)
+        if task:
+            while not task.done():
+                await asyncio.sleep(0.05)
+                next_pending = pending_human_responses.get(user_id)
+                if next_pending is not None and next_pending.get("selection_id") != selection_id:
+                    if next_pending.get("type") == "confirmation":
+                        return {
+                            "status": "chosen",
+                            "option": request_body.option,
+                            "pending_confirmations": [
+                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
+                            ],
+                        }
+                    if next_pending.get("type") == "selection":
+                        return {
+                            "status": "chosen",
+                            "option": request_body.option,
+                            "pending_selections": [
+                                {
+                                    "id": next_pending["selection_id"],
+                                    "question": next_pending.get("question", ""),
+                                    "options": next_pending.get("options", []),
+                                }
+                            ],
+                        }
+            active_tasks.pop(user_id, None)
+            if task.exception():
+                raise task.exception()
+        return {"status": "chosen", "option": request_body.option}
+
+    raise HTTPException(status_code=404, detail="selection_not_found")

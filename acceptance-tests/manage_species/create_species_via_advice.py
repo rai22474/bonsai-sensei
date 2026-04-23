@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, given, when, then, parsers
 
-from http_client import accept_confirmation, advise, delete, get
+from http_client import accept_confirmation, advise, choose_selection, delete, get
 from manage_species.species_api import delete_species_by_name, find_species_by_name
 
 
@@ -52,18 +52,22 @@ def confirm_species_creation(context, name, scientific_name):
         accept_confirmation(context["user_id"], confirmation["id"])
 
 
-@when(parsers.parse('I request to register ambiguous species "{name}" and select variety "{scientific_name}"'))
-def request_ambiguous_species_and_select_variety(context, name, scientific_name, external_stubs_ambiguous):
+@when(parsers.parse('I request to register ambiguous species "{name}"'))
+def request_ambiguous_species(context, name, external_stubs_ambiguous):
     context["created"].append(name)
-    advise(
+    response = advise(
         text=f"Da de alta la especie de bonsái {name}.",
         user_id=context["user_id"],
     )
-    response = advise(
-        text=f"Quiero registrar {name} con nombre científico {scientific_name}.",
-        user_id=context["user_id"],
-    )
-    context["pending_confirmations"] = response.get("pending_confirmations", [])
+    context["pending_selections"] = response.get("pending_selections", [])
+
+
+@when(parsers.parse('I choose scientific name "{scientific_name}" from the selection'))
+def select_scientific_name(context, scientific_name):
+    for selection in context.get("pending_selections", []):
+        response = choose_selection(context["user_id"], selection["id"], scientific_name)
+        if response:
+            context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @then(parsers.parse('species "{name}" should exist'))

@@ -67,6 +67,13 @@ def reject_confirmation(user_id: str, confirmation_id: str, reason: str = ""):
     )
 
 
+def choose_selection(user_id: str, selection_id: str, option: str):
+    return post(
+        f"/api/advice/selections/{selection_id}/choose",
+        {"user_id": user_id, "option": option},
+    )
+
+
 def send_text_response(user_id: str, text: str):
     return post("/api/advice/text-response", {"user_id": user_id, "text": text})
 

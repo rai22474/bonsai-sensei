@@ -73,6 +73,7 @@ def create_cultivation_group(
     model: object,
     session_factory,
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_fertilizer_confirmation: Callable,
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
@@ -86,7 +87,7 @@ def create_cultivation_group(
     list_species_tool = _create_list_species_tool(session_factory=session_factory)
     weather_agent = _create_weather_agent(model, list_species_tool, session_factory)
     botanist = _create_botanist(
-        model, session_factory, ask_confirmation,
+        model, session_factory, ask_confirmation, ask_selection,
         build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation,
     )
 
@@ -136,7 +137,7 @@ def create_cultivation_group(
     return botanist, weather_agent, planning_agent
 
 
-def _create_botanist(model, session_factory, ask_confirmation, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation):
+def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation):
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
@@ -176,6 +177,7 @@ def _create_botanist(model, session_factory, ask_confirmation, build_create_spec
             herbarium.delete_species, create_session=session_factory
         ),
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
