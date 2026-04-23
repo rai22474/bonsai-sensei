@@ -61,17 +61,3 @@
 **Workaround:** El usuario debe indicar explícitamente que no quiere continuar o cambiar el tema de conversación.
 
 **Relacionado:** `bonsai_sensei/telegram/handle_confirmation_callback.py`, ADR-003.
-
----
-
-## ISSUE-010 — ImportError en collection de tests bloquea la CI
-
-**Síntoma:** El job `test` de GitHub Actions falla con `Interrupted: 1 error during collection`. Ningún test llega a ejecutarse.
-
-**Causa raíz:** `integration-tests/domain/services/sensei/test_sensei_agent_prompt.py` importa `SPECIES_INSTRUCTION` desde `bonsai_sensei.domain.services.cultivation.species.botanist`, símbolo que ya no existe. Pytest recoge todos los ficheros antes de aplicar el filtro `-m "not integration"`, por lo que el `ImportError` ocurre en la fase de collection y aborta la ejecución completa aunque el CI excluya los tests de integración.
-
-**Workaround:** Ninguno. La CI está bloqueada hasta que se corrija el import.
-
-**Objetivo:** Corregir el import en `integration-tests/domain/services/sensei/test_sensei_agent_prompt.py` para que apunte al símbolo correcto, o eliminar la referencia si ya no es necesaria.
-
-**Relacionado:** `integration-tests/domain/services/sensei/test_sensei_agent_prompt.py`, `bonsai_sensei/domain/services/cultivation/species/botanist.py`, `.github/workflows/ci.yml`.
