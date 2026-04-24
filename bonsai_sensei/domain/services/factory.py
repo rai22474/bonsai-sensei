@@ -25,9 +25,11 @@ from bonsai_sensei.domain.services.sensei import create_sensei
 from bonsai_sensei.domain.services.shokunin import create_shokunin
 from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
     create_list_fertilizers_tool,
+    create_get_fertilizer_by_name_tool,
 )
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
     create_list_phytosanitary_tool,
+    create_get_phytosanitary_by_name_tool,
 )
 
 
@@ -35,7 +37,7 @@ def _build_agent_descriptions(agents) -> list[str]:
     return [f"- {agent.name}: {agent.description}" for agent in agents]
 
 
-def _create_query_tools(session_factory) -> list:
+def _create_query_tools(session_factory, wiki_root: str) -> list:
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     list_species_func = partial(herbarium.list_species, create_session=session_factory)
 
@@ -57,8 +59,16 @@ def _create_query_tools(session_factory) -> list:
     list_fertilizers_tool = create_list_fertilizers_tool(
         list_fertilizers_func=partial(fertilizer_catalog.list_fertilizers, create_session=session_factory),
     )
+    get_fertilizer_by_name_tool = create_get_fertilizer_by_name_tool(
+        get_fertilizer_by_name_func=partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory),
+        wiki_root=wiki_root,
+    )
     list_phytosanitary_tool = create_list_phytosanitary_tool(
         list_phytosanitary_func=partial(phytosanitary_registry.list_phytosanitary, create_session=session_factory),
+    )
+    get_phytosanitary_by_name_tool = create_get_phytosanitary_by_name_tool(
+        get_phytosanitary_by_name_func=partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory),
+        wiki_root=wiki_root,
     )
     list_planned_works_tool = create_list_planned_works_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -72,7 +82,9 @@ def _create_query_tools(session_factory) -> list:
         list_bonsai_events_tool,
         list_species_tool,
         list_fertilizers_tool,
+        get_fertilizer_by_name_tool,
         list_phytosanitary_tool,
+        get_phytosanitary_by_name_tool,
         list_planned_works_tool,
     ]
 
@@ -81,6 +93,7 @@ def create_sensei_group(
     model: object,
     command_agents: list,
     session_factory,
+    wiki_root: str,
     orchestrator_model: object = None,
 ):
     effective_orchestrator_model = orchestrator_model or model
@@ -97,7 +110,7 @@ def create_sensei_group(
         sub_agents=[mitori, shokunin],
     )
 
-    query_tools = _create_query_tools(session_factory)
+    query_tools = _create_query_tools(session_factory, wiki_root)
 
     return create_sensei(
         model=effective_orchestrator_model,

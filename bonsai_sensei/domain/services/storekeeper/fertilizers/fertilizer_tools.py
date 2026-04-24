@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
@@ -14,15 +15,13 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
         Returns:
             A JSON-ready dictionary with the fertilizer list.
 
-        Output JSON: {"status":"success","fertilizers":[{"id","name","recommended_amount","wiki_path"}]}.
+        Output JSON: {"status":"success","fertilizers":[{"id","name"}]}.
         """
         fertilizers = list_fertilizers_func()
         items = [
             {
                 "id": fertilizer.id,
                 "name": fertilizer.name,
-                "recommended_amount": fertilizer.recommended_amount,
-                "wiki_path": fertilizer.wiki_path,
             }
             for fertilizer in fertilizers
         ]
@@ -33,11 +32,14 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
 
 def create_get_fertilizer_by_name_tool(
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
+    wiki_root: str,
 ):
+    wiki_root_path = Path(wiki_root).resolve()
+
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     def get_fertilizer_by_name(name: str) -> dict:
-        """Lookup a fertilizer by name and return JSON with status and record.
+        """Lookup a fertilizer by name and return its full wiki page content.
 
         Args:
             name: Fertilizer name to look up.
@@ -45,7 +47,7 @@ def create_get_fertilizer_by_name_tool(
         Returns:
             A JSON-ready dictionary with the lookup result.
 
-        Output JSON (success): {"status":"success","fertilizer":{"id","name","recommended_amount","wiki_path"}}.
+        Output JSON (success): {"status":"success","fertilizer":{"id","name","recommended_amount","content":"<markdown>"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -53,13 +55,18 @@ def create_get_fertilizer_by_name_tool(
         fertilizer = get_fertilizer_by_name_func(name)
         if not fertilizer:
             return {"status": "error", "message": "fertilizer_not_found"}
+        content = None
+        if fertilizer.wiki_path:
+            page_path = (wiki_root_path / fertilizer.wiki_path).resolve()
+            if str(page_path).startswith(str(wiki_root_path)) and page_path.exists():
+                content = page_path.read_text(encoding="utf-8")
         return {
             "status": "success",
             "fertilizer": {
                 "id": fertilizer.id,
                 "name": fertilizer.name,
                 "recommended_amount": fertilizer.recommended_amount,
-                "wiki_path": fertilizer.wiki_path,
+                "content": content,
             },
         }
 

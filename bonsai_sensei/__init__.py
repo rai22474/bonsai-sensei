@@ -298,7 +298,7 @@ async def lifespan(app: FastAPI):
         build_delete_phytosanitary_confirmation=build_delete_phytosanitary_confirmation,
         build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
     )
-    sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model)
+    sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model, wiki_root=os.getenv("WIKI_PATH", "./wiki"))
     sensei_agent = create_agents(
         model=model,
         create_cultivation_group=cultivation_group_factory,

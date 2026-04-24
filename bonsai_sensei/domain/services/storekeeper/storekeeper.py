@@ -7,22 +7,30 @@ from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.fertilizers.create_fertilizer import create_create_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.delete_fertilizer import create_delete_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.update_fertilizer import create_update_fertilizer_tool
-from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import create_list_fertilizers_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
+    create_list_fertilizers_tool,
+    create_get_fertilizer_by_name_tool,
+)
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.create_phytosanitary import create_create_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.delete_phytosanitary import create_delete_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.update_phytosanitary import create_update_phytosanitary_tool
-from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import create_list_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
+    create_list_phytosanitary_tool,
+    create_get_phytosanitary_by_name_tool,
+)
 
 STOREKEEPER_INSTRUCTION = """
 Eres el responsable del catálogo de insumos para bonsáis: fertilizantes, microelementos y productos fitosanitarios. Mantienes ambos catálogos actualizados: registrar nuevos productos, actualizar sus fichas técnicas y eliminar los que ya no se usen.
 
 # Comportamiento
-Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
+- Cuando el usuario pida la ficha o los detalles de un producto, usa get_fertilizer_by_name o get_phytosanitary_by_name y devuelve el campo content al usuario.
+- Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
 """
 
 
 def create_storekeeper(
     model: object,
+    wiki_root: str,
     list_fertilizers_func: Callable[[], list[Fertilizer]],
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
     fertilizer_wiki_page_builder: Callable[[str], tuple[str, str]],
@@ -51,6 +59,7 @@ def create_storekeeper(
         after_model_callback=limit_to_single_tool_call,
         tools=[
             create_list_fertilizers_tool(list_fertilizers_func),
+            create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func, wiki_root),
             create_create_fertilizer_tool(
                 create_fertilizer_func=create_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
@@ -71,6 +80,7 @@ def create_storekeeper(
                 build_confirmation_message=build_delete_fertilizer_confirmation,
             ),
             create_list_phytosanitary_tool(list_phytosanitary_func),
+            create_get_phytosanitary_by_name_tool(get_phytosanitary_by_name_func, wiki_root),
             create_create_phytosanitary_tool(
                 create_phytosanitary_func=create_phytosanitary_func,
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,

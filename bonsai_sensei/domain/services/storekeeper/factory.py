@@ -46,6 +46,7 @@ def create_storekeeper_group(
 
     return create_storekeeper(
         model=model,
+        wiki_root=wiki_root,
         list_fertilizers_func=partial(
             fertilizer_catalog.list_fertilizers, create_session=session_factory
         ),
