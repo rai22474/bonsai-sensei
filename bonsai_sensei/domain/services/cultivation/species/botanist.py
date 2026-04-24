@@ -1,9 +1,9 @@
 from typing import Callable
 from google.adk.agents.llm_agent import Agent
-from bonsai_sensei.domain.services.cultivation.species.confirm_create_species_tool import create_confirm_create_species_tool
+from bonsai_sensei.domain.services.cultivation.species.create_species import create_create_species_tool
 from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
-from bonsai_sensei.domain.services.cultivation.species.confirm_delete_species_tool import create_confirm_delete_species_tool
-from bonsai_sensei.domain.services.cultivation.species.confirm_update_species_tool import create_confirm_update_species_tool
+from bonsai_sensei.domain.services.cultivation.species.delete_species import create_delete_species_tool
+from bonsai_sensei.domain.services.cultivation.species.update_species import create_update_species_tool
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import create_search_species_tool
 
@@ -41,7 +41,7 @@ def create_botanist(
         instruction=BOTANIST_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[
-            create_confirm_create_species_tool(
+            create_create_species_tool(
                 create_species_func=create_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 scientific_name_resolver=scientific_name_resolver,
@@ -50,13 +50,13 @@ def create_botanist(
                 ask_selection=ask_selection,
                 build_confirmation_message=build_create_species_confirmation,
             ),
-            create_confirm_update_species_tool(
+            create_update_species_tool(
                 update_species_func=update_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 ask_confirmation=ask_confirmation,
                 build_confirmation_message=build_update_species_confirmation,
             ),
-            create_confirm_delete_species_tool(
+            create_delete_species_tool(
                 delete_species_func=delete_species_func,
                 get_species_by_name_func=get_species_by_name_func,
                 ask_confirmation=ask_confirmation,

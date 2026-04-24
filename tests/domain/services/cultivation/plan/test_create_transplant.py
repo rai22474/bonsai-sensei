@@ -3,8 +3,8 @@ import pytest
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.confirm_create_transplant_tool import (
-    create_confirm_create_transplant_tool,
+from bonsai_sensei.domain.services.cultivation.plan.create_transplant import (
+    create_create_transplant_tool,
 )
 
 
@@ -46,7 +46,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
         captured_calls.append((bonsai_name, scheduled_date, pot_size, pot_type, substrate))
         return "confirmation text"
 
-    tool = create_confirm_create_transplant_tool(
+    tool = create_create_transplant_tool(
         get_bonsai_by_name_func, create_planned_work_func,
         ask_confirmation_confirm, build_confirmation_message,
     )
@@ -82,7 +82,7 @@ async def should_return_success_when_user_confirms(transplant_tool, tool_context
 
 @pytest.mark.asyncio
 async def should_not_create_when_user_cancels(tool_context, captured_planned_works, get_bonsai_by_name_func, create_planned_work_func, build_confirmation_message):
-    tool = create_confirm_create_transplant_tool(
+    tool = create_create_transplant_tool(
         get_bonsai_by_name_func, create_planned_work_func,
         ask_confirmation_cancel, build_confirmation_message,
     )
@@ -94,7 +94,7 @@ async def should_not_create_when_user_cancels(tool_context, captured_planned_wor
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, create_planned_work_func, build_confirmation_message):
-    tool = create_confirm_create_transplant_tool(
+    tool = create_create_transplant_tool(
         get_bonsai_by_name_func, create_planned_work_func,
         ask_confirmation_cancel, build_confirmation_message,
     )
@@ -158,7 +158,7 @@ def build_confirmation_message():
 
 @pytest.fixture
 def transplant_tool(get_bonsai_by_name_func, create_planned_work_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_create_transplant_tool(
+    return create_create_transplant_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         create_planned_work_func=create_planned_work_func,
         ask_confirmation=ask_confirmation_confirm,

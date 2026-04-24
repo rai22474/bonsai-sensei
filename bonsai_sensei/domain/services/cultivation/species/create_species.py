@@ -8,7 +8,7 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 from bonsai_sensei.domain.species import Species
 
 
-def create_confirm_create_species_tool(
+def create_create_species_tool(
     create_species_func: Callable,
     get_species_by_name_func: Callable[[str], Species | None],
     scientific_name_resolver: Callable[[str], dict],
@@ -19,7 +19,7 @@ def create_confirm_create_species_tool(
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
-    async def confirm_create_bonsai_species(
+    async def create_bonsai_species(
         common_name: str,
         scientific_name: str | None = None,
         tool_context: ToolContext | None = None,
@@ -87,4 +87,4 @@ def create_confirm_create_species_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_create_bonsai_species
+    return create_bonsai_species

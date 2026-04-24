@@ -5,16 +5,9 @@ import aiohttp
 def create_fertilizer(
     post_func: Callable[[str, dict | None], dict | None],
     name: str,
-    usage_sheet: str,
-    recommended_amount: str,
-    sources: list[str],
+    wiki_path: str | None = None,
 ) -> dict:
-    payload = {
-        "name": name,
-        "usage_sheet": usage_sheet,
-        "recommended_amount": recommended_amount,
-        "sources": sources,
-    }
+    payload = {"name": name, "wiki_path": wiki_path}
     return post_func("/api/fertilizers", payload) or {}
 
 

@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.domain.services.cultivation.species import scientific_name_tool
+from bonsai_sensei.domain.services.cultivation.species import scientific_name
 
 
 def should_resolve_scientific_name_from_results(resolver_with_results):
@@ -59,7 +59,7 @@ def duplicate_search_results():
 
 @pytest.fixture
 def resolver_with_results(trefle_search_results):
-    resolver = scientific_name_tool.create_scientific_name_resolver(
+    resolver = scientific_name.create_scientific_name_resolver(
         translator=lambda name: name,
         searcher=lambda common: trefle_search_results,
     )
@@ -79,7 +79,7 @@ def resolver_with_translation(trefle_search_results):
         captured["search_term"] = common_name
         return trefle_search_results
 
-    resolver = scientific_name_tool.create_scientific_name_resolver(
+    resolver = scientific_name.create_scientific_name_resolver(
         translator=lambda name: "Japanese black pine",
         searcher=searcher,
     )
@@ -93,7 +93,7 @@ def resolver_with_translation(trefle_search_results):
 
 @pytest.fixture
 def resolver_with_empty_results(empty_search_results):
-    resolver = scientific_name_tool.create_scientific_name_resolver(
+    resolver = scientific_name.create_scientific_name_resolver(
         translator=lambda name: name,
         searcher=lambda common: empty_search_results,
     )
@@ -107,7 +107,7 @@ def resolver_with_empty_results(empty_search_results):
 
 @pytest.fixture
 def resolver_with_duplicates(duplicate_search_results):
-    resolver = scientific_name_tool.create_scientific_name_resolver(
+    resolver = scientific_name.create_scientific_name_resolver(
         translator=lambda name: name,
         searcher=lambda common: duplicate_search_results,
     )

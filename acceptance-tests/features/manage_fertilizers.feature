@@ -4,12 +4,13 @@ Feature: Manage fertilizers via advice
     When I request to register fertilizer "BioGrow"
     And I confirm the fertilizer creation for "BioGrow"
     Then fertilizer "BioGrow" should exist
+    And fertilizer "BioGrow" should have a wiki page
 
-  Scenario: Update a fertilizer via advice
+  Scenario: Update fertilizer recommended amount via advice
     Given fertilizer "BioGrow" exists
-    When I request to update fertilizer "BioGrow" with recommended amount "15 ml por litro"
+    When I request to update fertilizer "BioGrow" with recommended amount "5 ml/L"
     And I confirm the fertilizer update for "BioGrow"
-    Then fertilizer "BioGrow" should have recommended amount "15 ml por litro"
+    Then fertilizer "BioGrow" should have recommended amount "5 ml/L"
 
   Scenario: Delete a fertilizer via advice
     Given fertilizer "BioDrop" exists

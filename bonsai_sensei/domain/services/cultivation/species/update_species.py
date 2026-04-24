@@ -6,7 +6,7 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_update_species_tool(
+def create_update_species_tool(
     update_species_func: Callable,
     get_species_by_name_func: Callable,
     ask_confirmation: Callable,
@@ -14,7 +14,7 @@ def create_confirm_update_species_tool(
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
-    async def confirm_update_species(
+    async def update_species(
         species: dict,
         tool_context: ToolContext | None = None,
     ) -> dict:
@@ -42,6 +42,7 @@ def create_confirm_update_species_tool(
         species_data = {}
         if common_name is not None:
             species_data["name"] = common_name
+        
         if scientific_name is not None:
             species_data["scientific_name"] = scientific_name
 
@@ -60,4 +61,4 @@ def create_confirm_update_species_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_update_species
+    return update_species

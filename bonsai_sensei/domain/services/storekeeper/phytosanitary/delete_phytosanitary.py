@@ -7,7 +7,7 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_delete_phytosanitary_tool(
+def create_delete_phytosanitary_tool(
     delete_phytosanitary_func: Callable,
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
     ask_confirmation: Callable,
@@ -15,7 +15,7 @@ def create_confirm_delete_phytosanitary_tool(
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
-    async def confirm_delete_phytosanitary(
+    async def delete_phytosanitary(
         name: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
@@ -45,4 +45,4 @@ def create_confirm_delete_phytosanitary_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_delete_phytosanitary
+    return delete_phytosanitary

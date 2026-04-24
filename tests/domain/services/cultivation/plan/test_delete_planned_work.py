@@ -2,8 +2,8 @@ import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.confirm_delete_planned_work_tool import (
-    create_confirm_delete_planned_work_tool,
+from bonsai_sensei.domain.services.cultivation.plan.delete_planned_work import (
+    create_delete_planned_work_tool,
 )
 
 
@@ -37,7 +37,7 @@ async def should_build_confirmation_message_with_correct_work(tool_context, get_
         captured_calls.append(work)
         return "confirmation text"
 
-    tool = create_confirm_delete_planned_work_tool(
+    tool = create_delete_planned_work_tool(
         get_planned_work_func, delete_planned_work_func, ask_confirmation_confirm, build_confirmation_message
     )
     await tool(planned_work_id=1, tool_context=tool_context)
@@ -56,7 +56,7 @@ async def should_return_success_when_user_confirms(delete_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_delete_when_user_cancels(tool_context, captured_delete, get_planned_work_func, delete_planned_work_func, build_confirmation_message):
-    tool = create_confirm_delete_planned_work_tool(
+    tool = create_delete_planned_work_tool(
         get_planned_work_func, delete_planned_work_func, ask_confirmation_cancel, build_confirmation_message
     )
     await tool(planned_work_id=1, tool_context=tool_context)
@@ -67,7 +67,7 @@ async def should_not_delete_when_user_cancels(tool_context, captured_delete, get
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_planned_work_func, delete_planned_work_func, build_confirmation_message):
-    tool = create_confirm_delete_planned_work_tool(
+    tool = create_delete_planned_work_tool(
         get_planned_work_func, delete_planned_work_func, ask_confirmation_cancel, build_confirmation_message
     )
     result = await tool(planned_work_id=1, tool_context=tool_context)
@@ -136,7 +136,7 @@ def build_confirmation_message():
 
 @pytest.fixture
 def delete_tool(get_planned_work_func, delete_planned_work_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_delete_planned_work_tool(
+    return create_delete_planned_work_tool(
         get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation_confirm,

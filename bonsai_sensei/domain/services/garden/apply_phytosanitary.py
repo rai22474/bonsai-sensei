@@ -7,7 +7,7 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_apply_phytosanitary_tool(
+def create_apply_phytosanitary_tool(
     get_bonsai_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
     record_bonsai_event_func: Callable,
@@ -16,7 +16,7 @@ def create_confirm_apply_phytosanitary_tool(
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    async def confirm_apply_phytosanitary(
+    async def apply_phytosanitary(
         bonsai_name: str,
         phytosanitary_name: str,
         amount: str,
@@ -68,4 +68,4 @@ def create_confirm_apply_phytosanitary_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_apply_phytosanitary
+    return apply_phytosanitary

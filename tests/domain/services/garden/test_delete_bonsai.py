@@ -1,8 +1,8 @@
 import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.garden.confirm_delete_bonsai_tool import (
-    create_confirm_delete_bonsai_tool,
+from bonsai_sensei.domain.services.garden.delete_bonsai import (
+    create_delete_bonsai_tool,
 )
 
 
@@ -36,7 +36,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, dele
         captured_calls.append((bonsai_id, bonsai_name))
         return "confirmation text"
 
-    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert captured_calls == [(1, "Naruto")], \
@@ -61,7 +61,7 @@ async def should_return_success_when_user_confirms(delete_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_execute_delete_when_user_cancels(tool_context, captured_delete, delete_bonsai_func, build_confirmation_message):
-    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert "bonsai_id" not in captured_delete, \
@@ -70,7 +70,7 @@ async def should_not_execute_delete_when_user_cancels(tool_context, captured_del
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, delete_bonsai_func, build_confirmation_message):
-    tool = create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(bonsai_id=1, bonsai_name="Naruto", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -117,4 +117,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def delete_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_delete_bonsai_tool(delete_bonsai_func, ask_confirmation_confirm, build_confirmation_message)

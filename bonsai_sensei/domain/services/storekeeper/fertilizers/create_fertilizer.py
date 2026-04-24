@@ -5,23 +5,25 @@ from google.adk.tools.tool_context import ToolContext
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
-from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import _extract_recommended_amount
 
 
-def create_confirm_create_fertilizer_tool(
+def create_create_fertilizer_tool(
     create_fertilizer_func: Callable,
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
-    searcher: Callable[[str], dict],
+    wiki_page_builder: Callable[[str], tuple[str, str]],
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
-    async def confirm_create_fertilizer(
+    async def create_fertilizer(
         name: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Search for the fertilizer guide online and create it after user confirmation.
+        """Register a new fertilizer and generate its wiki page after user confirmation.
+
+        Compiles a full technical wiki page (NPK composition, dosage, application timing)
+        and stores the recommended amount extracted by the compiler agent.
 
         Args:
             name: Fertilizer name.
@@ -39,25 +41,19 @@ def create_confirm_create_fertilizer_tool(
         if get_fertilizer_by_name_func(name):
             return {"status": "error", "message": "fertilizer_already_exists"}
 
-        search_response = searcher(f"{name} bonsai dosis de uso ficha tecnica fertilizante")
-        answer = str(search_response.get("answer", "")).strip()
-        sources = [str(item.get("url")) for item in search_response.get("results", []) if item.get("url")]
-        usage_sheet = answer or "No data available."
-        recommended_amount = _extract_recommended_amount(answer)
-
-        confirmed = await ask_confirmation(build_confirmation_message(name, usage_sheet, recommended_amount), tool_context=tool_context)
+        confirmed = await ask_confirmation(build_confirmation_message(name), tool_context=tool_context)
 
         if confirmed:
+            wiki_path, recommended_amount = await wiki_page_builder(name)
             create_fertilizer_func(
                 fertilizer=Fertilizer(
                     name=name,
-                    usage_sheet=usage_sheet,
+                    wiki_path=wiki_path,
                     recommended_amount=recommended_amount,
-                    sources=sources,
                 )
             )
             return {"status": "success", "message": f"Fertilizer '{name}' created."}
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_create_fertilizer
+    return create_fertilizer

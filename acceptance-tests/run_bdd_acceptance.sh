@@ -84,19 +84,22 @@ else
   PYTEST_TARGET="$TEST_TARGET"
 fi
 
-PYTEST_ARGS=("$PYTEST_TARGET" -o python_files='*.py' -o python_functions='test_*' -o log_cli=true -o log_cli_level=INFO)
+PYTEST_LOG="${ROOT_DIR}/acceptance-tests/pytest.log"
+PYTEST_ARGS=("$PYTEST_TARGET" -o python_files='*.py' -o python_functions='test_*' -o log_cli=true -o log_cli_level=INFO --tb=short)
 if [ -n "$SCENARIO_FILTER" ]; then
   PYTEST_ARGS+=("-k" "$SCENARIO_FILTER")
 fi
 
-if ! run_step "pytest ${PYTEST_TARGET}" env ACCEPTANCE_API_BASE="http://localhost:${ACCEPTANCE_PORT}" uv run pytest "${PYTEST_ARGS[@]}"; then
+if ! run_step "pytest ${PYTEST_TARGET}" env ACCEPTANCE_API_BASE="http://localhost:${ACCEPTANCE_PORT}" uv run pytest "${PYTEST_ARGS[@]}" 2>&1 | tee "$PYTEST_LOG"; then
   run_step "docker compose logs" save_logs
   echo "Docker logs saved to ${LOG_FILE}."
+  echo "Pytest output saved to ${PYTEST_LOG}."
   echo "Acceptance tests failed: pytest reported errors."
   exit 1
 fi
 
 run_step "docker compose logs" save_logs
 echo "Docker logs saved to ${LOG_FILE}."
+echo "Pytest output saved to ${PYTEST_LOG}."
 
 run_step "docker compose down" docker compose -f "$COMPOSE_FILE" down -v

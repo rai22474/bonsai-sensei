@@ -2,8 +2,8 @@ import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.fertilizer import Fertilizer
-from bonsai_sensei.domain.services.storekeeper.fertilizers.confirm_delete_fertilizer_tool import (
-    create_confirm_delete_fertilizer_tool,
+from bonsai_sensei.domain.services.storekeeper.fertilizers.delete_fertilizer import (
+    create_delete_fertilizer_tool,
 )
 
 
@@ -37,7 +37,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, dele
         captured_calls.append(name)
         return "confirmation text"
 
-    tool = create_confirm_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(name="GreenBoom", tool_context=tool_context)
 
     assert captured_calls == ["GreenBoom"], \
@@ -62,7 +62,7 @@ async def should_return_success_when_user_confirms(delete_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_delete_when_user_cancels(tool_context, captured_delete, delete_fertilizer_func, get_fertilizer_by_name_func, build_confirmation_message):
-    tool = create_confirm_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(name="GreenBoom", tool_context=tool_context)
 
     assert captured_delete == {}, \
@@ -71,7 +71,7 @@ async def should_not_delete_when_user_cancels(tool_context, captured_delete, del
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, delete_fertilizer_func, get_fertilizer_by_name_func, build_confirmation_message):
-    tool = create_confirm_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_fertilizer_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(name="GreenBoom", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -134,7 +134,7 @@ def build_confirmation_message():
 
 @pytest.fixture
 def delete_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_delete_fertilizer_tool(
+    return create_delete_fertilizer_tool(
         delete_fertilizer_func=delete_fertilizer_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         ask_confirmation=ask_confirmation_confirm,
@@ -144,7 +144,7 @@ def delete_tool(delete_fertilizer_func, get_fertilizer_by_name_func, ask_confirm
 
 @pytest.fixture
 def delete_tool_not_found(delete_fertilizer_func, get_fertilizer_by_name_not_found, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_delete_fertilizer_tool(
+    return create_delete_fertilizer_tool(
         delete_fertilizer_func=delete_fertilizer_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_not_found,
         ask_confirmation=ask_confirmation_confirm,

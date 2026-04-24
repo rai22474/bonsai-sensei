@@ -1,8 +1,8 @@
 import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.cultivation.species.confirm_update_species_tool import (
-    create_confirm_update_species_tool,
+from bonsai_sensei.domain.services.cultivation.species.update_species import (
+    create_update_species_tool,
 )
 from bonsai_sensei.domain.species import Species
 
@@ -45,7 +45,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, upda
         captured_calls.append((species_name, species_data))
         return "confirmation text"
 
-    tool = create_confirm_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(species={"name": "Elm", "scientific_name": "Ulmus minor"}, tool_context=tool_context)
 
     assert captured_calls == [("Elm", {"scientific_name": "Ulmus minor"})], \
@@ -86,7 +86,7 @@ async def should_return_success_when_user_confirms(update_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_update_when_user_cancels(tool_context, captured_update, update_species_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_confirm_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(species={"name": "Elm", "scientific_name": "Ulmus minor"}, tool_context=tool_context)
 
     assert captured_update == {}, \
@@ -95,7 +95,7 @@ async def should_not_update_when_user_cancels(tool_context, captured_update, upd
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, update_species_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_confirm_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(species={"name": "Elm", "scientific_name": "Ulmus minor"}, tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -159,4 +159,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def update_tool(update_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_update_species_tool(update_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)

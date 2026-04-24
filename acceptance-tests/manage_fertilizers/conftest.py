@@ -42,5 +42,5 @@ def external_stubs():
 
 @given(parsers.parse('fertilizer "{name}" exists'))
 def ensure_fertilizer_exists(context, name):
-    create_fertilizer(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", [])
+    create_fertilizer(post, name)
     context["fertilizers_created"].append(name)

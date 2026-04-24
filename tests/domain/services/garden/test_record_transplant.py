@@ -3,8 +3,8 @@ import pytest
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
-from bonsai_sensei.domain.services.garden.confirm_record_transplant_tool import (
-    create_confirm_record_transplant_tool,
+from bonsai_sensei.domain.services.garden.record_transplant import (
+    create_record_transplant_tool,
 )
 
 
@@ -38,7 +38,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
         captured_calls.append((bonsai_name, pot_size, pot_type, substrate))
         return "confirmation text"
 
-    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert captured_calls == [("Kaze", "20 cm", "cerámica", "akadama y pomice")], \
@@ -71,7 +71,7 @@ async def should_return_success_when_user_confirms(record_transplant_tool, tool_
 
 @pytest.mark.asyncio
 async def should_not_record_event_when_user_cancels(tool_context, captured_events, get_bonsai_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert captured_events == [], \
@@ -80,7 +80,7 @@ async def should_not_record_event_when_user_cancels(tool_context, captured_event
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(bonsai_name="Kaze", pot_size="20 cm", pot_type="cerámica", substrate="akadama y pomice", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -141,4 +141,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_record_transplant_tool(get_bonsai_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)

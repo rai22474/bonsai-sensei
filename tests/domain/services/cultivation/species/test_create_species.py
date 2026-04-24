@@ -1,8 +1,8 @@
 import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.cultivation.species.confirm_create_species_tool import (
-    create_confirm_create_species_tool,
+from bonsai_sensei.domain.services.cultivation.species.create_species import (
+    create_create_species_tool,
 )
 from bonsai_sensei.domain.species import Species
 
@@ -44,7 +44,7 @@ async def should_ask_selection_when_multiple_scientific_names_found(
 ):
     ask_selection = ask_selection_returning("Juniperus chinensis", captured_selection_calls)
     scientific_name_resolver_multi = lambda name: {"scientific_names": ["Juniperus chinensis", "Juniperus communis"]}
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver_multi,
         wiki_page_builder, ask_confirmation_confirm, ask_selection, build_confirmation_message,
     )
@@ -61,7 +61,7 @@ async def should_create_species_with_selected_scientific_name(
 ):
     ask_selection = ask_selection_returning("Juniperus communis", captured_selection_calls)
     scientific_name_resolver_multi = lambda name: {"scientific_names": ["Juniperus chinensis", "Juniperus communis"]}
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver_multi,
         wiki_page_builder, ask_confirmation_confirm, ask_selection, build_confirmation_message,
     )
@@ -77,7 +77,7 @@ async def should_skip_resolver_and_use_provided_scientific_name(
     ask_confirmation_confirm, build_confirmation_message, captured_species, ask_selection_fixture,
 ):
     scientific_name_resolver_multi = lambda name: {"scientific_names": ["Juniperus chinensis", "Juniperus communis"]}
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver_multi,
         wiki_page_builder, ask_confirmation_confirm, ask_selection_fixture, build_confirmation_message,
     )
@@ -98,7 +98,7 @@ async def should_build_confirmation_message_with_correct_args(
         captured_calls.append((common_name, scientific_name))
         return "confirmation text"
 
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver,
         wiki_page_builder, ask_confirmation_confirm, ask_selection_fixture, build_confirmation_message,
     )
@@ -145,7 +145,7 @@ async def should_not_create_species_when_user_cancels(
     tool_context, captured_species, create_species_func, get_species_by_name_func,
     scientific_name_resolver, wiki_page_builder, build_confirmation_message, ask_selection_fixture,
 ):
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver,
         wiki_page_builder, ask_confirmation_cancel, ask_selection_fixture, build_confirmation_message,
     )
@@ -160,7 +160,7 @@ async def should_return_cancelled_when_user_declines(
     tool_context, create_species_func, get_species_by_name_func, scientific_name_resolver,
     wiki_page_builder, build_confirmation_message, ask_selection_fixture,
 ):
-    tool = create_confirm_create_species_tool(
+    tool = create_create_species_tool(
         create_species_func, get_species_by_name_func, scientific_name_resolver,
         wiki_page_builder, ask_confirmation_cancel, ask_selection_fixture, build_confirmation_message,
     )
@@ -262,7 +262,7 @@ def build_confirmation_message():
 
 @pytest.fixture
 def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_resolver, wiki_page_builder, ask_confirmation_confirm, ask_selection_fixture, build_confirmation_message):
-    return create_confirm_create_species_tool(
+    return create_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=get_species_by_name_func,
         scientific_name_resolver=scientific_name_resolver,
@@ -275,7 +275,7 @@ def confirm_tool(create_species_func, get_species_by_name_func, scientific_name_
 
 @pytest.fixture
 def confirm_tool_with_existing(create_species_func, existing_species_func, scientific_name_resolver, wiki_page_builder, ask_confirmation_confirm, ask_selection_fixture, build_confirmation_message):
-    return create_confirm_create_species_tool(
+    return create_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=existing_species_func,
         scientific_name_resolver=scientific_name_resolver,
@@ -288,7 +288,7 @@ def confirm_tool_with_existing(create_species_func, existing_species_func, scien
 
 @pytest.fixture
 def confirm_tool_no_results(create_species_func, get_species_by_name_func, scientific_name_resolver_no_results, wiki_page_builder, ask_confirmation_confirm, ask_selection_fixture, build_confirmation_message):
-    return create_confirm_create_species_tool(
+    return create_create_species_tool(
         create_species_func=create_species_func,
         get_species_by_name_func=get_species_by_name_func,
         scientific_name_resolver=scientific_name_resolver_no_results,

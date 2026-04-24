@@ -1,48 +1,8 @@
 from typing import Callable
-import re
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
-
-
-def create_fetch_fertilizer_info_tool(searcher: Callable[[str], dict]):
-    @trace_tool_call
-    @limit_tool_calls(agent_name="storekeeper")
-    def fetch_fertilizer_info(name: str) -> dict:
-        """Fetch fertilizer info and return JSON with usage sheet and recommended amount.
-
-        Args:
-            name: Fertilizer name to look up.
-
-        Returns:
-            A JSON-ready dictionary with the fetched fertilizer info.
-
-        Output JSON: {"status":"success","fertilizer":{"name","usage_sheet","recommended_amount","sources"}}.
-        """
-        if not name:
-            return {"status": "error", "message": "fertilizer_name_required"}
-        query = f"{name} bonsai dosis de uso ficha tecnica fertilizante"
-        response = searcher(query)
-        answer = str(response.get("answer", "")).strip()
-        sources = [
-            str(item.get("url"))
-            for item in response.get("results", [])
-            if item.get("url")
-        ]
-        recommended_amount = _extract_recommended_amount(answer)
-        usage_sheet = answer or "No data available."
-        return {
-            "status": "success",
-            "fertilizer": {
-                "name": name,
-                "usage_sheet": usage_sheet,
-                "recommended_amount": recommended_amount,
-                "sources": sources,
-            },
-        }
-
-    return fetch_fertilizer_info
 
 
 def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertilizer]]):
@@ -54,16 +14,15 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
         Returns:
             A JSON-ready dictionary with the fertilizer list.
 
-        Output JSON: {"status":"success","fertilizers":[{"id","name","usage_sheet","recommended_amount"}]}.
+        Output JSON: {"status":"success","fertilizers":[{"id","name","recommended_amount","wiki_path"}]}.
         """
         fertilizers = list_fertilizers_func()
         items = [
             {
                 "id": fertilizer.id,
                 "name": fertilizer.name,
-                "usage_sheet": fertilizer.usage_sheet,
                 "recommended_amount": fertilizer.recommended_amount,
-                "sources": fertilizer.sources,
+                "wiki_path": fertilizer.wiki_path,
             }
             for fertilizer in fertilizers
         ]
@@ -86,7 +45,7 @@ def create_get_fertilizer_by_name_tool(
         Returns:
             A JSON-ready dictionary with the lookup result.
 
-        Output JSON (success): {"status":"success","fertilizer":{"id","name","usage_sheet","recommended_amount"}}.
+        Output JSON (success): {"status":"success","fertilizer":{"id","name","recommended_amount","wiki_path"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -99,21 +58,9 @@ def create_get_fertilizer_by_name_tool(
             "fertilizer": {
                 "id": fertilizer.id,
                 "name": fertilizer.name,
-                "usage_sheet": fertilizer.usage_sheet,
                 "recommended_amount": fertilizer.recommended_amount,
-                "sources": fertilizer.sources,
+                "wiki_path": fertilizer.wiki_path,
             },
         }
 
     return get_fertilizer_by_name
-
-
-
-def _extract_recommended_amount(text: str) -> str:
-    match = re.search(
-        r"(\d+[\.,]?\d*\s*(ml|g|mg|kg|l|L)\s*/?\s*(l|L|litro|litros|100\s*l)?)",
-        text,
-    )
-    if match:
-        return match.group(0)
-    return "No disponible"

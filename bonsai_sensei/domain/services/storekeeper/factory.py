@@ -8,6 +8,12 @@ from bonsai_sensei.domain.services.storekeeper.storekeeper import create_storeke
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import (
     create_tavily_searcher,
 )
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_wiki_compiler import (
+    create_phytosanitary_wiki_compiler,
+)
+from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_wiki_compiler import (
+    create_fertilizer_wiki_compiler,
+)
 
 
 def create_storekeeper_group(
@@ -23,6 +29,20 @@ def create_storekeeper_group(
 ):
     tavily_api_key = os.getenv("TAVILY_API_KEY")
     tavily_base_url = os.getenv("TAVILY_API_BASE")
+    wiki_root = os.getenv("WIKI_PATH", "./wiki")
+
+    tavily_searcher = create_tavily_searcher(tavily_api_key, tavily_base_url)
+
+    phytosanitary_wiki_page_builder = create_phytosanitary_wiki_compiler(
+        model=model,
+        wiki_root=wiki_root,
+        searcher=tavily_searcher,
+    )
+    fertilizer_wiki_page_builder = create_fertilizer_wiki_compiler(
+        model=model,
+        wiki_root=wiki_root,
+        searcher=tavily_searcher,
+    )
 
     return create_storekeeper(
         model=model,
@@ -32,7 +52,7 @@ def create_storekeeper_group(
         get_fertilizer_by_name_func=partial(
             fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory
         ),
-        fertilizer_searcher=create_tavily_searcher(tavily_api_key, tavily_base_url),
+        fertilizer_wiki_page_builder=fertilizer_wiki_page_builder,
         create_fertilizer_func=partial(
             fertilizer_catalog.create_fertilizer, create_session=session_factory
         ),
@@ -48,7 +68,7 @@ def create_storekeeper_group(
         get_phytosanitary_by_name_func=partial(
             phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory
         ),
-        phytosanitary_searcher=create_tavily_searcher(tavily_api_key, tavily_base_url),
+        phytosanitary_wiki_page_builder=phytosanitary_wiki_page_builder,
         create_phytosanitary_func=partial(
             phytosanitary_registry.create_phytosanitary, create_session=session_factory
         ),

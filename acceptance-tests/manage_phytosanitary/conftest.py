@@ -31,7 +31,7 @@ def external_stubs():
     server = HTTPServer(host="0.0.0.0", port=STUB_PORT)
     server.start()
     server.expect_request(re.compile(r"/search.*")).respond_with_json(
-        {"answer": "Ficha de uso disponible.", "results": []}
+        {"answer": "Ficha de uso disponible. Dosis recomendada: 2 ml por litro de agua.", "results": []}
     )
     yield server
     server.stop()
@@ -39,5 +39,5 @@ def external_stubs():
 
 @given(parsers.parse('phytosanitary product "{name}" exists'))
 def ensure_phytosanitary_exists(context, name):
-    create_phytosanitary(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", "Hongos y plagas", [])
+    create_phytosanitary(post, name)
     context["phytosanitaries_created"].append(name)

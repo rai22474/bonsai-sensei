@@ -4,8 +4,8 @@ from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.services.garden.confirm_apply_phytosanitary_tool import (
-    create_confirm_apply_phytosanitary_tool,
+from bonsai_sensei.domain.services.garden.apply_phytosanitary import (
+    create_apply_phytosanitary_tool,
 )
 
 
@@ -63,7 +63,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
         captured_calls.append((bonsai_name, phytosanitary_name, amount))
         return "confirmation text"
 
-    tool = create_confirm_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert captured_calls == [("Kaze", "NimBio", "3 ml")], \
@@ -96,7 +96,7 @@ async def should_return_success_when_user_confirms(apply_phytosanitary_tool, too
 
 @pytest.mark.asyncio
 async def should_not_record_event_when_user_cancels(tool_context, captured_events, get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_confirm_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert captured_events == [], \
@@ -105,7 +105,7 @@ async def should_not_record_event_when_user_cancels(tool_context, captured_event
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_confirm_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -179,4 +179,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)

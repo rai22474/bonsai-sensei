@@ -6,14 +6,14 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_delete_bonsai_tool(
+def create_delete_bonsai_tool(
     delete_bonsai_func: Callable,
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    async def confirm_delete_bonsai(
+    async def delete_bonsai(
         bonsai_id: int,
         bonsai_name: str,
         tool_context: ToolContext | None = None,
@@ -48,4 +48,4 @@ def create_confirm_delete_bonsai_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_delete_bonsai
+    return delete_bonsai

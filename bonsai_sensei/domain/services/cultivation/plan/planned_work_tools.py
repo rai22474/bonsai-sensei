@@ -4,7 +4,7 @@ def create_list_fertilizers_tool(list_fertilizers_func):
 
         Returns:
             A dict with "status" and "fertilizers" list.
-            Output JSON: {"status": "success", "fertilizers": [{"id": int, "name": str, "recommended_amount": str}]}.
+            Output JSON: {"status": "success", "fertilizers": [{"id": int, "name": str, "recommended_amount": str, "wiki_path": str|null}]}.
         """
         fertilizers = list_fertilizers_func()
         return {
@@ -14,6 +14,7 @@ def create_list_fertilizers_tool(list_fertilizers_func):
                     "id": fertilizer.id,
                     "name": fertilizer.name,
                     "recommended_amount": fertilizer.recommended_amount,
+                    "wiki_path": fertilizer.wiki_path,
                 }
                 for fertilizer in fertilizers
             ],
@@ -28,7 +29,7 @@ def create_list_phytosanitary_tool(list_phytosanitary_func):
 
         Returns:
             A dict with "status" and "products" list.
-            Output JSON: {"status": "success", "products": [{"id": int, "name": str, "recommended_amount": str}]}.
+            Output JSON: {"status": "success", "products": [{"id": int, "name": str, "recommended_amount": str, "wiki_path": str|null}]}.
         """
         products = list_phytosanitary_func()
         return {
@@ -38,6 +39,7 @@ def create_list_phytosanitary_tool(list_phytosanitary_func):
                     "id": product.id,
                     "name": product.name,
                     "recommended_amount": product.recommended_amount,
+                    "wiki_path": product.wiki_path,
                 }
                 for product in products
             ],

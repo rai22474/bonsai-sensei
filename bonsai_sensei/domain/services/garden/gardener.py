@@ -7,13 +7,13 @@ from bonsai_sensei.domain.services.garden.bonsai_tools import (
     create_list_bonsai_tool,
     create_list_bonsai_events_tool,
 )
-from bonsai_sensei.domain.services.garden.confirm_apply_fertilizer_tool import create_confirm_apply_fertilizer_tool
-from bonsai_sensei.domain.services.garden.confirm_apply_phytosanitary_tool import create_confirm_apply_phytosanitary_tool
-from bonsai_sensei.domain.services.garden.confirm_create_bonsai_tool import create_confirm_create_bonsai_tool
-from bonsai_sensei.domain.services.garden.confirm_record_transplant_tool import create_confirm_record_transplant_tool
-from bonsai_sensei.domain.services.garden.confirm_delete_bonsai_tool import create_confirm_delete_bonsai_tool
-from bonsai_sensei.domain.services.garden.confirm_update_bonsai_tool import create_confirm_update_bonsai_tool
-from bonsai_sensei.domain.services.garden.confirm_execute_planned_work_tool import create_confirm_execute_planned_work_tool
+from bonsai_sensei.domain.services.garden.apply_fertilizer import create_apply_fertilizer_tool
+from bonsai_sensei.domain.services.garden.apply_phytosanitary import create_apply_phytosanitary_tool
+from bonsai_sensei.domain.services.garden.create_bonsai import create_create_bonsai_tool
+from bonsai_sensei.domain.services.garden.record_transplant import create_record_transplant_tool
+from bonsai_sensei.domain.services.garden.delete_bonsai import create_delete_bonsai_tool
+from bonsai_sensei.domain.services.garden.update_bonsai import create_update_bonsai_tool
+from bonsai_sensei.domain.services.garden.execute_planned_work import create_execute_planned_work_tool
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
 
 
@@ -27,7 +27,7 @@ y registras eventos ya ocurridos (fertilizaciones, tratamientos fitosanitarios, 
 - Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
 - Si el usuario no proporciona un nombre para el bonsái, propón uno inspirado en anime o manga.
 - Si falta información esencial, pídela en tu respuesta.
-- Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a confirm_execute_planned_work.
+- Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a execute_planned_work.
 """
 
 
@@ -66,46 +66,46 @@ def create_gardener(
         list_species_func=list_species_func,
     )
     get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
-    confirm_create_tool = create_confirm_create_bonsai_tool(
+    create_bonsai_tool = create_create_bonsai_tool(
         create_bonsai_func=create_bonsai_func,
         get_species_by_name_func=get_species_by_name_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_create_bonsai_confirmation,
     )
-    confirm_update_tool = create_confirm_update_bonsai_tool(
+    update_bonsai_tool = create_update_bonsai_tool(
         update_bonsai_func=update_bonsai_func,
         get_species_by_name_func=get_species_by_name_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_update_bonsai_confirmation,
     )
-    confirm_delete_tool = create_confirm_delete_bonsai_tool(
+    delete_bonsai_tool = create_delete_bonsai_tool(
         delete_bonsai_func=delete_bonsai_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_delete_bonsai_confirmation,
     )
-    confirm_apply_fertilizer_tool = create_confirm_apply_fertilizer_tool(
+    apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_apply_fertilizer_confirmation,
     )
-    confirm_apply_fertilizer_tool.__name__ = "confirm_apply_fertilizer"
-    confirm_apply_phytosanitary_tool = create_confirm_apply_phytosanitary_tool(
+    apply_fertilizer_tool.__name__ = "apply_fertilizer"
+    apply_phytosanitary_tool = create_apply_phytosanitary_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_apply_phytosanitary_confirmation,
     )
-    confirm_apply_phytosanitary_tool.__name__ = "confirm_apply_phytosanitary"
-    confirm_record_transplant_tool = create_confirm_record_transplant_tool(
+    apply_phytosanitary_tool.__name__ = "apply_phytosanitary"
+    record_transplant_tool = create_record_transplant_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_record_transplant_confirmation,
     )
-    confirm_record_transplant_tool.__name__ = "confirm_record_transplant"
+    record_transplant_tool.__name__ = "record_transplant"
     list_events_tool = create_list_bonsai_events_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=list_bonsai_events_func,
@@ -116,14 +116,14 @@ def create_gardener(
         list_planned_works_func=list_planned_works_func,
     )
     list_works_tool.__name__ = "list_planned_works_for_bonsai"
-    confirm_execute_tool = create_confirm_execute_planned_work_tool(
+    execute_planned_work_tool = create_execute_planned_work_tool(
         get_planned_work_func=get_planned_work_func,
         record_bonsai_event_func=record_bonsai_event_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_execute_planned_work_confirmation,
     )
-    confirm_execute_tool.__name__ = "confirm_execute_planned_work"
+    execute_planned_work_tool.__name__ = "execute_planned_work"
 
     return Agent(
         model=model,
@@ -134,14 +134,14 @@ def create_gardener(
         tools=[
             list_bonsai_tool,
             get_bonsai_by_name_tool,
-            confirm_create_tool,
-            confirm_update_tool,
-            confirm_delete_tool,
-            confirm_apply_fertilizer_tool,
-            confirm_apply_phytosanitary_tool,
-            confirm_record_transplant_tool,
+            create_bonsai_tool,
+            update_bonsai_tool,
+            delete_bonsai_tool,
+            apply_fertilizer_tool,
+            apply_phytosanitary_tool,
+            record_transplant_tool,
             list_events_tool,
             list_works_tool,
-            confirm_execute_tool,
+            execute_planned_work_tool,
         ],
     )

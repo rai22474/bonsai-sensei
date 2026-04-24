@@ -70,6 +70,6 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 @given(parsers.parse('fertilizer "{name}" is registered'))
 def ensure_fertilizer_registered(context, name):
-    fertilizer = create_fertilizer(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", [])
+    fertilizer = create_fertilizer(post, name)
     context["fertilizers_registered"].append(name)
     context["fertilizer_ids"][name] = fertilizer.get("id")

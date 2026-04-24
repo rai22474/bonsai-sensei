@@ -1,51 +1,8 @@
 from typing import Callable
-import re
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
-
-
-def create_phytosanitary_info_tool(searcher: Callable[[str], dict]):
-
-    @trace_tool_call
-    @limit_tool_calls(agent_name="storekeeper")
-    def fetch_phytosanitary_info(name: str) -> dict:
-        """Fetch phytosanitary info and return JSON with usage sheet and recommended amount.
-
-        Args:
-            name: Phytosanitary product name to look up.
-
-        Returns:
-            A JSON-ready dictionary with the fetched phytosanitary info.
-
-        Output JSON: {"status":"success","phytosanitary":{"name","usage_sheet","recommended_amount","recommended_for","sources"}}.
-        """
-        if not name:
-            return {"status": "error", "message": "phytosanitary_name_required"}
-        query = f"{name} bonsai dosis de uso ficha tecnica fitosanitario"
-        response = searcher(query)
-        answer = str(response.get("answer", "")).strip()
-        sources = [
-            str(item.get("url"))
-            for item in response.get("results", [])
-            if item.get("url")
-        ]
-        recommended_amount = _extract_recommended_amount(answer)
-        usage_sheet = answer or "No data available."
-        recommended_for = "Plagas comunes"
-        return {
-            "status": "success",
-            "phytosanitary": {
-                "name": name,
-                "usage_sheet": usage_sheet,
-                "recommended_amount": recommended_amount,
-                "recommended_for": recommended_for,
-                "sources": sources,
-            },
-        }
-
-    return fetch_phytosanitary_info
 
 
 def create_list_phytosanitary_tool(
@@ -59,17 +16,15 @@ def create_list_phytosanitary_tool(
         Returns:
             A JSON-ready dictionary with the phytosanitary list.
 
-        Output JSON: {"status":"success","phytosanitary":[{"id","name","usage_sheet","recommended_amount","recommended_for"}]}.
+        Output JSON: {"status":"success","phytosanitary":[{"id","name","recommended_amount","wiki_path"}]}.
         """
         items = list_phytosanitary_func()
         results = [
             {
                 "id": phytosanitary.id,
                 "name": phytosanitary.name,
-                "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
-                "recommended_for": phytosanitary.recommended_for,
-                "sources": phytosanitary.sources,
+                "wiki_path": phytosanitary.wiki_path,
             }
             for phytosanitary in items
         ]
@@ -92,7 +47,7 @@ def create_get_phytosanitary_by_name_tool(
         Returns:
             A JSON-ready dictionary with the lookup result.
 
-        Output JSON (success): {"status":"success","phytosanitary":{"id","name","usage_sheet","recommended_amount","recommended_for"}}.
+        Output JSON (success): {"status":"success","phytosanitary":{"id","name","recommended_amount","wiki_path"}}.
         Output JSON (error): {"status":"error","message": "..."}.
         """
         if not name:
@@ -105,21 +60,9 @@ def create_get_phytosanitary_by_name_tool(
             "phytosanitary": {
                 "id": phytosanitary.id,
                 "name": phytosanitary.name,
-                "usage_sheet": phytosanitary.usage_sheet,
                 "recommended_amount": phytosanitary.recommended_amount,
-                "recommended_for": phytosanitary.recommended_for,
-                "sources": phytosanitary.sources,
+                "wiki_path": phytosanitary.wiki_path,
             },
         }
 
     return get_phytosanitary_by_name
-
-
-def _extract_recommended_amount(text: str) -> str:
-    match = re.search(
-        r"(\d+[\.,]?\d*\s*(ml|g|mg|kg|l|L)\s*/?\s*(l|L|litro|litros|100\s*l)?)",
-        text,
-    )
-    if match:
-        return match.group(0)
-    return "No disponible"

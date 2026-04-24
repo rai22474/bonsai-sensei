@@ -1,30 +1,18 @@
-from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
 from pytest_bdd import scenario, when, then, parsers
 
 from http_client import accept_confirmation, advise, get
-from judge import create_recommendation_metric
 from manage_fertilizers.fertilizer_api import find_fertilizer_by_name
 
-AMOUNT_EQUIVALENCE_CRITERIA = (
-    "The actual stored amount should convey the same dosage as the expected amount. "
-    "Minor additions like 'de agua' that do not change the numeric value are acceptable."
-)
 
-
-@scenario("../features/manage_fertilizers.feature", "Update a fertilizer via advice")
-def test_update_fertilizer():
+@scenario("../features/manage_fertilizers.feature", "Update fertilizer recommended amount via advice")
+def test_update_fertilizer_recommended_amount():
     return None
 
 
-@when(
-    parsers.parse(
-        'I request to update fertilizer "{name}" with recommended amount "{amount}"'
-    )
-)
+@when(parsers.parse('I request to update fertilizer "{name}" with recommended amount "{amount}"'))
 def request_fertilizer_update(context, name, amount, external_stubs):
     response = advise(
-        text=f"Actualiza el fertilizante {name} con dosis recomendada {amount}.",
+        text=f"Actualiza la cantidad recomendada del fertilizante {name} a {amount}.",
         user_id=context["user_id"],
     )
     context["pending_confirmations"] = response.get("pending_confirmations", [])
@@ -36,14 +24,9 @@ def confirm_fertilizer_update(context, name, external_stubs):
         accept_confirmation(context["user_id"], confirmation["id"])
 
 
-@then(
-    parsers.parse(
-        'fertilizer "{name}" should have recommended amount "{amount}"'
-    )
-)
-def assert_fertilizer_amount(name, amount):
+@then(parsers.parse('fertilizer "{name}" should have recommended amount "{amount}"'))
+def assert_fertilizer_recommended_amount(name, amount):
     fertilizer = find_fertilizer_by_name(get, name)
-    actual = fertilizer.get("recommended_amount") if fertilizer else ""
-    test_case = LLMTestCase(input=amount, actual_output=actual)
-    metric = create_recommendation_metric("amount_equivalence", AMOUNT_EQUIVALENCE_CRITERIA)
-    assert_test(test_case=test_case, metrics=[metric], run_async=False)
+    actual = (fertilizer or {}).get("recommended_amount")
+    assert actual == amount, \
+        f"Expected fertilizer '{name}' recommended_amount to be '{amount}', got: '{actual}'"

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from bonsai_sensei.domain.services.cultivation.weather.weather_tool import create_weather_tool
+from bonsai_sensei.domain.services.cultivation.weather.weather import create_weather_tool
 from bonsai_sensei.domain.services.cultivation.weather.weather_alert_runner import run_weather_alerts
 
 router = APIRouter()

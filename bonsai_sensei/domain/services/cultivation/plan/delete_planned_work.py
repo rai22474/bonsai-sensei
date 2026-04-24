@@ -6,7 +6,7 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_delete_planned_work_tool(
+def create_delete_planned_work_tool(
     get_planned_work_func: Callable,
     delete_planned_work_func: Callable,
     ask_confirmation: Callable,
@@ -14,7 +14,7 @@ def create_confirm_delete_planned_work_tool(
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="planning_agent")
-    async def confirm_delete_planned_work(
+    async def delete_planned_work(
         planned_work_id: int,
         tool_context: ToolContext | None = None,
     ) -> dict:
@@ -43,4 +43,4 @@ def create_confirm_delete_planned_work_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_delete_planned_work
+    return delete_planned_work

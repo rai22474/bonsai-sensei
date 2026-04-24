@@ -4,12 +4,13 @@ Feature: Manage phytosanitary products via advice
     When I request to register phytosanitary product "Neem Oil"
     And I confirm the phytosanitary creation for "Neem Oil"
     Then phytosanitary product "Neem Oil" should exist
+    And phytosanitary product "Neem Oil" should have a wiki page
 
-  Scenario: Update a phytosanitary product via advice
+  Scenario: Update phytosanitary recommended amount via advice
     Given phytosanitary product "Neem Oil" exists
-    When I request to update phytosanitary product "Neem Oil" with recommended amount "7 ml por litro"
+    When I request to update phytosanitary product "Neem Oil" with recommended amount "3 ml/L"
     And I confirm the phytosanitary update for "Neem Oil"
-    Then phytosanitary product "Neem Oil" should have recommended amount "7 ml por litro"
+    Then phytosanitary product "Neem Oil" should have recommended amount "3 ml/L"
 
   Scenario: Delete a phytosanitary product via advice
     Given phytosanitary product "Copper Soap" exists

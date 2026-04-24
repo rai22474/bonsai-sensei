@@ -1,8 +1,8 @@
 import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.cultivation.species.confirm_delete_species_tool import (
-    create_confirm_delete_species_tool,
+from bonsai_sensei.domain.services.cultivation.species.delete_species import (
+    create_delete_species_tool,
 )
 from bonsai_sensei.domain.species import Species
 
@@ -37,7 +37,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, dele
         captured_calls.append(species_name)
         return "confirmation text"
 
-    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(species_name="Elm", tool_context=tool_context)
 
     assert captured_calls == ["Elm"], \
@@ -62,7 +62,7 @@ async def should_return_success_when_user_confirms(delete_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_delete_when_user_cancels(tool_context, captured_delete, delete_species_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(species_name="Elm", tool_context=tool_context)
 
     assert captured_delete == {}, \
@@ -71,7 +71,7 @@ async def should_not_delete_when_user_cancels(tool_context, captured_delete, del
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, delete_species_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(species_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -134,4 +134,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def delete_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_delete_species_tool(delete_species_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)

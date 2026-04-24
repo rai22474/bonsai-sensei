@@ -1,6 +1,6 @@
 import pytest
 
-from bonsai_sensei.domain.services.wiki_page_tool import create_read_wiki_page_tool
+from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool
 
 
 def should_return_file_content_when_page_exists(wiki_root):

@@ -2,8 +2,8 @@ import pytest
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
-from bonsai_sensei.domain.services.garden.confirm_create_bonsai_tool import (
-    create_confirm_create_bonsai_tool,
+from bonsai_sensei.domain.services.garden.create_bonsai import (
+    create_create_bonsai_tool,
 )
 from bonsai_sensei.domain.species import Species
 
@@ -46,7 +46,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, crea
         captured_calls.append((name, species_name))
         return "confirmation text"
 
-    tool = create_confirm_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert captured_calls == [("Naruto", "Elm")], \
@@ -71,7 +71,7 @@ async def should_return_success_when_user_confirms(create_tool, tool_context):
 
 @pytest.mark.asyncio
 async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai_func, get_species_by_name_func, captured_bonsais, build_confirmation_message):
-    tool = create_confirm_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert captured_bonsais == [], \
@@ -80,7 +80,7 @@ async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai
 
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, create_bonsai_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_confirm_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert result["status"] == "cancelled", \
@@ -141,4 +141,4 @@ def build_confirmation_message():
 
 @pytest.fixture
 def create_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_confirm_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    return create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)

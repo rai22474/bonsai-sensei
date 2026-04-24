@@ -7,7 +7,7 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_confirm_record_transplant_tool(
+def create_record_transplant_tool(
     get_bonsai_by_name_func: Callable,
     record_bonsai_event_func: Callable,
     ask_confirmation: Callable,
@@ -15,7 +15,7 @@ def create_confirm_record_transplant_tool(
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="gardener")
-    async def confirm_record_transplant(
+    async def record_transplant(
         bonsai_name: str,
         pot_size: str,
         pot_type: str,
@@ -60,4 +60,4 @@ def create_confirm_record_transplant_tool(
 
         return {"status": "cancelled", "reason": confirmed.reason}
 
-    return confirm_record_transplant
+    return record_transplant

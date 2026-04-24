@@ -67,6 +67,6 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 
 @given(parsers.parse('phytosanitary product "{name}" is registered'))
 def ensure_phytosanitary_registered(context, name):
-    phytosanitary = create_phytosanitary(post, name, "Ficha de uso disponible.", "2 ml por litro de agua.", "Hongos y plagas", [])
+    phytosanitary = create_phytosanitary(post, name)
     context["phytosanitaries_registered"].append(name)
     context["phytosanitary_ids"][name] = phytosanitary.get("id")
