@@ -32,10 +32,3 @@ def assert_fertilizer_exists(name):
     assert actual == name, f"Expected fertilizer '{name}' to exist, got '{actual}'."
 
 
-@then(parsers.parse('fertilizer "{name}" should have a wiki page'))
-def assert_fertilizer_has_wiki_page(name):
-    fertilizer = find_fertilizer_by_name(get, name)
-    wiki_path = (fertilizer or {}).get("wiki_path")
-    assert wiki_path, f"Expected fertilizer '{name}' to have a wiki_path, got: {fertilizer}"
-    content = get(f"/api/wiki?path={wiki_path}").get("content", "")
-    assert content, f"Expected wiki page at '{wiki_path}' to have content, got empty."

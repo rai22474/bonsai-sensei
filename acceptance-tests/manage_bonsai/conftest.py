@@ -1,4 +1,7 @@
+import re
+
 import pytest
+from pytest_httpserver import HTTPServer
 
 from http_client import delete, get, post, put
 from manage_bonsai.bonsai_api import (
@@ -8,6 +11,32 @@ from manage_bonsai.bonsai_api import (
     update_bonsai,
 )
 from manage_species.species_api import create_species, get_species_id
+
+
+STUB_PORT = 8070
+
+
+@pytest.fixture(autouse=True)
+def external_stubs():
+    server = HTTPServer(host="0.0.0.0", port=STUB_PORT)
+    server.start()
+    server.expect_request(re.compile(r"/search.*")).respond_with_json(
+        {
+            "answer": (
+                "Acer palmatum es una especie caducifolia muy popular en bonsái. "
+                "Riego: abundante en verano, moderado en invierno; evitar encharcamiento. "
+                "Luz: semisombra, proteger del sol directo en verano. "
+                "Suelo: mezcla drenante de akadama y pomice en proporción 60/40. "
+                "Poda: formación en otoño; pinzado de brotes tiernos en primavera. "
+                "Plagas habituales: pulgones y cochinilla; tratar con aceite de neem. "
+                "Cuidados por estación: en primavera fertilizar cada 15 días; en verano riego diario; "
+                "en otoño reducir fertilización; en invierno proteger de heladas fuertes."
+            ),
+            "results": [],
+        }
+    )
+    yield server
+    server.stop()
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ from bonsai_sensei.domain.services.cultivation.species.create_species import cre
 from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
 from bonsai_sensei.domain.services.cultivation.species.delete_species import create_delete_species_tool
 from bonsai_sensei.domain.services.cultivation.species.update_species import create_update_species_tool
+from bonsai_sensei.domain.services.cultivation.species.refresh_species_wiki import create_refresh_species_wiki_tool
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import create_search_species_tool
 
@@ -33,6 +34,8 @@ def create_botanist(
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
+    build_refresh_species_wiki_confirmation: Callable,
+    refresh_species_wiki_tool: Callable,
 ) -> Agent:
     return Agent(
         model=model,
@@ -63,6 +66,7 @@ def create_botanist(
                 build_confirmation_message=build_delete_species_confirmation,
             ),
             create_search_species_tool(search_species_func=search_species_func),
+            refresh_species_wiki_tool,
             read_wiki_page_tool,
         ],
     )

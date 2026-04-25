@@ -12,15 +12,8 @@ def should_list_fertilizers(list_fertilizers_tool):
 
     assert result == {
         "status": "success",
-        "fertilizers": [
-            {
-                "id": 1,
-                "name": "Fertilizer A",
-                "recommended_amount": "10 ml/L",
-                "wiki_path": "fertilizers/fertilizer-a.md",
-            }
-        ],
-    }, "Should list fertilizers with id, name, recommended_amount and wiki_path"
+        "fertilizers": [{"id": 1, "name": "Fertilizer A"}],
+    }, "Should list fertilizers with only id and name"
 
 
 def should_get_fertilizer_by_name(get_fertilizer_tool):
@@ -32,9 +25,9 @@ def should_get_fertilizer_by_name(get_fertilizer_tool):
             "id": 1,
             "name": "Fertilizer A",
             "recommended_amount": "10 ml/L",
-            "wiki_path": "fertilizers/fertilizer-a.md",
+            "content": None,
         },
-    }, "Should return fertilizer record with id, name, recommended_amount and wiki_path"
+    }, "Should return fertilizer with id, name, recommended_amount and wiki content (None when file not found)"
 
 
 def should_return_error_when_fertilizer_not_found(get_fertilizer_tool):
@@ -78,5 +71,5 @@ def list_fertilizers_tool(list_fertilizers_func):
 
 
 @pytest.fixture
-def get_fertilizer_tool(get_fertilizer_by_name_func):
-    return create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func)
+def get_fertilizer_tool(get_fertilizer_by_name_func, tmp_path):
+    return create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func, wiki_root=str(tmp_path))

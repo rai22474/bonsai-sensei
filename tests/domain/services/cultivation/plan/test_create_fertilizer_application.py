@@ -32,6 +32,17 @@ async def should_return_error_when_scheduled_date_is_empty(fertilizer_tool, tool
 
 
 @pytest.mark.asyncio
+async def should_use_next_saturday_when_scheduled_date_is_empty(fertilizer_tool, tool_context, captured_planned_works):
+    tool_context.state["next_saturday"] = "2026-05-03"
+
+    await fertilizer_tool(bonsai_name="Kaze", scheduled_date="", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
+
+    from datetime import date
+    assert captured_planned_works[0].scheduled_date == date(2026, 5, 3), \
+        "When scheduled_date is empty, the tool should fall back to next_saturday from session state"
+
+
+@pytest.mark.asyncio
 async def should_return_error_when_fertilizer_name_is_empty(fertilizer_tool, tool_context):
     result = await fertilizer_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="", tool_context=tool_context)
 

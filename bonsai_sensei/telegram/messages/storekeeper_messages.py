@@ -20,3 +20,11 @@ def build_delete_phytosanitary_confirmation(name: str) -> str:
 
 def build_update_phytosanitary_confirmation(name: str, recommended_amount: str) -> str:
     return f"¿Actualizar la cantidad recomendada del producto fitosanitario '{name}' a '{recommended_amount}'?"
+
+
+def build_refresh_fertilizer_wiki_confirmation(name: str) -> str:
+    return f"¿Regenerar la ficha wiki del fertilizante '{name}' con información actualizada de internet?"
+
+
+def build_refresh_phytosanitary_wiki_confirmation(name: str) -> str:
+    return f"¿Regenerar la ficha wiki del producto fitosanitario '{name}' con información actualizada de internet?"

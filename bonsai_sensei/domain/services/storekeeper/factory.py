@@ -5,6 +5,10 @@ from typing import Callable
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain.services.storekeeper.storekeeper import create_storekeeper
+from bonsai_sensei.telegram.messages.storekeeper_messages import (
+    build_refresh_fertilizer_wiki_confirmation,
+    build_refresh_phytosanitary_wiki_confirmation,
+)
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import (
     create_tavily_searcher,
 )
@@ -86,4 +90,6 @@ def create_storekeeper_group(
         build_create_phytosanitary_confirmation=build_create_phytosanitary_confirmation,
         build_delete_phytosanitary_confirmation=build_delete_phytosanitary_confirmation,
         build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
+        build_refresh_fertilizer_wiki_confirmation=build_refresh_fertilizer_wiki_confirmation,
+        build_refresh_phytosanitary_wiki_confirmation=build_refresh_phytosanitary_wiki_confirmation,
     )

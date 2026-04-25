@@ -9,3 +9,7 @@ def build_delete_species_confirmation(species_name: str) -> str:
 def build_update_species_confirmation(species_name: str, species_data: dict) -> str:
     fields = ", ".join(f"{key}='{value}'" for key, value in species_data.items())
     return f"¿Actualizar especie '{species_name}'? Cambios: {fields}"
+
+
+def build_refresh_species_wiki_confirmation(name: str) -> str:
+    return f"¿Regenerar la ficha wiki de '{name}' con información actualizada de internet?"

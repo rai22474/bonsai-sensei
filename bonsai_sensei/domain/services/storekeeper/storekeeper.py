@@ -7,6 +7,7 @@ from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.fertilizers.create_fertilizer import create_create_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.delete_fertilizer import create_delete_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.update_fertilizer import create_update_fertilizer_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.refresh_fertilizer_wiki import create_refresh_fertilizer_wiki_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
     create_list_fertilizers_tool,
     create_get_fertilizer_by_name_tool,
@@ -14,6 +15,7 @@ from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools impo
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.create_phytosanitary import create_create_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.delete_phytosanitary import create_delete_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.update_phytosanitary import create_update_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.refresh_phytosanitary_wiki import create_refresh_phytosanitary_wiki_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
     create_list_phytosanitary_tool,
     create_get_phytosanitary_by_name_tool,
@@ -50,6 +52,8 @@ def create_storekeeper(
     build_create_phytosanitary_confirmation: Callable,
     build_delete_phytosanitary_confirmation: Callable,
     build_update_phytosanitary_confirmation: Callable,
+    build_refresh_fertilizer_wiki_confirmation: Callable,
+    build_refresh_phytosanitary_wiki_confirmation: Callable,
 ) -> Agent:
     return Agent(
         model=model,
@@ -73,6 +77,13 @@ def create_storekeeper(
                 ask_confirmation=ask_confirmation,
                 build_confirmation_message=build_update_fertilizer_confirmation,
             ),
+            create_refresh_fertilizer_wiki_tool(
+                get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+                update_fertilizer_func=update_fertilizer_func,
+                wiki_page_builder=fertilizer_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_refresh_fertilizer_wiki_confirmation,
+            ),
             create_delete_fertilizer_tool(
                 delete_fertilizer_func=delete_fertilizer_func,
                 get_fertilizer_by_name_func=get_fertilizer_by_name_func,
@@ -93,6 +104,13 @@ def create_storekeeper(
                 get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
                 ask_confirmation=ask_confirmation,
                 build_confirmation_message=build_update_phytosanitary_confirmation,
+            ),
+            create_refresh_phytosanitary_wiki_tool(
+                get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+                update_phytosanitary_func=update_phytosanitary_func,
+                wiki_page_builder=phytosanitary_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_refresh_phytosanitary_wiki_confirmation,
             ),
             create_delete_phytosanitary_tool(
                 delete_phytosanitary_func=delete_phytosanitary_func,

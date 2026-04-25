@@ -12,15 +12,8 @@ def should_list_phytosanitary(list_phytosanitary_tool):
 
     assert result == {
         "status": "success",
-        "phytosanitary": [
-            {
-                "id": 1,
-                "name": "Phytosanitary A",
-                "recommended_amount": "10 ml/L",
-                "wiki_path": "phytosanitaries/phytosanitary-a.md",
-            }
-        ],
-    }, "Should list phytosanitary with id, name, recommended_amount and wiki_path"
+        "phytosanitary": [{"id": 1, "name": "Phytosanitary A"}],
+    }, "Should list phytosanitary with only id and name"
 
 
 def should_get_phytosanitary_by_name(get_phytosanitary_tool):
@@ -32,9 +25,9 @@ def should_get_phytosanitary_by_name(get_phytosanitary_tool):
             "id": 1,
             "name": "Phytosanitary A",
             "recommended_amount": "10 ml/L",
-            "wiki_path": "phytosanitaries/phytosanitary-a.md",
+            "content": None,
         },
-    }, "Should return phytosanitary record with id, name, recommended_amount and wiki_path"
+    }, "Should return phytosanitary with id, name, recommended_amount and wiki content (None when file not found)"
 
 
 def should_return_error_when_phytosanitary_not_found(get_phytosanitary_tool):
@@ -78,5 +71,5 @@ def list_phytosanitary_tool(list_phytosanitary_func):
 
 
 @pytest.fixture
-def get_phytosanitary_tool(get_phytosanitary_by_name_func):
-    return create_get_phytosanitary_by_name_tool(get_phytosanitary_by_name_func)
+def get_phytosanitary_tool(get_phytosanitary_by_name_func, tmp_path):
+    return create_get_phytosanitary_by_name_tool(get_phytosanitary_by_name_func, wiki_root=str(tmp_path))

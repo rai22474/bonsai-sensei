@@ -46,6 +46,8 @@ def create_create_fertilizer_application_tool(
             return {"status": "error", "message": "bonsai_name_required"}
 
         if not scheduled_date:
+            scheduled_date = tool_context.state.get("next_saturday") if tool_context else None
+        if not scheduled_date:
             return {"status": "error", "message": "scheduled_date_required"}
 
         if not fertilizer_name:

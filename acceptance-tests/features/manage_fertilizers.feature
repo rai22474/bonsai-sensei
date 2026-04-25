@@ -22,3 +22,9 @@ Feature: Manage fertilizers via advice
     Given fertilizer "BioBloom" exists
     When I request the fertilizer list
     Then fertilizer list includes "BioBloom"
+
+  Scenario: Refresh fertilizer wiki via advice
+    Given fertilizer "BioGrow" exists
+    When I request to refresh the wiki page for fertilizer "BioGrow" with instructions "añade información detallada sobre las épocas de aplicación"
+    And I confirm the wiki refresh for fertilizer "BioGrow"
+    Then fertilizer "BioGrow" should have a wiki page

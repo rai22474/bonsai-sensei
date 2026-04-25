@@ -1,24 +1,12 @@
-from pytest_bdd import scenario, given, when, then, parsers
+from pytest_bdd import scenario, when, then, parsers
 
-from http_client import accept_confirmation, advise, delete, get, post
-from manage_species.species_api import (
-    create_species,
-    delete_species_by_name,
-    find_species_by_name,
-)
+from http_client import accept_confirmation, advise, get
+from manage_species.species_api import find_species_by_name
 
 
 @scenario("../features/manage_species.feature", "Delete a species via advice")
 def test_delete_species_via_advice():
     return None
-
-
-@given(parsers.parse('species "{name}" exists with scientific name "{scientific_name}"'))
-def ensure_species_exists(context, name, scientific_name, external_stubs):
-    delete_species_by_name(get, delete, name)
-    species = create_species(post, name, scientific_name)
-    context["created"].append(name)
-    context["species_ids"][name] = species.get("id")
 
 
 @when(parsers.parse('I request to delete species "{name}"'))

@@ -37,6 +37,7 @@ from bonsai_sensei.telegram.messages.botanist_messages import (
     build_create_species_confirmation,
     build_delete_species_confirmation,
     build_update_species_confirmation,
+    build_refresh_species_wiki_confirmation,
 )
 from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
@@ -273,6 +274,7 @@ async def lifespan(app: FastAPI):
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
+        build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
         orchestrator_model=orchestrator_model,
     )
     gardener_group_factory = partial(

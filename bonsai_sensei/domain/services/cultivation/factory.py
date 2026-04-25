@@ -12,6 +12,7 @@ from bonsai_sensei.domain.services.cultivation.plan.planning_agent import (
     create_planning_agent,
 )
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
+from bonsai_sensei.domain.services.cultivation.species.refresh_species_wiki import create_refresh_species_wiki_tool
 from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import (
     create_species_wiki_compiler,
 )
@@ -81,6 +82,7 @@ def create_cultivation_group(
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
+    build_refresh_species_wiki_confirmation: Callable,
     orchestrator_model: object = None,
 ):
     effective_orchestrator_model = orchestrator_model or model
@@ -89,6 +91,7 @@ def create_cultivation_group(
     botanist = _create_botanist(
         model, session_factory, ask_confirmation, ask_selection,
         build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation,
+        build_refresh_species_wiki_confirmation,
     )
 
     wiki_root = os.getenv("WIKI_PATH", "./wiki")
@@ -142,7 +145,7 @@ def create_cultivation_group(
     return botanist, weather_agent, planning_agent
 
 
-def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation):
+def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation):
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
@@ -186,6 +189,14 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
+        build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
+        refresh_species_wiki_tool=create_refresh_species_wiki_tool(
+            get_species_by_name_func=get_species_by_name_func,
+            update_species_func=partial(herbarium.update_species, create_session=session_factory),
+            wiki_page_builder=wiki_page_builder,
+            ask_confirmation=ask_confirmation,
+            build_confirmation_message=build_refresh_species_wiki_confirmation,
+        ),
     )
 
 

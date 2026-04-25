@@ -24,6 +24,12 @@ Feature: Manage bonsai species via advice
     And I confirm the species creation for "Ficus Retusa" with scientific name "Ficus retusa"
     Then the wiki page for species "Ficus Retusa" should contain watering information
 
+  Scenario: Refresh species wiki via advice
+    Given species "Ficus Retusa" exists with scientific name "Ficus retusa"
+    When I request to refresh the wiki page for species "Ficus Retusa" with instructions "profundiza en los cuidados por estación"
+    And I confirm the wiki refresh for species "Ficus Retusa"
+    Then the wiki page for species "Ficus Retusa" should contain watering information
+
   Scenario: User is asked to choose variety when species name is ambiguous
     Given no species named "Junípero" exists
     When I request to register ambiguous species "Junípero"

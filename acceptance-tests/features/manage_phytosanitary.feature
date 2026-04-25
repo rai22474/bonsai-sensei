@@ -22,3 +22,9 @@ Feature: Manage phytosanitary products via advice
     Given phytosanitary product "Copper Soap" exists
     When I request the phytosanitary list
     Then phytosanitary list includes "Copper Soap"
+
+  Scenario: Refresh phytosanitary wiki via advice
+    Given phytosanitary product "Neem Oil" exists
+    When I request to refresh the wiki page for phytosanitary product "Neem Oil" with instructions "amplía la sección de plagas y enfermedades objetivo"
+    And I confirm the wiki refresh for phytosanitary product "Neem Oil"
+    Then phytosanitary product "Neem Oil" should have a wiki page

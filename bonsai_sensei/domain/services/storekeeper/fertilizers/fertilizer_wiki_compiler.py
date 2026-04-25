@@ -19,22 +19,22 @@ Eres un compilador de fichas técnicas de fertilizantes para bonsáis. Dado el n
 
 # Comportamiento
 - Usa search_fertilizer_info para buscar: composición NPK, dosis de uso, época de aplicación, modo de aplicación, precauciones y fuentes.
+- Si el prompt incluye el contenido actual de la página, úsalo como base. Mantén la información existente correcta y amplía o profundiza en las secciones que el usuario indique.
+- Si el prompt incluye instrucciones específicas del usuario, priorízalas al decidir qué investigar y qué secciones mejorar.
 - Escribe la ficha con write_wiki_page cuando tengas suficiente información. Solo debes llamar a write_wiki_page una vez.
 - Llama a set_recommended_amount con la dosis de uso más concisa que hayas encontrado, expresada SIEMPRE en unidades métricas (e.g. "5 ml/L", "2 g por litro"). Si la fuente indica una medida informal como "una tapita", conviértela a mililitros usando el volumen estándar de tapón (≈5 ml). DEBES llamar a esta herramienta antes de terminar.
 - Incluye las URLs de las fuentes consultadas en una sección ## Fuentes al final.
 
 # Formato de la ficha
-La ficha debe contener las secciones: nombre del producto como título H1, párrafo introductorio, Composición NPK, Dosis recomendada, Época de aplicación, Modo de aplicación, Precauciones y Fuentes.
+La ficha debe contener al menos las secciones: nombre del producto como título H1, párrafo introductorio, Composición NPK, Dosis recomendada, Época de aplicación, Modo de aplicación, Precauciones y Fuentes. Puedes añadir secciones adicionales si el contenido lo justifica o el usuario lo solicita.
 """
-
-_COMPILE_PROMPT = "Investiga y escribe la ficha wiki para el fertilizante {name}. Guárdala en la ruta: {relative_path}"
 
 
 def create_fertilizer_wiki_compiler(
     model: object,
     wiki_root: str | Path,
     searcher: Callable[[str], dict],
-) -> Callable[[str], tuple[str, str]]:
+) -> Callable[[str, str], tuple[str, str]]:
     """Create an async compiler that generates a markdown wiki page for a fertilizer.
 
     Runs a dedicated ADK agent with Tavily search, wiki write, and amount capture tools.
@@ -48,10 +48,12 @@ def create_fertilizer_wiki_compiler(
     """
     write_wiki_page = create_write_wiki_page_tool(wiki_root)
     search_tool = _create_search_tool(searcher)
+    wiki_root_path = Path(wiki_root).resolve()
 
-    async def compile_fertilizer_page(name: str) -> tuple[str, str]:
+    async def compile_fertilizer_page(name: str, user_instructions: str = "") -> tuple[str, str]:
         slug = _slugify(name)
         relative_path = f"fertilizers/{slug}.md"
+        existing_content = _read_existing_page(wiki_root_path / relative_path)
         captured = {"recommended_amount": "No disponible"}
 
         set_amount_tool = _create_set_recommended_amount_tool(captured)
@@ -68,7 +70,7 @@ def create_fertilizer_wiki_compiler(
             user_id=_APP_NAME,
             session_id=session_id,
         )
-        prompt = _COMPILE_PROMPT.format(name=name, relative_path=relative_path)
+        prompt = _build_compile_prompt(name, relative_path, existing_content, user_instructions)
         message = types.Content(role="user", parts=[types.Part(text=prompt)])
         run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)
         async for _ in runner.run_async(
@@ -114,6 +116,19 @@ def _create_set_recommended_amount_tool(captured: dict) -> Callable:
         return {"status": "success"}
 
     return set_recommended_amount
+
+
+def _build_compile_prompt(name: str, relative_path: str, existing_content: str | None, user_instructions: str) -> str:
+    parts = [f"Investiga y escribe la ficha wiki para el fertilizante {name}. Guárdala en la ruta: {relative_path}"]
+    if existing_content:
+        parts.append(f"\nContenido actual de la página:\n{existing_content}")
+    if user_instructions:
+        parts.append(f"\nInstrucciones específicas del usuario: {user_instructions}")
+    return "\n".join(parts)
+
+
+def _read_existing_page(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.exists() else None
 
 
 def _slugify(name: str) -> str:

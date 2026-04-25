@@ -1,124 +1,125 @@
-acceptance-tests-db-1   | The files belonging to this database system will be owned by user "postgres".
-acceptance-tests-db-1   | This user must also own the server process.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-tests-db-1   | The default database encoding has accordingly been set to "UTF8".
-acceptance-tests-db-1   | The default text search configuration will be set to "english".
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | Data page checksums are disabled.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1  | The files belonging to this database system will be owned by user "postgres".
+acceptance-tests-db-1  | This user must also own the server process.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-tests-db-1  | The default database encoding has accordingly been set to "UTF8".
+acceptance-tests-db-1  | The default text search configuration will be set to "english".
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | Data page checksums are disabled.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1  | creating subdirectories ... ok
+acceptance-tests-db-1  | selecting dynamic shared memory implementation ... posix
+acceptance-tests-db-1  | selecting default max_connections ... 100
+acceptance-tests-db-1  | selecting default shared_buffers ... 128MB
+acceptance-tests-db-1  | selecting default time zone ... UTC
+acceptance-tests-db-1  | creating configuration files ... ok
+acceptance-tests-db-1  | running bootstrap script ... ok
+acceptance-tests-db-1  | sh: locale: not found
+acceptance-tests-db-1  | 2026-04-25 07:07:47.605 UTC [36] WARNING:  no usable system locales were found
+acceptance-tests-db-1  | performing post-bootstrap initialization ... ok
+acceptance-tests-db-1  | syncing data to disk ... ok
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | Success. You can now start the database server using:
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | initdb: warning: enabling "trust" authentication for local connections
+acceptance-tests-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-tests-db-1  | waiting for server to start....2026-04-25 07:07:47.923 UTC [42] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1  | 2026-04-25 07:07:47.924 UTC [42] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1  | 2026-04-25 07:07:47.930 UTC [45] LOG:  database system was shut down at 2026-04-25 07:07:47 UTC
+acceptance-tests-db-1  | 2026-04-25 07:07:47.936 UTC [42] LOG:  database system is ready to accept connections
+acceptance-tests-db-1  |  done
+acceptance-tests-db-1  | server started
+acceptance-tests-db-1  | CREATE DATABASE
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | waiting for server to shut down....2026-04-25 07:07:48.057 UTC [42] LOG:  received fast shutdown request
+acceptance-tests-db-1  | 2026-04-25 07:07:48.058 UTC [42] LOG:  aborting any active transactions
+acceptance-tests-db-1  | 2026-04-25 07:07:48.060 UTC [42] LOG:  background worker "logical replication launcher" (PID 48) exited with exit code 1
+acceptance-tests-db-1  | 2026-04-25 07:07:48.061 UTC [43] LOG:  shutting down
+acceptance-tests-db-1  | 2026-04-25 07:07:48.062 UTC [43] LOG:  checkpoint starting: shutdown immediate
+acceptance-tests-db-1  | 2026-04-25 07:07:48.132 UTC [43] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.019 s, sync=0.048 s, total=0.072 s; sync files=301, longest=0.011 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
+acceptance-tests-db-1  | 2026-04-25 07:07:48.136 UTC [42] LOG:  database system is shut down
+acceptance-tests-db-1  |  done
+acceptance-tests-db-1  | server stopped
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | PostgreSQL init process complete; ready for start up.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 2026-04-25 07:07:48.177 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1  | 2026-04-25 07:07:48.177 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-tests-db-1  | 2026-04-25 07:07:48.177 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-tests-db-1  | 2026-04-25 07:07:48.180 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1  | 2026-04-25 07:07:48.186 UTC [58] LOG:  database system was shut down at 2026-04-25 07:07:48 UTC
+acceptance-tests-db-1  | 2026-04-25 07:07:48.190 UTC [1] LOG:  database system is ready to accept connections
 acceptance-tests-app-1  | INFO:__main__:Running database migrations...
 acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/authlib/_joserfc_helpers.py:8: AuthlibDeprecationWarning: authlib.jose module is deprecated, please use joserfc instead.
 acceptance-tests-app-1  | It will be compatible before version 2.0.0.
 acceptance-tests-app-1  |   from authlib.jose import ECKey
-acceptance-tests-db-1   | creating subdirectories ... ok
-acceptance-tests-db-1   | selecting dynamic shared memory implementation ... posix
-acceptance-tests-db-1   | selecting default max_connections ... 100
-acceptance-tests-db-1   | selecting default shared_buffers ... 128MB
-acceptance-tests-db-1   | selecting default time zone ... UTC
-acceptance-tests-db-1   | creating configuration files ... ok
-acceptance-tests-db-1   | running bootstrap script ... ok
-acceptance-tests-db-1   | sh: locale: not found
-acceptance-tests-db-1   | 2026-04-24 13:15:58.952 UTC [37] WARNING:  no usable system locales were found
-acceptance-tests-db-1   | performing post-bootstrap initialization ... ok
-acceptance-tests-db-1   | syncing data to disk ... ok
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | Success. You can now start the database server using:
-acceptance-tests-db-1   | 
 acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:72: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
 acceptance-tests-app-1  |   check_feature_enabled()
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Will assume transactional DDL.
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Running upgrade  -> 644fe3ae93f1, replace_care_guide_with_wiki_path
-acceptance-tests-db-1   |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | initdb: warning: enabling "trust" authentication for local connections
-acceptance-tests-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-tests-db-1   | waiting for server to start....2026-04-24 13:15:59.367 UTC [43] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-04-24 13:15:59.369 UTC [43] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1   | 2026-04-24 13:15:59.373 UTC [46] LOG:  database system was shut down at 2026-04-24 13:15:59 UTC
-acceptance-tests-db-1   | 2026-04-24 13:15:59.377 UTC [43] LOG:  database system is ready to accept connections
-acceptance-tests-db-1   |  done
-acceptance-tests-db-1   | server started
-acceptance-tests-db-1   | CREATE DATABASE
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Running upgrade 644fe3ae93f1 -> a1b2c3d4e5f6, replace_usage_sheet_with_wiki_path
 acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/authlib/_joserfc_helpers.py:8: AuthlibDeprecationWarning: authlib.jose module is deprecated, please use joserfc instead.
 acceptance-tests-app-1  | It will be compatible before version 2.0.0.
 acceptance-tests-app-1  |   from authlib.jose import ECKey
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | waiting for server to shut down....2026-04-24 13:15:59.517 UTC [43] LOG:  received fast shutdown request
 acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:72: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
 acceptance-tests-app-1  |   check_feature_enabled()
 acceptance-tests-app-1  | INFO:     Started server process [8]
-acceptance-tests-db-1   | 2026-04-24 13:15:59.519 UTC [43] LOG:  aborting any active transactions
-acceptance-tests-db-1   | 2026-04-24 13:15:59.521 UTC [43] LOG:  background worker "logical replication launcher" (PID 49) exited with exit code 1
-acceptance-tests-db-1   | 2026-04-24 13:15:59.522 UTC [44] LOG:  shutting down
-acceptance-tests-db-1   | 2026-04-24 13:15:59.524 UTC [44] LOG:  checkpoint starting: shutdown immediate
 acceptance-tests-app-1  | INFO:     Waiting for application startup.
-acceptance-tests-app-1  | 2026-04-24 13:16:08,474 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
-acceptance-tests-app-1  | 2026-04-24 13:16:08,474 - bonsai_sensei.telegram.bot - WARNING - TELEGRAM_BOT_TOKEN not set. Bot will not function.
-acceptance-tests-db-1   | 2026-04-24 13:15:59.574 UTC [44] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.022 s, sync=0.024 s, total=0.053 s; sync files=301, longest=0.005 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
-acceptance-tests-db-1   | 2026-04-24 13:15:59.579 UTC [43] LOG:  database system is shut down
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
-acceptance-tests-db-1   |  done
-acceptance-tests-db-1   | server stopped
-acceptance-tests-db-1   | 
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Scheduler started
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-db-1   | PostgreSQL init process complete; ready for start up.
-acceptance-tests-db-1   | 
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
-acceptance-tests-app-1  | 2026-04-24 13:16:08,477 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-04-25 07:07:56,738 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
+acceptance-tests-app-1  | 2026-04-25 07:07:56,738 - bonsai_sensei.telegram.bot - WARNING - TELEGRAM_BOT_TOKEN not set. Bot will not function.
+acceptance-tests-app-1  | 2026-04-25 07:07:56,740 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-app-1  | 2026-04-25 07:07:56,740 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
+acceptance-tests-app-1  | 2026-04-25 07:07:56,740 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-04-25 07:07:56,741 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-app-1  | 2026-04-25 07:07:56,741 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
+acceptance-tests-app-1  | 2026-04-25 07:07:56,741 - apscheduler.scheduler - INFO - Scheduler started
 acceptance-tests-app-1  | INFO:     Application startup complete.
 acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-acceptance-tests-db-1   | 2026-04-24 13:15:59.635 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-04-24 13:15:59.636 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-tests-db-1   | 2026-04-24 13:15:59.636 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-tests-db-1   | 2026-04-24 13:15:59.639 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-app-1  | INFO:     192.168.48.1:42744 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-04-24 13:16:33,137 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-phytosanitary-92abe125999c4d4a82f221c027bd774a text=Da de alta el fitosanitario Neem Oil. ***
-acceptance-tests-app-1  | 2026-04-24 13:16:33,216 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:35,288 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:35,288 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
-acceptance-tests-app-1  | 2026-04-24 13:16:35,344 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:35,344 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-24 13:16:37,932 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:38,018 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:38,655 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:38,736 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:39,388 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:39,398 - bonsai_sensei.telegram.bot - ERROR - Cannot send confirmation message: Bot not configured
-acceptance-tests-app-1  | INFO:     192.168.48.1:44282 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-04-24 13:16:39,472 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:40,070 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:40,143 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:40,960 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:41,049 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:43,259 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:43,351 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:44,037 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:44,118 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:44,884 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-db-1   | 2026-04-24 13:15:59.646 UTC [59] LOG:  database system was shut down at 2026-04-24 13:15:59 UTC
-acceptance-tests-app-1  | 2026-04-24 13:16:44,915 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-24 13:16:44,915 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-24 13:16:44,978 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:45,768 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-24 13:16:45,788 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-24 13:16:45,788 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-24 13:16:45,838 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-24 13:16:47,073 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | INFO:     192.168.48.1:44296 - "POST /api/advice/confirmations/959e902ddc324484b8196282af81dfe8/accept HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33440 - "GET /api/phytosanitary/Neem%20Oil HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33452 - "GET /api/phytosanitary HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33454 - "GET /api/phytosanitary/Neem%20Oil HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33458 - "GET /api/wiki?path=phytosanitaries/neem-oil.md HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33468 - "DELETE /api/phytosanitary/Neem%20Oil HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.48.1:33476 - "DELETE /api/advice/sessions/bdd-phytosanitary-92abe125999c4d4a82f221c027bd774a HTTP/1.1" 204 No Content
-acceptance-tests-db-1   | 2026-04-24 13:15:59.651 UTC [1] LOG:  database system is ready to accept connections
+acceptance-tests-app-1  | INFO:     192.168.224.1:53480 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:55070 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:55080 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:55082 - "POST /api/fertilizers HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-04-25 07:08:16,455 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-cultivation-plan-ecb0e7043d6b429c8672e983eb04da95 text=Quiero planificar una fertilización con BioGrow en cantidad de 5 ml para el bonsái Kaze. No tengo una fecha concreta en mente, elige la que consideres más adecuada. ***
+acceptance-tests-app-1  | 2026-04-25 07:08:16,510 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:18,480 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:18,481 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+acceptance-tests-app-1  | 2026-04-25 07:08:18,558 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:18,558 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-04-25 07:08:22,427 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:22,514 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:25,851 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:25,931 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:25,931 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-04-25 07:08:34,337 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:34,428 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:35,161 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:35,227 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:35,944 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:35,981 - bonsai_sensei.telegram.bot - ERROR - Cannot send confirmation message: Bot not configured
+acceptance-tests-app-1  | INFO:     192.168.224.1:55086 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-04-25 07:08:36,075 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:36,904 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:36,935 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-04-25 07:08:36,935 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-04-25 07:08:36,997 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:37,979 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-04-25 07:08:38,012 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-04-25 07:08:38,013 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-04-25 07:08:38,074 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-04-25 07:08:39,100 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | INFO:     192.168.224.1:57462 - "POST /api/advice/confirmations/8d30d5565bda4c9a98bd013eed5e81eb/accept HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57476 - "GET /api/bonsai/1/planned-works HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57482 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57490 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57498 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57514 - "DELETE /api/species/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57528 - "DELETE /api/fertilizers/BioGrow HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.224.1:57534 - "DELETE /api/advice/sessions/bdd-cultivation-plan-ecb0e7043d6b429c8672e983eb04da95 HTTP/1.1" 204 No Content

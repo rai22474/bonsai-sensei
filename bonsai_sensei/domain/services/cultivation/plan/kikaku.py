@@ -15,7 +15,7 @@ Próximo sábado: {{next_saturday}}
 # Comportamiento
 Si falta información esencial (nombre del bonsái, tipo de trabajo), responde pidiéndola al usuario y no generes ningún plan.
 
-Si el usuario NO especifica fecha, usa EXACTAMENTE {{next_saturday}} en el paso de confirmación. No calcules ni uses otra fecha por defecto.
+Si el usuario NO especifica fecha, planifica directamente sin incluirla en el paso — el sistema usará el próximo sábado por defecto.
 
 Diseña un plan en JSON con esta estructura:
 {{

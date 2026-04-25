@@ -39,10 +39,3 @@ def assert_phytosanitary_exists(name):
     )
 
 
-@then(parsers.parse('phytosanitary product "{name}" should have a wiki page'))
-def assert_phytosanitary_has_wiki_page(name):
-    phytosanitary = find_phytosanitary_by_name(get, name)
-    wiki_path = (phytosanitary or {}).get("wiki_path")
-    assert wiki_path, f"Expected phytosanitary '{name}' to have a wiki_path, got: {phytosanitary}"
-    content = get(f"/api/wiki?path={wiki_path}").get("content", "")
-    assert content, f"Expected wiki page at '{wiki_path}' to have content, got empty."

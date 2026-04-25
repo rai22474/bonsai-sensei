@@ -47,6 +47,8 @@ def create_create_transplant_tool(
             return {"status": "error", "message": "bonsai_name_required"}
 
         if not scheduled_date:
+            scheduled_date = tool_context.state.get("next_saturday") if tool_context else None
+        if not scheduled_date:
             return {"status": "error", "message": "scheduled_date_required"}
 
         payload = build_transplant_payload(pot_size, pot_type, substrate)

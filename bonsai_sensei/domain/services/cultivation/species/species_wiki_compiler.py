@@ -15,44 +15,22 @@ Eres un compilador de conocimiento sobre bonsáis. Dado un nombre común y un no
 
 # Comportamiento
 - Usa search_bonsai_info para buscar información: guía general, riego, luz, suelo, poda, plagas. Haz las búsquedas que consideres necesarias.
+- Si el prompt incluye el contenido actual de la página, úsalo como base. Mantén la información existente correcta y amplía o profundiza en las secciones que el usuario indique.
+- Si el prompt incluye instrucciones específicas del usuario, priorízalas al decidir qué investigar y qué secciones mejorar.
 - Escribe la ficha con write_wiki_page cuando tengas suficiente información. Solo debes llamar a write_wiki_page una vez.
 - Usa wikilinks [[relative/path.md]] si detectas enfermedades o tratamientos fitosanitarios relacionados con la especie.
 - Incluye las URLs de las fuentes consultadas en una sección ## Fuentes al final.
 
 # Formato de la ficha
-```
-# {Nombre Común} (*{Nombre Científico}*)
-
-{párrafo introductorio}
-
-## Riego
-...
-
-## Luz
-...
-
-## Suelo
-...
-
-## Poda
-...
-
-## Plagas
-...
-
-## Fuentes
-- https://...
-```
+La ficha debe comenzar con el nombre común como título H1 seguido del nombre científico en cursiva, un párrafo introductorio, y al menos las secciones: Riego, Luz, Suelo, Poda, Plagas y Fuentes. Puedes añadir secciones adicionales si el contenido lo justifica o el usuario lo solicita.
 """
-
-_COMPILE_PROMPT = "Investiga y escribe la ficha wiki para {common_name} ({scientific_name}). Guárdala en la ruta: {relative_path}"
 
 
 def create_species_wiki_compiler(
     model: object,
     wiki_root: str | Path,
     searcher: Callable[[str], dict],
-) -> Callable[[str, str], str]:
+) -> Callable[[str, str, str], str]:
     """Create an async compiler that generates a markdown wiki page for a bonsai species.
 
     Runs a dedicated ADK agent with Tavily search and wiki write tools.
@@ -66,6 +44,7 @@ def create_species_wiki_compiler(
     """
     write_wiki_page = create_write_wiki_page_tool(wiki_root)
     search_tool = _create_search_tool(searcher)
+    wiki_root_path = Path(wiki_root).resolve()
 
     compiler_agent = Agent(
         model=model,
@@ -74,9 +53,10 @@ def create_species_wiki_compiler(
         tools=[search_tool, write_wiki_page],
     )
 
-    async def compile_species_page(common_name: str, scientific_name: str) -> str:
+    async def compile_species_page(common_name: str, scientific_name: str, user_instructions: str = "") -> str:
         slug = _slugify(common_name)
         relative_path = f"species/{slug}.md"
+        existing_content = _read_existing_page(wiki_root_path / relative_path)
         runner = InMemoryRunner(agent=compiler_agent, app_name=_APP_NAME)
         session_id = str(uuid.uuid4())
         await runner.session_service.create_session(
@@ -84,11 +64,7 @@ def create_species_wiki_compiler(
             user_id=_APP_NAME,
             session_id=session_id,
         )
-        prompt = _COMPILE_PROMPT.format(
-            common_name=common_name,
-            scientific_name=scientific_name,
-            relative_path=relative_path,
-        )
+        prompt = _build_compile_prompt(common_name, scientific_name, relative_path, existing_content, user_instructions)
         message = types.Content(role="user", parts=[types.Part(text=prompt)])
         run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)
         async for _ in runner.run_async(
@@ -148,6 +124,19 @@ def _create_search_tool(searcher: Callable[[str], dict]) -> Callable:
         return searcher(query)
 
     return search_bonsai_info
+
+
+def _build_compile_prompt(common_name: str, scientific_name: str, relative_path: str, existing_content: str | None, user_instructions: str) -> str:
+    parts = [f"Investiga y escribe la ficha wiki para {common_name} ({scientific_name}). Guárdala en la ruta: {relative_path}"]
+    if existing_content:
+        parts.append(f"\nContenido actual de la página:\n{existing_content}")
+    if user_instructions:
+        parts.append(f"\nInstrucciones específicas del usuario: {user_instructions}")
+    return "\n".join(parts)
+
+
+def _read_existing_page(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.exists() else None
 
 
 def _slugify(name: str) -> str:

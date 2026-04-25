@@ -85,13 +85,4 @@ def assert_species_exists_with_scientific_name(name, scientific_name):
     )
 
 
-@then(parsers.parse('the wiki page for species "{name}" should contain watering information'))
-def assert_wiki_page_has_watering(name):
-    species = find_species_by_name(get, name)
-    wiki_path = (species or {}).get("wiki_path")
-    assert wiki_path, f"Expected species '{name}' to have a wiki_path, got: {species}"
-    content = get(f"/api/wiki?path={wiki_path}").get("content", "")
-    assert "## Riego" in content or "watering" in content.lower(), (
-        f"Expected wiki page for '{name}' to contain watering section, got: {content[:300]}"
-    )
 
