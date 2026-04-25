@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.planned_work import PlannedWork
@@ -17,16 +18,16 @@ class MockToolContext:
 async def should_return_error_when_planned_work_not_found(delete_tool, tool_context):
     result = await delete_tool(planned_work_id=999, tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "planned_work_not_found"}, \
-        "Non-existent work_id should return a not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "planned_work_not_found"}),
+        "Non-existent work_id should return a not_found error")
 
 
 @pytest.mark.asyncio
 async def should_delete_with_correct_work_id_when_user_confirms(delete_tool, tool_context, captured_delete):
     await delete_tool(planned_work_id=1, tool_context=tool_context)
 
-    assert captured_delete["work_id"] == 1, \
-        "Should pass the correct work_id to delete_planned_work_func"
+    assert_that(captured_delete["work_id"], equal_to(1),
+        "Should pass the correct work_id to delete_planned_work_func")
 
 
 @pytest.mark.asyncio
@@ -42,16 +43,16 @@ async def should_build_confirmation_message_with_correct_work(tool_context, get_
     )
     await tool(planned_work_id=1, tool_context=tool_context)
 
-    assert captured_calls == [planned_work_stub], \
-        "build_confirmation_message should be called with the retrieved PlannedWork"
+    assert_that(captured_calls, equal_to([planned_work_stub]),
+        "build_confirmation_message should be called with the retrieved PlannedWork")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(delete_tool, tool_context):
     result = await delete_tool(planned_work_id=1, tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -61,8 +62,8 @@ async def should_not_delete_when_user_cancels(tool_context, captured_delete, get
     )
     await tool(planned_work_id=1, tool_context=tool_context)
 
-    assert captured_delete == {}, \
-        "delete_planned_work_func should not be called when user cancels"
+    assert_that(captured_delete, equal_to({}),
+        "delete_planned_work_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -72,8 +73,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_planned_w
     )
     result = await tool(planned_work_id=1, tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

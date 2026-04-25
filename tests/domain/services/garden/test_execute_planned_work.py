@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
@@ -20,16 +21,16 @@ class MockToolContext:
 async def should_return_error_when_work_id_is_zero(execute_planned_work_tool, tool_context):
     result = await execute_planned_work_tool(work_id=0, tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "work_id_required"}, \
-        "Zero work_id should return work_id_required error"
+    assert_that(result, equal_to({"status": "error", "message": "work_id_required"}),
+        "Zero work_id should return work_id_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_planned_work_not_found(execute_planned_work_tool, tool_context):
     result = await execute_planned_work_tool(work_id=999, tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "planned_work_not_found"}, \
-        "Unknown work_id should return planned_work_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "planned_work_not_found"}),
+        "Unknown work_id should return planned_work_not_found error")
 
 
 @pytest.mark.asyncio
@@ -43,32 +44,32 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
     tool = create_execute_planned_work_tool(get_planned_work_func, record_bonsai_event_func, delete_planned_work_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(work_id=1, tool_context=tool_context)
 
-    assert captured_calls == [existing_planned_work], \
-        "build_confirmation_message should be called with the resolved PlannedWork entity"
+    assert_that(captured_calls, equal_to([existing_planned_work]),
+        "build_confirmation_message should be called with the resolved PlannedWork entity")
 
 
 @pytest.mark.asyncio
 async def should_record_event_with_correct_type_when_user_confirms(execute_planned_work_tool, tool_context, captured_events):
     await execute_planned_work_tool(work_id=1, tool_context=tool_context)
 
-    assert captured_events[0].event_type == "fertilizer_application", \
-        "Should record a fertilizer_application event when user confirms"
+    assert_that(captured_events[0].event_type, equal_to("fertilizer_application"),
+        "Should record a fertilizer_application event when user confirms")
 
 
 @pytest.mark.asyncio
 async def should_delete_planned_work_when_user_confirms(execute_planned_work_tool, tool_context, deleted_work_ids):
     await execute_planned_work_tool(work_id=1, tool_context=tool_context)
 
-    assert deleted_work_ids == [1], \
-        "Should delete the planned work when user confirms"
+    assert_that(deleted_work_ids, equal_to([1]),
+        "Should delete the planned work when user confirms")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(execute_planned_work_tool, tool_context):
     result = await execute_planned_work_tool(work_id=1, tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -76,8 +77,8 @@ async def should_not_record_event_when_user_cancels(tool_context, captured_event
     tool = create_execute_planned_work_tool(get_planned_work_func, record_bonsai_event_func, delete_planned_work_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(work_id=1, tool_context=tool_context)
 
-    assert captured_events == [], \
-        "record_bonsai_event_func should not be called when user cancels"
+    assert_that(captured_events, equal_to([]),
+        "record_bonsai_event_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -85,8 +86,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_planned_w
     tool = create_execute_planned_work_tool(get_planned_work_func, record_bonsai_event_func, delete_planned_work_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(work_id=1, tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

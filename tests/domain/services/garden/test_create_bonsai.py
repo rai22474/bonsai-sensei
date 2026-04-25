@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
@@ -18,24 +19,24 @@ class MockToolContext:
 async def should_return_error_when_bonsai_name_is_empty(create_tool, tool_context):
     result = await create_tool(name="", species_name="Elm", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "bonsai_name_required"}, \
-        "Empty bonsai name should return bonsai_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "bonsai_name_required"}),
+        "Empty bonsai name should return bonsai_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_name_is_empty(create_tool, tool_context):
     result = await create_tool(name="Naruto", species_name="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "species_name_required"}, \
-        "Empty species name should return species_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "species_name_required"}),
+        "Empty species name should return species_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_not_found(create_tool, tool_context):
     result = await create_tool(name="Naruto", species_name="Unknown", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "species_not_found"}, \
-        "Unknown species name should return species_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "species_not_found"}),
+        "Unknown species name should return species_not_found error")
 
 
 @pytest.mark.asyncio
@@ -49,24 +50,24 @@ async def should_build_confirmation_message_with_correct_args(tool_context, crea
     tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
-    assert captured_calls == [("Naruto", "Elm")], \
-        "build_confirmation_message should be called with name and species_name"
+    assert_that(captured_calls, equal_to([("Naruto", "Elm")]),
+        "build_confirmation_message should be called with name and species_name")
 
 
 @pytest.mark.asyncio
 async def should_create_bonsai_with_resolved_species_id_when_user_confirms(create_tool, tool_context, captured_bonsais):
     await create_tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
-    assert captured_bonsais[0].species_id == 1, \
-        "Bonsai should be created with the species_id resolved from species_name"
+    assert_that(captured_bonsais[0].species_id, equal_to(1),
+        "Bonsai should be created with the species_id resolved from species_name")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(create_tool, tool_context):
     result = await create_tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -74,8 +75,8 @@ async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai
     tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
-    assert captured_bonsais == [], \
-        "create_bonsai_func should not be called when user cancels"
+    assert_that(captured_bonsais, equal_to([]),
+        "create_bonsai_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -83,8 +84,8 @@ async def should_return_cancelled_when_user_declines(tool_context, create_bonsai
     tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

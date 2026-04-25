@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to, has_key, not_
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
@@ -17,48 +18,48 @@ class MockToolContext:
 async def should_return_error_when_name_is_missing(refresh_tool, tool_context):
     result = await refresh_tool(name="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "fertilizer_name_required"}, \
-        "Missing name should return a fertilizer_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "fertilizer_name_required"}),
+        "Missing name should return a fertilizer_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_fertilizer_not_found(refresh_tool_not_found, tool_context):
     result = await refresh_tool_not_found(name="BioGrow", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "fertilizer_not_found"}, \
-        "Non-existent fertilizer should return a fertilizer_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "fertilizer_not_found"}),
+        "Non-existent fertilizer should return a fertilizer_not_found error")
 
 
 @pytest.mark.asyncio
 async def should_call_wiki_page_builder_when_confirmed(refresh_tool, tool_context, captured_wiki_build):
     await refresh_tool(name="BioGrow", tool_context=tool_context)
 
-    assert captured_wiki_build["called_with"] == "BioGrow", \
-        "wiki_page_builder should be called with the fertilizer name"
+    assert_that(captured_wiki_build["called_with"], equal_to("BioGrow"),
+        "wiki_page_builder should be called with the fertilizer name")
 
 
 @pytest.mark.asyncio
 async def should_pass_instructions_to_wiki_page_builder(refresh_tool, tool_context, captured_wiki_build):
     await refresh_tool(name="BioGrow", instructions="amplía la época de aplicación", tool_context=tool_context)
 
-    assert captured_wiki_build["user_instructions"] == "amplía la época de aplicación", \
-        "user instructions should be forwarded to wiki_page_builder"
+    assert_that(captured_wiki_build["user_instructions"], equal_to("amplía la época de aplicación"),
+        "user instructions should be forwarded to wiki_page_builder")
 
 
 @pytest.mark.asyncio
 async def should_update_wiki_path_and_recommended_amount_when_confirmed(refresh_tool, tool_context, captured_update):
     await refresh_tool(name="BioGrow", tool_context=tool_context)
 
-    assert captured_update["fertilizer_data"] == {"wiki_path": "fertilizers/biogrow.md", "recommended_amount": "5 ml/L"}, \
-        "Should update wiki_path and recommended_amount from wiki_page_builder output"
+    assert_that(captured_update["fertilizer_data"], equal_to({"wiki_path": "fertilizers/biogrow.md", "recommended_amount": "5 ml/L"}),
+        "Should update wiki_path and recommended_amount from wiki_page_builder output")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_confirmed(refresh_tool, tool_context):
     result = await refresh_tool(name="BioGrow", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -72,8 +73,8 @@ async def should_not_call_wiki_builder_when_cancelled(tool_context, captured_wik
     )
     await tool(name="BioGrow", tool_context=tool_context)
 
-    assert "called_with" not in captured_wiki_build, \
-        "wiki_page_builder should not be called when user cancels"
+    assert_that(captured_wiki_build, not_(has_key("called_with")),
+        "wiki_page_builder should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -87,8 +88,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_fertilize
     )
     result = await tool(name="BioGrow", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

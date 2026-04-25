@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from hamcrest import assert_that, equal_to, contains_string
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.planned_work import PlannedWork
@@ -54,7 +55,7 @@ async def should_yield_one_event_per_user_with_telegram_chat_id(
         )
     )
 
-    assert len(results) == 1, "Expected exactly one event yielded for the user with telegram"
+    assert_that(len(results), equal_to(1), "Expected exactly one event yielded for the user with telegram")
 
 
 @pytest.mark.asyncio
@@ -73,7 +74,7 @@ async def should_skip_users_without_telegram_chat_id(
         )
     )
 
-    assert len(results) == 0, "Expected no events for a user without telegram_chat_id"
+    assert_that(len(results), equal_to(0), "Expected no events for a user without telegram_chat_id")
 
 
 @pytest.mark.asyncio
@@ -90,12 +91,10 @@ async def should_send_telegram_message_for_each_user_with_chat_id(
         )
     )
 
-    assert send_telegram_func.call_count == 1, (
-        "Expected send_telegram_message_func to be called once"
-    )
-    assert send_telegram_func.call_args[0][0] == user_with_telegram.telegram_chat_id, (
-        "Expected message sent to the correct chat_id"
-    )
+    assert_that(send_telegram_func.call_count, equal_to(1),
+        "Expected send_telegram_message_func to be called once")
+    assert_that(send_telegram_func.call_args[0][0], equal_to(user_with_telegram.telegram_chat_id),
+        "Expected message sent to the correct chat_id")
 
 
 @pytest.mark.asyncio
@@ -118,9 +117,8 @@ async def should_use_no_works_prompt_when_no_planned_works_exist(
         saturday=saturday.isoformat(),
         sunday=(saturday + timedelta(days=1)).isoformat(),
     )
-    assert expected_fragment in called_prompt, (
-        f"Expected no-works prompt when no planned works exist, but got: {called_prompt}"
-    )
+    assert_that(called_prompt, contains_string(expected_fragment),
+        f"Expected no-works prompt when no planned works exist, but got: {called_prompt}")
 
 
 @pytest.mark.asyncio
@@ -142,9 +140,8 @@ async def should_use_weekend_plan_prompt_when_planned_works_exist(
     )
 
     called_prompt = advisor.call_args[0][0]
-    assert "Hanako" in called_prompt, (
-        f"Expected bonsai name 'Hanako' in prompt when planned works exist, but got: {called_prompt}"
-    )
+    assert_that(called_prompt, contains_string("Hanako"),
+        f"Expected bonsai name 'Hanako' in prompt when planned works exist, but got: {called_prompt}")
 
 
 @pytest.mark.asyncio
@@ -166,9 +163,8 @@ async def should_include_work_type_in_prompt_when_planned_works_exist(
     )
 
     called_prompt = advisor.call_args[0][0]
-    assert "transplant" in called_prompt, (
-        f"Expected work_type 'transplant' in prompt, but got: {called_prompt}"
-    )
+    assert_that(called_prompt, contains_string("transplant"),
+        f"Expected work_type 'transplant' in prompt, but got: {called_prompt}")
 
 
 @pytest.mark.asyncio
@@ -188,9 +184,8 @@ async def should_include_response_text_in_yielded_event(
     )
 
     event = json.loads(results[0])
-    assert event["response"] == "Weekend plan summary", (
-        f"Expected advisor response text in yielded event, but got: {event}"
-    )
+    assert_that(event["response"], equal_to("Weekend plan summary"),
+        f"Expected advisor response text in yielded event, but got: {event}")
 
 
 @pytest.fixture

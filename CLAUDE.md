@@ -47,11 +47,11 @@ DESIGN RULES:
 
 # TESTING RULES:
 - Use a single assert per test.
-- Always include a descriptive message in asserts.
+- Use `assert_that` from pyhamcrest: `assert_that(actual, matcher, "reason")`. Prefer `equal_to`, `not_none`, `has_key`, `not_`, `contains_string`. The reason string is optional when the matcher description is self-explanatory.
 - Prefer pytest fixtures for test data setup.
 - Name tests with a should_ prefix.
 - Place fixtures below tests in test files.
-- Always include failure messages in assert statements.
+- Always include failure messages in assert statements (the reason parameter in `assert_that`).
 - Only test public method, private methods are implementation details.
 - Follow TDD: always write the acceptance test first, then implement the production code to make it pass.
 - Acceptance test steps have strict boundaries on how they interact with the system:

@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
@@ -18,24 +19,24 @@ class MockToolContext:
 async def should_return_error_when_bonsai_name_is_empty(transplant_tool, tool_context):
     result = await transplant_tool(bonsai_name="", scheduled_date="2026-03-15", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "bonsai_name_required"}, \
-        "Empty bonsai name should return a bonsai_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "bonsai_name_required"}),
+        "Empty bonsai name should return a bonsai_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_scheduled_date_is_empty(transplant_tool, tool_context):
     result = await transplant_tool(bonsai_name="Kaze", scheduled_date="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "scheduled_date_required"}, \
-        "Empty scheduled_date should return a scheduled_date_required error"
+    assert_that(result, equal_to({"status": "error", "message": "scheduled_date_required"}),
+        "Empty scheduled_date should return a scheduled_date_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_not_found(transplant_tool, tool_context):
     result = await transplant_tool(bonsai_name="UnknownBonsai", scheduled_date="2026-03-15", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "bonsai_not_found"}, \
-        "Unknown bonsai name should return a bonsai_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "bonsai_not_found"}),
+        "Unknown bonsai name should return a bonsai_not_found error")
 
 
 @pytest.mark.asyncio
@@ -52,32 +53,32 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", pot_size="20 cm", pot_type="ceramic", substrate="akadama", tool_context=tool_context)
 
-    assert captured_calls == [("Kaze", "2026-03-15", "20 cm", "ceramic", "akadama")], \
-        "build_confirmation_message should be called with bonsai_name, scheduled_date, pot_size, pot_type, substrate"
+    assert_that(captured_calls, equal_to([("Kaze", "2026-03-15", "20 cm", "ceramic", "akadama")]),
+        "build_confirmation_message should be called with bonsai_name, scheduled_date, pot_size, pot_type, substrate")
 
 
 @pytest.mark.asyncio
 async def should_create_with_correct_payload_when_user_confirms(transplant_tool, tool_context, captured_planned_works):
     await transplant_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", pot_size="20 cm", pot_type="ceramic", substrate="akadama", tool_context=tool_context)
 
-    assert captured_planned_works[0].payload == {"pot_size": "20 cm", "pot_type": "ceramic", "substrate": "akadama"}, \
-        "Created planned work should have the correct transplant payload"
+    assert_that(captured_planned_works[0].payload, equal_to({"pot_size": "20 cm", "pot_type": "ceramic", "substrate": "akadama"}),
+        "Created planned work should have the correct transplant payload")
 
 
 @pytest.mark.asyncio
 async def should_create_with_partial_payload_when_optional_fields_missing(transplant_tool, tool_context, captured_planned_works):
     await transplant_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", pot_size="20 cm", tool_context=tool_context)
 
-    assert captured_planned_works[0].payload == {"pot_size": "20 cm"}, \
-        "Created planned work payload should only include provided optional fields"
+    assert_that(captured_planned_works[0].payload, equal_to({"pot_size": "20 cm"}),
+        "Created planned work payload should only include provided optional fields")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(transplant_tool, tool_context):
     result = await transplant_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -88,8 +89,8 @@ async def should_not_create_when_user_cancels(tool_context, captured_planned_wor
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", tool_context=tool_context)
 
-    assert captured_planned_works == [], \
-        "create_planned_work_func should not be called when user cancels"
+    assert_that(captured_planned_works, equal_to([]),
+        "create_planned_work_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -100,8 +101,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by
     )
     result = await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

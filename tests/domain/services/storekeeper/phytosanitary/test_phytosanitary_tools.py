@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
@@ -10,16 +11,16 @@ from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools
 def should_list_phytosanitary(list_phytosanitary_tool):
     result = list_phytosanitary_tool()
 
-    assert result == {
+    assert_that(result, equal_to({
         "status": "success",
         "phytosanitary": [{"id": 1, "name": "Phytosanitary A"}],
-    }, "Should list phytosanitary with only id and name"
+    }), "Should list phytosanitary with only id and name")
 
 
 def should_get_phytosanitary_by_name(get_phytosanitary_tool):
     result = get_phytosanitary_tool("Phytosanitary A")
 
-    assert result == {
+    assert_that(result, equal_to({
         "status": "success",
         "phytosanitary": {
             "id": 1,
@@ -27,14 +28,14 @@ def should_get_phytosanitary_by_name(get_phytosanitary_tool):
             "recommended_amount": "10 ml/L",
             "content": None,
         },
-    }, "Should return phytosanitary with id, name, recommended_amount and wiki content (None when file not found)"
+    }), "Should return phytosanitary with id, name, recommended_amount and wiki content (None when file not found)")
 
 
 def should_return_error_when_phytosanitary_not_found(get_phytosanitary_tool):
     result = get_phytosanitary_tool("Unknown")
 
-    assert result == {"status": "error", "message": "phytosanitary_not_found"}, \
-        "Should return phytosanitary_not_found error for unknown name"
+    assert_that(result, equal_to({"status": "error", "message": "phytosanitary_not_found"}),
+        "Should return phytosanitary_not_found error for unknown name")
 
 
 @pytest.fixture

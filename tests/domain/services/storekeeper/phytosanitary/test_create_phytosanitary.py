@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
@@ -17,16 +18,16 @@ class MockToolContext:
 async def should_return_error_when_name_is_missing(create_tool, tool_context):
     result = await create_tool(name="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "phytosanitary_name_required"}, \
-        "Missing name should return a phytosanitary_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "phytosanitary_name_required"}),
+        "Missing name should return a phytosanitary_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_phytosanitary_already_exists(create_tool_with_existing, tool_context):
     result = await create_tool_with_existing(name="Neem Oil", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "phytosanitary_already_exists"}, \
-        "Existing product should return a phytosanitary_already_exists error"
+    assert_that(result, equal_to({"status": "error", "message": "phytosanitary_already_exists"}),
+        "Existing product should return a phytosanitary_already_exists error")
 
 
 @pytest.mark.asyncio
@@ -40,40 +41,40 @@ async def should_build_confirmation_message_with_name_only(tool_context, create_
     tool = create_create_phytosanitary_tool(create_phytosanitary_func, get_phytosanitary_by_name_func, wiki_page_builder, ask_confirmation_confirm, build_confirmation_message)
     await tool(name="Neem Oil", tool_context=tool_context)
 
-    assert captured_calls == ["Neem Oil"], \
-        "build_confirmation_message should be called with name only"
+    assert_that(captured_calls, equal_to(["Neem Oil"]),
+        "build_confirmation_message should be called with name only")
 
 
 @pytest.mark.asyncio
 async def should_create_with_correct_name_when_user_confirms(create_tool, tool_context, captured_create):
     await create_tool(name="Neem Oil", tool_context=tool_context)
 
-    assert captured_create["phytosanitary"].name == "Neem Oil", \
-        "Should pass the correct name to create_phytosanitary_func"
+    assert_that(captured_create["phytosanitary"].name, equal_to("Neem Oil"),
+        "Should pass the correct name to create_phytosanitary_func")
 
 
 @pytest.mark.asyncio
 async def should_create_with_wiki_path_from_builder_when_user_confirms(create_tool, tool_context, captured_create):
     await create_tool(name="Neem Oil", tool_context=tool_context)
 
-    assert captured_create["phytosanitary"].wiki_path == "phytosanitaries/neem-oil.md", \
-        "Should store the wiki_path returned by the wiki_page_builder"
+    assert_that(captured_create["phytosanitary"].wiki_path, equal_to("phytosanitaries/neem-oil.md"),
+        "Should store the wiki_path returned by the wiki_page_builder")
 
 
 @pytest.mark.asyncio
 async def should_create_with_recommended_amount_from_builder_when_user_confirms(create_tool, tool_context, captured_create):
     await create_tool(name="Neem Oil", tool_context=tool_context)
 
-    assert captured_create["phytosanitary"].recommended_amount == "5 ml/L", \
-        "Should store the recommended_amount extracted by the wiki_page_builder"
+    assert_that(captured_create["phytosanitary"].recommended_amount, equal_to("5 ml/L"),
+        "Should store the recommended_amount extracted by the wiki_page_builder")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(create_tool, tool_context):
     result = await create_tool(name="Neem Oil", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -81,8 +82,8 @@ async def should_not_create_when_user_cancels(tool_context, captured_create, cre
     tool = create_create_phytosanitary_tool(create_phytosanitary_func, get_phytosanitary_by_name_func, wiki_page_builder, ask_confirmation_cancel, build_confirmation_message)
     await tool(name="Neem Oil", tool_context=tool_context)
 
-    assert captured_create == {}, \
-        "create_phytosanitary_func should not be called when user cancels"
+    assert_that(captured_create, equal_to({}),
+        "create_phytosanitary_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -90,8 +91,8 @@ async def should_return_cancelled_when_user_declines(tool_context, create_phytos
     tool = create_create_phytosanitary_tool(create_phytosanitary_func, get_phytosanitary_by_name_func, wiki_page_builder, ask_confirmation_cancel, build_confirmation_message)
     result = await tool(name="Neem Oil", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

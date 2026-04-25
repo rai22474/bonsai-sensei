@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to, is_
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.services.cultivation.species.create_species import (
@@ -17,24 +18,24 @@ class MockToolContext:
 async def should_return_error_when_species_name_is_missing(confirm_tool, tool_context):
     result = await confirm_tool(common_name="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "species_name_required"}, \
-        "Missing common_name should return a species_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "species_name_required"}),
+        "Missing common_name should return a species_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_species_already_exists(confirm_tool_with_existing, tool_context):
     result = await confirm_tool_with_existing(common_name="Elm", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "species_already_exists"}, \
-        "Existing species should return a species_already_exists error"
+    assert_that(result, equal_to({"status": "error", "message": "species_already_exists"}),
+        "Existing species should return a species_already_exists error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_scientific_name_not_found(confirm_tool_no_results, tool_context):
     result = await confirm_tool_no_results(common_name="Elm", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "scientific_name_not_found"}, \
-        "No scientific name results should return a scientific_name_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "scientific_name_not_found"}),
+        "No scientific name results should return a scientific_name_not_found error")
 
 
 @pytest.mark.asyncio
@@ -50,8 +51,8 @@ async def should_ask_selection_when_multiple_scientific_names_found(
     )
     await tool(common_name="Junípero", tool_context=tool_context)
 
-    assert captured_selection_calls[0]["options"] == ["Juniperus chinensis", "Juniperus communis"], \
-        "ask_selection should be called with all candidate scientific names"
+    assert_that(captured_selection_calls[0]["options"], equal_to(["Juniperus chinensis", "Juniperus communis"]),
+        "ask_selection should be called with all candidate scientific names")
 
 
 @pytest.mark.asyncio
@@ -67,8 +68,8 @@ async def should_create_species_with_selected_scientific_name(
     )
     await tool(common_name="Junípero", tool_context=tool_context)
 
-    assert captured_species[0].scientific_name == "Juniperus communis", \
-        "Species should be created with the scientific name chosen by the user"
+    assert_that(captured_species[0].scientific_name, equal_to("Juniperus communis"),
+        "Species should be created with the scientific name chosen by the user")
 
 
 @pytest.mark.asyncio
@@ -83,8 +84,8 @@ async def should_skip_resolver_and_use_provided_scientific_name(
     )
     await tool(common_name="Junípero", scientific_name="Juniperus chinensis", tool_context=tool_context)
 
-    assert captured_species[0].scientific_name == "Juniperus chinensis", \
-        "When scientific_name is provided directly, tool should use it without resolving"
+    assert_that(captured_species[0].scientific_name, equal_to("Juniperus chinensis"),
+        "When scientific_name is provided directly, tool should use it without resolving")
 
 
 @pytest.mark.asyncio
@@ -104,40 +105,40 @@ async def should_build_confirmation_message_with_correct_args(
     )
     await tool(common_name="Elm", tool_context=tool_context)
 
-    assert len(captured_calls) == 1 and captured_calls[0] == ("Elm", "Ulmus minor"), \
-        "build_confirmation_message should be called with common_name and resolved scientific_name"
+    assert_that(len(captured_calls) == 1 and captured_calls[0] == ("Elm", "Ulmus minor"), is_(True),
+        "build_confirmation_message should be called with common_name and resolved scientific_name")
 
 
 @pytest.mark.asyncio
 async def should_create_species_with_correct_common_name_when_user_confirms(confirm_tool, tool_context, captured_species):
     await confirm_tool(common_name="Elm", tool_context=tool_context)
 
-    assert captured_species[0].name == "Elm", \
-        "Created species should use the common name"
+    assert_that(captured_species[0].name, equal_to("Elm"),
+        "Created species should use the common name")
 
 
 @pytest.mark.asyncio
 async def should_create_species_with_scientific_name_from_resolver_when_user_confirms(confirm_tool, tool_context, captured_species):
     await confirm_tool(common_name="Elm", tool_context=tool_context)
 
-    assert captured_species[0].scientific_name == "Ulmus minor", \
-        "Created species should use the scientific name returned by the resolver"
+    assert_that(captured_species[0].scientific_name, equal_to("Ulmus minor"),
+        "Created species should use the scientific name returned by the resolver")
 
 
 @pytest.mark.asyncio
 async def should_create_species_with_wiki_path_from_builder_when_user_confirms(confirm_tool, tool_context, captured_species):
     await confirm_tool(common_name="Elm", tool_context=tool_context)
 
-    assert captured_species[0].wiki_path == "species/elm.md", \
-        "Created species should use the wiki_path returned by the builder"
+    assert_that(captured_species[0].wiki_path, equal_to("species/elm.md"),
+        "Created species should use the wiki_path returned by the builder")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(confirm_tool, tool_context):
     result = await confirm_tool(common_name="Elm", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -151,8 +152,8 @@ async def should_not_create_species_when_user_cancels(
     )
     await tool(common_name="Elm", tool_context=tool_context)
 
-    assert captured_species == [], \
-        "create_species_func should not be called when user cancels"
+    assert_that(captured_species, equal_to([]),
+        "create_species_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -166,8 +167,8 @@ async def should_return_cancelled_when_user_declines(
     )
     result = await tool(common_name="Elm", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

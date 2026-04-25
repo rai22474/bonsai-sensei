@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
@@ -24,40 +25,40 @@ class MockPhytosanitary:
 async def should_return_error_when_bonsai_name_is_empty(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "bonsai_name_required"}, \
-        "Empty bonsai name should return a bonsai_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "bonsai_name_required"}),
+        "Empty bonsai name should return a bonsai_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_scheduled_date_is_empty(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="Kaze", scheduled_date="", phytosanitary_name="Neem Oil", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "scheduled_date_required"}, \
-        "Empty scheduled_date should return a scheduled_date_required error"
+    assert_that(result, equal_to({"status": "error", "message": "scheduled_date_required"}),
+        "Empty scheduled_date should return a scheduled_date_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_phytosanitary_name_is_empty(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "phytosanitary_name_required"}, \
-        "Empty phytosanitary_name should return a phytosanitary_name_required error"
+    assert_that(result, equal_to({"status": "error", "message": "phytosanitary_name_required"}),
+        "Empty phytosanitary_name should return a phytosanitary_name_required error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_bonsai_not_found(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="UnknownBonsai", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "bonsai_not_found"}, \
-        "Unknown bonsai name should return a bonsai_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "bonsai_not_found"}),
+        "Unknown bonsai name should return a bonsai_not_found error")
 
 
 @pytest.mark.asyncio
 async def should_return_error_when_phytosanitary_not_found(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="UnknownProduct", tool_context=tool_context)
 
-    assert result == {"status": "error", "message": "phytosanitary_not_found"}, \
-        "Unknown phytosanitary name should return a phytosanitary_not_found error"
+    assert_that(result, equal_to({"status": "error", "message": "phytosanitary_not_found"}),
+        "Unknown phytosanitary name should return a phytosanitary_not_found error")
 
 
 @pytest.mark.asyncio
@@ -74,24 +75,24 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", amount="2 ml", tool_context=tool_context)
 
-    assert captured_calls == [("Kaze", "Neem Oil", "2 ml", "2026-03-15")], \
-        "build_confirmation_message should be called with bonsai_name, phytosanitary_name, amount, scheduled_date"
+    assert_that(captured_calls, equal_to([("Kaze", "Neem Oil", "2 ml", "2026-03-15")]),
+        "build_confirmation_message should be called with bonsai_name, phytosanitary_name, amount, scheduled_date")
 
 
 @pytest.mark.asyncio
 async def should_create_with_correct_payload_when_user_confirms(phytosanitary_tool, tool_context, captured_planned_works):
     await phytosanitary_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", amount="2 ml", tool_context=tool_context)
 
-    assert captured_planned_works[0].payload == {"phytosanitary_id": 1, "phytosanitary_name": "Neem Oil", "amount": "2 ml"}, \
-        "Created planned work should have the correct phytosanitary payload"
+    assert_that(captured_planned_works[0].payload, equal_to({"phytosanitary_id": 1, "phytosanitary_name": "Neem Oil", "amount": "2 ml"}),
+        "Created planned work should have the correct phytosanitary payload")
 
 
 @pytest.mark.asyncio
 async def should_return_success_when_user_confirms(phytosanitary_tool, tool_context):
     result = await phytosanitary_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", amount="2 ml", tool_context=tool_context)
 
-    assert result["status"] == "success", \
-        "Tool should return success status when user confirms"
+    assert_that(result["status"], equal_to("success"),
+        "Tool should return success status when user confirms")
 
 
 @pytest.mark.asyncio
@@ -102,8 +103,8 @@ async def should_not_create_when_user_cancels(tool_context, captured_planned_wor
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", amount="2 ml", tool_context=tool_context)
 
-    assert captured_planned_works == [], \
-        "create_planned_work_func should not be called when user cancels"
+    assert_that(captured_planned_works, equal_to([]),
+        "create_planned_work_func should not be called when user cancels")
 
 
 @pytest.mark.asyncio
@@ -114,8 +115,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by
     )
     result = await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", phytosanitary_name="Neem Oil", amount="2 ml", tool_context=tool_context)
 
-    assert result["status"] == "cancelled", \
-        "Tool should return cancelled status when user declines"
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled status when user declines")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):

@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.planned_work import PlannedWork
@@ -43,12 +44,10 @@ def should_return_success_status_with_saturday_and_sunday_dates():
 
     result = tool()
 
-    assert result["saturday"] == saturday.isoformat(), (
-        "Expected 'saturday' to be next Saturday's ISO date"
-    )
-    assert result["sunday"] == (saturday + timedelta(days=1)).isoformat(), (
-        "Expected 'sunday' to be next Sunday's ISO date"
-    )
+    assert_that(result["saturday"], equal_to(saturday.isoformat()),
+        "Expected 'saturday' to be next Saturday's ISO date")
+    assert_that(result["sunday"], equal_to((saturday + timedelta(days=1)).isoformat()),
+        "Expected 'sunday' to be next Sunday's ISO date")
 
 
 def should_return_empty_list_when_no_works_for_weekend():
@@ -59,9 +58,8 @@ def should_return_empty_list_when_no_works_for_weekend():
 
     result = tool()
 
-    assert result["planned_works"] == [], (
-        "Expected empty planned_works when no works are scheduled for the weekend"
-    )
+    assert_that(result["planned_works"], equal_to([]),
+        "Expected empty planned_works when no works are scheduled for the weekend")
 
 
 def should_return_works_scheduled_for_upcoming_saturday():
@@ -76,9 +74,8 @@ def should_return_works_scheduled_for_upcoming_saturday():
 
     result = tool()
 
-    assert len(result["planned_works"]) == 1, (
-        "Expected one planned work for the upcoming Saturday"
-    )
+    assert_that(len(result["planned_works"]), equal_to(1),
+        "Expected one planned work for the upcoming Saturday")
 
 
 def should_include_bonsai_name_in_each_work_entry():
@@ -93,9 +90,8 @@ def should_include_bonsai_name_in_each_work_entry():
 
     result = tool()
 
-    assert result["planned_works"][0]["bonsai_name"] == "Hanako", (
-        "Expected bonsai_name to be resolved from bonsai_id in each work entry"
-    )
+    assert_that(result["planned_works"][0]["bonsai_name"], equal_to("Hanako"),
+        "Expected bonsai_name to be resolved from bonsai_id in each work entry")
 
 
 def should_include_work_type_and_scheduled_date_in_each_entry():
@@ -111,12 +107,10 @@ def should_include_work_type_and_scheduled_date_in_each_entry():
     result = tool()
 
     entry = result["planned_works"][0]
-    assert entry["work_type"] == "fertilizer_application", (
-        "Expected work_type to be present in each work entry"
-    )
-    assert entry["scheduled_date"] == saturday.isoformat(), (
-        "Expected scheduled_date as ISO string in each work entry"
-    )
+    assert_that(entry["work_type"], equal_to("fertilizer_application"),
+        "Expected work_type to be present in each work entry")
+    assert_that(entry["scheduled_date"], equal_to(saturday.isoformat()),
+        "Expected scheduled_date as ISO string in each work entry")
 
 
 def should_query_date_range_spanning_saturday_and_sunday():
@@ -133,9 +127,7 @@ def should_query_date_range_spanning_saturday_and_sunday():
     )
     tool()
 
-    assert captured_dates["start_date"] == saturday, (
-        "Expected start_date to be the upcoming Saturday"
-    )
-    assert captured_dates["end_date"] == saturday + timedelta(days=1), (
-        "Expected end_date to be the upcoming Sunday"
-    )
+    assert_that(captured_dates["start_date"], equal_to(saturday),
+        "Expected start_date to be the upcoming Saturday")
+    assert_that(captured_dates["end_date"], equal_to(saturday + timedelta(days=1)),
+        "Expected end_date to be the upcoming Sunday")

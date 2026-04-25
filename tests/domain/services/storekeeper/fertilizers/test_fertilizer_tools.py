@@ -1,4 +1,5 @@
 import pytest
+from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
@@ -10,16 +11,16 @@ from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools impo
 def should_list_fertilizers(list_fertilizers_tool):
     result = list_fertilizers_tool()
 
-    assert result == {
+    assert_that(result, equal_to({
         "status": "success",
         "fertilizers": [{"id": 1, "name": "Fertilizer A"}],
-    }, "Should list fertilizers with only id and name"
+    }), "Should list fertilizers with only id and name")
 
 
 def should_get_fertilizer_by_name(get_fertilizer_tool):
     result = get_fertilizer_tool("Fertilizer A")
 
-    assert result == {
+    assert_that(result, equal_to({
         "status": "success",
         "fertilizer": {
             "id": 1,
@@ -27,14 +28,14 @@ def should_get_fertilizer_by_name(get_fertilizer_tool):
             "recommended_amount": "10 ml/L",
             "content": None,
         },
-    }, "Should return fertilizer with id, name, recommended_amount and wiki content (None when file not found)"
+    }), "Should return fertilizer with id, name, recommended_amount and wiki content (None when file not found)")
 
 
 def should_return_error_when_fertilizer_not_found(get_fertilizer_tool):
     result = get_fertilizer_tool("Unknown")
 
-    assert result == {"status": "error", "message": "fertilizer_not_found"}, \
-        "Should return fertilizer_not_found error for unknown name"
+    assert_that(result, equal_to({"status": "error", "message": "fertilizer_not_found"}),
+        "Should return fertilizer_not_found error for unknown name")
 
 
 @pytest.fixture
