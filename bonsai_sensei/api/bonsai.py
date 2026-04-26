@@ -1,10 +1,19 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
+import io
+import os
+import uuid
+from pathlib import Path
 from typing import List, Dict, Callable
+
+from fastapi import APIRouter, Request, HTTPException, Depends, UploadFile
+from PIL import Image
+
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.bonsai_photo import BonsaiPhoto
 
 router = APIRouter()
+
+PHOTOS_PATH = os.getenv("PHOTOS_PATH", "./photos")
 
 
 def get_list_bonsai_svc(request: Request) -> Callable:
@@ -33,6 +42,10 @@ def get_record_bonsai_event_svc(request: Request) -> Callable:
 
 def get_list_bonsai_photos_svc(request: Request) -> Callable:
     return request.app.state.bonsai_photo_service["list_bonsai_photos"]
+
+
+def get_create_bonsai_photo_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_photo_service["create_bonsai_photo"]
 
 
 def get_delete_bonsai_photos_svc(request: Request) -> Callable:
@@ -106,10 +119,32 @@ def list_bonsai_photos(
     return list_photos_func(bonsai_id=bonsai_id)
 
 
+@router.post("/bonsai/{bonsai_id}/photos", response_model=BonsaiPhoto)
+async def create_bonsai_photo(
+    bonsai_id: int,
+    file: UploadFile,
+    create_photo_func: Callable = Depends(get_create_bonsai_photo_svc),
+):
+    photos_dir = Path(PHOTOS_PATH)
+    photos_dir.mkdir(parents=True, exist_ok=True)
+    file_name = f"{uuid.uuid4().hex}.webp"
+    raw_bytes = await file.read()
+    image = Image.open(io.BytesIO(raw_bytes))
+    image.save(photos_dir / file_name, format="WEBP", quality=85)
+    return create_photo_func(bonsai_photo=BonsaiPhoto(bonsai_id=bonsai_id, file_path=file_name))
+
+
 @router.delete("/bonsai/{bonsai_id}/photos")
 def delete_bonsai_photos(
     bonsai_id: int,
+    list_photos_func: Callable = Depends(get_list_bonsai_photos_svc),
     delete_photos_func: Callable = Depends(get_delete_bonsai_photos_svc),
 ):
+    photos = list_photos_func(bonsai_id=bonsai_id)
     delete_photos_func(bonsai_id=bonsai_id)
+    photos_dir = Path(PHOTOS_PATH)
+    for photo in photos:
+        photo_file = photos_dir / photo.file_path
+        if photo_file.exists():
+            photo_file.unlink()
     return {"status": "success"}

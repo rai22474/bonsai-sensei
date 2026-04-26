@@ -4,6 +4,7 @@ from http_client import accept_confirmation, upload_photo, advise
 from manage_bonsai_photos.conftest import (
     create_species_record,
     create_bonsai_record,
+    create_bonsai_photo_via_api,
     find_bonsai_by_name_api,
     get_species_record_id,
     list_bonsai_photos,
@@ -13,6 +14,11 @@ from manage_bonsai_photos.conftest import (
 
 @scenario("../features/manage_bonsai_photos.feature", "Add a photo to a bonsai")
 def test_add_photo_to_bonsai():
+    return None
+
+
+@scenario("../features/manage_bonsai_photos.feature", "Add multiple photos to a bonsai accumulates them")
+def test_add_multiple_photos_accumulates():
     return None
 
 
@@ -45,6 +51,12 @@ def confirm_photo_bonsai(context, bonsai_name):
         accept_confirmation(context["user_id"], confirmation["id"])
 
 
+@given(parsers.parse('bonsai "{bonsai_name}" already has 1 photo'))
+def ensure_bonsai_has_one_photo_already(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    create_bonsai_photo_via_api(bonsai["id"], MINIMAL_PNG)
+
+
 @then(parsers.parse('bonsai "{bonsai_name}" should have 1 photo'))
 def assert_bonsai_has_one_photo(context, bonsai_name):
     from hamcrest import assert_that, equal_to
@@ -52,3 +64,11 @@ def assert_bonsai_has_one_photo(context, bonsai_name):
     assert bonsai is not None, f"Expected bonsai '{bonsai_name}' to exist"
     photos = list_bonsai_photos(bonsai["id"])
     assert_that(len(photos), equal_to(1), f"Expected bonsai '{bonsai_name}' to have 1 photo")
+
+
+@then(parsers.parse('bonsai "{bonsai_name}" should have 2 photos'))
+def assert_bonsai_has_two_photos(context, bonsai_name):
+    from hamcrest import assert_that, equal_to
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    photos = list_bonsai_photos(bonsai["id"])
+    assert_that(len(photos), equal_to(2), f"Expected bonsai '{bonsai_name}' to have 2 photos")
