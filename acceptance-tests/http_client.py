@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from pathlib import Path
 import aiohttp
 
 BASE_URL = os.getenv("ACCEPTANCE_API_BASE", "http://localhost:8060")
@@ -51,6 +52,30 @@ def advise(text: str, user_id: str):
             "user_id": user_id,
         },
     )
+
+
+async def upload_photo_async(photo_bytes: bytes, user_id: str, filename: str = "photo.png") -> dict:
+    url = f"{BASE_URL}/api/advice/photos"
+    timeout = aiohttp.ClientTimeout(total=180)
+    form_data = aiohttp.FormData()
+    form_data.add_field("photo", photo_bytes, filename=filename, content_type="image/png")
+    form_data.add_field("user_id", user_id)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(url, data=form_data) as response:
+            body = await response.text()
+            if response.status >= 400:
+                raise aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=response.history,
+                    status=response.status,
+                    message=body,
+                    headers=response.headers,
+                )
+            return json.loads(body) if body else {}
+
+
+def upload_photo(photo_bytes: bytes, user_id: str, filename: str = "photo.png") -> dict:
+    return asyncio.run(upload_photo_async(photo_bytes, user_id, filename))
 
 
 def accept_confirmation(user_id: str, confirmation_id: str):

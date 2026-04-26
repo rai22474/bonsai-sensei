@@ -15,6 +15,7 @@ def create_create_species_tool(
     wiki_page_builder: Callable[[str, str], str],
     ask_confirmation: Callable,
     ask_selection: Callable,
+    build_selection_question: Callable,
     build_confirmation_message: Callable,
 ):
     @trace_tool_call
@@ -59,7 +60,7 @@ def create_create_species_tool(
                 return {"status": "error", "message": "scientific_name_not_found"}
             if len(scientific_names) > 1:
                 selection = await ask_selection(
-                    f"Se encontraron varios nombres científicos para '{common_name}'. ¿Cuál es el correcto?",
+                    build_selection_question(common_name),
                     scientific_names,
                     tool_context=tool_context,
                 )

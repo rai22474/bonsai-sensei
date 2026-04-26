@@ -41,6 +41,7 @@ Forbidden:
 DESIGN RULES:
 - Inject external dependencies into functions for testability (e.g., translators, HTTP clients).
 - Never use single-letter or abbreviated variable names (e.g., `c`, `e`, `f`). Always use descriptive names, including in list comprehensions and lambda expressions.
+- Never hardcode user-facing strings (questions, confirmation texts, error messages) inside domain tools. Any text that reaches the user must be defined in `telegram/messages/` and injected as a `Callable` (e.g. `build_selection_question`, `build_confirmation_message`). Tools call the callable — they never build the string.
 
 # DOMAIN RULES: 
 - Keep domain entities in `bonsai_sensei/domain`, not in `bonsai_sensei/database`.
@@ -54,6 +55,7 @@ DESIGN RULES:
 - Always include failure messages in assert statements (the reason parameter in `assert_that`).
 - Only test public method, private methods are implementation details.
 - Follow TDD: always write the acceptance test first, then implement the production code to make it pass.
+- In acceptance tests, the `cleanup_records` fixture MUST delete ALL resources created during the test — including files on disk (photos, wiki pages, etc.). Always add a REST endpoint to delete them and call it in cleanup before deleting the parent entity.
 - Acceptance test steps have strict boundaries on how they interact with the system:
   - `given` steps: MUST use REST API only. NEVER call `advise()` or `accept_confirmation()`. These are preconditions that must be deterministic and fast. The LLM may normalize or paraphrase input (e.g., "10 g" → "10g"), breaking assertions. If the required REST endpoint does not exist, create it.
   - `when` steps: MUST use `advise()` (and `accept_confirmation()` if needed). These are the user actions under test.

@@ -18,6 +18,8 @@ from bonsai_sensei.telegram.messages.gardener_messages import (
     build_apply_phytosanitary_confirmation,
     build_record_transplant_confirmation,
     build_execute_planned_work_confirmation,
+    build_add_bonsai_photo_selection_question,
+    build_add_bonsai_photo_confirmation,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilizer_confirmation,
@@ -34,6 +36,7 @@ from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_update_phytosanitary_confirmation,
 )
 from bonsai_sensei.telegram.messages.botanist_messages import (
+    build_create_species_selection_question,
     build_create_species_confirmation,
     build_delete_species_confirmation,
     build_update_species_confirmation,
@@ -61,6 +64,7 @@ from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_selection_callback import handle_selection_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
+from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
 from bonsai_sensei.telegram.start import start
 from bonsai_sensei.telegram.bot import TelegramBot
 
@@ -75,6 +79,7 @@ from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import cultivation_plan
+from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import init_telemetry
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -221,6 +226,20 @@ def _create_cultivation_plan_service(session_factory):
     }
 
 
+def _create_bonsai_photo_service(session_factory):
+    return {
+        "create_bonsai_photo": partial(
+            bonsai_photo_store.create_bonsai_photo, create_session=session_factory
+        ),
+        "list_bonsai_photos": partial(
+            bonsai_photo_store.list_bonsai_photos, create_session=session_factory
+        ),
+        "delete_bonsai_photos": partial(
+            bonsai_photo_store.delete_bonsai_photos, create_session=session_factory
+        ),
+    }
+
+
 def _save_telegram_chat_id(user_id: str, chat_id: str, save_user_settings):
     save_user_settings(UserSettings(user_id=user_id, telegram_chat_id=chat_id))
 
@@ -239,6 +258,7 @@ async def lifespan(app: FastAPI):
     app.state.bonsai_history_service = _create_bonsai_history_service(get_session_partial)
     app.state.user_settings_service = _create_user_settings_service(get_session_partial)
     app.state.cultivation_plan_service = _create_cultivation_plan_service(get_session_partial)
+    app.state.bonsai_photo_service = _create_bonsai_photo_service(get_session_partial)
     app.state.pending_human_responses = {}
     app.state.pending_confirmation_cleanups = {}
     app.state.active_tasks = {}
@@ -271,6 +291,7 @@ async def lifespan(app: FastAPI):
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,
         build_delete_confirmation=build_delete_confirmation,
+        build_create_species_selection_question=build_create_species_selection_question,
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
@@ -281,6 +302,7 @@ async def lifespan(app: FastAPI):
         create_gardener_group,
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
+        ask_selection=ask_selection_func,
         build_create_bonsai_confirmation=build_create_bonsai_confirmation,
         build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
         build_update_bonsai_confirmation=build_update_bonsai_confirmation,
@@ -288,6 +310,8 @@ async def lifespan(app: FastAPI):
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
+        build_add_bonsai_photo_selection_question=build_add_bonsai_photo_selection_question,
+        build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
     )
     storekeeper_group_factory = partial(
         create_storekeeper_group,
@@ -328,6 +352,13 @@ async def lifespan(app: FastAPI):
         pending_human_responses=app.state.pending_human_responses,
         pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
     )
+    photo_handler = partial(
+        handle_user_photo,
+        message_processor=app.state.advisor,
+        save_telegram_chat_id_func=save_telegram_chat_id_func,
+        pending_human_responses=app.state.pending_human_responses,
+        pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
+    )
     confirmation_handler = partial(
         handle_confirmation_callback,
         pending_human_responses=app.state.pending_human_responses,
@@ -345,6 +376,7 @@ async def lifespan(app: FastAPI):
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
+        MessageHandler(filters.PHOTO, photo_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
         CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
     ]

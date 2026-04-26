@@ -33,3 +33,11 @@ def build_record_transplant_confirmation(bonsai_name: str, pot_size: str, pot_ty
 def build_execute_planned_work_confirmation(work) -> str:
     date_str = format_date(work.scheduled_date)
     return f"¿Ejecutar trabajo planificado '{work.work_type}' del {date_str} para el bonsái {work.bonsai_id}?"
+
+
+def build_add_bonsai_photo_selection_question() -> str:
+    return "¿A qué bonsái pertenece esta foto?"
+
+
+def build_add_bonsai_photo_confirmation(bonsai_name: str) -> str:
+    return f"¿Registrar esta foto para el bonsái '{bonsai_name}'?"

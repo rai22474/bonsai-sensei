@@ -14,13 +14,15 @@ from bonsai_sensei.domain.services.garden.record_transplant import create_record
 from bonsai_sensei.domain.services.garden.delete_bonsai import create_delete_bonsai_tool
 from bonsai_sensei.domain.services.garden.update_bonsai import create_update_bonsai_tool
 from bonsai_sensei.domain.services.garden.execute_planned_work import create_execute_planned_work_tool
+from bonsai_sensei.domain.services.garden.add_bonsai_photo import create_add_bonsai_photo_tool
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
 
 
 GARDENER_INSTRUCTION = """
-Eres el jardinero responsable de la colección de bonsáis. 
-Gestionas el catálogo de bonsáis (crear, actualizar, eliminar) 
-y registras eventos ya ocurridos (fertilizaciones, tratamientos fitosanitarios, trasplantes y ejecución de trabajos planificados).
+Eres el jardinero responsable de la colección de bonsáis.
+Gestionas el catálogo de bonsáis (crear, actualizar, eliminar), registras eventos ya ocurridos
+(fertilizaciones, tratamientos fitosanitarios, trasplantes y ejecución de trabajos planificados)
+y registras fotos de bonsáis.
 
 # Comportamiento
 - Cada herramienta de confirmación gestiona sus propias validaciones. Llámala directamente con los datos del usuario; no hagas lookups previos.
@@ -28,6 +30,8 @@ y registras eventos ya ocurridos (fertilizaciones, tratamientos fitosanitarios, 
 - Si el usuario no proporciona un nombre para el bonsái, propón uno inspirado en anime o manga.
 - Si falta información esencial, pídela en tu respuesta.
 - Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a execute_planned_work.
+- Cuando el mensaje incluya el marcador [FOTO RECIBIDA: <path>], extrae el path y llama directamente a add_bonsai_photo con ese photo_path; la herramienta mostrará la lista de bonsáis al usuario.
+- Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name y el photo_path proporcionados.
 """
 
 
@@ -41,6 +45,7 @@ def create_gardener(
     update_bonsai_func: Callable[..., Bonsai | None],
     delete_bonsai_func: Callable[..., bool],
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_create_bonsai_confirmation: Callable,
     build_delete_bonsai_confirmation: Callable,
     build_update_bonsai_confirmation: Callable,
@@ -55,6 +60,10 @@ def create_gardener(
     list_planned_works_func: Callable[..., list] = None,
     get_planned_work_func: Callable[..., object | None] = None,
     delete_planned_work_func: Callable[..., bool] = None,
+    create_bonsai_photo_func: Callable[..., object] = None,
+    list_bonsai_photos_func: Callable[[int], list] = None,
+    build_add_bonsai_photo_selection_question: Callable = None,
+    build_add_bonsai_photo_confirmation: Callable = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
         list_bonsai_func=list_bonsai_func,
@@ -124,11 +133,21 @@ def create_gardener(
         build_confirmation_message=build_execute_planned_work_confirmation,
     )
     execute_planned_work_tool.__name__ = "execute_planned_work"
+    add_photo_tool = create_add_bonsai_photo_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_func=list_bonsai_func,
+        create_bonsai_photo_func=create_bonsai_photo_func,
+        ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
+        build_selection_question=build_add_bonsai_photo_selection_question,
+        build_confirmation_message=build_add_bonsai_photo_confirmation,
+    )
+    add_photo_tool.__name__ = "add_bonsai_photo"
 
     return Agent(
         model=model,
         name="gardener",
-        description="Gestiona la colección de bonsáis (crear, actualizar, eliminar) y registra eventos ya ocurridos: fertilizaciones aplicadas, tratamientos fitosanitarios aplicados, trasplantes realizados y ejecución de trabajos planificados. No planifica trabajos futuros ni gestiona el catálogo de productos.",
+        description="Gestiona la colección de bonsáis (crear, actualizar, eliminar) y registra eventos ya ocurridos: fertilizaciones aplicadas, tratamientos fitosanitarios aplicados, trasplantes realizados, ejecución de trabajos planificados y registro de fotos. Cuando el mensaje contiene [FOTO RECIBIDA: <path>], es siempre tarea de este agente. No planifica trabajos futuros ni gestiona el catálogo de productos.",
         instruction=GARDENER_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[
@@ -143,5 +162,6 @@ def create_gardener(
             list_events_tool,
             list_works_tool,
             execute_planned_work_tool,
+            add_photo_tool,
         ],
     )

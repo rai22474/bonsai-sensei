@@ -21,9 +21,11 @@ services:
       - GOOGLE_TRANSLATE_ENABLED=false
       - TELEGRAM_BOT_TOKEN=
       - WIKI_PATH=/app/wiki
+      - PHOTOS_PATH=/app/photos
       - OTEL_TRACES_FILE=/app/traces/traces.jsonl
     volumes:
       - wiki_data_acceptance:/app/wiki
+      - photos_data_acceptance:/app/photos
       - ./traces:/app/traces
     depends_on:
       db:
@@ -49,3 +51,4 @@ services:
 volumes:
   postgres_data_acceptance:
   wiki_data_acceptance:
+  photos_data_acceptance:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict, Callable
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
+from bonsai_sensei.domain.bonsai_photo import BonsaiPhoto
 
 router = APIRouter()
 
@@ -28,6 +29,14 @@ def get_list_bonsai_events_svc(request: Request) -> Callable:
 
 def get_record_bonsai_event_svc(request: Request) -> Callable:
     return request.app.state.bonsai_history_service["record_bonsai_event"]
+
+
+def get_list_bonsai_photos_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_photo_service["list_bonsai_photos"]
+
+
+def get_delete_bonsai_photos_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_photo_service["delete_bonsai_photos"]
 
 
 @router.get("/bonsai", response_model=List[Bonsai])
@@ -87,3 +96,20 @@ def record_bonsai_event(
     event.id = None
     event.bonsai_id = bonsai_id
     return record_event_func(bonsai_event=event)
+
+
+@router.get("/bonsai/{bonsai_id}/photos", response_model=List[BonsaiPhoto])
+def list_bonsai_photos(
+    bonsai_id: int,
+    list_photos_func: Callable = Depends(get_list_bonsai_photos_svc),
+):
+    return list_photos_func(bonsai_id=bonsai_id)
+
+
+@router.delete("/bonsai/{bonsai_id}/photos")
+def delete_bonsai_photos(
+    bonsai_id: int,
+    delete_photos_func: Callable = Depends(get_delete_bonsai_photos_svc),
+):
+    delete_photos_func(bonsai_id=bonsai_id)
+    return {"status": "success"}

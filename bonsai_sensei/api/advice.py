@@ -1,7 +1,10 @@
 import asyncio
 import dataclasses
+import os
+import uuid
+from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, UploadFile, Form
 from pydantic import BaseModel
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
@@ -9,6 +12,8 @@ from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+PHOTOS_PATH = os.getenv("PHOTOS_PATH", "./photos")
 
 
 class AdviceRequest(BaseModel):
@@ -171,3 +176,19 @@ async def choose_selection(
         return {"status": "chosen", "option": request_body.option}
 
     raise HTTPException(status_code=404, detail="selection_not_found")
+
+
+@router.post("/advice/photos")
+async def upload_photo(
+    photo: UploadFile,
+    user_id: str = Form(default="acceptance_user"),
+):
+    photos_dir = Path(PHOTOS_PATH)
+    photos_dir.mkdir(parents=True, exist_ok=True)
+    extension = Path(photo.filename).suffix if photo.filename else ".jpg"
+    file_name = f"{uuid.uuid4().hex}{extension}"
+    file_path = photos_dir / file_name
+    content = await photo.read()
+    file_path.write_bytes(content)
+    relative_path = str(Path(file_name))
+    return {"photo_path": relative_path}

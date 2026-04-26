@@ -31,6 +31,7 @@ def create_botanist(
     delete_species_func: Callable[..., bool],
     ask_confirmation: Callable,
     ask_selection: Callable,
+    build_create_species_selection_question: Callable,
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
@@ -51,6 +52,7 @@ def create_botanist(
                 wiki_page_builder=wiki_page_builder,
                 ask_confirmation=ask_confirmation,
                 ask_selection=ask_selection,
+                build_selection_question=build_create_species_selection_question,
                 build_confirmation_message=build_create_species_confirmation,
             ),
             create_update_species_tool(

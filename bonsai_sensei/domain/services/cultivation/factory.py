@@ -79,6 +79,7 @@ def create_cultivation_group(
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
     build_delete_confirmation: Callable,
+    build_create_species_selection_question: Callable,
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
@@ -90,7 +91,8 @@ def create_cultivation_group(
     weather_agent = _create_weather_agent(model, list_species_tool, session_factory)
     botanist = _create_botanist(
         model, session_factory, ask_confirmation, ask_selection,
-        build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation,
+        build_create_species_selection_question, build_create_species_confirmation,
+        build_delete_species_confirmation, build_update_species_confirmation,
         build_refresh_species_wiki_confirmation,
     )
 
@@ -145,7 +147,7 @@ def create_cultivation_group(
     return botanist, weather_agent, planning_agent
 
 
-def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation):
+def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation):
     get_species_by_name_func = partial(
         herbarium.get_species_by_name, create_session=session_factory
     )
@@ -186,6 +188,7 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
         ),
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
+        build_create_species_selection_question=build_create_species_selection_question,
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,

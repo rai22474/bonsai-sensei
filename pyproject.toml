@@ -18,6 +18,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-telegram-bot>=22.5",
     "sqlmodel>=0.0.31",
+    "Pillow>=11.0.0",
     "tavily-python>=0.7.19",
     "uvicorn",
     "alembic>=1.18.1",

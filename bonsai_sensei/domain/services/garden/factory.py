@@ -7,6 +7,7 @@ from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
+from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.domain.services.garden.gardener import create_gardener
 
 
@@ -14,6 +15,7 @@ def create_gardener_group(
     model: object,
     session_factory,
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_create_bonsai_confirmation: Callable,
     build_delete_bonsai_confirmation: Callable,
     build_update_bonsai_confirmation: Callable,
@@ -21,6 +23,8 @@ def create_gardener_group(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_add_bonsai_photo_selection_question: Callable = None,
+    build_add_bonsai_photo_confirmation: Callable = None,
 ):
     list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(
@@ -38,6 +42,8 @@ def create_gardener_group(
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
     get_planned_work_func = partial(cultivation_plan.get_planned_work, create_session=session_factory)
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
+    create_bonsai_photo_func = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
+    list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
     return create_gardener(
         model=model,
         list_bonsai_func=list_bonsai_func,
@@ -55,6 +61,7 @@ def create_gardener_group(
         get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
         build_create_bonsai_confirmation=build_create_bonsai_confirmation,
         build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
         build_update_bonsai_confirmation=build_update_bonsai_confirmation,
@@ -62,4 +69,8 @@ def create_gardener_group(
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
+        create_bonsai_photo_func=create_bonsai_photo_func,
+        list_bonsai_photos_func=list_bonsai_photos_func,
+        build_add_bonsai_photo_selection_question=build_add_bonsai_photo_selection_question,
+        build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
     )
