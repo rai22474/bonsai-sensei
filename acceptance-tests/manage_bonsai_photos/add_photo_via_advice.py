@@ -22,6 +22,11 @@ def test_add_multiple_photos_accumulates():
     return None
 
 
+@scenario("../features/manage_bonsai_photos.feature", "Add a photo when the bonsai does not exist returns an error")
+def test_add_photo_bonsai_not_found():
+    return None
+
+
 @given(parsers.parse('species "{name}" exists with scientific name "{scientific_name}"'))
 def ensure_species_exists(context, name, scientific_name):
     create_species_record(context, name, scientific_name)
@@ -46,6 +51,7 @@ def confirm_photo_bonsai(context, bonsai_name):
         text=f"Registra la foto '{photo_path}' para el bonsái '{bonsai_name}'.",
         user_id=context["user_id"],
     )
+    context["advice_response"] = response
     pending_confirmations = response.get("pending_confirmations", [])
     for confirmation in pending_confirmations:
         accept_confirmation(context["user_id"], confirmation["id"])
@@ -72,3 +78,18 @@ def assert_bonsai_has_two_photos(context, bonsai_name):
     bonsai = find_bonsai_by_name_api(bonsai_name)
     photos = list_bonsai_photos(bonsai["id"])
     assert_that(len(photos), equal_to(2), f"Expected bonsai '{bonsai_name}' to have 2 photos")
+
+
+@given(parsers.parse('no bonsai named "{bonsai_name}" exists'))
+def ensure_bonsai_does_not_exist(context, bonsai_name):
+    from http_client import delete as delete_request
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    if bonsai:
+        delete_request(f"/api/bonsai/{bonsai['id']}")
+
+
+@then("I should receive an error indicating the bonsai does not exist")
+def assert_bonsai_not_found_error(context):
+    from hamcrest import assert_that, empty
+    pending = context.get("advice_response", {}).get("pending_confirmations", [])
+    assert_that(pending, empty(), "Expected no confirmation request when bonsai does not exist")
