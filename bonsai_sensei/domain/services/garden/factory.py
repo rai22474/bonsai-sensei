@@ -1,4 +1,6 @@
+import os
 from functools import partial
+from pathlib import Path
 from typing import Callable
 
 from bonsai_sensei.domain import garden
@@ -42,8 +44,19 @@ def create_gardener_group(
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
     get_planned_work_func = partial(cultivation_plan.get_planned_work, create_session=session_factory)
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
-    create_bonsai_photo_func = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
+    _raw_create_bonsai_photo = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
+    photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
+
+    def create_bonsai_photo_func(bonsai_photo):
+        flat_file = photos_root / bonsai_photo.file_path
+        if flat_file.exists():
+            bonsai_dir = photos_root / str(bonsai_photo.bonsai_id)
+            bonsai_dir.mkdir(parents=True, exist_ok=True)
+            target = bonsai_dir / Path(bonsai_photo.file_path).name
+            flat_file.rename(target)
+            bonsai_photo.file_path = f"{bonsai_photo.bonsai_id}/{Path(bonsai_photo.file_path).name}"
+        return _raw_create_bonsai_photo(bonsai_photo=bonsai_photo)
     return create_gardener(
         model=model,
         list_bonsai_func=list_bonsai_func,

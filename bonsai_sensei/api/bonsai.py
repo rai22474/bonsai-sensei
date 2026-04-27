@@ -127,13 +127,13 @@ async def create_bonsai_photo(
     create_photo_func: Callable = Depends(get_create_bonsai_photo_svc),
     taken_on: Optional[date] = Query(default=None),
 ):
-    photos_dir = Path(PHOTOS_PATH)
+    photos_dir = Path(PHOTOS_PATH) / str(bonsai_id)
     photos_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"{uuid.uuid4().hex}.webp"
     raw_bytes = await file.read()
     image = Image.open(io.BytesIO(raw_bytes))
     image.save(photos_dir / file_name, format="WEBP", quality=85)
-    photo = BonsaiPhoto(bonsai_id=bonsai_id, file_path=file_name)
+    photo = BonsaiPhoto(bonsai_id=bonsai_id, file_path=f"{bonsai_id}/{file_name}")
     if taken_on is not None:
         photo.taken_on = taken_on
     return create_photo_func(bonsai_photo=photo)
