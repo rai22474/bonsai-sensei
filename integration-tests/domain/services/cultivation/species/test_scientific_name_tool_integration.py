@@ -2,7 +2,7 @@ import os
 import pytest
 from hamcrest import assert_that, equal_to, has_item
 
-from bonsai_sensei.domain.services.cultivation.species.scientific_name_tool import (
+from bonsai_sensei.domain.services.cultivation.species.scientific_name import (
     create_scientific_name_resolver,
 )
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_translator import (
