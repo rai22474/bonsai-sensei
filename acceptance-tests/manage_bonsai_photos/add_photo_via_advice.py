@@ -35,6 +35,16 @@ def test_retrieve_latest_photo():
     return None
 
 
+@scenario("../features/manage_bonsai_photos.feature", "Retrieve a photo by exact date")
+def test_retrieve_photo_by_exact_date():
+    return None
+
+
+@scenario("../features/manage_bonsai_photos.feature", "Retrieve the photo closest to a given date")
+def test_retrieve_photo_closest_to_date():
+    return None
+
+
 @when("I send a photo")
 def send_photo(context):
     response = upload_photo(MINIMAL_PNG, user_id=context["user_id"])
@@ -64,6 +74,24 @@ def ensure_bonsai_has_one_photo_already(context, bonsai_name):
 def ask_for_latest_photo(context, bonsai_name):
     response = advise(
         text=f"Muéstrame la última foto de '{bonsai_name}'.",
+        user_id=context["user_id"],
+    )
+    context["advice_response"] = response
+
+
+@when(parsers.parse('I ask for the photo of bonsai "{bonsai_name}" taken on "{date_text}"'))
+def ask_for_photo_by_date(context, bonsai_name, date_text):
+    response = advise(
+        text=f"Muéstrame la foto de '{bonsai_name}' tomada el {date_text}.",
+        user_id=context["user_id"],
+    )
+    context["advice_response"] = response
+
+
+@when(parsers.parse('I ask for the photo of bonsai "{bonsai_name}" closest to "{date_text}"'))
+def ask_for_photo_closest_to_date(context, bonsai_name, date_text):
+    response = advise(
+        text=f"Muéstrame la foto de '{bonsai_name}' más cercana al {date_text}.",
         user_id=context["user_id"],
     )
     context["advice_response"] = response
