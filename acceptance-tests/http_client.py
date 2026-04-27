@@ -78,13 +78,16 @@ def upload_photo(photo_bytes: bytes, user_id: str, filename: str = "photo.png") 
     return asyncio.run(upload_photo_async(photo_bytes, user_id, filename))
 
 
-async def post_bonsai_photo_async(bonsai_id: int, photo_bytes: bytes, filename: str = "photo.png") -> dict:
+async def post_bonsai_photo_async(bonsai_id: int, photo_bytes: bytes, filename: str = "photo.png", taken_on: str | None = None) -> dict:
+    params = {}
+    if taken_on is not None:
+        params["taken_on"] = taken_on
     url = f"{BASE_URL}/api/bonsai/{bonsai_id}/photos"
     timeout = aiohttp.ClientTimeout(total=30)
     form_data = aiohttp.FormData()
     form_data.add_field("file", photo_bytes, filename=filename, content_type="image/png")
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.post(url, data=form_data) as response:
+        async with session.post(url, data=form_data, params=params) as response:
             body = await response.text()
             if response.status >= 400:
                 raise aiohttp.ClientResponseError(
@@ -97,8 +100,8 @@ async def post_bonsai_photo_async(bonsai_id: int, photo_bytes: bytes, filename: 
             return json.loads(body) if body else {}
 
 
-def post_bonsai_photo(bonsai_id: int, photo_bytes: bytes, filename: str = "photo.png") -> dict:
-    return asyncio.run(post_bonsai_photo_async(bonsai_id, photo_bytes, filename))
+def post_bonsai_photo(bonsai_id: int, photo_bytes: bytes, filename: str = "photo.png", taken_on: str | None = None) -> dict:
+    return asyncio.run(post_bonsai_photo_async(bonsai_id, photo_bytes, filename, taken_on))
 
 
 def accept_confirmation(user_id: str, confirmation_id: str):

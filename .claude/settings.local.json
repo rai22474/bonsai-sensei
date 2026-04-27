@@ -11,7 +11,12 @@
       "Bash(uv add:*)",
       "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_fertilizer_application_tool.py -v)",
       "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_phytosanitary_application_tool.py -v)",
-      "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_phytosanitary_application_tool.py tests/domain/services/cultivation/plan/test_confirm_create_transplant_tool.py -v)"
+      "Bash(python -m pytest tests/domain/services/cultivation/plan/test_confirm_create_phytosanitary_application_tool.py tests/domain/services/cultivation/plan/test_confirm_create_transplant_tool.py -v)",
+      "Bash(python -m pytest manage_bonsai_photos/add_photo_via_advice.py -k \"test_retrieve_latest_photo\" -v)",
+      "Bash(python -m pytest manage_bonsai_photos/add_photo_via_advice.py -v)",
+      "Bash(python -m pytest manage_bonsai_photos/add_photo_via_advice.py --collect-only)",
+      "Bash(python -m pytest manage_bonsai_photos/add_photo_via_advice.py --collect-only -p no:pyproject)",
+      "Bash(python -m pytest manage_bonsai_photos/add_photo_via_advice.py --collect-only --override-ini=\"python_functions=test_*\")"
     ]
   }
 }

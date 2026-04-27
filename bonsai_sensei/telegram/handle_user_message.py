@@ -1,4 +1,6 @@
+import os
 import time
+from pathlib import Path
 from typing import Callable
 
 from opentelemetry import metrics
@@ -119,6 +121,7 @@ async def handle_user_message(
                 pass
 
     await _reply_with_html(update, response.text)
+    await _send_photos(update, response.photos)
 
     latency_ms = (time.monotonic() - start_time) * 1000
     _message_counter.add(1, {"user.id": user_id})
@@ -143,6 +146,15 @@ async def _confirm_and_save_location(
         await update.message.reply_text("Ubicación guardada correctamente.")
     else:
         await update.message.reply_text("Ubicación cancelada.")
+
+
+async def _send_photos(update: Update, photo_paths: list[str]) -> None:
+    photos_dir = Path(os.getenv("PHOTOS_PATH", "./photos"))
+    for file_path in photo_paths:
+        full_path = photos_dir / file_path
+        if full_path.exists():
+            with open(full_path, "rb") as photo_file:
+                await update.message.reply_photo(photo_file)
 
 
 async def _reply_with_html(update: Update, text: str) -> None:

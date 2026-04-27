@@ -19,6 +19,7 @@ Una vez recibido el resultado, preséntalo al usuario de forma clara. Si el pipe
 # Formato
 Responde siempre en castellano.
 Usa HTML compatible con Telegram: <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea. No uses Markdown.
+Cuando muestres fotos, el sistema las envía automáticamente. No incluyas nombres de archivo ni rutas en tu respuesta de texto.
 """
 
 

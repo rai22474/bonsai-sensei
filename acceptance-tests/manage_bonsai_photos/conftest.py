@@ -89,5 +89,5 @@ def list_bonsai_photos(bonsai_id: int) -> list:
     return get(f"/api/bonsai/{bonsai_id}/photos") or []
 
 
-def create_bonsai_photo_via_api(bonsai_id: int, photo_bytes: bytes) -> dict:
-    return post_bonsai_photo(bonsai_id, photo_bytes)
+def create_bonsai_photo_via_api(bonsai_id: int, photo_bytes: bytes, taken_on: str | None = None) -> dict:
+    return post_bonsai_photo(bonsai_id, photo_bytes, taken_on=taken_on)

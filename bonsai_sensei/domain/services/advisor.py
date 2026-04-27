@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Callable
 from functools import partial
@@ -38,6 +38,7 @@ _execution_latency = _meter.create_histogram(
 @dataclass
 class AdvisorResponse:
     text: str
+    photos: list = field(default_factory=list)
 
 
 def create_advisor(
@@ -75,7 +76,8 @@ async def _generate_advise(
     message = _build_user_message(text)
     events = await _run_agent(runner, user_id, message, progress_callback)
     response_text = "\n".join(_build_response_texts(events))
-    return AdvisorResponse(text=response_text)
+    photos = await _collect_and_clear_photos(runner, user_id)
+    return AdvisorResponse(text=response_text, photos=photos)
 
 
 def _build_context_state(user_id: str, get_user_settings_func: Callable | None) -> dict:
@@ -164,6 +166,20 @@ def _extract_progress_message(event) -> str | None:
         if function_call and function_call.name in _PROGRESS_MESSAGES:
             return _PROGRESS_MESSAGES[function_call.name]
     return None
+
+
+async def _collect_and_clear_photos(runner: InMemoryRunner, user_id: str) -> list[str]:
+    session = await runner.session_service.get_session(
+        app_name="bonsai_sensei",
+        user_id=user_id,
+        session_id=str(user_id),
+    )
+    if session is None:
+        return []
+    photos = list(session.state.get("photos_to_display") or [])
+    if photos:
+        session.state["photos_to_display"] = []
+    return photos
 
 
 def _build_response_texts(events: list) -> list[str]:

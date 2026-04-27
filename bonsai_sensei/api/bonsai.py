@@ -1,10 +1,11 @@
 import io
 import os
 import uuid
+from datetime import date
 from pathlib import Path
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
-from fastapi import APIRouter, Request, HTTPException, Depends, UploadFile
+from fastapi import APIRouter, Request, HTTPException, Depends, UploadFile, Query
 from PIL import Image
 
 from bonsai_sensei.domain.bonsai import Bonsai
@@ -124,6 +125,7 @@ async def create_bonsai_photo(
     bonsai_id: int,
     file: UploadFile,
     create_photo_func: Callable = Depends(get_create_bonsai_photo_svc),
+    taken_on: Optional[date] = Query(default=None),
 ):
     photos_dir = Path(PHOTOS_PATH)
     photos_dir.mkdir(parents=True, exist_ok=True)
@@ -131,7 +133,10 @@ async def create_bonsai_photo(
     raw_bytes = await file.read()
     image = Image.open(io.BytesIO(raw_bytes))
     image.save(photos_dir / file_name, format="WEBP", quality=85)
-    return create_photo_func(bonsai_photo=BonsaiPhoto(bonsai_id=bonsai_id, file_path=file_name))
+    photo = BonsaiPhoto(bonsai_id=bonsai_id, file_path=file_name)
+    if taken_on is not None:
+        photo.taken_on = taken_on
+    return create_photo_func(bonsai_photo=photo)
 
 
 @router.delete("/bonsai/{bonsai_id}/photos")

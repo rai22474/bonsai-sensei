@@ -27,6 +27,11 @@ def test_add_photo_bonsai_not_found():
     return None
 
 
+@scenario("../features/manage_bonsai_photos.feature", "Retrieve the latest photo of a bonsai")
+def test_retrieve_latest_photo():
+    return None
+
+
 @given(parsers.parse('species "{name}" exists with scientific name "{scientific_name}"'))
 def ensure_species_exists(context, name, scientific_name):
     create_species_record(context, name, scientific_name)
@@ -93,3 +98,29 @@ def assert_bonsai_not_found_error(context):
     from hamcrest import assert_that, empty
     pending = context.get("advice_response", {}).get("pending_confirmations", [])
     assert_that(pending, empty(), "Expected no confirmation request when bonsai does not exist")
+
+
+@given(parsers.parse('bonsai "{bonsai_name}" has a photo taken on "{taken_on}"'))
+def ensure_bonsai_has_photo_on_date(context, bonsai_name, taken_on):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    create_bonsai_photo_via_api(bonsai["id"], MINIMAL_PNG, taken_on=taken_on)
+
+
+@when(parsers.parse('I ask for the latest photo of bonsai "{bonsai_name}"'))
+def ask_for_latest_photo(context, bonsai_name):
+    response = advise(
+        text=f"Muéstrame la última foto de '{bonsai_name}'.",
+        user_id=context["user_id"],
+    )
+    context["advice_response"] = response
+
+
+@then(parsers.parse('I should receive the photo of bonsai "{bonsai_name}" taken on "{taken_on}"'))
+def assert_photo_taken_on(context, bonsai_name, taken_on):
+    from hamcrest import assert_that, has_item
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    photos = list_bonsai_photos(bonsai["id"])
+    expected_photo = next((photo for photo in photos if photo["taken_on"] == taken_on), None)
+    assert expected_photo is not None, f"No photo found with taken_on='{taken_on}' for bonsai '{bonsai_name}'"
+    response_photos = context.get("advice_response", {}).get("photos", [])
+    assert_that(response_photos, has_item(expected_photo["file_path"]), f"Expected response photos to include '{expected_photo['file_path']}'")
