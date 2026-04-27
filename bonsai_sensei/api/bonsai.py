@@ -49,6 +49,10 @@ def get_create_bonsai_photo_svc(request: Request) -> Callable:
     return request.app.state.bonsai_photo_service["create_bonsai_photo"]
 
 
+def get_delete_bonsai_photo_svc(request: Request) -> Callable:
+    return request.app.state.bonsai_photo_service["delete_bonsai_photo"]
+
+
 def get_delete_bonsai_photos_svc(request: Request) -> Callable:
     return request.app.state.bonsai_photo_service["delete_bonsai_photos"]
 
@@ -137,6 +141,18 @@ async def create_bonsai_photo(
     if taken_on is not None:
         photo.taken_on = taken_on
     return create_photo_func(bonsai_photo=photo)
+
+
+@router.delete("/bonsai/{bonsai_id}/photos/{photo_id}")
+def delete_single_bonsai_photo(
+    bonsai_id: int,
+    photo_id: int,
+    delete_photo_func: Callable = Depends(get_delete_bonsai_photo_svc),
+):
+    success = delete_photo_func(photo_id=photo_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return {"status": "success"}
 
 
 @router.delete("/bonsai/{bonsai_id}/photos")

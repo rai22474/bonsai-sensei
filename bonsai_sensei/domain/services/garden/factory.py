@@ -27,6 +27,8 @@ def create_gardener_group(
     build_execute_planned_work_confirmation: Callable,
     build_add_bonsai_photo_selection_question: Callable = None,
     build_add_bonsai_photo_confirmation: Callable = None,
+    build_delete_bonsai_photo_selection_question: Callable = None,
+    build_delete_bonsai_photo_confirmation: Callable = None,
 ):
     list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(
@@ -46,6 +48,7 @@ def create_gardener_group(
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
     _raw_create_bonsai_photo = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
+    delete_bonsai_photo_func = partial(bonsai_photo_store.delete_bonsai_photo, create_session=session_factory)
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
 
     def create_bonsai_photo_func(bonsai_photo):
@@ -84,6 +87,9 @@ def create_gardener_group(
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
         create_bonsai_photo_func=create_bonsai_photo_func,
         list_bonsai_photos_func=list_bonsai_photos_func,
+        delete_bonsai_photo_func=delete_bonsai_photo_func,
         build_add_bonsai_photo_selection_question=build_add_bonsai_photo_selection_question,
         build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
+        build_delete_bonsai_photo_selection_question=build_delete_bonsai_photo_selection_question,
+        build_delete_bonsai_photo_confirmation=build_delete_bonsai_photo_confirmation,
     )

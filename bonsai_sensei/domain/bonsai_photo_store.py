@@ -17,6 +17,15 @@ def list_bonsai_photos(session: Session, bonsai_id: int) -> List[BonsaiPhoto]:
 
 
 @with_session
+def delete_bonsai_photo(session: Session, photo_id: int) -> bool:
+    photo = session.get(BonsaiPhoto, photo_id)
+    if not photo:
+        return False
+    session.delete(photo)
+    return True
+
+
+@with_session
 def delete_bonsai_photos(session: Session, bonsai_id: int) -> None:
     photos = session.exec(select(BonsaiPhoto).where(BonsaiPhoto.bonsai_id == bonsai_id)).all()
     for photo in photos:

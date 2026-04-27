@@ -15,6 +15,7 @@ from bonsai_sensei.domain.services.garden.delete_bonsai import create_delete_bon
 from bonsai_sensei.domain.services.garden.update_bonsai import create_update_bonsai_tool
 from bonsai_sensei.domain.services.garden.execute_planned_work import create_execute_planned_work_tool
 from bonsai_sensei.domain.services.garden.add_bonsai_photo import create_add_bonsai_photo_tool
+from bonsai_sensei.domain.services.garden.delete_bonsai_photo import create_delete_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.list_bonsai_photos import create_list_bonsai_photos_tool
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
 
@@ -34,6 +35,7 @@ y registras fotos de bonsáis.
 - Cuando el mensaje incluya el marcador [FOTO RECIBIDA: <path>], extrae el path y llama directamente a add_bonsai_photo con ese photo_path; la herramienta mostrará la lista de bonsáis al usuario.
 - Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name y el photo_path proporcionados.
 - Para consultar fotos de un bonsái, usa list_bonsai_photos. Las fechas se devuelven en formato ISO (YYYY-MM-DD).
+- Para eliminar una foto, usa delete_bonsai_photo con el nombre del bonsái. La herramienta mostrará las fotos disponibles y pedirá confirmación.
 """
 
 
@@ -64,8 +66,11 @@ def create_gardener(
     delete_planned_work_func: Callable[..., bool] = None,
     create_bonsai_photo_func: Callable[..., object] = None,
     list_bonsai_photos_func: Callable[[int], list] = None,
+    delete_bonsai_photo_func: Callable[..., bool] = None,
     build_add_bonsai_photo_selection_question: Callable = None,
     build_add_bonsai_photo_confirmation: Callable = None,
+    build_delete_bonsai_photo_selection_question: Callable = None,
+    build_delete_bonsai_photo_confirmation: Callable = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
         list_bonsai_func=list_bonsai_func,
@@ -150,6 +155,16 @@ def create_gardener(
         list_bonsai_photos_func=list_bonsai_photos_func,
     )
     list_photos_tool.__name__ = "list_bonsai_photos"
+    delete_photo_tool = create_delete_bonsai_photo_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_photos_func=list_bonsai_photos_func,
+        delete_bonsai_photo_func=delete_bonsai_photo_func,
+        ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
+        build_selection_question=build_delete_bonsai_photo_selection_question,
+        build_confirmation_message=build_delete_bonsai_photo_confirmation,
+    )
+    delete_photo_tool.__name__ = "delete_bonsai_photo"
 
     return Agent(
         model=model,
@@ -171,5 +186,6 @@ def create_gardener(
             execute_planned_work_tool,
             add_photo_tool,
             list_photos_tool,
+            delete_photo_tool,
         ],
     )

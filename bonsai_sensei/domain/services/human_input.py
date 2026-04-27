@@ -111,21 +111,27 @@ def create_ask_selection(
     send_selection_func: Callable,
     pending_responses: dict,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+    send_photo_selection_func: Callable | None = None,
 ) -> Callable:
     async def ask_selection(
         question: str,
         options: list[str],
         tool_context: ToolContext | None = None,
+        photos: list[str] | None = None,
     ) -> str | SelectionNoneResult:
         """Present a list of options to the user and wait for their selection.
 
         Sends the options as an interactive selector and blocks execution until
         the user picks one or selects "Ninguna de las anteriores".
+        When photos are provided and send_photo_selection_func is configured, each
+        photo is sent with its corresponding selection button attached, so the user
+        can see the image and tap its button in one step.
 
         Args:
             question: The prompt explaining what the user should select.
             options: The list of options to present.
             tool_context: ADK tool context providing the user identifier.
+            photos: Optional list of photo file paths, one per option.
 
         Returns:
             The selected option string, or SelectionNoneResult if the user
@@ -142,7 +148,10 @@ def create_ask_selection(
             "question": question,
             "options": options,
         }
-        await send_selection_func(user_id, question, options, selection_id)
+        if send_photo_selection_func and photos and len(photos) == len(options):
+            await send_photo_selection_func(user_id, question, options, photos, selection_id)
+        else:
+            await send_selection_func(user_id, question, options, selection_id)
         try:
             await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
         except TimeoutError:

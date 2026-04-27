@@ -9,6 +9,8 @@ ENV UV_COMPILE_BYTECODE=1
 
 COPY pyproject.toml .
 
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+
 RUN uv pip install --system -r pyproject.toml
 
 COPY bonsai_sensei/ bonsai_sensei/

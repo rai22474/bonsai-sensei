@@ -2,6 +2,7 @@ import logging
 import os
 import traceback
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from functools import partial
@@ -20,6 +21,8 @@ from bonsai_sensei.telegram.messages.gardener_messages import (
     build_execute_planned_work_confirmation,
     build_add_bonsai_photo_selection_question,
     build_add_bonsai_photo_confirmation,
+    build_delete_bonsai_photo_selection_question,
+    build_delete_bonsai_photo_confirmation,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilizer_confirmation,
@@ -234,6 +237,9 @@ def _create_bonsai_photo_service(session_factory):
         "list_bonsai_photos": partial(
             bonsai_photo_store.list_bonsai_photos, create_session=session_factory
         ),
+        "delete_bonsai_photo": partial(
+            bonsai_photo_store.delete_bonsai_photo, create_session=session_factory
+        ),
         "delete_bonsai_photos": partial(
             bonsai_photo_store.delete_bonsai_photos, create_session=session_factory
         ),
@@ -280,7 +286,36 @@ async def lifespan(app: FastAPI):
     async def send_selection_func(user_id: str, question: str, options: list, selection_id: str):
         await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
 
-    ask_selection_func = create_ask_selection(send_selection_func, app.state.pending_human_responses)
+    photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
+
+    async def send_photo_selection_func(user_id: str, question: str, options: list[str], photo_paths: list[str], selection_id: str):
+        from bonsai_sensei.telegram.photo_thumbnail import generate_labeled_thumbnail
+        thumbnail_paths = []
+        try:
+            for option, photo_path in zip(options, photo_paths):
+                full_path = str(photos_root / photo_path)
+                label = option.replace("Foto del ", "📅 ")
+                thumbnail_paths.append(generate_labeled_thumbnail(full_path, label))
+            await bot_instance.send_selection_with_photos(
+                chat_id=user_id,
+                question=question,
+                options=options,
+                photo_file_paths=thumbnail_paths,
+                selection_id=selection_id,
+            )
+        except Exception:
+            logging.exception("Photo thumbnail generation failed, falling back to text selection")
+            await bot_instance.send_selection_message(
+                chat_id=user_id,
+                question=question,
+                options=options,
+                selection_id=selection_id,
+            )
+        finally:
+            for tmp_path in thumbnail_paths:
+                Path(tmp_path).unlink(missing_ok=True)
+
+    ask_selection_func = create_ask_selection(send_selection_func, app.state.pending_human_responses, send_photo_selection_func=send_photo_selection_func)
 
     cultivation_group_factory = partial(
         create_cultivation_group,
@@ -312,6 +347,8 @@ async def lifespan(app: FastAPI):
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
         build_add_bonsai_photo_selection_question=build_add_bonsai_photo_selection_question,
         build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
+        build_delete_bonsai_photo_selection_question=build_delete_bonsai_photo_selection_question,
+        build_delete_bonsai_photo_confirmation=build_delete_bonsai_photo_confirmation,
     )
     storekeeper_group_factory = partial(
         create_storekeeper_group,

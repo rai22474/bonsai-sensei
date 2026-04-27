@@ -57,6 +57,13 @@ async def handle_selection_callback(
     if pending_confirmation_cleanups is not None:
         pending_confirmation_cleanups.setdefault(user_id, []).append(query.message.delete)
 
-    await query.edit_message_text(random_processing_message())
+    try:
+        await query.edit_message_text(random_processing_message())
+    except Exception:
+        try:
+            await query.edit_message_caption(caption=random_processing_message())
+        except Exception:
+            pass
+
     pending["response"] = selected
     pending["event"].set()

@@ -80,6 +80,7 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
     list_bonsai_photos_tool = create_list_bonsai_photos_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_photos_func=partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory),
+        set_photos_for_display=True,
     )
     list_bonsai_photos_tool.__name__ = "list_bonsai_photos"
 

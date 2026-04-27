@@ -41,3 +41,11 @@ def build_add_bonsai_photo_selection_question() -> str:
 
 def build_add_bonsai_photo_confirmation(bonsai_name: str) -> str:
     return f"¿Registrar esta foto para el bonsái '{bonsai_name}'?"
+
+
+def build_delete_bonsai_photo_selection_question(bonsai_name: str) -> str:
+    return f"¿Qué foto de '{bonsai_name}' deseas eliminar?"
+
+
+def build_delete_bonsai_photo_confirmation(bonsai_name: str, taken_on: str) -> str:
+    return f"¿Eliminar la foto del {format_date(taken_on)} del bonsái '{bonsai_name}'? Esta acción es permanente."

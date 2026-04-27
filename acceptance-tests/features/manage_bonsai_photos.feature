@@ -48,20 +48,23 @@ Feature: Manage bonsai photos via advice
   Scenario: Delete a photo from a bonsai
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
-    And bonsai "Momiji" already has 2 photos
-    When I request to delete the first photo of bonsai "Momiji"
-    And I confirm the photo deletion for bonsai "Momiji"
+    And bonsai "Momiji" has a photo taken on "2025-03-10"
+    And bonsai "Momiji" has a photo taken on "2025-06-25"
+    When I ask to delete a photo of bonsai "Momiji"
+    And I select the photo taken on "2025-06-25"
+    And I confirm the photo deletion
     Then bonsai "Momiji" should have 1 photo
 
   Scenario: Cancel a photo deletion preserves the photo
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
-    And bonsai "Momiji" already has 1 photo
-    When I request to delete the first photo of bonsai "Momiji"
-    And I cancel the deletion with reason "Me equivoqué, no quiero borrarla"
+    And bonsai "Momiji" has a photo taken on "2025-03-10"
+    When I ask to delete a photo of bonsai "Momiji"
+    And I select the photo taken on "2025-03-10"
+    And I cancel the photo deletion with reason "Me equivoqué, no quiero borrarla"
     Then bonsai "Momiji" should still have 1 photo
 
   Scenario: Delete a photo when the bonsai does not exist returns an error
     Given no bonsai named "Fantasma" exists
-    When I request to delete the first photo of bonsai "Fantasma"
+    When I ask to delete a photo of bonsai "Fantasma"
     Then I should receive an error indicating the bonsai does not exist

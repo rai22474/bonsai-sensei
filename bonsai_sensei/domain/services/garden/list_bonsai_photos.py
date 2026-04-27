@@ -6,6 +6,7 @@ from google.adk.tools.tool_context import ToolContext
 def create_list_bonsai_photos_tool(
     get_bonsai_by_name_func: Callable,
     list_bonsai_photos_func: Callable,
+    set_photos_for_display: bool = False,
 ) -> Callable:
     async def list_bonsai_photos(
         bonsai_name: str,
@@ -25,7 +26,7 @@ def create_list_bonsai_photos_tool(
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
         photos = list_bonsai_photos_func(bonsai_id=bonsai.id)
-        if tool_context is not None:
+        if set_photos_for_display and tool_context is not None:
             tool_context.state["photos_to_display"] = [photo.file_path for photo in photos]
         return {
             "status": "success",

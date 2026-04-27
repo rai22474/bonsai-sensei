@@ -2,6 +2,8 @@ import re
 import uuid
 
 import pytest
+from hamcrest import assert_that, empty, equal_to
+from pytest_bdd import given, then, parsers
 from pytest_httpserver import HTTPServer
 
 from http_client import delete, get, post, post_bonsai_photo
@@ -91,3 +93,53 @@ def list_bonsai_photos(bonsai_id: int) -> list:
 
 def create_bonsai_photo_via_api(bonsai_id: int, photo_bytes: bytes, taken_on: str | None = None) -> dict:
     return post_bonsai_photo(bonsai_id, photo_bytes, taken_on=taken_on)
+
+
+def delete_bonsai_photo_via_api(bonsai_id: int, photo_id: int) -> None:
+    delete(f"/api/bonsai/{bonsai_id}/photos/{photo_id}")
+
+
+@given(parsers.parse('species "{name}" exists with scientific name "{scientific_name}"'))
+def ensure_species_exists(context, name, scientific_name):
+    create_species_record(context, name, scientific_name)
+
+
+@given(parsers.parse('a bonsai named "{bonsai_name}" exists for species "{species_name}"'))
+def ensure_bonsai_exists(context, bonsai_name, species_name):
+    species_id = get_species_record_id(context, species_name)
+    create_bonsai_record(context, bonsai_name, species_id)
+
+
+@given(parsers.parse('bonsai "{bonsai_name}" has a photo taken on "{taken_on}"'))
+def ensure_bonsai_has_photo_on_date(context, bonsai_name, taken_on):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    create_bonsai_photo_via_api(bonsai["id"], MINIMAL_PNG, taken_on=taken_on)
+
+
+@given(parsers.parse('no bonsai named "{bonsai_name}" exists'))
+def ensure_bonsai_does_not_exist(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    if bonsai:
+        delete(f"/api/bonsai/{bonsai['id']}")
+
+
+@then(parsers.parse('bonsai "{bonsai_name}" should have 1 photo'))
+def assert_bonsai_has_one_photo(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    assert bonsai is not None, f"Expected bonsai '{bonsai_name}' to exist"
+    photos = list_bonsai_photos(bonsai["id"])
+    assert_that(len(photos), equal_to(1), f"Expected bonsai '{bonsai_name}' to have 1 photo")
+
+
+@then(parsers.parse('bonsai "{bonsai_name}" should have 2 photos'))
+def assert_bonsai_has_two_photos(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name)
+    photos = list_bonsai_photos(bonsai["id"])
+    assert_that(len(photos), equal_to(2), f"Expected bonsai '{bonsai_name}' to have 2 photos")
+
+
+@then("I should receive an error indicating the bonsai does not exist")
+def assert_bonsai_not_found_error(context):
+    response = context.get("advice_response", {})
+    pending_interactions = response.get("pending_confirmations", []) + response.get("pending_selections", [])
+    assert_that(pending_interactions, empty(), "Expected no pending interaction when bonsai does not exist")

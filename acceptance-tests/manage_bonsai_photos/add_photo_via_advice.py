@@ -11,6 +11,9 @@ from manage_bonsai_photos.conftest import (
     MINIMAL_PNG,
 )
 
+# Shared steps (ensure_species_exists, ensure_bonsai_exists, ensure_bonsai_has_photo_on_date,
+# ensure_bonsai_does_not_exist) are defined in conftest.py and available automatically.
+
 
 @scenario("../features/manage_bonsai_photos.feature", "Add a photo to a bonsai")
 def test_add_photo_to_bonsai():
@@ -30,17 +33,6 @@ def test_add_photo_bonsai_not_found():
 @scenario("../features/manage_bonsai_photos.feature", "Retrieve the latest photo of a bonsai")
 def test_retrieve_latest_photo():
     return None
-
-
-@given(parsers.parse('species "{name}" exists with scientific name "{scientific_name}"'))
-def ensure_species_exists(context, name, scientific_name):
-    create_species_record(context, name, scientific_name)
-
-
-@given(parsers.parse('a bonsai named "{bonsai_name}" exists for species "{species_name}"'))
-def ensure_bonsai_exists(context, bonsai_name, species_name):
-    species_id = get_species_record_id(context, species_name)
-    create_bonsai_record(context, bonsai_name, species_id)
 
 
 @when("I send a photo")
@@ -66,44 +58,6 @@ def confirm_photo_bonsai(context, bonsai_name):
 def ensure_bonsai_has_one_photo_already(context, bonsai_name):
     bonsai = find_bonsai_by_name_api(bonsai_name)
     create_bonsai_photo_via_api(bonsai["id"], MINIMAL_PNG)
-
-
-@then(parsers.parse('bonsai "{bonsai_name}" should have 1 photo'))
-def assert_bonsai_has_one_photo(context, bonsai_name):
-    from hamcrest import assert_that, equal_to
-    bonsai = find_bonsai_by_name_api(bonsai_name)
-    assert bonsai is not None, f"Expected bonsai '{bonsai_name}' to exist"
-    photos = list_bonsai_photos(bonsai["id"])
-    assert_that(len(photos), equal_to(1), f"Expected bonsai '{bonsai_name}' to have 1 photo")
-
-
-@then(parsers.parse('bonsai "{bonsai_name}" should have 2 photos'))
-def assert_bonsai_has_two_photos(context, bonsai_name):
-    from hamcrest import assert_that, equal_to
-    bonsai = find_bonsai_by_name_api(bonsai_name)
-    photos = list_bonsai_photos(bonsai["id"])
-    assert_that(len(photos), equal_to(2), f"Expected bonsai '{bonsai_name}' to have 2 photos")
-
-
-@given(parsers.parse('no bonsai named "{bonsai_name}" exists'))
-def ensure_bonsai_does_not_exist(context, bonsai_name):
-    from http_client import delete as delete_request
-    bonsai = find_bonsai_by_name_api(bonsai_name)
-    if bonsai:
-        delete_request(f"/api/bonsai/{bonsai['id']}")
-
-
-@then("I should receive an error indicating the bonsai does not exist")
-def assert_bonsai_not_found_error(context):
-    from hamcrest import assert_that, empty
-    pending = context.get("advice_response", {}).get("pending_confirmations", [])
-    assert_that(pending, empty(), "Expected no confirmation request when bonsai does not exist")
-
-
-@given(parsers.parse('bonsai "{bonsai_name}" has a photo taken on "{taken_on}"'))
-def ensure_bonsai_has_photo_on_date(context, bonsai_name, taken_on):
-    bonsai = find_bonsai_by_name_api(bonsai_name)
-    create_bonsai_photo_via_api(bonsai["id"], MINIMAL_PNG, taken_on=taken_on)
 
 
 @when(parsers.parse('I ask for the latest photo of bonsai "{bonsai_name}"'))

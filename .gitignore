@@ -12,6 +12,7 @@ acceptance-tests/docker-compose.logs.txt
 postgres_data/
 ollama_data/
 wiki/
+photos/
 .monocle/
 acceptance-tests/docker-compose.logs.txt
 acceptance-tests/docker-compose.logs.txt

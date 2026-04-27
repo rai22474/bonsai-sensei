@@ -90,6 +90,7 @@ def _build_context_state(user_id: str, get_user_settings_func: Callable | None) 
         "current_date": today.isoformat(),
         "next_saturday": next_saturday,
         "user_location": user_location,
+        "photos_to_display": [],
     }
 
 
@@ -120,7 +121,9 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
             state=state_delta,
         )
         return
-    session.state.update(state_delta)
+    storage_session = runner.session_service.sessions.get("bonsai_sensei", {}).get(user_id, {}).get(str(user_id))
+    if storage_session:
+        storage_session.state.update(state_delta)
 
 
 def _build_user_message(text: str) -> types.Content:
@@ -176,10 +179,7 @@ async def _collect_and_clear_photos(runner: InMemoryRunner, user_id: str) -> lis
     )
     if session is None:
         return []
-    photos = list(session.state.get("photos_to_display") or [])
-    if photos:
-        session.state["photos_to_display"] = []
-    return photos
+    return list(session.state.get("photos_to_display") or [])
 
 
 def _build_response_texts(events: list) -> list[str]:

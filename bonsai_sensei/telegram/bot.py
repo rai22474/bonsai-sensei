@@ -66,6 +66,38 @@ class TelegramBot:
             parse_mode="HTML",
         )
 
+    async def send_selection_with_photos(
+        self,
+        chat_id: str,
+        question: str,
+        options: list[str],
+        photo_file_paths: list[str],
+        selection_id: str,
+    ):
+        if not self.application:
+            logger.error("Cannot send photo selection: Bot not configured")
+            return
+        for index, (option, photo_file_path) in enumerate(zip(options, photo_file_paths)):
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton(f"✅ {option}", callback_data=f"selection:{selection_id}:{index}")
+            ]])
+            from pathlib import Path
+            path = Path(photo_file_path)
+            if path.exists():
+                with open(path, "rb") as photo_file:
+                    await self.application.bot.send_photo(chat_id=chat_id, photo=photo_file, reply_markup=keyboard)
+            else:
+                await self.application.bot.send_message(chat_id=chat_id, text=f"🌿 {option}", reply_markup=keyboard)
+        cancel_keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("🚫 Ninguna de las anteriores", callback_data=f"selection:{selection_id}:none")
+        ]])
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=f"<b>{html.escape(question)}</b>",
+            reply_markup=cancel_keyboard,
+            parse_mode="HTML",
+        )
+
     async def send_force_reply_message(self, chat_id: str, text: str):
         if not self.application:
             logger.error("Cannot send force reply message: Bot not configured")
