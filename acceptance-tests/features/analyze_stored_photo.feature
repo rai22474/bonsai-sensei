@@ -1,22 +1,22 @@
-Feature: Analyze a stored bonsai photo via advice
+Feature: Analyze a stored bonsai photo
 
-  Scenario: Analyse the latest stored photo by bonsai name
+  Scenario: Visual description is returned for the latest stored photo
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
     And bonsai "Momiji" has a photo taken on "2025-06-25"
     When I ask to analyse the latest photo of bonsai "Momiji"
-    Then the bot's response should contain a visual observation about the photo
+    Then I receive a visual description of the photo
 
-  Scenario: Analyse a stored photo by approximate date
+  Scenario: Photo from approximate date is identified and described
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
     And bonsai "Momiji" has a photo taken on "2025-01-15"
     And bonsai "Momiji" has a photo taken on "2025-06-10"
     When I ask to analyse the photo of bonsai "Momiji" from "enero"
-    Then the bot's response should reference the photo taken on "2025-01-15"
+    Then I receive an analysis of the photo taken on "2025-01-15"
 
-  Scenario: Analyse stored photo when no photos exist returns an explanation
+  Scenario: No photos available returns an explanation
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
     When I ask to analyse the latest photo of bonsai "Momiji"
-    Then the bot's response should indicate there are no photos available for "Momiji"
+    Then I am informed that no photos are available for "Momiji"
