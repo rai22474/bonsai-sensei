@@ -65,7 +65,7 @@ def create_advisor(
 
 
 async def _generate_advise(
-    text: str,
+    content: types.Content | str,
     runner: InMemoryRunner,
     user_id: str = "default_user",
     get_user_settings_func: Callable | None = None,
@@ -73,7 +73,7 @@ async def _generate_advise(
 ) -> AdvisorResponse:
     state_delta = _build_context_state(user_id, get_user_settings_func)
     await _sync_session(runner, user_id, state_delta)
-    message = _build_user_message(text)
+    message = content if isinstance(content, types.Content) else _build_user_message(content)
     events = await _run_agent(runner, user_id, message, progress_callback)
     response_text = "\n".join(_build_response_texts(events))
     photos = await _collect_and_clear_photos(runner, user_id)

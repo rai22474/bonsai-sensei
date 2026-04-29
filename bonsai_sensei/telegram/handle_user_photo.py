@@ -1,9 +1,7 @@
 import io
-import os
-import uuid
-from pathlib import Path
 
 from PIL import Image
+from google.genai import types
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TimedOut
@@ -14,16 +12,14 @@ from bonsai_sensei.telegram.messages._formatting import random_processing_messag
 
 logger = get_logger(__name__)
 
-PHOTOS_PATH = os.getenv("PHOTOS_PATH", "./photos")
-
 
 async def handle_user_photo(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     message_processor=None,
     save_telegram_chat_id_func=None,
-    pending_human_responses: dict | None = None,
     pending_confirmation_cleanups: dict | None = None,
+    pending_photos: dict | None = None,
 ):
     user_id = str(update.effective_user.id)
     chat_id = str(update.effective_chat.id)
@@ -37,24 +33,15 @@ async def handle_user_photo(
         logger.error("No message processor configured for photo handler")
         return
 
-    photo = update.message.photo[-1]
-    telegram_file = await context.bot.get_file(photo.file_id)
+    webp_bytes = await _download_as_webp(update, context)
 
-    photos_dir = Path(PHOTOS_PATH)
-    photos_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f"{uuid.uuid4().hex}.webp"
-    file_path = photos_dir / file_name
-
-    raw_bytes = await telegram_file.download_as_bytearray()
-    image = Image.open(io.BytesIO(raw_bytes))
-    image.save(file_path, format="WEBP", quality=85)
+    if pending_photos is not None:
+        pending_photos[user_id] = webp_bytes
 
     progress_message = await update.message.reply_text(random_processing_message())
 
-    advisor_message = f"[FOTO RECIBIDA: {file_name}] El usuario ha enviado una foto."
-
     try:
-        response = await message_processor(advisor_message, user_id=user_id)
+        response = await message_processor(_build_photo_message(webp_bytes), user_id=user_id)
     finally:
         try:
             await progress_message.delete()
@@ -68,6 +55,25 @@ async def handle_user_photo(
 
     logger.info(f"Photo response for {user_id}: {repr(response.text[:100] if response.text else '')}")
     await _reply_with_html(update, response.text)
+
+
+async def _download_as_webp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bytes:
+    photo = update.message.photo[-1]
+    telegram_file = await context.bot.get_file(photo.file_id)
+    raw_bytes = await telegram_file.download_as_bytearray()
+    buffer = io.BytesIO()
+    Image.open(io.BytesIO(raw_bytes)).save(buffer, format="WEBP", quality=85)
+    return buffer.getvalue()
+
+
+def _build_photo_message(webp_bytes: bytes) -> types.Content:
+    return types.Content(
+        role="user",
+        parts=[
+            types.Part(inline_data=types.Blob(mime_type="image/webp", data=webp_bytes)),
+            types.Part(text="El usuario ha enviado una foto."),
+        ],
+    )
 
 
 async def _reply_with_html(update: Update, text: str) -> None:

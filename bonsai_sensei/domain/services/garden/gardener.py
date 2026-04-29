@@ -32,8 +32,8 @@ y registras fotos de bonsáis.
 - Si el usuario no proporciona un nombre para el bonsái, propón uno inspirado en anime o manga.
 - Si falta información esencial, pídela en tu respuesta.
 - Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a execute_planned_work.
-- Cuando el mensaje incluya el marcador [FOTO RECIBIDA: <path>], extrae el path y llama directamente a add_bonsai_photo con ese photo_path; la herramienta mostrará la lista de bonsáis al usuario.
-- Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name y el photo_path proporcionados.
+- Cuando el usuario envíe una foto (visible en la conversación), llama directamente a add_bonsai_photo; la herramienta mostrará la lista de bonsáis al usuario.
+- Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name proporcionado.
 - Para consultar fotos de un bonsái, usa list_bonsai_photos. Las fechas se devuelven en formato ISO (YYYY-MM-DD).
 - Para eliminar una foto, usa delete_bonsai_photo con el nombre del bonsái. La herramienta mostrará las fotos disponibles y pedirá confirmación.
 """
@@ -71,6 +71,9 @@ def create_gardener(
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
     build_delete_bonsai_photo_confirmation: Callable = None,
+    get_pending_photo_bytes: Callable = None,
+    save_photo_file: Callable = None,
+    clear_pending_photo: Callable = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
         list_bonsai_func=list_bonsai_func,
@@ -148,6 +151,9 @@ def create_gardener(
         ask_selection=ask_selection,
         build_selection_question=build_add_bonsai_photo_selection_question,
         build_confirmation_message=build_add_bonsai_photo_confirmation,
+        get_pending_photo_bytes=get_pending_photo_bytes,
+        save_photo_file=save_photo_file,
+        clear_pending_photo=clear_pending_photo,
     )
     add_photo_tool.__name__ = "add_bonsai_photo"
     list_photos_tool = create_list_bonsai_photos_tool(

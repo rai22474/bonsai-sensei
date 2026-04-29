@@ -1,10 +1,10 @@
 import asyncio
 import dataclasses
-import os
-import uuid
-from pathlib import Path
+import io
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, Form
+from google.genai import types
+from PIL import Image
 from pydantic import BaseModel
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
@@ -12,8 +12,6 @@ from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
-
-PHOTOS_PATH = os.getenv("PHOTOS_PATH", "./photos")
 
 
 class AdviceRequest(BaseModel):
@@ -182,13 +180,54 @@ async def choose_selection(
 async def upload_photo(
     photo: UploadFile,
     user_id: str = Form(default="acceptance_user"),
+    request: Request = None,
 ):
-    photos_dir = Path(PHOTOS_PATH)
-    photos_dir.mkdir(parents=True, exist_ok=True)
-    extension = Path(photo.filename).suffix if photo.filename else ".jpg"
-    file_name = f"{uuid.uuid4().hex}{extension}"
-    file_path = photos_dir / file_name
-    content = await photo.read()
-    file_path.write_bytes(content)
-    relative_path = str(Path(file_name))
-    return {"photo_path": relative_path}
+    raw_bytes = await photo.read()
+    webp_buffer = io.BytesIO()
+    Image.open(io.BytesIO(raw_bytes)).save(webp_buffer, format="WEBP", quality=85)
+    webp_bytes = webp_buffer.getvalue()
+
+    pending_photos = getattr(request.app.state, "pending_photos", {})
+    pending_photos[user_id] = webp_bytes
+
+    advisor = request.app.state.advisor
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+
+    message = types.Content(
+        role="user",
+        parts=[
+            types.Part(inline_data=types.Blob(mime_type="image/webp", data=webp_bytes)),
+            types.Part(text="El usuario ha enviado una foto."),
+        ],
+    )
+
+    task = asyncio.create_task(advisor(message, user_id=user_id))
+    active_tasks[user_id] = task
+
+    while not task.done():
+        await asyncio.sleep(0.05)
+        pending = pending_human_responses.get(user_id)
+        if pending and pending.get("type") == "confirmation":
+            return {
+                "text": "",
+                "pending_confirmations": [
+                    {"id": pending["confirmation_id"], "summary": pending.get("summary", "")}
+                ],
+            }
+        if pending and pending.get("type") == "selection":
+            return {
+                "text": "",
+                "pending_selections": [
+                    {
+                        "id": pending["selection_id"],
+                        "question": pending.get("question", ""),
+                        "options": pending.get("options", []),
+                    }
+                ],
+            }
+
+    active_tasks.pop(user_id, None)
+    if task.exception():
+        raise task.exception()
+    return dataclasses.asdict(task.result())

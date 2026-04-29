@@ -268,6 +268,7 @@ async def lifespan(app: FastAPI):
     app.state.pending_human_responses = {}
     app.state.pending_confirmation_cleanups = {}
     app.state.active_tasks = {}
+    app.state.pending_photos = {}
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
     model_factory = (
@@ -338,6 +339,7 @@ async def lifespan(app: FastAPI):
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
         ask_selection=ask_selection_func,
+        pending_photos=app.state.pending_photos,
         build_create_bonsai_confirmation=build_create_bonsai_confirmation,
         build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
         build_update_bonsai_confirmation=build_update_bonsai_confirmation,
@@ -393,8 +395,8 @@ async def lifespan(app: FastAPI):
         handle_user_photo,
         message_processor=app.state.advisor,
         save_telegram_chat_id_func=save_telegram_chat_id_func,
-        pending_human_responses=app.state.pending_human_responses,
         pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
+        pending_photos=app.state.pending_photos,
     )
     confirmation_handler = partial(
         handle_confirmation_callback,

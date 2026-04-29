@@ -1,4 +1,7 @@
 import os
+import re
+import uuid
+from datetime import date
 from functools import partial
 from pathlib import Path
 from typing import Callable
@@ -29,6 +32,7 @@ def create_gardener_group(
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
     build_delete_bonsai_photo_confirmation: Callable = None,
+    pending_photos: dict | None = None,
 ):
     list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(
@@ -46,20 +50,25 @@ def create_gardener_group(
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
     get_planned_work_func = partial(cultivation_plan.get_planned_work, create_session=session_factory)
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
-    _raw_create_bonsai_photo = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
+    create_bonsai_photo_func = partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory)
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
     delete_bonsai_photo_func = partial(bonsai_photo_store.delete_bonsai_photo, create_session=session_factory)
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
+    _pending_photos = pending_photos if pending_photos is not None else {}
 
-    def create_bonsai_photo_func(bonsai_photo):
-        flat_file = photos_root / bonsai_photo.file_path
-        if flat_file.exists():
-            bonsai_dir = photos_root / str(bonsai_photo.bonsai_id)
-            bonsai_dir.mkdir(parents=True, exist_ok=True)
-            target = bonsai_dir / Path(bonsai_photo.file_path).name
-            flat_file.rename(target)
-            bonsai_photo.file_path = f"{bonsai_photo.bonsai_id}/{Path(bonsai_photo.file_path).name}"
-        return _raw_create_bonsai_photo(bonsai_photo=bonsai_photo)
+    def save_photo_file(bonsai_name: str, photo_bytes: bytes) -> str:
+        safe_name = re.sub(r"[^\w\-]", "_", bonsai_name.lower())
+        bonsai_dir = photos_root / safe_name
+        bonsai_dir.mkdir(parents=True, exist_ok=True)
+        file_name = f"{date.today().isoformat()}_{uuid.uuid4().hex[:8]}.webp"
+        (bonsai_dir / file_name).write_bytes(photo_bytes)
+        return f"{safe_name}/{file_name}"
+
+    def get_pending_photo_bytes(user_id: str) -> bytes | None:
+        return _pending_photos.get(user_id)
+
+    def clear_pending_photo(user_id: str) -> None:
+        _pending_photos.pop(user_id, None)
     return create_gardener(
         model=model,
         list_bonsai_func=list_bonsai_func,
@@ -92,4 +101,7 @@ def create_gardener_group(
         build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
         build_delete_bonsai_photo_selection_question=build_delete_bonsai_photo_selection_question,
         build_delete_bonsai_photo_confirmation=build_delete_bonsai_photo_confirmation,
+        get_pending_photo_bytes=get_pending_photo_bytes,
+        save_photo_file=save_photo_file,
+        clear_pending_photo=clear_pending_photo,
     )
