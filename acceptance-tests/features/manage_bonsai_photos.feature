@@ -40,10 +40,10 @@ Feature: Manage bonsai photos via advice
   Scenario: Retrieve the photo closest to a given date
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
-    And bonsai "Momiji" has a photo taken on "2025-03-10"
-    And bonsai "Momiji" has a photo taken on "2025-06-25"
-    When I ask for the photo of bonsai "Momiji" closest to "1 de abril"
-    Then I should receive the photo of bonsai "Momiji" taken on "2025-03-10"
+    And bonsai "Momiji" has a photo taken on "2026-03-10"
+    And bonsai "Momiji" has a photo taken on "2026-06-25"
+    When I ask for the photo of bonsai "Momiji" closest to "1 de abril de 2026"
+    Then I should receive the photo of bonsai "Momiji" taken on "2026-03-10"
 
   Scenario: Delete a photo from a bonsai
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
