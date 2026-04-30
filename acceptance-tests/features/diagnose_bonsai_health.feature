@@ -1,21 +1,23 @@
-Feature: Diagnose bonsai health with photo evidence
-  # NOTE: blocked by ISSUE-002 (session reset at 50 events)
+Feature: Diagnose bonsai health from stored photo evidence
 
-  @wip
-  Scenario: Diagnosis connects described symptom with photo evidence
+  Scenario: Diagnosis connects a described symptom with what is visible in a stored photo
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
-    When I describe "las hojas de Momiji están amarilleando"
-    And I send a photo
-    And I confirm the photo belongs to bonsai "Momiji"
+    And bonsai "Momiji" has a photo taken on "2025-06-01"
+    When I ask "Las hojas de Momiji están amarilleando, ¿qué puede ser?"
     Then I receive a diagnosis connecting the described symptom with what is visible in the photo
     And I receive at least one actionable recommendation
 
-  @wip
-  Scenario: Health issues are identified proactively without prior symptom description
+  Scenario: Health issues are identified proactively from a stored photo
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"
-    When I send a photo and ask "¿Ves algo malo en Momiji?"
-    And I confirm the photo belongs to bonsai "Momiji"
+    And bonsai "Momiji" has a photo taken on "2025-06-01"
+    When I ask "¿Ves algo malo en Momiji?"
     Then I receive a description of the visible condition of the tree
     And I receive at least one observation or recommendation
+
+  Scenario: No stored photos prompts for a photo before health advice is given
+    Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
+    And a bonsai named "Momiji" exists for species "Acer Palmatum"
+    When I ask "¿Ves algo malo en Momiji?"
+    Then I am asked to provide a photo before receiving health advice

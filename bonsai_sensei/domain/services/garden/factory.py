@@ -69,6 +69,13 @@ def create_gardener_group(
 
     def clear_pending_photo(user_id: str) -> None:
         _pending_photos.pop(user_id, None)
+
+    def load_photo_bytes(file_path: str) -> bytes | None:
+        full_path = photos_root / file_path
+        if not full_path.exists():
+            return None
+        return full_path.read_bytes()
+
     return create_gardener(
         model=model,
         list_bonsai_func=list_bonsai_func,
@@ -104,4 +111,5 @@ def create_gardener_group(
         get_pending_photo_bytes=get_pending_photo_bytes,
         save_photo_file=save_photo_file,
         clear_pending_photo=clear_pending_photo,
+        load_photo_bytes=load_photo_bytes,
     )

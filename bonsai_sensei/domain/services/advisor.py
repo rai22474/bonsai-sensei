@@ -75,6 +75,10 @@ async def _generate_advise(
     await _sync_session(runner, user_id, state_delta)
     message = content if isinstance(content, types.Content) else _build_user_message(content)
     events = await _run_agent(runner, user_id, message, progress_callback)
+    photo_bytes = await _pop_photo_for_analysis(runner, user_id)
+    if photo_bytes:
+        analysis_message = _build_photo_analysis_message(photo_bytes)
+        events = await _run_agent(runner, user_id, analysis_message, progress_callback)
     response_text = "\n".join(_build_response_texts(events))
     photos = await _collect_and_clear_photos(runner, user_id)
     return AdvisorResponse(text=response_text, photos=photos)
@@ -91,6 +95,7 @@ def _build_context_state(user_id: str, get_user_settings_func: Callable | None) 
         "next_saturday": next_saturday,
         "user_location": user_location,
         "photos_to_display": [],
+        "photo_for_analysis": None,
     }
 
 
@@ -128,6 +133,30 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
 
 def _build_user_message(text: str) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=text)])
+
+
+async def _pop_photo_for_analysis(runner: InMemoryRunner, user_id: str) -> bytes | None:
+    session = await runner.session_service.get_session(
+        app_name="bonsai_sensei",
+        user_id=user_id,
+        session_id=str(user_id),
+    )
+    if session is None:
+        return None
+    photo_bytes = session.state.get("photo_for_analysis")
+    if photo_bytes:
+        session.state["photo_for_analysis"] = None
+    return photo_bytes
+
+
+def _build_photo_analysis_message(photo_bytes: bytes) -> types.Content:
+    return types.Content(
+        role="user",
+        parts=[
+            types.Part(inline_data=types.Blob(mime_type="image/webp", data=photo_bytes)),
+            types.Part(text="[ANÁLISIS_FOTOGRÁFICO] Esta es la foto almacenada que solicitaste analizar. Descríbela detalladamente."),
+        ],
+    )
 
 
 async def _run_agent(
