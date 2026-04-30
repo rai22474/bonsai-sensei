@@ -26,11 +26,11 @@ def create_delete_bonsai_photo_tool(
         bonsai_name: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Delete a photo from a bonsai after the user selects which one and confirms.
+        """Delete a stored photo from a bonsai.
 
-        Lists all available photos for the bonsai, shows thumbnails to the user,
-        then presents a selection list by date. After selection, asks for confirmation
-        before deleting the photo from disk and the database.
+        Call this directly with just the bonsai name — do not ask the user which photo
+        to delete beforehand. This tool handles showing available photos, user selection,
+        and deletion confirmation internally.
 
         Args:
             bonsai_name: Name of the bonsai whose photo should be deleted.

@@ -17,7 +17,6 @@ from bonsai_sensei.domain.services.garden.execute_planned_work import create_exe
 from bonsai_sensei.domain.services.garden.add_bonsai_photo import create_add_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.delete_bonsai_photo import create_delete_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.list_bonsai_photos import create_list_bonsai_photos_tool
-from bonsai_sensei.domain.services.garden.analyze_bonsai_photo import create_analyze_bonsai_photo_tool
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
 
 
@@ -35,9 +34,8 @@ y registras fotos de bonsáis.
 - Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a execute_planned_work.
 - Cuando el usuario envíe una foto (visible en la conversación), llama directamente a add_bonsai_photo; la herramienta mostrará la lista de bonsáis al usuario.
 - Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name proporcionado.
-- Para consultar fotos de un bonsái, usa list_bonsai_photos. Las fechas se devuelven en formato ISO (YYYY-MM-DD).
-- Para analizar visualmente una foto almacenada de un bonsái, usa analyze_bonsai_photo. La imagen se inyectará automáticamente en la conversación para su descripción.
-- Para eliminar una foto, usa delete_bonsai_photo con el nombre del bonsái. La herramienta mostrará las fotos disponibles y pedirá confirmación.
+- Para consultar o listar las fotos registradas de un bonsái (sin analizarlas), usa list_bonsai_photos. Las fechas se devuelven en formato ISO (YYYY-MM-DD).
+- Para eliminar una foto, usa delete_bonsai_photo con el nombre del bonsái.
 """
 
 
@@ -76,7 +74,6 @@ def create_gardener(
     get_pending_photo_bytes: Callable = None,
     save_photo_file: Callable = None,
     clear_pending_photo: Callable = None,
-    load_photo_bytes: Callable = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
         list_bonsai_func=list_bonsai_func,
@@ -174,17 +171,10 @@ def create_gardener(
         build_confirmation_message=build_delete_bonsai_photo_confirmation,
     )
     delete_photo_tool.__name__ = "delete_bonsai_photo"
-    analyze_photo_tool = create_analyze_bonsai_photo_tool(
-        get_bonsai_by_name_func=get_bonsai_by_name_func,
-        list_bonsai_photos_func=list_bonsai_photos_func,
-        load_photo_bytes=load_photo_bytes,
-    )
-    analyze_photo_tool.__name__ = "analyze_bonsai_photo"
-
     return Agent(
         model=model,
         name="gardener",
-        description="Gestiona la colección de bonsáis (crear, actualizar, eliminar) y registra eventos ya ocurridos: fertilizaciones aplicadas, tratamientos fitosanitarios aplicados, trasplantes realizados, ejecución de trabajos planificados y registro de fotos. Cuando el usuario pide analizar visualmente una foto almacenada de un bonsái, este agente usa analyze_bonsai_photo. No planifica trabajos futuros ni gestiona el catálogo de productos.",
+        description="Gestiona la colección de bonsáis (crear, actualizar, eliminar) y registra eventos ya ocurridos: fertilizaciones aplicadas, tratamientos fitosanitarios aplicados, trasplantes realizados, ejecución de trabajos planificados y registro de fotos. No analiza visualmente fotos ni planifica trabajos futuros.",
         instruction=GARDENER_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[
@@ -202,6 +192,5 @@ def create_gardener(
             add_photo_tool,
             list_photos_tool,
             delete_photo_tool,
-            analyze_photo_tool,
         ],
     )

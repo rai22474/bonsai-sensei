@@ -14,6 +14,7 @@ MAX_SESSION_EVENTS = 50
 _PROGRESS_MESSAGES = {
     "command_pipeline": "🗺️ Elaborando un plan de acción...",
     "gardener": "🌱 Gestionando la colección de bonsáis...",
+    "kantei": "🔍 Analizando la foto...",
     "botanist": "🌿 Consultando el herbario de especies...",
     "planning_agent": "📅 Planificando trabajos de cultivo...",
     "weather_advisor": "🌤️ Consultando el pronóstico meteorológico...",
@@ -39,6 +40,7 @@ _execution_latency = _meter.create_histogram(
 class AdvisorResponse:
     text: str
     photos: list = field(default_factory=list)
+    photos_taken_on: list = field(default_factory=list)
 
 
 def create_advisor(
@@ -75,13 +77,10 @@ async def _generate_advise(
     await _sync_session(runner, user_id, state_delta)
     message = content if isinstance(content, types.Content) else _build_user_message(content)
     events = await _run_agent(runner, user_id, message, progress_callback)
-    photo_bytes = await _pop_photo_for_analysis(runner, user_id)
-    if photo_bytes:
-        analysis_message = _build_photo_analysis_message(photo_bytes)
-        events = await _run_agent(runner, user_id, analysis_message, progress_callback)
+    photos_taken_on = await _pop_photos_taken_on(runner, user_id)
     response_text = "\n".join(_build_response_texts(events))
     photos = await _collect_and_clear_photos(runner, user_id)
-    return AdvisorResponse(text=response_text, photos=photos)
+    return AdvisorResponse(text=response_text, photos=photos, photos_taken_on=photos_taken_on)
 
 
 def _build_context_state(user_id: str, get_user_settings_func: Callable | None) -> dict:
@@ -95,7 +94,7 @@ def _build_context_state(user_id: str, get_user_settings_func: Callable | None) 
         "next_saturday": next_saturday,
         "user_location": user_location,
         "photos_to_display": [],
-        "photo_for_analysis": None,
+        "photos_for_analysis_taken_on": [],
     }
 
 
@@ -135,28 +134,17 @@ def _build_user_message(text: str) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=text)])
 
 
-async def _pop_photo_for_analysis(runner: InMemoryRunner, user_id: str) -> bytes | None:
+async def _pop_photos_taken_on(runner: InMemoryRunner, user_id: str) -> list:
     session = await runner.session_service.get_session(
         app_name="bonsai_sensei",
         user_id=user_id,
         session_id=str(user_id),
     )
     if session is None:
-        return None
-    photo_bytes = session.state.get("photo_for_analysis")
-    if photo_bytes:
-        session.state["photo_for_analysis"] = None
-    return photo_bytes
-
-
-def _build_photo_analysis_message(photo_bytes: bytes) -> types.Content:
-    return types.Content(
-        role="user",
-        parts=[
-            types.Part(inline_data=types.Blob(mime_type="image/webp", data=photo_bytes)),
-            types.Part(text="[ANÁLISIS_FOTOGRÁFICO] Esta es la foto almacenada que solicitaste analizar. Descríbela detalladamente."),
-        ],
-    )
+        return []
+    taken_on_list = list(session.state.get("photos_for_analysis_taken_on") or [])
+    session.state["photos_for_analysis_taken_on"] = []
+    return taken_on_list
 
 
 async def _run_agent(

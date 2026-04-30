@@ -9,6 +9,7 @@ from functools import partial
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
+from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
 from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_selection
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.telegram.messages.gardener_messages import (
@@ -364,12 +365,14 @@ async def lifespan(app: FastAPI):
         build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
     )
     sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model, wiki_root=os.getenv("WIKI_PATH", "./wiki"))
+    kantei_group_factory = partial(create_kantei_group, session_factory=get_session_partial)
     sensei_agent = create_agents(
         model=model,
         create_cultivation_group=cultivation_group_factory,
         create_gardener_group=gardener_group_factory,
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
+        create_kantei_group=kantei_group_factory,
     )
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,

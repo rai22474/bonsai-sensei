@@ -17,28 +17,32 @@ def create_analyze_bonsai_photo_tool(
     get_bonsai_by_name_func: Callable,
     list_bonsai_photos_func: Callable,
     load_photo_bytes: Callable,
+    run_photo_analysis: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="kantei")
     async def analyze_bonsai_photo(
         bonsai_name: str,
+        analysis_intent: str,
         date_hint: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Retrieve a stored photo of the given bonsai and prepare it for visual analysis.
+        """Retrieve a stored photo of the given bonsai and produce a visual analysis.
 
-        Loads the photo from disk and makes it available so the next response can describe
-        what is visible in it. Call this when the user asks for visual analysis, description,
-        or critique of a bonsai based on a stored photo.
+        Selects the photo matching the date hint (or the latest if omitted), runs the
+        visual analysis oriented to the given intent and returns the result.
 
         Args:
             bonsai_name: Name of the bonsai.
+            analysis_intent: What the user wants from the analysis, in the user's own words
+                             (e.g. "diagnostica si tiene plagas", "critica el diseño",
+                             "describe el estado general"). Used to orient the analysis.
             date_hint: Optional date hint in natural language (e.g. "enero", "2025-06-25").
                        Leave empty to use the latest photo.
 
         Returns:
-            JSON dict with status 'photo_ready', 'no_photos', or 'error'.
-            Output JSON (photo_ready): {"status": "photo_ready", "bonsai_name": str, "taken_on": "YYYY-MM-DD"}.
+            JSON dict with status 'analysis_complete', 'no_photos', or 'error'.
+            Output JSON (analysis_complete): {"status": "analysis_complete", "bonsai_name": str, "taken_on": "YYYY-MM-DD", "analysis": str}.
             Output JSON (no_photos): {"status": "no_photos", "bonsai_name": str}.
             Output JSON (error): {"status": "error", "message": str}.
             Error messages: "bonsai_not_found", "photo_file_not_found".
@@ -56,16 +60,18 @@ def create_analyze_bonsai_photo_tool(
         if photo_bytes is None:
             return {"status": "error", "message": "photo_file_not_found"}
 
+        analysis = await run_photo_analysis(photo_bytes, analysis_intent)
+
         if tool_context is not None:
-            tool_context.state["photo_for_analysis"] = photo_bytes
             analyzed = list(tool_context.state.get("photos_for_analysis_taken_on") or [])
             analyzed.append(str(photo.taken_on))
             tool_context.state["photos_for_analysis_taken_on"] = analyzed
 
         return {
-            "status": "photo_ready",
+            "status": "analysis_complete",
             "bonsai_name": bonsai_name,
             "taken_on": str(photo.taken_on),
+            "analysis": analysis,
         }
 
     return analyze_bonsai_photo

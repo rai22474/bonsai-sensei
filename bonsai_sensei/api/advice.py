@@ -41,6 +41,15 @@ async def get_advice(request_body: AdviceRequest, request: Request):
     pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
     active_tasks = getattr(request.app.state, "active_tasks", {})
 
+    existing_task = active_tasks.get(user_id)
+    if existing_task and not existing_task.done():
+        existing_task.cancel()
+        try:
+            await existing_task
+        except (asyncio.CancelledError, Exception):
+            pass
+    pending_human_responses.pop(user_id, None)
+
     task = asyncio.create_task(advisor(request_body.text, user_id=user_id))
     active_tasks[user_id] = task
 

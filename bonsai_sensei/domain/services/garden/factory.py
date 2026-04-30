@@ -111,5 +111,4 @@ def create_gardener_group(
         get_pending_photo_bytes=get_pending_photo_bytes,
         save_photo_file=save_photo_file,
         clear_pending_photo=clear_pending_photo,
-        load_photo_bytes=load_photo_bytes,
     )
