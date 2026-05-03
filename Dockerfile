@@ -1,17 +1,24 @@
-# Use a Python image with uv pre-installed
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM python:3.12-alpine AS builder
 
-# Set the working directory to /app
+RUN apk add --no-cache \
+    gcc musl-dev libffi-dev \
+    jpeg-dev zlib-dev freetype-dev libpng-dev && \
+    pip install --no-cache-dir uv
+
 WORKDIR /app
-
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
 
 COPY pyproject.toml .
 
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+RUN uv venv .venv && \
+    UV_COMPILE_BYTECODE=1 uv pip install --python .venv -r pyproject.toml
 
-RUN uv pip install --system -r pyproject.toml
+FROM python:3.12-alpine
+
+RUN apk add --no-cache libjpeg libpng freetype ttf-dejavu
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv .venv
 
 COPY bonsai_sensei/ bonsai_sensei/
 COPY alembic/ alembic/
@@ -20,4 +27,4 @@ COPY scripts/init_db.py .
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "bonsai_sensei.main:app", "--host", "0.0.0.0", "--port", "8080"]

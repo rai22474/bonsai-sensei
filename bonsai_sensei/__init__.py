@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from functools import partial
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
@@ -67,6 +67,7 @@ from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_selection_callback import handle_selection_callback
+from bonsai_sensei.telegram.handle_poll_answer import handle_poll_answer
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
 from bonsai_sensei.telegram.start import start
@@ -286,7 +287,9 @@ async def lifespan(app: FastAPI):
     ask_confirmation_func = create_ask_confirmation(send_confirmation_func, app.state.pending_human_responses)
 
     async def send_selection_func(user_id: str, question: str, options: list, selection_id: str):
-        await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
+        poll_id = await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
+        if poll_id is not None and user_id in app.state.pending_human_responses:
+            app.state.pending_human_responses[user_id]["poll_id"] = poll_id
 
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
 
@@ -415,12 +418,19 @@ async def lifespan(app: FastAPI):
         send_none_reason_prompt=bot_instance.send_force_reply_message,
     )
 
+    poll_answer_handler = partial(
+        handle_poll_answer,
+        pending_human_responses=app.state.pending_human_responses,
+        send_none_reason_prompt=bot_instance.send_force_reply_message,
+    )
+
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         MessageHandler(filters.PHOTO, photo_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
         CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
+        PollAnswerHandler(poll_answer_handler),
     ]
     if bot_instance.application:
         for handler in handlers:
