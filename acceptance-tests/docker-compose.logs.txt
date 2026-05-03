@@ -1,3 +1,61 @@
+acceptance-tests-db-1  | The files belonging to this database system will be owned by user "postgres".
+acceptance-tests-db-1  | This user must also own the server process.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-tests-db-1  | The default database encoding has accordingly been set to "UTF8".
+acceptance-tests-db-1  | The default text search configuration will be set to "english".
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | Data page checksums are disabled.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1  | creating subdirectories ... ok
+acceptance-tests-db-1  | selecting dynamic shared memory implementation ... posix
+acceptance-tests-db-1  | selecting default max_connections ... 100
+acceptance-tests-db-1  | selecting default shared_buffers ... 128MB
+acceptance-tests-db-1  | selecting default time zone ... UTC
+acceptance-tests-db-1  | creating configuration files ... ok
+acceptance-tests-db-1  | running bootstrap script ... ok
+acceptance-tests-db-1  | sh: locale: not found
+acceptance-tests-db-1  | 2026-05-03 17:51:08.673 UTC [36] WARNING:  no usable system locales were found
+acceptance-tests-db-1  | performing post-bootstrap initialization ... ok
+acceptance-tests-db-1  | initdb: warning: enabling "trust" authentication for local connections
+acceptance-tests-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-tests-db-1  | syncing data to disk ... ok
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | Success. You can now start the database server using:
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | waiting for server to start....2026-05-03 17:51:09.058 UTC [42] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1  | 2026-05-03 17:51:09.059 UTC [42] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1  | 2026-05-03 17:51:09.063 UTC [45] LOG:  database system was shut down at 2026-05-03 17:51:08 UTC
+acceptance-tests-db-1  | 2026-05-03 17:51:09.067 UTC [42] LOG:  database system is ready to accept connections
+acceptance-tests-db-1  |  done
+acceptance-tests-db-1  | server started
+acceptance-tests-db-1  | CREATE DATABASE
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | waiting for server to shut down....2026-05-03 17:51:09.197 UTC [42] LOG:  received fast shutdown request
+acceptance-tests-db-1  | 2026-05-03 17:51:09.199 UTC [42] LOG:  aborting any active transactions
+acceptance-tests-db-1  | 2026-05-03 17:51:09.201 UTC [42] LOG:  background worker "logical replication launcher" (PID 48) exited with exit code 1
+acceptance-tests-db-1  | 2026-05-03 17:51:09.202 UTC [43] LOG:  shutting down
+acceptance-tests-db-1  | 2026-05-03 17:51:09.203 UTC [43] LOG:  checkpoint starting: shutdown immediate
+acceptance-tests-db-1  | 2026-05-03 17:51:09.254 UTC [43] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.019 s, sync=0.029 s, total=0.053 s; sync files=301, longest=0.005 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
+acceptance-tests-db-1  | 2026-05-03 17:51:09.259 UTC [42] LOG:  database system is shut down
+acceptance-tests-db-1  |  done
+acceptance-tests-db-1  | server stopped
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | PostgreSQL init process complete; ready for start up.
+acceptance-tests-db-1  | 
+acceptance-tests-db-1  | 2026-05-03 17:51:09.315 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+acceptance-tests-db-1  | 2026-05-03 17:51:09.315 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-tests-db-1  | 2026-05-03 17:51:09.315 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-tests-db-1  | 2026-05-03 17:51:09.317 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1  | 2026-05-03 17:51:09.321 UTC [58] LOG:  database system was shut down at 2026-05-03 17:51:09 UTC
+acceptance-tests-db-1  | 2026-05-03 17:51:09.324 UTC [1] LOG:  database system is ready to accept connections
 acceptance-tests-app-1  | INFO:__main__:Running database migrations...
 acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/authlib/_joserfc_helpers.py:8: AuthlibDeprecationWarning: authlib.jose module is deprecated, please use joserfc instead.
 acceptance-tests-app-1  | It will be compatible before version 2.0.0.
@@ -17,175 +75,114 @@ acceptance-tests-app-1  | /usr/local/lib/python3.12/site-packages/google/adk/fea
 acceptance-tests-app-1  |   check_feature_enabled()
 acceptance-tests-app-1  | INFO:     Started server process [8]
 acceptance-tests-app-1  | INFO:     Waiting for application startup.
-acceptance-tests-app-1  | 2026-04-30 11:32:26,143 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
-acceptance-tests-app-1  | 2026-04-30 11:32:26,143 - bonsai_sensei.telegram.bot - WARNING - TELEGRAM_BOT_TOKEN not set. Bot will not function.
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-05-03 17:51:17,995 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
+acceptance-tests-app-1  | 2026-05-03 17:51:17,995 - bonsai_sensei.telegram.bot - WARNING - TELEGRAM_BOT_TOKEN not set. Bot will not function.
+acceptance-tests-app-1  | 2026-05-03 17:51:17,997 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-app-1  | 2026-05-03 17:51:17,997 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
+acceptance-tests-app-1  | 2026-05-03 17:51:17,998 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-05-03 17:51:17,998 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-app-1  | 2026-05-03 17:51:17,998 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
+acceptance-tests-app-1  | 2026-05-03 17:51:17,998 - apscheduler.scheduler - INFO - Scheduler started
 acceptance-tests-app-1  | INFO:     Application startup complete.
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
-acceptance-tests-app-1  | 2026-04-30 11:32:26,146 - apscheduler.scheduler - INFO - Scheduler started
 acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-acceptance-tests-app-1  | INFO:     192.168.32.1:54342 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:34076 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:34078 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:34084 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:34092 - "POST /api/bonsai/1/photos?taken_on=2025-06-25 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-04-30 11:32:46,451 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-analyze-photo-c499b9b3b0624eb0adfac784f1167601 text=Analiza la última foto de 'Momiji'. ***
-acceptance-tests-app-1  | 2026-04-30 11:32:46,504 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:47,903 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:47,904 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
-acceptance-tests-app-1  | 2026-04-30 11:32:47,989 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:47,990 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-30 11:32:52,723 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:52,816 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:53,608 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:53,678 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:54,503 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:54,585 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:54,585 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-30 11:32:56,224 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:56,321 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:58,030 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:58,055 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:32:58,055 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:32:58,107 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:32:59,480 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:32:59,507 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:32:59,507 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:32:59,571 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:02,069 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | INFO:     192.168.32.1:34100 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44284 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44298 - "DELETE /api/bonsai/1/photos HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44314 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44318 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44324 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44328 - "DELETE /api/species/1 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44344 - "DELETE /api/advice/sessions/bdd-analyze-photo-c499b9b3b0624eb0adfac784f1167601 HTTP/1.1" 204 No Content
-acceptance-tests-app-1  | INFO:     192.168.32.1:44354 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44358 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44370 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44382 - "POST /api/bonsai/2/photos?taken_on=2025-01-15 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44390 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:44404 - "POST /api/bonsai/2/photos?taken_on=2025-06-10 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-04-30 11:33:02,555 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-analyze-photo-eae4b93dfb5841b3ad2dfa77c1611d4e text=Analiza la foto de 'Momiji' de enero. ***
-acceptance-tests-app-1  | 2026-04-30 11:33:02,598 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:06,234 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:06,311 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:06,311 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-30 11:33:10,623 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:10,708 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:11,657 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:11,743 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:12,586 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:12,637 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:12,638 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-30 11:33:14,437 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:14,534 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:16,324 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:16,359 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:33:16,359 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:33:16,415 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:19,148 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:19,196 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:33:19,196 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:33:19,258 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:21,487 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | INFO:     192.168.32.1:44408 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56280 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56294 - "DELETE /api/bonsai/2/photos HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56300 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56312 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56322 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56324 - "DELETE /api/species/2 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56340 - "DELETE /api/advice/sessions/bdd-analyze-photo-eae4b93dfb5841b3ad2dfa77c1611d4e HTTP/1.1" 204 No Content
-acceptance-tests-app-1  | INFO:     192.168.32.1:56356 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:56358 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-04-30 11:33:22,253 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-analyze-photo-d3cd86ef3e8c47cba28a253c17c67b2c text=Analiza la última foto de 'Momiji'. ***
-acceptance-tests-app-1  | 2026-04-30 11:33:22,296 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:24,311 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:24,385 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:24,385 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-tests-app-1  | 2026-04-30 11:33:30,975 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:31,059 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:31,952 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:32,033 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:33,827 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:33,919 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:34,791 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:34,831 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:33:34,831 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:33:34,886 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:35,945 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | 2026-04-30 11:33:35,972 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-tests-app-1  | 2026-04-30 11:33:35,972 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-tests-app-1  | 2026-04-30 11:33:36,041 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-tests-app-1  | 2026-04-30 11:33:37,696 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-tests-app-1  | INFO:     192.168.32.1:56368 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42422 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42424 - "DELETE /api/bonsai/3/photos HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42434 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42446 - "DELETE /api/bonsai/3 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42462 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42466 - "DELETE /api/species/3 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:42472 - "DELETE /api/advice/sessions/bdd-analyze-photo-d3cd86ef3e8c47cba28a253c17c67b2c HTTP/1.1" 204 No Content
-acceptance-tests-db-1   | The files belonging to this database system will be owned by user "postgres".
-acceptance-tests-db-1   | This user must also own the server process.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-tests-db-1   | The default database encoding has accordingly been set to "UTF8".
-acceptance-tests-db-1   | The default text search configuration will be set to "english".
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | Data page checksums are disabled.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
-acceptance-tests-db-1   | creating subdirectories ... ok
-acceptance-tests-db-1   | selecting dynamic shared memory implementation ... posix
-acceptance-tests-db-1   | selecting default max_connections ... 100
-acceptance-tests-db-1   | selecting default shared_buffers ... 128MB
-acceptance-tests-db-1   | selecting default time zone ... UTC
-acceptance-tests-db-1   | creating configuration files ... ok
-acceptance-tests-db-1   | running bootstrap script ... ok
-acceptance-tests-db-1   | sh: locale: not found
-acceptance-tests-db-1   | 2026-04-30 11:32:16.423 UTC [36] WARNING:  no usable system locales were found
-acceptance-tests-db-1   | performing post-bootstrap initialization ... ok
-acceptance-tests-db-1   | initdb: warning: enabling "trust" authentication for local connections
-acceptance-tests-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-tests-db-1   | syncing data to disk ... ok
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | Success. You can now start the database server using:
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | waiting for server to start....2026-04-30 11:32:16.834 UTC [42] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-04-30 11:32:16.836 UTC [42] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1   | 2026-04-30 11:32:16.839 UTC [45] LOG:  database system was shut down at 2026-04-30 11:32:16 UTC
-acceptance-tests-db-1   | 2026-04-30 11:32:16.846 UTC [42] LOG:  database system is ready to accept connections
-acceptance-tests-db-1   |  done
-acceptance-tests-db-1   | server started
-acceptance-tests-db-1   | CREATE DATABASE
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | waiting for server to shut down....2026-04-30 11:32:16.972 UTC [42] LOG:  received fast shutdown request
-acceptance-tests-db-1   | 2026-04-30 11:32:16.973 UTC [42] LOG:  aborting any active transactions
-acceptance-tests-db-1   | 2026-04-30 11:32:16.975 UTC [42] LOG:  background worker "logical replication launcher" (PID 48) exited with exit code 1
-acceptance-tests-db-1   | 2026-04-30 11:32:16.975 UTC [43] LOG:  shutting down
-acceptance-tests-db-1   | 2026-04-30 11:32:16.977 UTC [43] LOG:  checkpoint starting: shutdown immediate
-acceptance-tests-db-1   | 2026-04-30 11:32:17.027 UTC [43] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.019 s, sync=0.028 s, total=0.052 s; sync files=301, longest=0.003 s, average=0.001 s; distance=4238 kB, estimate=4238 kB
-acceptance-tests-db-1   | 2026-04-30 11:32:17.032 UTC [42] LOG:  database system is shut down
-acceptance-tests-db-1   |  done
-acceptance-tests-db-1   | server stopped
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | PostgreSQL init process complete; ready for start up.
-acceptance-tests-db-1   | 
-acceptance-tests-db-1   | 2026-04-30 11:32:17.125 UTC [1] LOG:  starting PostgreSQL 15.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
-acceptance-tests-db-1   | 2026-04-30 11:32:17.125 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-tests-db-1   | 2026-04-30 11:32:17.125 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-tests-db-1   | 2026-04-30 11:32:17.130 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1   | 2026-04-30 11:32:17.135 UTC [58] LOG:  database system was shut down at 2026-04-30 11:32:17 UTC
-acceptance-tests-db-1   | 2026-04-30 11:32:17.139 UTC [1] LOG:  database system is ready to accept connections
+acceptance-tests-app-1  | INFO:     172.19.0.1:55918 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55922 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55932 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55938 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55946 - "POST /api/bonsai/1/photos?taken_on=2025-01-01 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55962 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:55976 - "POST /api/bonsai/1/photos?taken_on=2025-07-01 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-05-03 17:51:38,237 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-compare-93c6ac3c076f40fa8b1a78801078946a text=Compara las fotos de 'Momiji' de principio y fin de año. ***
+acceptance-tests-app-1  | 2026-05-03 17:51:38,286 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:40,017 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:40,018 - google_genai.types - WARNING - Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+acceptance-tests-app-1  | 2026-05-03 17:51:40,098 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:40,098 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-05-03 17:51:45,745 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:45,829 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:46,521 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:46,600 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:47,252 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:47,314 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:47,315 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-05-03 17:51:49,431 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:49,525 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:50,512 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:50,543 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:51:50,543 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:51:50,606 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:51,502 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:51,525 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:51:51,525 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:51:51,590 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:53,474 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | INFO:     172.19.0.1:55988 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42114 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42126 - "DELETE /api/bonsai/1/photos HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42130 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42134 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42138 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42144 - "DELETE /api/species/1 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42154 - "DELETE /api/advice/sessions/bdd-compare-93c6ac3c076f40fa8b1a78801078946a HTTP/1.1" 204 No Content
+acceptance-tests-app-1  | INFO:     172.19.0.1:42158 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42174 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42188 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:42192 - "POST /api/bonsai/2/photos?taken_on=2025-01-01 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-05-03 17:51:53,799 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-compare-8665e925de774d3ba7fcad6a7f17ddc4 text=Compara las fotos de 'Momiji'. ***
+acceptance-tests-app-1  | 2026-05-03 17:51:53,840 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:55,469 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:55,538 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:55,539 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-05-03 17:51:58,575 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:58,666 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:51:59,402 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:51:59,449 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:00,071 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:00,168 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:01,078 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:01,118 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:52:01,118 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:52:01,169 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:02,550 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:02,567 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:52:02,567 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:52:02,618 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:04,421 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | INFO:     172.19.0.1:42204 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47616 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47632 - "DELETE /api/bonsai/2/photos HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47640 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47656 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47666 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47672 - "DELETE /api/species/2 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47680 - "DELETE /api/advice/sessions/bdd-compare-8665e925de774d3ba7fcad6a7f17ddc4 HTTP/1.1" 204 No Content
+acceptance-tests-app-1  | INFO:     172.19.0.1:47690 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:47698 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-05-03 17:52:04,946 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-compare-31f3a9df533a460bb8f47970de06598c text=Compara las fotos de 'Momiji'. ***
+acceptance-tests-app-1  | 2026-05-03 17:52:04,991 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:06,313 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:06,394 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:06,395 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+acceptance-tests-app-1  | 2026-05-03 17:52:09,700 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:09,762 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:10,383 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:10,447 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:11,119 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:11,211 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:12,117 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:12,149 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:52:12,150 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:52:12,214 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3.1-flash-lite-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:12,980 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | 2026-05-03 17:52:13,008 - google_adk.google.adk.runners - INFO - Closing runner...
+acceptance-tests-app-1  | 2026-05-03 17:52:13,009 - google_adk.google.adk.runners - INFO - Runner closed.
+acceptance-tests-app-1  | 2026-05-03 17:52:13,070 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-tests-app-1  | 2026-05-03 17:52:14,577 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-tests-app-1  | INFO:     172.19.0.1:47714 - "POST /api/advice HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53814 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53818 - "DELETE /api/bonsai/3/photos HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53822 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53824 - "DELETE /api/bonsai/3 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53826 - "GET /api/species/search?name=Acer+Palmatum HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53834 - "DELETE /api/species/3 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     172.19.0.1:53848 - "DELETE /api/advice/sessions/bdd-compare-31f3a9df533a460bb8f47970de06598c HTTP/1.1" 204 No Content

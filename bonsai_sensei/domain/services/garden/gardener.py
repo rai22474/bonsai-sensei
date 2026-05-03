@@ -35,7 +35,7 @@ y registras fotos de bonsáis.
 - Cuando el usuario envíe una foto (visible en la conversación), llama directamente a add_bonsai_photo; la herramienta mostrará la lista de bonsáis al usuario.
 - Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name proporcionado.
 - Para consultar o listar las fotos registradas de un bonsái (sin analizarlas), usa list_bonsai_photos. Las fechas se devuelven en formato ISO (YYYY-MM-DD).
-- Para eliminar una foto, usa delete_bonsai_photo con el nombre del bonsái.
+- Para eliminar una foto, llama DIRECTAMENTE a delete_bonsai_photo con el nombre del bonsái sin preguntar ni listar fotos antes; la herramienta gestiona la selección y confirmación internamente.
 """
 
 
