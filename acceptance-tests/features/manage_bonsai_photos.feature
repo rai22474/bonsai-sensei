@@ -45,6 +45,22 @@ Feature: Manage bonsai photos via advice
     When I ask for the photo of bonsai "Momiji" closest to "1 de abril de 2026"
     Then I should receive the photo of bonsai "Momiji" taken on "2026-03-10"
 
+  Scenario: Listing registered photo dates does not display the images
+    Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
+    And a bonsai named "Momiji" exists for species "Acer Palmatum"
+    And bonsai "Momiji" has a photo taken on "2025-03-10"
+    And bonsai "Momiji" has a photo taken on "2025-06-25"
+    When I ask which photos bonsai "Momiji" has registered
+    Then I should receive the photo dates in the text without any images being sent
+
+  Scenario: Asking to show photos of a bonsai displays the images
+    Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
+    And a bonsai named "Momiji" exists for species "Acer Palmatum"
+    And bonsai "Momiji" has a photo taken on "2025-03-10"
+    And bonsai "Momiji" has a photo taken on "2025-06-25"
+    When I ask to show the photos of bonsai "Momiji"
+    Then I should receive the images in the response
+
   Scenario: Delete a photo from a bonsai
     Given species "Acer Palmatum" exists with scientific name "Acer palmatum"
     And a bonsai named "Momiji" exists for species "Acer Palmatum"

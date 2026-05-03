@@ -196,7 +196,9 @@ async def _collect_and_clear_photos(runner: InMemoryRunner, user_id: str) -> lis
     )
     if session is None:
         return []
-    return list(session.state.get("photos_to_display") or [])
+    photos = list(session.state.get("photos_to_display") or [])
+    session.state["photos_to_display"] = []
+    return photos
 
 
 def _build_response_texts(events: list) -> list[str]:

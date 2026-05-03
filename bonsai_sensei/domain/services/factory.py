@@ -21,7 +21,10 @@ from bonsai_sensei.domain.services.garden.bonsai_tools import (
     create_list_bonsai_events_tool,
     create_list_bonsai_tool,
 )
-from bonsai_sensei.domain.services.garden.list_bonsai_photos import create_list_bonsai_photos_tool
+from bonsai_sensei.domain.services.garden.list_bonsai_photos import (
+    create_list_bonsai_photos_tool,
+    create_show_bonsai_photos_tool,
+)
 from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
 from bonsai_sensei.domain.services.mitori import create_mitori
 from bonsai_sensei.domain.services.sensei import create_sensei
@@ -78,12 +81,17 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_planned_works_func=partial(cultivation_plan.list_planned_works, create_session=session_factory),
     )
     list_planned_works_tool.__name__ = "list_planned_works_for_bonsai"
+    list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
     list_bonsai_photos_tool = create_list_bonsai_photos_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
-        list_bonsai_photos_func=partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory),
-        set_photos_for_display=True,
+        list_bonsai_photos_func=list_bonsai_photos_func,
     )
     list_bonsai_photos_tool.__name__ = "list_bonsai_photos"
+    show_bonsai_photos_tool = create_show_bonsai_photos_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_photos_func=list_bonsai_photos_func,
+    )
+    show_bonsai_photos_tool.__name__ = "show_bonsai_photos"
 
     return [
         list_bonsai_tool,
@@ -96,6 +104,7 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         get_phytosanitary_by_name_tool,
         list_planned_works_tool,
         list_bonsai_photos_tool,
+        show_bonsai_photos_tool,
     ]
 
 
