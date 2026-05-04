@@ -11,7 +11,11 @@ from bonsai_sensei.logging_config import get_logger
 logger = get_logger(__name__)
 
 _MAX_LLM_CALLS = 40
-_PROMPT = "Revisa todas las fichas de conocimiento y actualiza la wiki para que refleje todo el conocimiento disponible."
+_PROMPT = (
+    "Ejecuta las dos fases: "
+    "1) enriquece la wiki con el conocimiento de las fichas; "
+    "2) añade wikilinks en todas las páginas existentes donde falten."
+)
 
 
 def create_wiki_keeper(model: object, transcripts_root: Path, wiki_root: Path) -> Callable[[], None]:
