@@ -11,7 +11,8 @@ __pycache__/
 acceptance-tests/docker-compose.logs.txt
 postgres_data/
 ollama_data/
-wiki/
+/wiki/
+/transcripts/
 photos/
 .monocle/
 acceptance-tests/docker-compose.logs.txt

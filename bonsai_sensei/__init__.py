@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from functools import partial
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
@@ -64,10 +64,12 @@ from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
+from bonsai_sensei.api.transcripts import router as transcripts_router
+from bonsai_sensei.knowledge_base.ingestion.factory import create_ingestion_pipeline
+from bonsai_sensei.knowledge_base.keeper.runner import create_wiki_keeper
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_selection_callback import handle_selection_callback
-from bonsai_sensei.telegram.handle_poll_answer import handle_poll_answer
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
 from bonsai_sensei.telegram.start import start
@@ -287,9 +289,7 @@ async def lifespan(app: FastAPI):
     ask_confirmation_func = create_ask_confirmation(send_confirmation_func, app.state.pending_human_responses)
 
     async def send_selection_func(user_id: str, question: str, options: list, selection_id: str):
-        poll_id = await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
-        if poll_id is not None and user_id in app.state.pending_human_responses:
-            app.state.pending_human_responses[user_id]["poll_id"] = poll_id
+        await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
 
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
 
@@ -367,7 +367,9 @@ async def lifespan(app: FastAPI):
         build_delete_phytosanitary_confirmation=build_delete_phytosanitary_confirmation,
         build_update_phytosanitary_confirmation=build_update_phytosanitary_confirmation,
     )
-    sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model, wiki_root=os.getenv("WIKI_PATH", "./wiki"))
+    wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
+    transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
+    sensei_group_factory = partial(create_sensei_group, session_factory=get_session_partial, orchestrator_model=orchestrator_model, wiki_root=str(wiki_root))
     kantei_group_factory = partial(create_kantei_group, session_factory=get_session_partial)
     sensei_agent = create_agents(
         model=model,
@@ -377,6 +379,9 @@ async def lifespan(app: FastAPI):
         create_sensei_group=sensei_group_factory,
         create_kantei_group=kantei_group_factory,
     )
+    app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root)
+    app.state.run_wiki_keeper = create_wiki_keeper(model, transcripts_root, wiki_root)
+
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
         get_user_settings_func=app.state.user_settings_service["get_user_settings"],
@@ -418,19 +423,12 @@ async def lifespan(app: FastAPI):
         send_none_reason_prompt=bot_instance.send_force_reply_message,
     )
 
-    poll_answer_handler = partial(
-        handle_poll_answer,
-        pending_human_responses=app.state.pending_human_responses,
-        send_none_reason_prompt=bot_instance.send_force_reply_message,
-    )
-
     handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         MessageHandler(filters.PHOTO, photo_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
         CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
-        PollAnswerHandler(poll_answer_handler),
     ]
     if bot_instance.application:
         for handler in handlers:
@@ -474,4 +472,5 @@ app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
+app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

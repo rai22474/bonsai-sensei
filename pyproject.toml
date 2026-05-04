@@ -20,6 +20,7 @@ dependencies = [
     "sqlmodel>=0.0.31",
     "Pillow>=11.0.0",
     "tavily-python>=0.7.19",
+    "youtube-transcript-api>=0.6.3",
     "uvicorn",
     "alembic>=1.18.1",
 ]

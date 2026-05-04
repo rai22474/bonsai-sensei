@@ -20,6 +20,28 @@
 
 ---
 
+## ISSUE-009 — El análisis de salud carece de contexto y tiene responsabilidades mal distribuidas
+
+**Síntoma:** Cuando el agente analiza el estado de salud de un bonsái, su diagnóstico es incompleto porque no conoce el historial de cuidados (trasplantes recientes, fertilizaciones, tratamientos, podas). Esta información es determinante para interpretar síntomas correctamente (p.ej. hojas amarillas tras un trasplante reciente vs. carencia de nutrientes).
+
+**Causa raíz y problema de diseño:** La responsabilidad del análisis de salud está mal ubicada. La tool de análisis de foto hace demasiado: describe lo que ve Y genera el diagnóstico. Lo correcto es separar ambas responsabilidades:
+
+1. **Tool de descripción visual** — solo describe lo que ve en la foto (síntomas, color, estado de hojas, ramas, sustrato). Sin diagnóstico. Su resultado debe persistirse junto a la foto para no repetir el análisis si ya fue procesada.
+2. **Agente de diagnóstico** — agrega la información de todas las fotos disponibles del árbol (sus descripciones visuales) junto con el historial de eventos de cultivo y genera un análisis de salud contextualizado.
+
+Además, puede haber varias fotos de un mismo árbol que analizar. La tool actual no está diseñada para trabajar con múltiples observaciones visuales de forma coherente.
+
+**Workaround:** El usuario debe contextualizar manualmente los cuidados recientes en el mensaje.
+
+**Objetivo:**
+- Separar la tool de visión (describe foto → persiste resultado junto a la foto) del agente de diagnóstico (agrega descripciones + historial de eventos → emite análisis de salud).
+- Persistir el resultado de la descripción visual para evitar re-analizar fotos ya procesadas.
+- El agente de diagnóstico debe recibir: historial de eventos recientes del árbol + descripciones visuales de sus fotos.
+
+**Relacionado:** `bonsai_sensei/domain/services/kantei/`, `bonsai_sensei/domain/services/garden/analyze_bonsai_photo.py`.
+
+---
+
 ## ISSUE-007 — Borrar una especie no comprueba si hay bonsáis que la usan
 
 **Síntoma:** Si el usuario elimina una especie que tiene bonsáis asociados, la operación se ejecuta sin error. Los bonsáis quedan con una referencia a una especie inexistente, corrompiendo el estado de la colección.

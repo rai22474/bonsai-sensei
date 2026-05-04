@@ -14,11 +14,13 @@ services:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:32b-instruct}
       - WIKI_PATH=/app/wiki
       - PHOTOS_PATH=/app/photos
+      - TRANSCRIPTS_PATH=/app/transcripts
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=true
     volumes:
       - ./wiki:/app/wiki
       - ./photos:/app/photos
+      - ./transcripts:/app/transcripts
     depends_on:
       db:
         condition: service_healthy

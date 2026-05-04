@@ -50,27 +50,14 @@ class TelegramBot:
         ]])
         await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
 
-    async def send_selection_message(self, chat_id: str, question: str, options: list[str], selection_id: str) -> str | None:
+    async def send_selection_message(self, chat_id: str, question: str, options: list[str], selection_id: str):
         if not self.application:
             logger.error("Cannot send selection message: Bot not configured")
-            return None
-        none_option = "🚫 Ninguna de las anteriores"
-        poll_max_options = 10
-        if len(options) < poll_max_options:
-            poll_options = [opt[:100] for opt in options] + [none_option]
-            message = await self.application.bot.send_poll(
-                chat_id=chat_id,
-                question=question[:300],
-                options=poll_options,
-                is_anonymous=False,
-                allows_multiple_answers=False,
-                type="regular",
-            )
-            return message.poll.id
+            return
         keyboard = InlineKeyboardMarkup([
             *[[InlineKeyboardButton(f"🌿 {option}", callback_data=f"selection:{selection_id}:{index}")]
               for index, option in enumerate(options)],
-            [InlineKeyboardButton(none_option, callback_data=f"selection:{selection_id}:none")],
+            [InlineKeyboardButton("🚫 Ninguna de las anteriores", callback_data=f"selection:{selection_id}:none")],
         ])
         await self.application.bot.send_message(
             chat_id=chat_id,
@@ -78,7 +65,6 @@ class TelegramBot:
             reply_markup=keyboard,
             parse_mode="HTML",
         )
-        return None
 
     async def send_selection_with_photos(
         self,

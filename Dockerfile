@@ -18,6 +18,8 @@ RUN apk add --no-cache libjpeg libpng freetype ttf-dejavu
 
 WORKDIR /app
 
+ENV PATH="/app/.venv/bin:$PATH"
+
 COPY --from=builder /app/.venv .venv
 
 COPY bonsai_sensei/ bonsai_sensei/
@@ -27,4 +29,4 @@ COPY scripts/init_db.py .
 
 EXPOSE 8080
 
-CMD ["/app/.venv/bin/python", "-m", "uvicorn", "bonsai_sensei.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "-m", "uvicorn", "bonsai_sensei.main:app", "--host", "0.0.0.0", "--port", "8080"]
