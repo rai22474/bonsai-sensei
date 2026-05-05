@@ -14,6 +14,7 @@ Read these files before forming any opinion:
 - `docs/architecture/decisions.md` — all ADRs: what was decided, why, and what was rejected.
 - `docs/project/technical-debt.md` — known debt and its context.
 - `docs/project/known-issues.md` — open issues, their root causes, and workarounds.
+- `docs/project/future-work.md` — pending initiatives not yet ready to implement: design decisions already evaluated, options discarded, and recommended order when resuming.
 - `CLAUDE.md` — coding conventions and design rules the team follows.
 
 Only read source code when you need to verify whether reality matches what the docs describe.
@@ -43,7 +44,8 @@ Only read source code when you need to verify whether reality matches what the d
 
 1. Read vision.md: what major use cases are explicitly noted as unimplemented?
 2. Read known-issues.md: which issues block users most directly?
-3. Think in terms of system coherence: what gaps make the system feel incomplete or inconsistent to use?
+3. Read future-work.md: what has already been designed but deliberately deferred, and in what order should it be picked up?
+4. Think in terms of system coherence: what gaps make the system feel incomplete or inconsistent to use?
 4. Avoid suggesting improvements that increase pipeline complexity or add routing logic unless strictly necessary (vision.md principle).
 
 ## Output format
