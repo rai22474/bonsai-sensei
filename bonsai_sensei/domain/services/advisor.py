@@ -16,11 +16,11 @@ _PROGRESS_MESSAGES = {
     "gardener": "🌱 Gestionando la colección de bonsáis...",
     "kantei": "🔍 Analizando la foto...",
     "botanist": "🌿 Consultando el herbario de especies...",
-    "planning_agent": "📅 Planificando trabajos de cultivo...",
+    "kikaru": "📅 Planificando trabajos de cultivo...",
     "weather_advisor": "🌤️ Consultando el pronóstico meteorológico...",
     "storekeeper": "📦 Consultando el catálogo de insumos...",
-    "fertilizer_advisor": "🧪 Seleccionando fertilizante...",
-    "phytosanitary_advisor": "🛡️ Seleccionando producto fitosanitario...",
+    "recommend_fertilizer": "🧪 Seleccionando fertilizante...",
+    "recommend_phytosanitary": "🛡️ Seleccionando producto fitosanitario...",
 }
 
 _tracer = trace.get_tracer(__name__)

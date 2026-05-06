@@ -40,12 +40,8 @@ sensei                        [orchestrator model]
     └── shokunin              Executor [leaf model]: runs the plan step by step using the agents below
         ├── botanist              Species registry (CRUD + wiki generation) [leaf model]
         ├── weather_advisor       Climate risk assessment [leaf model]
-        ├── planning_agent        Cultivation plan — SequentialAgent
-        │   ├── kikaku                Planner [orchestrator model]: schedules work and sets default dates
-        │   └── seko                  Executor [leaf model]: runs plan steps using tools and advisors below
-        │       ├── fertilizer_advisor    Recommends fertilizers based on catalogue and event history [leaf model]
-        │       ├── phytosanitary_advisor Recommends phytosanitary products based on event history [leaf model]
-        │       └── [planning tools]      confirm_create/delete_planned_work, list_*, list_weekend_planned_works
+        ├── kikaru                Cultivation plan [leaf model]: recommends, plans and schedules work
+        │   └── [planning tools]      recommend_fertilizer, recommend_phytosanitary, confirm_create/delete_planned_work, list_*, list_weekend_planned_works
         ├── gardener              Bonsai collection (CRUD + event recording + photos) [leaf model]
         └── storekeeper           Fertilizer & phytosanitary catalogues (CRUD + wiki generation) [leaf model]
 ```
@@ -59,10 +55,9 @@ Agents with domain-specific complexity are named after Japanese bonsai craft con
 | **sensei** | 先生 | teacher / master | The wise entry point that guides the user |
 | **mitori** | 見取り | sketch / observe structure | Observes the request and drafts a structural plan before acting |
 | **shokunin** | 職人 | craftsman | Executes the plan with precision, step by step |
-| **kikaku** | 企画 | project planning | Plans the cultivation work schedule and decides dates |
-| **seko** | 施工 | construction / implementation | Carries out the cultivation plan using tools and sub-agents |
+| **kikaru** | 木刈る | to prune trees | Manages the cultivation work calendar — recommends, plans and schedules care work |
 
-Domain-facing agents (botanist, gardener, storekeeper, weather_advisor, fertilizer_advisor, phytosanitary_advisor) use descriptive English names that make their responsibility self-evident.
+Domain-facing agents (botanist, gardener, storekeeper, weather_advisor) use descriptive English names that make their responsibility self-evident.
 
 ### Models
 
@@ -70,8 +65,8 @@ The system supports a dual-model setup via environment variables:
 
 | Variable | Role | Default |
 |---|---|---|
-| `GEMINI_MODEL` | Leaf agents (botanist, weather_advisor, gardener, storekeeper, seko, advisors) | `gemini-2.0-flash-lite` |
-| `GEMINI_ORCHESTRATOR_MODEL` | Orchestrators (sensei, mitori, kikaku) | falls back to `GEMINI_MODEL` |
+| `GEMINI_MODEL` | Leaf agents (botanist, weather_advisor, gardener, storekeeper, kikaru) | `gemini-2.0-flash-lite` |
+| `GEMINI_ORCHESTRATOR_MODEL` | Orchestrators (sensei, mitori) | falls back to `GEMINI_MODEL` |
 
 ### Roles
 
@@ -82,11 +77,7 @@ The system supports a dual-model setup via environment variables:
 | **shokunin** | Executor. Runs each step of mitori's plan, delegating to the appropriate leaf agent. Stops immediately on `confirmation_pending`. |
 | **botanist** | Manages the species registry (CRUD). Resolves scientific names via Trefle and generates wiki care guides via Tavily at confirmation time. |
 | **weather_advisor** | Fetches weather forecasts and advises on frost/heat protection for specific species. |
-| **planning_agent** | Cultivation work calendar (fertilizations, transplants, treatments). Internal SequentialAgent: kikaku plans, seko executes. |
-| **kikaku** | Planning planner. Analyses the scheduling request and decides dates — applies next-Saturday default when the user specifies none. |
-| **seko** | Planning executor. Runs each step of kikaku's plan using tools and sub-advisors. |
-| **fertilizer_advisor** | Recommends which fertilizer to use based on catalogue and bonsai event history. |
-| **phytosanitary_advisor** | Recommends which phytosanitary product to use based on catalogue and event history. |
+| **kikaru** | Manages the cultivation work calendar (fertilizations, transplants, treatments). Uses deterministic recommendation tools that gather context, reason, and persist the plan to the wiki in a single guaranteed step. Applies next-Saturday default when the user specifies no date. |
 | **gardener** | Manages the bonsai collection (CRUD), records completed events (fertilizations, transplants, treatments, planned work execution) and manages bonsai photos. |
 | **storekeeper** | Manages the fertilizer and phytosanitary catalogues (CRUD + wiki page generation via Tavily). |
 
@@ -96,13 +87,10 @@ The system supports a dual-model setup via environment variables:
 |---|---|
 | **sensei** | `list_bonsai`, `get_bonsai_by_name`, `list_bonsai_events`, `list_bonsai_photos`, `list_species`, `list_fertilizers`, `get_fertilizer_by_name`, `list_phytosanitary`, `get_phytosanitary_by_name`, `list_planned_works_for_bonsai`, `command_pipeline` |
 | **mitori** | — |
-| **shokunin** | `botanist`, `weather_advisor`, `planning_agent`, `gardener`, `storekeeper` |
+| **shokunin** | `botanist`, `weather_advisor`, `kikaru`, `gardener`, `storekeeper` |
 | **botanist** | `confirm_create_species`, `confirm_update_species`, `confirm_delete_species`, `confirm_refresh_species_wiki` |
 | **weather_advisor** | `get_weather`, `list_bonsai_species` |
-| **kikaku** | — |
-| **seko** | `fertilizer_advisor`, `phytosanitary_advisor`, `list_planned_works_for_bonsai`, `list_bonsai_events_for_cultivation`, `confirm_create_fertilizer_application`, `confirm_create_phytosanitary_application`, `confirm_create_transplant`, `confirm_delete_planned_work`, `list_bonsai`, `list_weekend_planned_works` |
-| **fertilizer_advisor** | `list_fertilizers_for_planning`, `list_bonsai_events_for_cultivation` |
-| **phytosanitary_advisor** | `list_phytosanitary_for_planning`, `list_bonsai_events_for_cultivation` |
+| **kikaru** | `recommend_fertilizer`, `recommend_phytosanitary`, `list_planned_works_for_bonsai`, `list_bonsai_events_for_cultivation`, `confirm_create_fertilizer_application`, `confirm_create_phytosanitary_application`, `confirm_create_transplant`, `confirm_delete_planned_work`, `list_bonsai`, `list_weekend_planned_works` |
 | **gardener** | `list_bonsai`, `get_bonsai_by_name`, `confirm_create_bonsai`, `confirm_update_bonsai`, `confirm_delete_bonsai`, `confirm_apply_fertilizer`, `confirm_apply_phytosanitary`, `confirm_record_transplant`, `list_bonsai_events`, `list_planned_works_for_bonsai`, `confirm_execute_planned_work`, `add_bonsai_photo`, `list_bonsai_photos` |
 | **storekeeper** | `list_fertilizers`, `confirm_create_fertilizer`, `confirm_update_fertilizer`, `confirm_delete_fertilizer`, `confirm_refresh_fertilizer_wiki`, `list_phytosanitary`, `confirm_create_phytosanitary`, `confirm_update_phytosanitary`, `confirm_delete_phytosanitary`, `confirm_refresh_phytosanitary_wiki` |
 

@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.domain.services.human_input import ConfirmationResult
+from bonsai_sensei.domain.services.human_input import ConfirmationResult, SelectionNoneResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.services.garden.create_bonsai import (
     create_create_bonsai_tool,
@@ -24,11 +24,22 @@ async def should_return_error_when_bonsai_name_is_empty(create_tool, tool_contex
 
 
 @pytest.mark.asyncio
-async def should_return_error_when_species_name_is_empty(create_tool, tool_context):
-    result = await create_tool(name="Naruto", species_name="", tool_context=tool_context)
+async def should_return_error_when_no_species_available(tool_context, create_bonsai_func, ask_confirmation_confirm, build_confirmation_message, ask_selection_confirm, write_wiki_page_func):
+    tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [],
+        get_species_by_name_func=lambda name: None,
+        ask_confirmation=ask_confirmation_confirm,
+        ask_selection=ask_selection_confirm,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )
 
-    assert_that(result, equal_to({"status": "error", "message": "species_name_required"}),
-        "Empty species name should return species_name_required error")
+    result = await tool(name="Naruto", species_name="", tool_context=tool_context)
+
+    assert_that(result, equal_to({"status": "error", "message": "no_species_available"}),
+        "Empty species list should return no_species_available error")
 
 
 @pytest.mark.asyncio
@@ -40,14 +51,23 @@ async def should_return_error_when_species_not_found(create_tool, tool_context):
 
 
 @pytest.mark.asyncio
-async def should_build_confirmation_message_with_correct_args(tool_context, create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm):
+async def should_build_confirmation_message_with_correct_args(tool_context, create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, ask_selection_confirm, write_wiki_page_func, existing_species):
     captured_calls = []
 
     def build_confirmation_message(name, species_name):
         captured_calls.append((name, species_name))
         return "confirmation text"
 
-    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [existing_species],
+        get_species_by_name_func=get_species_by_name_func,
+        ask_confirmation=ask_confirmation_confirm,
+        ask_selection=ask_selection_confirm,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert_that(captured_calls, equal_to([("Naruto", "Elm")]),
@@ -71,8 +91,17 @@ async def should_return_success_when_user_confirms(create_tool, tool_context):
 
 
 @pytest.mark.asyncio
-async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai_func, get_species_by_name_func, captured_bonsais, build_confirmation_message):
-    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai_func, get_species_by_name_func, captured_bonsais, build_confirmation_message, ask_selection_confirm, existing_species, write_wiki_page_func):
+    tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [existing_species],
+        get_species_by_name_func=get_species_by_name_func,
+        ask_confirmation=ask_confirmation_cancel,
+        ask_selection=ask_selection_confirm,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )
     await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert_that(captured_bonsais, equal_to([]),
@@ -80,12 +109,50 @@ async def should_not_create_bonsai_when_user_cancels(tool_context, create_bonsai
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, create_bonsai_func, get_species_by_name_func, build_confirmation_message):
-    tool = create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_cancel, build_confirmation_message)
+async def should_return_cancelled_when_user_declines(tool_context, create_bonsai_func, get_species_by_name_func, build_confirmation_message, ask_selection_confirm, existing_species, write_wiki_page_func):
+    tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [existing_species],
+        get_species_by_name_func=get_species_by_name_func,
+        ask_confirmation=ask_confirmation_cancel,
+        ask_selection=ask_selection_confirm,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )
     result = await tool(name="Naruto", species_name="Elm", tool_context=tool_context)
 
     assert_that(result["status"], equal_to("cancelled"),
         "Tool should return cancelled status when user declines")
+
+
+@pytest.mark.asyncio
+async def should_use_selection_when_species_name_not_provided(create_tool, tool_context, captured_bonsais):
+    await create_tool(name="Naruto", species_name="", tool_context=tool_context)
+
+    assert_that(captured_bonsais[0].species_id, equal_to(1),
+        "Bonsai should be created using species from selection when species_name is empty")
+
+
+@pytest.mark.asyncio
+async def should_return_cancelled_when_selection_is_cancelled(tool_context, create_bonsai_func, get_species_by_name_func, existing_species, build_confirmation_message, ask_confirmation_confirm, write_wiki_page_func):
+    async def ask_selection_cancel(question, options, tool_context=None):
+        return SelectionNoneResult(reason="changed mind")
+
+    tool = create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [existing_species],
+        get_species_by_name_func=get_species_by_name_func,
+        ask_confirmation=ask_confirmation_confirm,
+        ask_selection=ask_selection_cancel,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )
+    result = await tool(name="Naruto", species_name="", tool_context=tool_context)
+
+    assert_that(result["status"], equal_to("cancelled"),
+        "Tool should return cancelled when user cancels species selection")
 
 
 async def ask_confirmation_cancel(question, tool_context=None):
@@ -102,7 +169,6 @@ def create_bonsai_func(captured_bonsais):
     def create_bonsai(bonsai: Bonsai) -> Bonsai:
         captured_bonsais.append(bonsai)
         return bonsai
-
     return create_bonsai
 
 
@@ -115,7 +181,6 @@ def existing_species():
 def get_species_by_name_func(existing_species):
     def get_species_by_name(name: str) -> Species | None:
         return existing_species if name == existing_species.name else None
-
     return get_species_by_name
 
 
@@ -128,18 +193,37 @@ def tool_context():
 def ask_confirmation_confirm():
     async def ask_confirmation(question, tool_context=None):
         return True
-
     return ask_confirmation
+
+
+@pytest.fixture
+def ask_selection_confirm(existing_species):
+    async def ask_selection(question, options, tool_context=None):
+        return existing_species.name
+    return ask_selection
 
 
 @pytest.fixture
 def build_confirmation_message():
     def build(name, species_name):
         return f"Confirm create bonsai '{name}' ({species_name})"
-
     return build
 
 
 @pytest.fixture
-def create_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_create_bonsai_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, build_confirmation_message)
+def write_wiki_page_func():
+    return lambda path, content: {"status": "success"}
+
+
+@pytest.fixture
+def create_tool(create_bonsai_func, get_species_by_name_func, ask_confirmation_confirm, ask_selection_confirm, build_confirmation_message, existing_species, write_wiki_page_func):
+    return create_create_bonsai_tool(
+        create_bonsai_func=create_bonsai_func,
+        list_species_func=lambda: [existing_species],
+        get_species_by_name_func=get_species_by_name_func,
+        ask_confirmation=ask_confirmation_confirm,
+        ask_selection=ask_selection_confirm,
+        build_selection_question=lambda: "Select species",
+        build_confirmation_message=build_confirmation_message,
+        write_wiki_page_func=write_wiki_page_func,
+    )

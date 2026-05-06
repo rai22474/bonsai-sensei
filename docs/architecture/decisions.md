@@ -155,6 +155,40 @@ En el compose de acceptance tests se mantiene un named volume (`wiki_data_accept
 
 ---
 
+## ADR-009 — Tools deterministas con LLM embebido para flujos de pasos fijos
+
+**Estado:** Aceptado
+
+**Contexto:**
+Varios flujos del sistema tienen pasos fijos y ordenados donde todos deben ejecutarse sin excepción: recopilar historial del bonsái, leer el plan wiki existente, listar productos disponibles, leer fichas técnicas, razonar y elegir el producto, escribir el plan resultante en la wiki. La implementación inicial usaba un `Agent` LLM con tools (un `fertilizer_advisor`) cuya instrucción decía explícitamente "sigue estos pasos en orden, sin omitir ninguno". El LLM ignoraba el paso de escritura en la wiki con frecuencia porque el paso era presentado como prosa opcional al final del prompt, no como una obligación estructural.
+
+**Señal de alerta:** cuando la instrucción de un agente dice "sigue estos pasos en orden, sin omitir ninguno", es síntoma de que el control debería estar en Python, no en el prompt.
+
+**Decisión:**
+Para flujos con pasos fijos y efectos secundarios obligatorios, se usa una **tool determinista** en lugar de un agente con tools:
+- Los pasos de recopilación de datos (DB, wiki) se ejecutan en Python de forma garantizada.
+- Solo el paso de razonamiento puro (elegir el producto más adecuado dado el contexto) se delega a un LLM via `InMemoryRunner` sin tools — solo entrada de texto, salida de texto/JSON.
+- El paso de escritura en wiki se ejecuta en Python después del razonamiento, de forma garantizada.
+
+El `InMemoryRunner` embebido sigue el mismo patrón que ADR-007: sesión propia, aislada del runner conversacional, descartada al terminar.
+
+**Criterio general para elegir entre los dos patrones:**
+
+| Situación | Patrón |
+|---|---|
+| Pasos fijos, todos obligatorios, efectos secundarios garantizados | Tool determinista + LLM embebido solo para razonamiento |
+| El LLM necesita decidir cuántos pasos dar, en qué orden, o si saltarse alguno | Agente con tools |
+| Flujo conversacional multi-turno con el usuario | Agente libre sin pipeline |
+
+**Consecuencias:**
+- La escritura en wiki está garantizada — ya no depende de que el LLM decida ejecutar el último paso.
+- El LLM embebido recibe un contexto completamente ensamblado en Python; si falta un dato, es un bug de código, no una omisión del modelo.
+- El `InMemoryRunner` embebido no hereda el estado de la sesión conversacional — el contexto debe ensamblarse explícitamente.
+- Si el LLM del paso de razonamiento devuelve JSON malformado, la tool lanza excepción (no escribe una página parcial). El agente orquestador reporta el error.
+- Las tools son testeables en aislamiento reemplazando el runner por un stub.
+
+---
+
 ## ADR-005 — Los mensajes de confirmación pertenecen a la capa de presentación
 
 **Estado:** Aceptado

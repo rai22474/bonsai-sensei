@@ -32,13 +32,16 @@ def request_bonsai_rename(context, bonsai_name, new_name):
         user_id="bdd-bonsai",
     )
     context["pending_confirmations"] = response.get("pending_confirmations", [])
+    context["renamed_bonsai_new_name"] = new_name
 
 
 @when(parsers.parse('I confirm the bonsai update for "{bonsai_name}"'))
 def confirm_bonsai_update(context, bonsai_name):
     for confirmation in context.get("pending_confirmations", []):
         accept_confirmation("bdd-bonsai", confirmation["id"])
-    context["bonsai_created"].append(bonsai_name)
+    new_name = context.get("renamed_bonsai_new_name")
+    if new_name and new_name not in context["bonsai_created"]:
+        context["bonsai_created"].append(new_name)
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should exist'))

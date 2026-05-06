@@ -35,6 +35,10 @@ def build_execute_planned_work_confirmation(work) -> str:
     return f"¿Ejecutar trabajo planificado '{work.work_type}' del {date_str} para el bonsái {work.bonsai_id}?"
 
 
+def build_create_bonsai_species_selection_question() -> str:
+    return "¿Qué especie quieres asignar al bonsái?"
+
+
 def build_add_bonsai_photo_selection_question() -> str:
     return "¿A qué bonsái pertenece esta foto?"
 

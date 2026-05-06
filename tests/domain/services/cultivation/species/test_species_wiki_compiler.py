@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to, is_, contains_string
 
-from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import create_write_wiki_page_tool
+from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool
 
 
 def should_write_file_and_return_success(wiki_root):

@@ -13,7 +13,7 @@ def create_delete_planned_work_tool(
     build_confirmation_message: Callable,
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="planning_agent")
+    @limit_tool_calls(agent_name="kikaru")
     async def delete_planned_work(
         planned_work_id: int,
         tool_context: ToolContext | None = None,

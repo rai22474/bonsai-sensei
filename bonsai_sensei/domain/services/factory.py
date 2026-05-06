@@ -145,7 +145,7 @@ def create_agents(
     create_sensei_group,
     create_kantei_group,
 ):
-    botanist, weather_advisor, planning_agent = create_cultivation_group(model=model)
+    botanist, weather_advisor, kikaru = create_cultivation_group(model=model)
     gardener = create_gardener_group(model=model)
     storekeeper = create_storekeeper_group(model=model)
     kantei = create_kantei_group(model=model)
@@ -155,7 +155,7 @@ def create_agents(
         command_agents=[
             botanist,
             weather_advisor,
-            planning_agent,
+            kikaru,
             gardener,
             kantei,
             storekeeper,

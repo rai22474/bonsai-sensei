@@ -14,6 +14,7 @@ from bonsai_sensei.domain.services.human_input import create_ask_confirmation, c
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.telegram.messages.gardener_messages import (
     build_create_bonsai_confirmation,
+    build_create_bonsai_species_selection_question,
     build_delete_bonsai_confirmation,
     build_update_bonsai_confirmation,
     build_apply_fertilizer_confirmation,
@@ -345,6 +346,7 @@ async def lifespan(app: FastAPI):
         ask_selection=ask_selection_func,
         pending_photos=app.state.pending_photos,
         build_create_bonsai_confirmation=build_create_bonsai_confirmation,
+        build_create_bonsai_species_selection_question=build_create_bonsai_species_selection_question,
         build_delete_bonsai_confirmation=build_delete_bonsai_confirmation,
         build_update_bonsai_confirmation=build_update_bonsai_confirmation,
         build_apply_fertilizer_confirmation=build_apply_fertilizer_confirmation,

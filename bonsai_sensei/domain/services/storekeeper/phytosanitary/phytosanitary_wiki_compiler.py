@@ -7,9 +7,7 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
-from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import (
-    create_write_wiki_page_tool,
-)
+from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool
 
 _APP_NAME = "phytosanitary_wiki_compiler"
 _MAX_LLM_CALLS = 20

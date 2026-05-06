@@ -14,6 +14,7 @@ from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.domain.services.garden.gardener import create_gardener
+from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool
 
 
 def create_gardener_group(
@@ -28,6 +29,7 @@ def create_gardener_group(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_create_bonsai_species_selection_question: Callable = None,
     build_add_bonsai_photo_selection_question: Callable = None,
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
@@ -54,6 +56,8 @@ def create_gardener_group(
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
     delete_bonsai_photo_func = partial(bonsai_photo_store.delete_bonsai_photo, create_session=session_factory)
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
+    wiki_root = os.getenv("WIKI_PATH", "./wiki")
+    write_wiki_page_func = create_write_wiki_page_tool(wiki_root=wiki_root)
     _pending_photos = pending_photos if pending_photos is not None else {}
 
     def save_photo_file(bonsai_name: str, photo_bytes: bytes) -> str:
@@ -104,6 +108,7 @@ def create_gardener_group(
         create_bonsai_photo_func=create_bonsai_photo_func,
         list_bonsai_photos_func=list_bonsai_photos_func,
         delete_bonsai_photo_func=delete_bonsai_photo_func,
+        build_create_bonsai_species_selection_question=build_create_bonsai_species_selection_question,
         build_add_bonsai_photo_selection_question=build_add_bonsai_photo_selection_question,
         build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
         build_delete_bonsai_photo_selection_question=build_delete_bonsai_photo_selection_question,
@@ -111,4 +116,5 @@ def create_gardener_group(
         get_pending_photo_bytes=get_pending_photo_bytes,
         save_photo_file=save_photo_file,
         clear_pending_photo=clear_pending_photo,
+        write_wiki_page_func=write_wiki_page_func,
     )

@@ -2,8 +2,7 @@ from pathlib import Path
 
 from google.adk.agents.llm_agent import Agent
 
-from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import create_write_wiki_page_tool
-from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool
+from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool, create_write_wiki_page_tool
 from bonsai_sensei.knowledge_base.keeper.tools import create_list_cards_tool, create_list_wiki_pages_tool, create_read_card_tool
 
 _APP_NAME = "wiki_keeper"

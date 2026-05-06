@@ -10,20 +10,29 @@ _MAX_LLM_CALLS = 5
 
 _ANALYSIS_INSTRUCTION = """
 Eres el kantei de bonsáis, experto en evaluación visual de árboles.
-
-Recibirás una foto de bonsái y una intención de análisis. Orienta tu respuesta a esa intención.
-Cubre solo los aspectos relevantes para lo que se pide: si es salud, enfócate en signos de estrés,
-plagas o carencias; si es diseño, en estructura, proporción, estilo y nebari; si es descripción general,
-abarca agronómico y estético. Sé preciso y útil, no genérico.
-
-Responde en castellano.
+Sé preciso y útil, no genérico. Responde en castellano.
 Usa HTML compatible con Telegram: <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea.
 No uses Markdown.
 """
 
+_PROMPTS = {
+    "health": (
+        "Analiza la salud de este bonsái. Identifica signos de estrés hídrico, carencias nutricionales, "
+        "plagas o enfermedades visibles. Incluye al menos una recomendación accionable."
+    ),
+    "design": (
+        "Critica el diseño estético de este bonsái. Evalúa línea de tronco, nebari, distribución de ramas, "
+        "proporción, movimiento y coherencia de estilo. Señala los puntos más importantes a mejorar."
+    ),
+    "general": (
+        "Describe el estado general de este bonsái: aspecto agronómico (vigor, follaje, salud visible) "
+        "y aspecto estético (forma, estructura, equilibrio visual)."
+    ),
+}
+
 
 def create_photo_analysis_runner(model: object) -> Callable:
-    async def run_photo_analysis(photo_bytes: bytes, analysis_intent: str) -> str:
+    async def run_photo_analysis(photo_bytes: bytes, analysis_type: str) -> str:
         agent = Agent(
             model=model,
             name=_APP_NAME,
@@ -40,7 +49,7 @@ def create_photo_analysis_runner(model: object) -> Callable:
             role="user",
             parts=[
                 types.Part(inline_data=types.Blob(mime_type="image/webp", data=photo_bytes)),
-                types.Part(text=analysis_intent),
+                types.Part(text=_PROMPTS[analysis_type]),
             ],
         )
         run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)

@@ -16,7 +16,7 @@ def create_create_phytosanitary_application_tool(
     build_confirmation_message: Callable,
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="planning_agent")
+    @limit_tool_calls(agent_name="kikaru")
     async def create_phytosanitary_application(
         bonsai_name: str,
         scheduled_date: str,

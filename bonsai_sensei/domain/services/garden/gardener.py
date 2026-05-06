@@ -67,6 +67,7 @@ def create_gardener(
     create_bonsai_photo_func: Callable[..., object] = None,
     list_bonsai_photos_func: Callable[[int], list] = None,
     delete_bonsai_photo_func: Callable[..., bool] = None,
+    build_create_bonsai_species_selection_question: Callable = None,
     build_add_bonsai_photo_selection_question: Callable = None,
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
@@ -74,6 +75,7 @@ def create_gardener(
     get_pending_photo_bytes: Callable = None,
     save_photo_file: Callable = None,
     clear_pending_photo: Callable = None,
+    write_wiki_page_func: Callable = None,
 ) -> Agent:
     list_bonsai_tool = create_list_bonsai_tool(
         list_bonsai_func=list_bonsai_func,
@@ -87,9 +89,13 @@ def create_gardener(
     get_bonsai_by_name_tool.__name__ = "get_bonsai_by_name"
     create_bonsai_tool = create_create_bonsai_tool(
         create_bonsai_func=create_bonsai_func,
+        list_species_func=list_species_func,
         get_species_by_name_func=get_species_by_name_func,
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
+        build_selection_question=build_create_bonsai_species_selection_question,
         build_confirmation_message=build_create_bonsai_confirmation,
+        write_wiki_page_func=write_wiki_page_func,
     )
     update_bonsai_tool = create_update_bonsai_tool(
         update_bonsai_func=update_bonsai_func,

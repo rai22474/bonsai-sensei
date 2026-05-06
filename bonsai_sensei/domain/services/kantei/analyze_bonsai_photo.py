@@ -6,6 +6,8 @@ from google.adk.tools.tool_context import ToolContext
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
+ANALYSIS_TYPES = {"health", "design", "general"}
+
 _SPANISH_MONTHS = {
     "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
     "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
@@ -23,30 +25,33 @@ def create_analyze_bonsai_photo_tool(
     @limit_tool_calls(agent_name="kantei")
     async def analyze_bonsai_photo(
         bonsai_name: str,
-        analysis_intent: str,
+        analysis_type: str,
         date_hint: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Retrieve a stored photo of the given bonsai and produce a visual analysis.
+        """Retrieve a stored photo of the given bonsai and produce a typed visual analysis.
 
         Selects the photo matching the date hint (or the latest if omitted), runs the
-        visual analysis oriented to the given intent and returns the result.
+        visual analysis for the given type and returns the result.
 
         Args:
             bonsai_name: Name of the bonsai.
-            analysis_intent: What the user wants from the analysis, in the user's own words
-                             (e.g. "diagnostica si tiene plagas", "critica el diseño",
-                             "describe el estado general"). Used to orient the analysis.
+            analysis_type: Type of analysis to perform. Valid values: "health" (pests,
+                           stress, diseases), "design" (structure, proportion, style,
+                           nebari), "general" (overall agronomic and aesthetic description).
             date_hint: Optional date hint in natural language (e.g. "enero", "2025-06-25").
                        Leave empty to use the latest photo.
 
         Returns:
             JSON dict with status 'analysis_complete', 'no_photos', or 'error'.
-            Output JSON (analysis_complete): {"status": "analysis_complete", "bonsai_name": str, "taken_on": "YYYY-MM-DD", "analysis": str}.
+            Output JSON (analysis_complete): {"status": "analysis_complete", "bonsai_name": str, "taken_on": "YYYY-MM-DD", "analysis_type": str, "analysis": str}.
             Output JSON (no_photos): {"status": "no_photos", "bonsai_name": str}.
             Output JSON (error): {"status": "error", "message": str}.
-            Error messages: "bonsai_not_found", "photo_file_not_found".
+            Error messages: "bonsai_not_found", "photo_file_not_found", "invalid_analysis_type".
         """
+        if analysis_type not in ANALYSIS_TYPES:
+            return {"status": "error", "message": "invalid_analysis_type"}
+
         bonsai = get_bonsai_by_name_func(bonsai_name)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
@@ -60,7 +65,7 @@ def create_analyze_bonsai_photo_tool(
         if photo_bytes is None:
             return {"status": "error", "message": "photo_file_not_found"}
 
-        analysis = await run_photo_analysis(photo_bytes, analysis_intent)
+        analysis = await run_photo_analysis(photo_bytes, analysis_type)
 
         if tool_context is not None:
             analyzed = list(tool_context.state.get("photos_for_analysis_taken_on") or [])
@@ -71,6 +76,7 @@ def create_analyze_bonsai_photo_tool(
             "status": "analysis_complete",
             "bonsai_name": bonsai_name,
             "taken_on": str(photo.taken_on),
+            "analysis_type": analysis_type,
             "analysis": analysis,
         }
 

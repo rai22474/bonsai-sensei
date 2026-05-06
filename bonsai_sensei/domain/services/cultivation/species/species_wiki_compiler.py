@@ -7,6 +7,8 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
+from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool
+
 _APP_NAME = "wiki_compiler"
 _MAX_LLM_CALLS = 20
 
@@ -78,37 +80,6 @@ def create_species_wiki_compiler(
 
     return compile_species_page
 
-
-def create_write_wiki_page_tool(wiki_root: str | Path) -> Callable:
-    """Create a tool that writes content to a wiki page at the given relative path.
-
-    Args:
-        wiki_root: Absolute path to the root directory of the wiki.
-    """
-    wiki_root_path = Path(wiki_root).resolve()
-
-    def write_wiki_page(path: str, content: str) -> dict:
-        """Write content to a wiki page at the given path relative to the wiki root.
-
-        Creates parent directories if they do not exist.
-
-        Args:
-            path: Path relative to wiki root (e.g. 'species/ficus-retusa.md').
-            content: Full markdown content to write to the page.
-
-        Returns:
-            A dict with status 'success' and 'path', or status 'error' and 'message'.
-            Output JSON (success): {"status": "success", "path": "<relative_path>"}.
-            Output JSON (error): {"status": "error", "message": "invalid_path"}.
-        """
-        resolved = (wiki_root_path / path).resolve()
-        if not str(resolved).startswith(str(wiki_root_path)):
-            return {"status": "error", "message": "invalid_path"}
-        resolved.parent.mkdir(parents=True, exist_ok=True)
-        resolved.write_text(content, encoding="utf-8")
-        return {"status": "success", "path": path}
-
-    return write_wiki_page
 
 
 def _create_search_tool(searcher: Callable[[str], dict]) -> Callable:

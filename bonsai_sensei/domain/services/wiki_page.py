@@ -4,6 +4,38 @@ from typing import Callable
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+def create_write_wiki_page_tool(wiki_root: str | Path) -> Callable:
+    """Create a tool that writes content to a wiki page at the given relative path.
+
+    Args:
+        wiki_root: Absolute path to the root directory of the wiki.
+    """
+    wiki_root_path = Path(wiki_root).resolve()
+
+    def write_wiki_page(path: str, content: str) -> dict:
+        """Write content to a wiki page at the given path relative to the wiki root.
+
+        Creates parent directories if they do not exist.
+
+        Args:
+            path: Path relative to wiki root (e.g. 'species/ficus-retusa.md').
+            content: Full markdown content to write to the page.
+
+        Returns:
+            A dict with status 'success' and 'path', or status 'error' and 'message'.
+            Output JSON (success): {"status": "success", "path": "<relative_path>"}.
+            Output JSON (error): {"status": "error", "message": "invalid_path"}.
+        """
+        resolved = (wiki_root_path / path).resolve()
+        if not str(resolved).startswith(str(wiki_root_path)):
+            return {"status": "error", "message": "invalid_path"}
+        resolved.parent.mkdir(parents=True, exist_ok=True)
+        resolved.write_text(content, encoding="utf-8")
+        return {"status": "success", "path": path}
+
+    return write_wiki_page
+
+
 def create_read_wiki_page_tool(wiki_root: str) -> Callable:
     """Create a tool that reads a wiki page by its relative path.
 

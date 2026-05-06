@@ -10,7 +10,8 @@ from manage_bonsai.bonsai_api import (
     find_bonsai_by_name as find_bonsai_by_name_api_func,
     update_bonsai,
 )
-from manage_species.species_api import create_species, get_species_id
+from manage_bonsai.wiki_api import delete_bonsai_wiki_pages
+from manage_species.species_api import create_species, delete_species_by_name as delete_species_by_name_api_func, get_species_id
 
 
 STUB_PORT = 8070
@@ -53,7 +54,10 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
+        delete_bonsai_wiki_pages(delete, name)
         delete_bonsai_by_name_api_func(get, delete, name)
+    for name in context["species_created"]:
+        delete_species_by_name_api_func(get, delete, name)
 
 
 def create_species_record(context: dict, name: str, scientific_name: str) -> dict:
