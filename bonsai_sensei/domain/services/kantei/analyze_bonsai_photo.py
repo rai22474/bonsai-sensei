@@ -76,6 +76,7 @@ def create_analyze_bonsai_photo_tool(
             "status": "analysis_complete",
             "bonsai_name": bonsai_name,
             "taken_on": str(photo.taken_on),
+            "photo_path": photo.file_path,
             "analysis_type": analysis_type,
             "analysis": analysis,
         }

@@ -1,7 +1,7 @@
 from pytest_bdd import scenario, when, then, parsers
 
 from cultivation_plan.planned_works_api import list_planned_works
-from http_client import accept_confirmation, advise, get
+from http_client import accept_confirmation, accept_plan_review, advise, get
 
 
 @scenario(
@@ -35,12 +35,15 @@ def plan_fertilization_without_specifying_fertilizer(context, bonsai_name, sched
         user_id=context["user_id"],
     )
     context["pending_confirmations"] = response.get("pending_confirmations", [])
+    context["pending_plan_reviews"] = response.get("pending_plan_reviews", [])
 
 
 @when("I confirm the planned work")
 def confirm_planned_work(context):
     for confirmation in context.get("pending_confirmations", []):
         accept_confirmation(context["user_id"], confirmation["id"])
+    for plan_review in context.get("pending_plan_reviews", []):
+        accept_plan_review(context["user_id"], plan_review["id"])
 
 
 @when(parsers.parse('I ask about recent fertilization treatments for "{bonsai_name}"'))

@@ -9,7 +9,8 @@ from bonsai_sensei.domain.services.kantei.compare_bonsai_photos import create_co
 from bonsai_sensei.domain.services.kantei.kantei import create_kantei
 from bonsai_sensei.domain.services.kantei.photo_analysis_runner import create_photo_analysis_runner
 from bonsai_sensei.domain.services.kantei.photo_comparison_runner import create_photo_comparison_runner
-from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool
+from bonsai_sensei.domain.services.kantei.update_reports_index import create_update_bonsai_reports_index_tool
+from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool, create_list_wiki_files_tool
 
 
 def create_kantei_group(model: object, session_factory) -> object:
@@ -25,6 +26,11 @@ def create_kantei_group(model: object, session_factory) -> object:
 
     wiki_root = os.getenv("WIKI_PATH", "./wiki")
     write_wiki_page_tool = create_write_wiki_page_tool(wiki_root=wiki_root)
+    list_wiki_files_func = create_list_wiki_files_tool(wiki_root=wiki_root)
+    update_reports_index_tool = create_update_bonsai_reports_index_tool(
+        list_wiki_files_func=list_wiki_files_func,
+        write_wiki_page_func=write_wiki_page_tool,
+    )
 
     run_photo_analysis = create_photo_analysis_runner(model)
     run_photo_comparison = create_photo_comparison_runner(model)
@@ -50,4 +56,5 @@ def create_kantei_group(model: object, session_factory) -> object:
         analyze_bonsai_photo_tool=analyze_tool,
         compare_bonsai_photos_tool=compare_tool,
         write_wiki_page_tool=write_wiki_page_tool,
+        update_reports_index_tool=update_reports_index_tool,
     )

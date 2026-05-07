@@ -1,0 +1,7 @@
+# Reports — {{ bonsai_name }}
+
+| Date | Type | Link |
+|------|------|------|
+{% for report in reports %}
+| {{ report.date }} | {{ report.type }} | [[{{ report.path }}]] |
+{% endfor %}

@@ -81,6 +81,13 @@ async def get_advice(request_body: AdviceRequest, request: Request):
                     {"question": pending.get("summary", "")}
                 ],
             }
+        if pending and pending.get("type") == "plan_review":
+            return {
+                "text": "",
+                "pending_plan_reviews": [
+                    {"id": pending["review_id"]}
+                ],
+            }
 
     active_tasks.pop(user_id, None)
     if task.exception():
@@ -245,6 +252,34 @@ async def choose_selection(
         return {"status": "chosen", "option": request_body.option}
 
     raise HTTPException(status_code=404, detail="selection_not_found")
+
+
+class PlanReviewConfirmRequest(BaseModel):
+    user_id: str
+
+
+@router.post("/advice/plan-reviews/{review_id}/confirm")
+async def confirm_plan_review(
+    review_id: str, request_body: PlanReviewConfirmRequest, request: Request
+):
+    user_id = request_body.user_id
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+
+    pending = pending_human_responses.get(user_id)
+    if pending and pending.get("review_id") == review_id:
+        pending["response"] = "confirmed"
+        pending["event"].set()
+        task = active_tasks.get(user_id)
+        if task:
+            try:
+                await asyncio.wait_for(asyncio.shield(task), timeout=30)
+                active_tasks.pop(user_id, None)
+            except asyncio.TimeoutError:
+                pass
+        return {"status": "confirmed"}
+
+    raise HTTPException(status_code=404, detail="plan_review_not_found")
 
 
 @router.post("/advice/photos")

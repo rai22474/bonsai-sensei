@@ -18,6 +18,13 @@ Tras cada análisis, guarda el resultado en la wiki del bonsái usando el analys
 - Análisis: bonsai/<nombre-bonsai>/reports/<taken_on>-<analysis_type>.md
 - Comparación: bonsai/<nombre-bonsai>/reports/<newer_taken_on>-comparison.md
 Usa el nombre del bonsái en minúsculas con guiones como directorio (ej: "El Viejo" → bonsai/el-viejo/reports/...).
+
+El contenido del report debe comenzar con un encabezado que incluya el link a la foto analizada:
+- Análisis: `[[{photo_path}|Ver foto]]`
+- Comparación: `[[{older_photo_path}|Foto anterior]] · [[{newer_photo_path}|Foto reciente]]`
+Añade esta línea justo debajo del título h1, antes del contenido del análisis.
+
+Tras guardar el report, llama siempre a update_bonsai_reports_index con el nombre del bonsái para actualizar el índice de informes.
 """
 
 
@@ -26,11 +33,12 @@ def create_kantei(
     analyze_bonsai_photo_tool: Callable,
     compare_bonsai_photos_tool: Callable,
     write_wiki_page_tool: Callable,
+    update_reports_index_tool: Callable,
 ) -> Agent:
     return Agent(
         model=model,
         name="kantei",
         description="Evalúa visualmente fotos almacenadas de bonsáis: describe su estado agronómico y estético, diagnostica problemas, critica el diseño y compara fotos de distintas fechas para ver la evolución.",
         instruction=KANTEI_INSTRUCTION,
-        tools=[analyze_bonsai_photo_tool, compare_bonsai_photos_tool, write_wiki_page_tool],
+        tools=[analyze_bonsai_photo_tool, compare_bonsai_photos_tool, write_wiki_page_tool, update_reports_index_tool],
     )

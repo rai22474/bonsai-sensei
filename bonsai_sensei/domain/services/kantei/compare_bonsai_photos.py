@@ -79,7 +79,9 @@ def create_compare_bonsai_photos_tool(
             "status": "comparison_complete",
             "bonsai_name": bonsai_name,
             "older_taken_on": str(older_photo.taken_on),
+            "older_photo_path": older_photo.file_path,
             "newer_taken_on": str(newer_photo.taken_on),
+            "newer_photo_path": newer_photo.file_path,
             "comparison": comparison,
         }
 

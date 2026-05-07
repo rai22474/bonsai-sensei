@@ -111,6 +111,13 @@ def accept_confirmation(user_id: str, confirmation_id: str):
     )
 
 
+def accept_plan_review(user_id: str, review_id: str):
+    return post(
+        f"/api/advice/plan-reviews/{review_id}/confirm",
+        {"user_id": user_id},
+    )
+
+
 def reject_confirmation(user_id: str, confirmation_id: str, reason: str = ""):
     return post(
         f"/api/advice/confirmations/{confirmation_id}/reject",
