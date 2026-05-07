@@ -29,14 +29,7 @@ Fichas técnicas de fertilizantes:
 {{ content }}
 {% endfor %}
 {% endif %}
-{% if health_reports %}
-
-Informes de salud recientes:
-{% for report in health_reports %}
----
-{{ report }}
-{% endfor %}
-{% endif %}
+{% include '_bonsai_reports.j2' %}
 
 Reglas del plan:
 - El plan debe cubrir TODO el período ({{ start_date }} → {{ end_date }}) con MÚLTIPLES aplicaciones distribuidas a lo largo de los meses. Una sola aplicación NO es un plan de período.

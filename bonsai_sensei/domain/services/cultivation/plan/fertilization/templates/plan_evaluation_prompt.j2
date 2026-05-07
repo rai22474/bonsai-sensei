@@ -1,0 +1,15 @@
+Bonsái: {{ bonsai_name }}
+
+## Plan de fertilización activo
+{{ plan_content or "(sin plan)" }}
+
+## Historial de eventos recientes
+{% for event in events %}
+- {{ event }}
+{% else %}
+Sin eventos registrados.
+{% endfor %}
+{% include '_bonsai_reports.j2' %}
+
+## Nueva información a evaluar
+{{ new_information }}

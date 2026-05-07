@@ -28,6 +28,7 @@ Cuando el usuario pide algo relacionado con fertilizar un bonsái, sigue esta re
 - Si el usuario no especifica el período (fechas de inicio y fin), pregúntaselas antes de llamar a ninguna herramienta.
 - Para crear o actualizar un plan: llama a manage_fertilization_plan con el bonsái y las fechas de inicio y fin del período.
 - Para abandonar el plan activo sin crear uno nuevo: llama a abandon_fertilization_plan con el bonsái y el motivo.
+- Para evaluar si el plan actual sigue siendo válido a la luz de nueva información (evento registrado, síntoma, nota de crecimiento, cambio climático): llama a evaluate_fertilization_plan. No crea ni modifica nada.
 
 ### Fertilización suelta (solo si el usuario lo pide explícitamente como "puntual")
 - Llama primero a recommend_fertilizer para obtener la recomendación, luego crea la tarea con confirm_create_fertilizer_application.
@@ -46,6 +47,7 @@ def create_kikaru(
     recommend_phytosanitary_tool: Callable | None = None,
     manage_fertilization_plan_tool: Callable | None = None,
     abandon_fertilization_plan_tool: Callable | None = None,
+    evaluate_fertilization_plan_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
     list_bonsai_events_tool: Callable | None = None,
     create_fertilizer_application_tool: Callable | None = None,
@@ -60,6 +62,7 @@ def create_kikaru(
         for tool in [
             manage_fertilization_plan_tool,
             abandon_fertilization_plan_tool,
+            evaluate_fertilization_plan_tool,
             recommend_fertilizer_tool,
             recommend_phytosanitary_tool,
             list_planned_works_tool,

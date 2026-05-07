@@ -45,6 +45,7 @@ DESIGN RULES:
 
 # DOMAIN RULES: 
 - Keep domain entities in `bonsai_sensei/domain`, not in `bonsai_sensei/database`.
+- LLM prompt contexts (strings passed to LLM runners) must always be built with a Jinja2 template, never with string concatenation or f-strings. Place templates in the `templates/` subdirectory next to the runner file.
 
 # TESTING RULES:
 - Use a single assert per test.

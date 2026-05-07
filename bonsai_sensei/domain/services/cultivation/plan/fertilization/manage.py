@@ -1,4 +1,3 @@
-import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -8,6 +7,10 @@ from jinja2 import Environment, FileSystemLoader
 
 from bonsai_sensei.domain.fertilization_plan import FertilizationPlan
 from bonsai_sensei.domain.planned_work import PlannedWork
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.context import (
+    bonsai_slug,
+    load_bonsai_plan_context,
+)
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.wiki import read_wiki_content, update_wiki_on_abandon
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
@@ -75,12 +78,15 @@ def create_manage_fertilization_plan_tool(
         if not fertilizers:
             return {"status": "error", "message": "no_fertilizers_available"}
 
-        events = list_bonsai_events_func(bonsai.id) or []
-        formatted_events = [_format_event(event) for event in events]
         existing_plan = get_active_fertilization_plan_func(bonsai_id=bonsai.id)
-
-        bonsai_slug = _slug(bonsai_name)
-        bonsai_wiki_content = read_wiki_content(bonsai.wiki_path, read_wiki_page_func) if bonsai.wiki_path else ""
+        slug = bonsai_slug(bonsai_name)
+        bonsai_context = load_bonsai_plan_context(
+            bonsai=bonsai,
+            bonsai_name=bonsai_name,
+            list_bonsai_events_func=list_bonsai_events_func,
+            list_wiki_files_func=list_wiki_files_func,
+            read_wiki_page_func=read_wiki_page_func,
+        )
 
         clarification = await run_clarification_loop(
             rendered_prompt=CLARIFICATION_AGENT_PROMPT.render(
@@ -88,14 +94,12 @@ def create_manage_fertilization_plan_tool(
                 start_date=start_date,
                 end_date=end_date,
                 fertilizers=fertilizers,
-                events=formatted_events,
-                bonsai_wiki_content=bonsai_wiki_content,
+                events=bonsai_context["events"],
+                bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
                 existing_plan_content=read_wiki_content(existing_plan.wiki_path, read_wiki_page_func) if existing_plan else "",
             ),
             outer_tool_context=tool_context,
         )
-
-        health_reports = _load_health_reports(bonsai_slug, list_wiki_files_func, read_wiki_page_func)
 
         proposal = await run_plan_proposal(
             rendered_prompt=PLAN_PROPOSAL_PROMPT.render(
@@ -106,10 +110,11 @@ def create_manage_fertilization_plan_tool(
                 objectives=clarification["objectives"],
                 preferences=clarification["preferences"],
                 context=clarification["context"],
-                events=formatted_events,
+                events=bonsai_context["events"],
                 fertilizers=fertilizers,
                 fertilizer_pages=_load_fertilizer_wiki_pages(fertilizers, read_wiki_page_func),
-                health_reports=health_reports,
+                reports=bonsai_context["reports"],
+                bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
             ),
             outer_tool_context=tool_context,
         )
@@ -122,7 +127,7 @@ def create_manage_fertilization_plan_tool(
         if existing_plan:
             _abandon_plan(existing_plan, delete_future_planned_works_func, update_fertilization_plan_func, read_wiki_page_func, write_wiki_page_func)
 
-        wiki_path = f"bonsai/{bonsai_slug}/plans/{start_date[:7]}_to_{end_date[:7]}.md"
+        wiki_path = f"bonsai/{slug}/plans/{start_date[:7]}_to_{end_date[:7]}.md"
 
         plan = create_fertilization_plan_func(
             FertilizationPlan(
@@ -147,7 +152,7 @@ def create_manage_fertilization_plan_tool(
                 entries=entries,
             ),
         )
-        _update_plans_index(bonsai_name, bonsai_slug, plan, start_date, end_date, write_wiki_page_func)
+        _update_plans_index(bonsai_name, slug, plan, start_date, end_date, write_wiki_page_func)
 
         return {
             "status": "success",
@@ -165,16 +170,6 @@ def create_manage_fertilization_plan_tool(
         }
 
     return manage_fertilization_plan
-
-
-def _load_health_reports(bonsai_slug: str, list_wiki_files_func: Callable, read_wiki_page_func: Callable) -> list[str]:
-    paths = list_wiki_files_func(f"bonsai/{bonsai_slug}/reports")
-    reports = []
-    for path in paths[-5:]:
-        page = read_wiki_page_func(path=path)
-        if page.get("status") == "success":
-            reports.append(page["content"])
-    return reports
 
 
 def _load_fertilizer_wiki_pages(fertilizers: list, read_wiki_page_func: Callable) -> dict:
@@ -225,17 +220,6 @@ def _create_planned_works(
                 notes=entry.get("notes") or None,
             )
         )
-
-
-def _format_event(event: dict) -> str:
-    occurred_at = event.get("occurred_at", "")
-    date_str = occurred_at[:10] if occurred_at else "unknown date"
-    payload_parts = ", ".join(f"{key}: {value}" for key, value in (event.get("payload") or {}).items())
-    return f"{date_str} | {event.get('event_type', '')}" + (f" | {payload_parts}" if payload_parts else "")
-
-
-def _slug(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
 def _update_plans_index(
