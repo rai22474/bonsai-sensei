@@ -1,0 +1,24 @@
+# Fertilization Plan — {{ bonsai_name }}
+
+**Period:** {{ period_start }} → {{ period_end }}
+**Status:** {{ status }}
+**Created:** {{ created_at }}
+
+## Rationale
+
+{{ rationale }}
+
+## Schedule
+
+| Date | Fertilizer | Dose | Notes |
+|------|------------|------|-------|
+{% for entry in entries %}
+| {{ entry.date }} | {{ entry.fertilizer_name }} | {{ entry.dose or '' }} | {{ entry.notes or '' }} |
+{% endfor %}
+{% if status == 'abandoned' %}
+
+## Abandonment
+
+**Date:** {{ abandoned_at }}
+**Reason:** {{ abandonment_reason }}
+{% endif %}

@@ -70,3 +70,30 @@ def create_read_wiki_page_tool(wiki_root: str) -> Callable:
         return {"status": "success", "content": resolved.read_text(encoding="utf-8")}
 
     return read_wiki_page
+
+
+def create_list_wiki_files_tool(wiki_root: str | Path) -> Callable:
+    """Create a function that lists wiki files in a directory matching a glob pattern."""
+    wiki_root_path = Path(wiki_root).resolve()
+
+    def list_wiki_files(directory: str, pattern: str = "*.md") -> list[str]:
+        """List wiki files in a directory matching a glob pattern.
+
+        Args:
+            directory: Directory path relative to wiki root.
+            pattern: Glob pattern to match files (default: '*.md').
+
+        Returns:
+            A sorted list of file paths relative to the wiki root.
+        """
+        target = (wiki_root_path / directory).resolve()
+        if not str(target).startswith(str(wiki_root_path)):
+            return []
+        if not target.is_dir():
+            return []
+        return [
+            str(path.relative_to(wiki_root_path))
+            for path in sorted(target.glob(pattern))
+        ]
+
+    return list_wiki_files

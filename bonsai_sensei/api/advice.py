@@ -74,6 +74,13 @@ async def get_advice(request_body: AdviceRequest, request: Request):
                     }
                 ],
             }
+        if pending and pending.get("type") == "text":
+            return {
+                "text": "",
+                "pending_text_questions": [
+                    {"question": pending.get("summary", "")}
+                ],
+            }
 
     active_tasks.pop(user_id, None)
     if task.exception():
@@ -132,6 +139,61 @@ async def reject_confirmation(
         return {"status": "rejected"}
 
     raise HTTPException(status_code=404, detail="confirmation_not_found")
+
+
+class TextResponseRequest(BaseModel):
+    user_id: str
+    text: str
+
+
+@router.post("/advice/text-response")
+async def submit_text_response(request_body: TextResponseRequest, request: Request):
+    user_id = request_body.user_id
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+
+    pending = pending_human_responses.get(user_id)
+    if pending and pending.get("type") == "text":
+        pending["response"] = request_body.text
+        pending["event"].set()
+        task = active_tasks.get(user_id)
+        if task:
+            while not task.done():
+                await asyncio.sleep(0.05)
+                next_pending = pending_human_responses.get(user_id)
+                if next_pending is not None and next_pending is not pending:
+                    if next_pending.get("type") == "confirmation":
+                        return {
+                            "text": "",
+                            "pending_confirmations": [
+                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
+                            ],
+                        }
+                    if next_pending.get("type") == "selection":
+                        return {
+                            "text": "",
+                            "pending_selections": [
+                                {
+                                    "id": next_pending["selection_id"],
+                                    "question": next_pending.get("question", ""),
+                                    "options": next_pending.get("options", []),
+                                }
+                            ],
+                        }
+                    if next_pending.get("type") == "text":
+                        return {
+                            "text": "",
+                            "pending_text_questions": [
+                                {"question": next_pending.get("summary", "")}
+                            ],
+                        }
+            active_tasks.pop(user_id, None)
+            if task.exception():
+                raise task.exception()
+            return dataclasses.asdict(task.result())
+        return {"text": ""}
+
+    raise HTTPException(status_code=404, detail="text_question_not_found")
 
 
 class SelectionChooseRequest(BaseModel):

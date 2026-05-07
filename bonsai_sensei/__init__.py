@@ -10,7 +10,7 @@ from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, f
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
-from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_selection
+from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_human, create_ask_selection
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.telegram.messages.gardener_messages import (
     build_create_bonsai_confirmation,
@@ -31,6 +31,7 @@ from bonsai_sensei.telegram.messages.planning_messages import (
     build_phytosanitary_confirmation,
     build_transplant_confirmation,
     build_delete_confirmation,
+    build_abandon_plan_confirmation,
 )
 from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_create_fertilizer_confirmation,
@@ -63,6 +64,7 @@ from bonsai_sensei.api.weather import router as weather_router
 from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
+from bonsai_sensei.api.fertilization_plans import router as fertilization_plans_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.api.transcripts import router as transcripts_router
@@ -87,6 +89,7 @@ from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import cultivation_plan
+from bonsai_sensei.domain import fertilization_plan_store
 from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import init_telemetry
@@ -234,6 +237,26 @@ def _create_cultivation_plan_service(session_factory):
     }
 
 
+def _create_fertilization_plan_service(session_factory):
+    return {
+        "list_fertilization_plans": partial(
+            fertilization_plan_store.list_fertilization_plans, create_session=session_factory
+        ),
+        "get_fertilization_plan": partial(
+            fertilization_plan_store.get_fertilization_plan, create_session=session_factory
+        ),
+        "get_active_fertilization_plan": partial(
+            fertilization_plan_store.get_active_fertilization_plan, create_session=session_factory
+        ),
+        "create_fertilization_plan": partial(
+            fertilization_plan_store.create_fertilization_plan, create_session=session_factory
+        ),
+        "delete_fertilization_plan": partial(
+            fertilization_plan_store.delete_fertilization_plan, create_session=session_factory
+        ),
+    }
+
+
 def _create_bonsai_photo_service(session_factory):
     return {
         "create_bonsai_photo": partial(
@@ -269,6 +292,7 @@ async def lifespan(app: FastAPI):
     app.state.bonsai_history_service = _create_bonsai_history_service(get_session_partial)
     app.state.user_settings_service = _create_user_settings_service(get_session_partial)
     app.state.cultivation_plan_service = _create_cultivation_plan_service(get_session_partial)
+    app.state.fertilization_plan_service = _create_fertilization_plan_service(get_session_partial)
     app.state.bonsai_photo_service = _create_bonsai_photo_service(get_session_partial)
     app.state.pending_human_responses = {}
     app.state.pending_confirmation_cleanups = {}
@@ -288,6 +312,11 @@ async def lifespan(app: FastAPI):
         await bot_instance.send_confirmation_message(chat_id=user_id, text=question, confirmation_id=confirmation_id)
 
     ask_confirmation_func = create_ask_confirmation(send_confirmation_func, app.state.pending_human_responses)
+
+    async def send_message_func(user_id: str, text: str):
+        await bot_instance.send_message(chat_id=user_id, text=text)
+
+    ask_human_func = create_ask_human(send_message_func, app.state.pending_human_responses)
 
     async def send_selection_func(user_id: str, question: str, options: list, selection_id: str):
         await bot_instance.send_selection_message(chat_id=user_id, question=question, options=options, selection_id=selection_id)
@@ -327,11 +356,13 @@ async def lifespan(app: FastAPI):
         create_cultivation_group,
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
+        ask_human=ask_human_func,
         ask_selection=ask_selection_func,
         build_fertilizer_confirmation=build_fertilizer_confirmation,
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,
         build_delete_confirmation=build_delete_confirmation,
+        build_abandon_plan_confirmation=build_abandon_plan_confirmation,
         build_create_species_selection_question=build_create_species_selection_question,
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
@@ -472,6 +503,7 @@ app.include_router(advice_router, prefix="/api", tags=["advice"])
 app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
+app.include_router(fertilization_plans_router, prefix="/api", tags=["fertilization_plans"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])

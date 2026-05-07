@@ -48,7 +48,7 @@ class TelegramBot:
             InlineKeyboardButton("✅ Aceptar", callback_data=f"confirm:accept:{confirmation_id}"),
             InlineKeyboardButton("❌ Cancelar", callback_data=f"confirm:cancel:{confirmation_id}"),
         ]])
-        await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+        await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard, parse_mode="HTML")
 
     async def send_selection_message(self, chat_id: str, question: str, options: list[str], selection_id: str):
         if not self.application:
