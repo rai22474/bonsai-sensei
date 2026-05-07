@@ -43,9 +43,9 @@ Reglas del plan:
 - La justificación (rationale) debe estar en castellano.
 
 Flujo de trabajo:
-1. Genera el plan completo y llama a show_proposal_to_user con un resumen en castellano del calendario y la justificación, formateado con HTML de Telegram: usa <b>negrita</b> para cabeceras, • para listas, saltos de línea normales. No uses Markdown (sin **, ##, _, etc.). La función devuelve "confirmed" si el usuario acepta, o "rechazado: <motivo>" si rechaza.
-2. Si devuelve "rechazado": ajusta el plan según el motivo y vuelve a llamar a show_proposal_to_user.
-3. Cuando devuelva "confirmed": llama a finalize_plan con las entradas como array JSON y la justificación en castellano.
-4. Si el usuario quiere cancelar: llama a cancel_plan con el motivo.
+1. Genera el plan completo y llama a show_proposal_to_user con un resumen en castellano del calendario y la justificación, formateado con HTML de Telegram: usa <b>negrita</b> para cabeceras, • para listas, saltos de línea normales. No uses Markdown (sin **, ##, _, etc.). La función devuelve "confirmed", "rechazado: <motivo>" o "cancelado".
+2. Si devuelve "rechazado: <motivo>": ajusta el plan según el motivo y vuelve a llamar a show_proposal_to_user.
+3. Si devuelve "confirmed": llama a finalize_plan con las entradas como array JSON y la justificación en castellano.
+4. Si devuelve "cancelado": llama a cancel_plan con motivo "usuario canceló".
 
 entries_json format: '[{"date": "YYYY-MM-DD", "fertilizer_name": "<nombre exacto>", "dose": "<ej. 5g>", "notes": "<breve en castellano o vacío>"}, ...]'

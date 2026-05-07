@@ -85,6 +85,7 @@ def create_cultivation_group(
     ask_confirmation: Callable,
     ask_human: Callable,
     ask_selection: Callable,
+    ask_plan_review: Callable,
     build_fertilizer_confirmation: Callable,
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
@@ -147,7 +148,7 @@ def create_cultivation_group(
         model=effective_orchestrator_model,
         session_factory=session_factory,
         ask_human=ask_human,
-        ask_confirmation=ask_confirmation,
+        ask_plan_review=ask_plan_review,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
@@ -281,7 +282,7 @@ def _create_list_bonsai_events_tool(session_factory):
 
 
 
-def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, ask_confirmation, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable):
+def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, ask_plan_review, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable):
     from bonsai_sensei.domain.services.cultivation.plan.fertilization.designer import create_fertilization_plan_runner
     from bonsai_sensei.domain.services.cultivation.plan.fertilization.clarification import create_clarification_loop_runner
     return create_manage_fertilization_plan_tool(
@@ -298,7 +299,7 @@ def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, as
         write_wiki_page_func=write_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
         run_clarification_loop=create_clarification_loop_runner(model=model, ask_human=ask_human),
-        run_plan_proposal=create_fertilization_plan_runner(model=model, ask_human=ask_human, ask_confirmation=ask_confirmation),
+        run_plan_proposal=create_fertilization_plan_runner(model=model, ask_human=ask_human, ask_plan_review=ask_plan_review),
     )
 
 

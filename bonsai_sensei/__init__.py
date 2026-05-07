@@ -10,7 +10,7 @@ from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, f
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
-from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_human, create_ask_selection
+from bonsai_sensei.domain.services.human_input import create_ask_confirmation, create_ask_human, create_ask_plan_review, create_ask_selection
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.telegram.messages.gardener_messages import (
     build_create_bonsai_confirmation,
@@ -72,6 +72,7 @@ from bonsai_sensei.knowledge_base.ingestion.factory import create_ingestion_pipe
 from bonsai_sensei.knowledge_base.keeper.runner import create_wiki_keeper
 from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
+from bonsai_sensei.telegram.handle_plan_review_callback import handle_plan_review_callback
 from bonsai_sensei.telegram.handle_selection_callback import handle_selection_callback
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
@@ -352,12 +353,18 @@ async def lifespan(app: FastAPI):
 
     ask_selection_func = create_ask_selection(send_selection_func, app.state.pending_human_responses, send_photo_selection_func=send_photo_selection_func)
 
+    async def send_plan_review_func(user_id: str, proposal: str, review_id: str):
+        await bot_instance.send_plan_review_message(chat_id=user_id, text=proposal, review_id=review_id)
+
+    ask_plan_review_func = create_ask_plan_review(send_plan_review_func, app.state.pending_human_responses)
+
     cultivation_group_factory = partial(
         create_cultivation_group,
         session_factory=get_session_partial,
         ask_confirmation=ask_confirmation_func,
         ask_human=ask_human_func,
         ask_selection=ask_selection_func,
+        ask_plan_review=ask_plan_review_func,
         build_fertilizer_confirmation=build_fertilizer_confirmation,
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,
@@ -449,6 +456,12 @@ async def lifespan(app: FastAPI):
         send_cancel_reason_prompt=bot_instance.send_force_reply_message,
     )
 
+    plan_review_handler = partial(
+        handle_plan_review_callback,
+        pending_human_responses=app.state.pending_human_responses,
+        pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
+    )
+
     selection_handler = partial(
         handle_selection_callback,
         pending_human_responses=app.state.pending_human_responses,
@@ -461,6 +474,7 @@ async def lifespan(app: FastAPI):
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         MessageHandler(filters.PHOTO, photo_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
+        CallbackQueryHandler(plan_review_handler, pattern=r"^plan_review:.+:(confirm|correct|cancel)$"),
         CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
     ]
     if bot_instance.application:

@@ -98,6 +98,17 @@ class TelegramBot:
             parse_mode="HTML",
         )
 
+    async def send_plan_review_message(self, chat_id: str, text: str, review_id: str):
+        if not self.application:
+            logger.error("Cannot send plan review message: Bot not configured")
+            return
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("✅ Confirmar", callback_data=f"plan_review:{review_id}:confirm"),
+            InlineKeyboardButton("✏️ Corregir", callback_data=f"plan_review:{review_id}:correct"),
+            InlineKeyboardButton("❌ Cancelar", callback_data=f"plan_review:{review_id}:cancel"),
+        ]])
+        await self.application.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard, parse_mode="HTML")
+
     async def send_force_reply_message(self, chat_id: str, text: str):
         if not self.application:
             logger.error("Cannot send force reply message: Bot not configured")

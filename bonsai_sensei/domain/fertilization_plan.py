@@ -10,6 +10,7 @@ class FertilizationPlan(SQLModel, table=True):
     period_start: date
     period_end: date
     status: str = Field(default="active")
+    goal: Optional[str] = Field(default=None)
     wiki_path: str
     abandonment_reason: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

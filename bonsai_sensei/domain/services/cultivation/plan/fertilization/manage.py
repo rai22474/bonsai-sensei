@@ -135,6 +135,7 @@ def create_manage_fertilization_plan_tool(
                 period_start=date.fromisoformat(start_date),
                 period_end=date.fromisoformat(end_date),
                 status="active",
+                goal=clarification["objectives"],
                 wiki_path=wiki_path,
             )
         )

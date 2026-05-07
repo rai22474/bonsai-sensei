@@ -13,17 +13,18 @@ _MAX_ITERATIONS = 5
 _MAX_LLM_CALLS = _MAX_ITERATIONS * 3
 
 
-def create_fertilization_plan_runner(model: object, ask_human: Callable, ask_confirmation: Callable) -> Callable:
+def create_fertilization_plan_runner(model: object, ask_human: Callable, ask_plan_review: Callable) -> Callable:
     async def run_plan_proposal(rendered_prompt: str, outer_tool_context) -> dict:
         async def show_proposal_to_user(message: str) -> str:
-            """Muestra el plan de fertilización al usuario para confirmación. Devuelve 'confirmed' si el usuario acepta, o 'rechazado: <motivo>' si rechaza."""
-            result = await ask_confirmation(message, tool_context=outer_tool_context)
-            if result:
+            """Muestra el plan de fertilización al usuario con tres opciones: confirmar, corregir o cancelar.
+            Devuelve 'confirmed' si acepta, 'rechazado: <motivo>' si quiere correcciones, o 'cancelado' si cancela."""
+            action = await ask_plan_review(message, tool_context=outer_tool_context)
+            if action == "confirmed":
                 return "confirmed"
-            if result.reason:
-                return f"rechazado: {result.reason}"
-            feedback = await ask_human("¿Qué cambios quieres hacer al plan?", tool_context=outer_tool_context)
-            return f"rechazado: {feedback}"
+            if action == "correct":
+                feedback = await ask_human("¿Qué cambios quieres hacer al plan?", tool_context=outer_tool_context)
+                return f"rechazado: {feedback}"
+            return "cancelado"
 
         async def finalize_plan(entries_json: str, rationale: str, tool_context: ToolContext) -> str:
             """Finalize the plan after the user confirms it. entries_json must be a valid JSON array of schedule entries."""

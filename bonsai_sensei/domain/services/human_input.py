@@ -107,6 +107,44 @@ def create_ask_confirmation(
     return ask_confirmation
 
 
+def create_ask_plan_review(
+    send_plan_review_func: Callable,
+    pending_responses: dict,
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+) -> Callable:
+    async def ask_plan_review(
+        proposal: str,
+        tool_context: ToolContext | None = None,
+    ) -> str:
+        """Present a fertilization plan proposal to the user with three options: confirm, correct, or cancel.
+
+        Args:
+            proposal: The plan proposal text to show the user.
+            tool_context: ADK tool context providing the user identifier.
+
+        Returns:
+            "confirmed" if the user accepts, "correct" if they want changes, "cancelled" if they cancel.
+        """
+        user_id = resolve_confirmation_user_id(tool_context)
+        review_id = uuid.uuid4().hex
+        event = asyncio.Event()
+        pending_responses[user_id] = {
+            "event": event,
+            "response": None,
+            "type": "plan_review",
+            "review_id": review_id,
+        }
+        await send_plan_review_func(user_id, proposal, review_id)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
+        except TimeoutError:
+            pending_responses.pop(user_id, None)
+            raise
+        return pending_responses.pop(user_id)["response"]
+
+    return ask_plan_review
+
+
 def create_ask_selection(
     send_selection_func: Callable,
     pending_responses: dict,
