@@ -194,6 +194,13 @@ async def submit_text_response(request_body: TextResponseRequest, request: Reque
                                 {"question": next_pending.get("summary", "")}
                             ],
                         }
+                    if next_pending.get("type") == "plan_review":
+                        return {
+                            "text": "",
+                            "pending_plan_reviews": [
+                                {"id": next_pending["review_id"]}
+                            ],
+                        }
             active_tasks.pop(user_id, None)
             if task.exception():
                 raise task.exception()
