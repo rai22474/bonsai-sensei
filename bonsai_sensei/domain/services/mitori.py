@@ -27,7 +27,7 @@ Diseña un plan en JSON con esta estructura:
 Auto-revisa el plan antes de responder:
 - ¿Los agentes elegidos son los correctos para cada paso?
 - ¿Falta algún paso necesario?
-- ¿Cada request es suficientemente detallado para ejecutarse sin ambigüedad?
+- ¿El request transmite la intención del usuario con suficiente contexto? (No es necesario incluir todos los datos — las tools de creación, actualización y eliminación recopilan internamente los datos que faltan. Nunca añadas pasos para solicitar información al usuario.)
 
 Responde ÚNICAMENTE con el JSON del plan, sin texto adicional.
 """

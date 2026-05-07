@@ -29,7 +29,7 @@ def create_create_bonsai_tool(
         """Create a new bonsai in the collection after explicit user confirmation.
 
         Args:
-            name: Bonsai name.
+            name: Bonsai name. If the user did not provide one, invent one inspired by anime or manga characters.
             species_name: Common name of the species to assign to the bonsai. If empty, user selects from a list.
 
         Returns:

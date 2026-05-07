@@ -49,8 +49,8 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-      - "16686:16686"
-      - "4317:4317"
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_OTLP_PORT:-4317}:4317"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
       - COLLECTOR_OTLP_GRPC_MAX_MESSAGE_SIZE=20971520
