@@ -49,7 +49,11 @@ def create_ask_human(
         event = asyncio.Event()
         pending_responses[user_id] = {"event": event, "response": None, "type": "text"}
         await send_message_func(user_id, question)
-        await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
+        except TimeoutError:
+            pending_responses.pop(user_id, None)
+            return ""
         return pending_responses.pop(user_id)["response"]
 
     return ask_human
@@ -101,7 +105,7 @@ def create_ask_confirmation(
                 await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
             except TimeoutError:
                 pending_responses.pop(resolved_user_id, None)
-                raise
+                return ConfirmationResult(accepted=False, reason="timeout")
             return pending_responses.pop(resolved_user_id)["response"]
 
     return ask_confirmation
@@ -139,7 +143,7 @@ def create_ask_plan_review(
             await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
         except TimeoutError:
             pending_responses.pop(user_id, None)
-            raise
+            return "timeout"
         return pending_responses.pop(user_id)["response"]
 
     return ask_plan_review
@@ -194,7 +198,7 @@ def create_ask_selection(
             await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
         except TimeoutError:
             pending_responses.pop(user_id, None)
-            raise
+            return SelectionNoneResult(reason="timeout")
         return pending_responses.pop(user_id)["response"]
 
     return ask_selection
