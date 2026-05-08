@@ -1,0 +1,7 @@
+# Phytosanitary Plans — {{ bonsai_name }}
+
+| Period | Status | Link |
+|--------|--------|------|
+{% for plan in plans %}
+| {{ plan.period_start }} → {{ plan.period_end }} | {{ plan.status }} | [[{{ plan.wiki_path }}]] |
+{% endfor %}

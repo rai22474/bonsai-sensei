@@ -4,12 +4,12 @@ from typing import Callable
 from bonsai_sensei.domain.services.cultivation.plan.evaluate_plan import create_evaluate_plan_tool
 
 _INSTRUCTION = """
-Eres un experto en fertilización de bonsáis. Se te proporciona el plan de fertilización activo y nueva información relevante.
+Eres un experto en fitosanidad de bonsáis. Se te proporciona el plan fitosanitario activo y nueva información relevante.
 Evalúa críticamente si el plan sigue siendo adecuado a la luz de esa nueva información.
 
 Analiza:
-- ¿La nueva información cambia las necesidades del bonsái?
-- ¿Alguna aplicación próxima debería modificarse (dosis, producto, fecha)?
+- ¿La nueva información indica una plaga, enfermedad o condición nueva?
+- ¿Algún tratamiento próximo debería modificarse (producto, dosis, fecha)?
 - ¿Es necesario replantear el plan completo?
 
 Devuelve ÚNICAMENTE un JSON válido con este formato exacto, sin texto adicional:
@@ -25,11 +25,11 @@ Devuelve ÚNICAMENTE un JSON válido con este formato exacto, sin texto adiciona
 - suggestions puede ser lista vacía si verdict es "ok".
 """
 
-_DOCSTRING = """Evaluate the active fertilization plan against new information without modifying it.
+_DOCSTRING = """Evaluate the active phytosanitary plan against new information without modifying it.
 
 Args:
-    bonsai_name: Name of the bonsai whose plan to evaluate.
-    new_information: New observations or events that may affect the plan (e.g. health issue, temperature change, growth note).
+    bonsai_name: Name of the bonsai whose phytosanitary plan to evaluate.
+    new_information: New observations or events that may affect the plan (e.g. new pest detected, health improvement, climate change).
 
 Returns:
     A JSON-ready dict with the evaluation.
@@ -41,22 +41,22 @@ Returns:
 _TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 
-def create_evaluate_fertilization_plan_tool(
+def create_evaluate_phytosanitary_plan_tool(
     model: object,
     get_bonsai_by_name_func: Callable,
-    get_active_fertilization_plan_func: Callable,
+    get_active_phytosanitary_plan_func: Callable,
     list_bonsai_events_func: Callable,
     read_wiki_page_func: Callable,
     list_wiki_files_func: Callable,
 ) -> Callable:
     return create_evaluate_plan_tool(
-        tool_name="evaluate_fertilization_plan",
+        tool_name="evaluate_phytosanitary_plan",
         tool_docstring=_DOCSTRING,
         evaluation_instruction=_INSTRUCTION,
         template_dir=_TEMPLATE_DIR,
         model=model,
         get_bonsai_by_name_func=get_bonsai_by_name_func,
-        get_active_plan_func=get_active_fertilization_plan_func,
+        get_active_plan_func=get_active_phytosanitary_plan_func,
         list_bonsai_events_func=list_bonsai_events_func,
         read_wiki_page_func=read_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,

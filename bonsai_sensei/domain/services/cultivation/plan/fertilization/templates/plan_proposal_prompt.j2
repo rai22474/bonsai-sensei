@@ -18,13 +18,13 @@ Sin eventos registrados.
 {% endfor %}
 
 Fertilizantes disponibles:
-{% for f in fertilizers %}
+{% for f in products %}
 - {{ f.name }}{% if f.recommended_amount %} (dosis recomendada: {{ f.recommended_amount }}){% endif %}
 {% endfor %}
-{% if fertilizer_pages %}
+{% if product_pages %}
 
 Fichas técnicas de fertilizantes:
-{% for name, content in fertilizer_pages.items() %}
+{% for name, content in product_pages.items() %}
 ### {{ name }}
 {{ content }}
 {% endfor %}

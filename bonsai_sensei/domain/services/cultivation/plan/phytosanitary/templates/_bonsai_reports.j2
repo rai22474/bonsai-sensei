@@ -1,0 +1,15 @@
+{% if bonsai_wiki_content %}
+
+## Perfil del bonsái
+{{ bonsai_wiki_content }}
+{% endif %}
+{% if reports %}
+
+## Informes y análisis recientes (salud, fotos, comparativas)
+{% for report in reports %}
+{{ report }}
+{% if not loop.last %}
+---
+{% endif %}
+{% endfor %}
+{% endif %}

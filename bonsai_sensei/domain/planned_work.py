@@ -9,6 +9,7 @@ class PlannedWork(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     bonsai_id: int = Field(foreign_key="bonsai.id", ondelete="CASCADE")
     plan_id: Optional[int] = Field(default=None, foreign_key="fertilizationplan.id", ondelete="SET NULL")
+    phytosanitary_plan_id: Optional[int] = Field(default=None, foreign_key="phytosanitaryplan.id", ondelete="SET NULL")
     work_type: str = Field(index=True)
     payload: Dict[str, Any] = Field(sa_column=Column(JSON))
     scheduled_date: date

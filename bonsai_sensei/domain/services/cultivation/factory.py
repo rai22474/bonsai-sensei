@@ -46,10 +46,10 @@ from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
     create_list_bonsai_events_tool,
     create_list_weekend_planned_works_tool,
 )
-from bonsai_sensei.domain.services.cultivation.plan.create_fertilizer_application import (
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.create_fertilizer_application import (
     create_create_fertilizer_application_tool,
 )
-from bonsai_sensei.domain.services.cultivation.plan.create_phytosanitary_application import (
+from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.create_phytosanitary_application import (
     create_create_phytosanitary_application_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.create_transplant import (
@@ -58,15 +58,12 @@ from bonsai_sensei.domain.services.cultivation.plan.create_transplant import (
 from bonsai_sensei.domain.services.cultivation.plan.delete_planned_work import (
     create_delete_planned_work_tool,
 )
-from bonsai_sensei.domain.services.cultivation.plan.recommend_fertilizer import (
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.recommend_fertilizer import (
     create_recommend_fertilizer_tool,
     create_fertilizer_recommender_func,
 )
-from bonsai_sensei.domain.services.cultivation.plan.clarify_fertilization_type import (
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.clarify_fertilization_type import (
     create_clarify_fertilization_type_tool,
-)
-from bonsai_sensei.domain.services.cultivation.plan.recommend_phytosanitary import (
-    create_recommend_phytosanitary_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.manage import (
     create_manage_fertilization_plan_tool,
@@ -76,11 +73,11 @@ from bonsai_sensei.domain.services.cultivation.plan.fertilization.abandon_plan i
 )
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.evaluate import (
     create_evaluate_fertilization_plan_tool,
-    create_plan_evaluation_runner,
 )
 from bonsai_sensei.domain.services.garden.bonsai_tools import create_list_bonsai_tool
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import fertilization_plan_store
+from bonsai_sensei.domain import phytosanitary_plan_store
 
 
 def create_cultivation_group(
@@ -96,6 +93,7 @@ def create_cultivation_group(
     build_transplant_confirmation: Callable,
     build_delete_confirmation: Callable,
     build_abandon_plan_confirmation: Callable,
+    build_abandon_phytosanitary_plan_confirmation: Callable,
     build_create_species_selection_question: Callable,
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
@@ -132,11 +130,28 @@ def create_cultivation_group(
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
     )
-    recommend_phytosanitary_tool = _create_recommend_phytosanitary_tool(
-        model=model,
+    manage_phytosanitary_plan_tool = _create_manage_phytosanitary_plan_tool(
+        model=effective_orchestrator_model,
         session_factory=session_factory,
+        ask_human=ask_human,
+        ask_plan_review=ask_plan_review,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
+        list_wiki_files_func=list_wiki_files_func,
+    )
+    abandon_phytosanitary_plan_tool = _create_abandon_phytosanitary_plan_tool(
+        session_factory=session_factory,
+        ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_abandon_phytosanitary_plan_confirmation,
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+    )
+
+    evaluate_phytosanitary_plan_tool = _create_evaluate_phytosanitary_plan_tool(
+        model=effective_orchestrator_model,
+        session_factory=session_factory,
+        read_wiki_page_func=read_wiki_page_func,
+        list_wiki_files_func=list_wiki_files_func,
     )
 
     list_planned_works_tool = _create_list_planned_works_tool(session_factory=session_factory)
@@ -174,12 +189,12 @@ def create_cultivation_group(
     )
 
     evaluate_fertilization_plan_tool = create_evaluate_fertilization_plan_tool(
+        model=effective_orchestrator_model,
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         get_active_fertilization_plan_func=partial(fertilization_plan_store.get_active_fertilization_plan, create_session=session_factory),
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
         read_wiki_page_func=read_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
-        run_plan_evaluation=create_plan_evaluation_runner(model=effective_orchestrator_model),
     )
 
     clarify_fertilization_type_tool = create_clarify_fertilization_type_tool(
@@ -196,7 +211,9 @@ def create_cultivation_group(
         abandon_fertilization_plan_tool=abandon_fertilization_plan_tool,
         evaluate_fertilization_plan_tool=evaluate_fertilization_plan_tool,
         clarify_fertilization_type_tool=clarify_fertilization_type_tool,
-        recommend_phytosanitary_tool=recommend_phytosanitary_tool,
+        manage_phytosanitary_plan_tool=manage_phytosanitary_plan_tool,
+        abandon_phytosanitary_plan_tool=abandon_phytosanitary_plan_tool,
+        evaluate_phytosanitary_plan_tool=evaluate_phytosanitary_plan_tool,
         list_planned_works_tool=list_planned_works_tool,
         list_bonsai_events_tool=list_bonsai_events_tool,
         create_fertilizer_tool=create_fertilizer_tool,
@@ -300,8 +317,8 @@ def _create_list_bonsai_events_tool(session_factory):
 
 
 def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, ask_plan_review, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable):
-    from bonsai_sensei.domain.services.cultivation.plan.fertilization.designer import create_fertilization_plan_runner
-    from bonsai_sensei.domain.services.cultivation.plan.fertilization.clarification import create_clarification_loop_runner
+    from bonsai_sensei.domain.services.cultivation.plan.plan_proposal_runner import create_plan_proposal_runner as create_fertilization_plan_runner
+    from bonsai_sensei.domain.services.cultivation.plan.clarification_runner import create_clarification_loop_runner
     return create_manage_fertilization_plan_tool(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
@@ -315,8 +332,8 @@ def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, as
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
-        run_clarification_loop=create_clarification_loop_runner(model=model, ask_human=ask_human),
-        run_plan_proposal=create_fertilization_plan_runner(model=model, ask_human=ask_human, ask_plan_review=ask_plan_review),
+        run_clarification_loop=create_clarification_loop_runner(model=model, ask_human=ask_human, app_name="fertilization_plan_clarification"),
+        run_plan_proposal=create_fertilization_plan_runner(model=model, ask_human=ask_human, ask_plan_review=ask_plan_review, app_name="fertilization_plan_proposal"),
     )
 
 
@@ -334,7 +351,7 @@ def _create_abandon_fertilization_plan_tool(session_factory, ask_confirmation, b
 
 
 def _create_recommend_fertilizer_tool(model, session_factory, read_wiki_page_func, write_wiki_page_func):
-    from bonsai_sensei.domain.services.cultivation.plan.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
+    from bonsai_sensei.domain.services.cultivation.plan.fertilization.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
     return create_recommend_fertilizer_tool(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
@@ -346,7 +363,7 @@ def _create_recommend_fertilizer_tool(model, session_factory, read_wiki_page_fun
 
 
 def _create_fertilizer_recommender_func(model, session_factory, read_wiki_page_func, write_wiki_page_func):
-    from bonsai_sensei.domain.services.cultivation.plan.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
+    from bonsai_sensei.domain.services.cultivation.plan.fertilization.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
     return create_fertilizer_recommender_func(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
@@ -357,15 +374,51 @@ def _create_fertilizer_recommender_func(model, session_factory, read_wiki_page_f
     )
 
 
-def _create_recommend_phytosanitary_tool(model, session_factory, read_wiki_page_func, write_wiki_page_func):
-    from bonsai_sensei.domain.services.cultivation.plan.phytosanitary_recommendation_runner import create_phytosanitary_recommendation_runner
-    return create_recommend_phytosanitary_tool(
+def _create_manage_phytosanitary_plan_tool(model, session_factory, ask_human, ask_plan_review, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable):
+    from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.manage import create_manage_phytosanitary_plan_tool
+    from bonsai_sensei.domain.services.cultivation.plan.clarification_runner import create_clarification_loop_runner
+    from bonsai_sensei.domain.services.cultivation.plan.plan_proposal_runner import create_plan_proposal_runner
+    return create_manage_phytosanitary_plan_tool(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
         list_phytosanitary_func=partial(phytosanitary_registry.list_phytosanitary, create_session=session_factory),
+        get_phytosanitary_by_name_func=partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory),
+        get_active_phytosanitary_plan_func=partial(phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory),
+        create_phytosanitary_plan_func=partial(phytosanitary_plan_store.create_phytosanitary_plan, create_session=session_factory),
+        update_phytosanitary_plan_func=partial(phytosanitary_plan_store.update_phytosanitary_plan, create_session=session_factory),
+        create_planned_work_func=partial(cultivation_plan.create_planned_work, create_session=session_factory),
+        delete_future_planned_works_func=partial(cultivation_plan.delete_future_planned_works_by_phytosanitary_plan, create_session=session_factory),
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
-        run_recommendation=create_phytosanitary_recommendation_runner(model=model),
+        list_wiki_files_func=list_wiki_files_func,
+        run_clarification_loop=create_clarification_loop_runner(model=model, ask_human=ask_human, app_name="phytosanitary_plan_clarification"),
+        run_plan_proposal=create_plan_proposal_runner(model=model, ask_human=ask_human, ask_plan_review=ask_plan_review, app_name="phytosanitary_plan_proposal"),
+    )
+
+
+def _create_abandon_phytosanitary_plan_tool(session_factory, ask_confirmation, build_confirmation_message, read_wiki_page_func, write_wiki_page_func):
+    from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.abandon_plan import create_abandon_phytosanitary_plan_tool
+    return create_abandon_phytosanitary_plan_tool(
+        get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+        get_active_phytosanitary_plan_func=partial(phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory),
+        update_phytosanitary_plan_func=partial(phytosanitary_plan_store.update_phytosanitary_plan, create_session=session_factory),
+        delete_future_planned_works_func=partial(cultivation_plan.delete_future_planned_works_by_phytosanitary_plan, create_session=session_factory),
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+        ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_confirmation_message,
+    )
+
+
+def _create_evaluate_phytosanitary_plan_tool(model, session_factory, read_wiki_page_func, list_wiki_files_func):
+    from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.evaluate import create_evaluate_phytosanitary_plan_tool
+    return create_evaluate_phytosanitary_plan_tool(
+        model=model,
+        get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+        get_active_phytosanitary_plan_func=partial(phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory),
+        list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
+        read_wiki_page_func=read_wiki_page_func,
+        list_wiki_files_func=list_wiki_files_func,
     )
 
 
@@ -415,7 +468,8 @@ def _create_kikaru(
     manage_fertilization_plan_tool, abandon_fertilization_plan_tool,
     evaluate_fertilization_plan_tool,
     clarify_fertilization_type_tool,
-    recommend_phytosanitary_tool,
+    manage_phytosanitary_plan_tool, abandon_phytosanitary_plan_tool,
+    evaluate_phytosanitary_plan_tool,
     list_planned_works_tool, list_bonsai_events_tool,
     create_fertilizer_tool, create_phytosanitary_tool, create_transplant_tool,
 ):
@@ -445,7 +499,9 @@ def _create_kikaru(
         abandon_fertilization_plan_tool=abandon_fertilization_plan_tool,
         evaluate_fertilization_plan_tool=evaluate_fertilization_plan_tool,
         clarify_fertilization_type_tool=clarify_fertilization_type_tool,
-        recommend_phytosanitary_tool=recommend_phytosanitary_tool,
+        manage_phytosanitary_plan_tool=manage_phytosanitary_plan_tool,
+        abandon_phytosanitary_plan_tool=abandon_phytosanitary_plan_tool,
+        evaluate_phytosanitary_plan_tool=evaluate_phytosanitary_plan_tool,
         list_planned_works_tool=list_planned_works_tool,
         list_bonsai_events_tool=list_bonsai_events_tool,
         create_fertilizer_application_tool=create_fertilizer_tool,

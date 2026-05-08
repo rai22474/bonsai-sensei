@@ -1,0 +1,30 @@
+# Phytosanitary Plan — {{ bonsai_name }}
+
+**Period:** {{ period_start }} → {{ period_end }}
+**Status:** {{ status }}
+**Created:** {{ created_at }}
+{% if goal %}
+
+## Goal
+
+{{ goal }}
+{% endif %}
+
+## Rationale
+
+{{ rationale }}
+
+## Schedule
+
+| Date | Product | Dose | Notes |
+|------|---------|------|-------|
+{% for entry in entries %}
+| {{ entry.date }} | {{ entry.phytosanitary_name }} | {{ entry.dose or '' }} | {{ entry.notes or '' }} |
+{% endfor %}
+{% if status == 'abandoned' %}
+
+## Abandonment
+
+**Date:** {{ abandoned_at }}
+**Reason:** {{ abandonment_reason }}
+{% endif %}

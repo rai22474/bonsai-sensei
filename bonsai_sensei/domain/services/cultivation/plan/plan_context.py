@@ -1,7 +1,7 @@
 import re
 from typing import Callable
 
-from bonsai_sensei.domain.services.cultivation.plan.fertilization.wiki import read_wiki_content
+from bonsai_sensei.domain.services.cultivation.plan.wiki_utils import read_wiki_content
 
 
 def load_bonsai_plan_context(

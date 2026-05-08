@@ -33,6 +33,7 @@ from bonsai_sensei.telegram.messages.planning_messages import (
     build_transplant_confirmation,
     build_delete_confirmation,
     build_abandon_plan_confirmation,
+    build_abandon_phytosanitary_plan_confirmation,
 )
 from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_create_fertilizer_confirmation,
@@ -66,6 +67,7 @@ from bonsai_sensei.api.telegram import router as telegram_router
 from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.api.fertilization_plans import router as fertilization_plans_router
+from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.api.transcripts import router as transcripts_router
@@ -92,6 +94,7 @@ from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import fertilization_plan_store
+from bonsai_sensei.domain import phytosanitary_plan_store
 from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.database.session import get_session, get_engine
 from bonsai_sensei.observability import init_telemetry
@@ -259,6 +262,26 @@ def _create_fertilization_plan_service(session_factory):
     }
 
 
+def _create_phytosanitary_plan_service(session_factory):
+    return {
+        "list_phytosanitary_plans": partial(
+            phytosanitary_plan_store.list_phytosanitary_plans, create_session=session_factory
+        ),
+        "get_phytosanitary_plan": partial(
+            phytosanitary_plan_store.get_phytosanitary_plan, create_session=session_factory
+        ),
+        "get_active_phytosanitary_plan": partial(
+            phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory
+        ),
+        "create_phytosanitary_plan": partial(
+            phytosanitary_plan_store.create_phytosanitary_plan, create_session=session_factory
+        ),
+        "delete_phytosanitary_plan": partial(
+            phytosanitary_plan_store.delete_phytosanitary_plan, create_session=session_factory
+        ),
+    }
+
+
 def _create_bonsai_photo_service(session_factory):
     return {
         "create_bonsai_photo": partial(
@@ -295,6 +318,7 @@ async def lifespan(app: FastAPI):
     app.state.user_settings_service = _create_user_settings_service(get_session_partial)
     app.state.cultivation_plan_service = _create_cultivation_plan_service(get_session_partial)
     app.state.fertilization_plan_service = _create_fertilization_plan_service(get_session_partial)
+    app.state.phytosanitary_plan_service = _create_phytosanitary_plan_service(get_session_partial)
     app.state.bonsai_photo_service = _create_bonsai_photo_service(get_session_partial)
     app.state.pending_human_responses = {}
     app.state.pending_confirmation_cleanups = {}
@@ -372,6 +396,7 @@ async def lifespan(app: FastAPI):
         build_transplant_confirmation=build_transplant_confirmation,
         build_delete_confirmation=build_delete_confirmation,
         build_abandon_plan_confirmation=build_abandon_plan_confirmation,
+        build_abandon_phytosanitary_plan_confirmation=build_abandon_phytosanitary_plan_confirmation,
         build_create_species_selection_question=build_create_species_selection_question,
         build_create_species_confirmation=build_create_species_confirmation,
         build_delete_species_confirmation=build_delete_species_confirmation,
@@ -520,6 +545,7 @@ app.include_router(weather_router, prefix="/api", tags=["weather"])
 app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(fertilization_plans_router, prefix="/api", tags=["fertilization_plans"])
+app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanitary_plans"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])

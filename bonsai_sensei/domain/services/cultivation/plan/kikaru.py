@@ -32,8 +32,20 @@ Para evaluar si el plan actual sigue siendo válido a la luz de nueva informaci�
 ### Caso ambiguo
 Si no queda claro si el usuario quiere una fertilización puntual o un plan para un período, pídele que elija antes de actuar.
 
+## Fitosanitarios — regla de decisión
+
+### Tratamiento puntual (UNA sola aplicación)
+Úsalo cuando el usuario diga "puntual", "una sola aplicación" o dé un producto y una fecha concreta sin período.
+
+### Plan fitosanitario (múltiples tratamientos en un período)
+Úsalo cuando el usuario especifique un período con fecha de inicio Y fin, o términos como "los próximos meses", "esta temporada", "programa un plan".
+Para abandonar el plan activo sin crear uno nuevo: usa la función de abandono con el motivo.
+Para evaluar si el plan actual sigue siendo válido a la luz de nueva información: usa la función de evaluación (no crea ni modifica nada).
+
+### Caso ambiguo
+Si no queda claro si el usuario quiere una aplicación puntual o un plan, pídele que elija antes de actuar.
+
 ## Otros trabajos
-- Tratamientos fitosanitarios: obtén primero la recomendación fitosanitaria y luego crea una tarea por cada tratamiento devuelto.
 - Trasplante: crea la tarea directamente.
 """
 
@@ -41,11 +53,13 @@ Si no queda claro si el usuario quiere una fertilización puntual o un plan para
 def create_kikaru(
     model: object,
 
-    recommend_phytosanitary_tool: Callable | None = None,
     manage_fertilization_plan_tool: Callable | None = None,
     abandon_fertilization_plan_tool: Callable | None = None,
     evaluate_fertilization_plan_tool: Callable | None = None,
     clarify_fertilization_type_tool: Callable | None = None,
+    manage_phytosanitary_plan_tool: Callable | None = None,
+    abandon_phytosanitary_plan_tool: Callable | None = None,
+    evaluate_phytosanitary_plan_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
     list_bonsai_events_tool: Callable | None = None,
     create_fertilizer_application_tool: Callable | None = None,
@@ -62,7 +76,9 @@ def create_kikaru(
             abandon_fertilization_plan_tool,
             evaluate_fertilization_plan_tool,
             clarify_fertilization_type_tool,
-            recommend_phytosanitary_tool,
+            manage_phytosanitary_plan_tool,
+            abandon_phytosanitary_plan_tool,
+            evaluate_phytosanitary_plan_tool,
             list_planned_works_tool,
             list_bonsai_events_tool,
             create_fertilizer_application_tool,
