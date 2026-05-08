@@ -3,7 +3,7 @@ from datetime import date
 from pytest_bdd import scenario, when, then, parsers
 
 from cultivation_plan.planned_works_api import list_planned_works
-from http_client import accept_confirmation, advise, get
+from http_client import accept_confirmation, advise, choose_selection, get
 from manage_bonsai.bonsai_events_api import list_bonsai_events
 
 
@@ -46,6 +46,9 @@ def plan_fertilization_via_advice(context, fertilizer_name, bonsai_name, amount,
         ),
         user_id=context["user_id"],
     )
+    if response.get("pending_selections"):
+        selection_id = response["pending_selections"][0]["id"]
+        response = choose_selection(context["user_id"], selection_id, "Fertilización puntual")
     context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
@@ -63,6 +66,9 @@ def plan_fertilization_without_date(context, fertilizer_name, bonsai_name, amoun
         ),
         user_id=context["user_id"],
     )
+    if response.get("pending_selections"):
+        selection_id = response["pending_selections"][0]["id"]
+        response = choose_selection(context["user_id"], selection_id, "Fertilización puntual")
     context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 

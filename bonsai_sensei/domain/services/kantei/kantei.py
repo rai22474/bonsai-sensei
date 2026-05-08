@@ -19,10 +19,11 @@ Tras cada análisis, guarda el resultado en la wiki del bonsái usando el analys
 - Comparación: bonsai/<nombre-bonsai>/reports/<newer_taken_on>-comparison.md
 Usa el nombre del bonsái en minúsculas con guiones como directorio (ej: "El Viejo" → bonsai/el-viejo/reports/...).
 
-El contenido del report debe comenzar con un encabezado que incluya el link a la foto analizada:
-- Análisis: `[[{photo_path}|Ver foto]]`
-- Comparación: `[[{older_photo_path}|Foto anterior]] · [[{newer_photo_path}|Foto reciente]]`
-Añade esta línea justo debajo del título h1, antes del contenido del análisis.
+El contenido del report debe comenzar con un encabezado que incluya el link a la foto analizada.
+Justo debajo del título h1, añade una línea con wikilinks usando los campos photo_path / older_photo_path / newer_photo_path devueltos por la tool:
+- Análisis: wikilink al campo photo_path con texto "Ver foto"
+- Comparación: wikilink al campo older_photo_path con texto "Foto anterior" · wikilink al campo newer_photo_path con texto "Foto reciente"
+Formato wikilink: [[RUTA|TEXTO]]
 
 Tras guardar el report, llama siempre a update_bonsai_reports_index con el nombre del bonsái para actualizar el índice de informes.
 """

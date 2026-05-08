@@ -14,23 +14,26 @@ def create_create_fertilizer_application_tool(
     create_planned_work_func: Callable,
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
+    get_fertilizer_recommendation_func: Callable | None = None,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
     async def create_fertilizer_application(
         bonsai_name: str,
-        scheduled_date: str,
-        fertilizer_name: str,
+        scheduled_date: str = "",
+        fertilizer_name: str = "",
         amount: str = "",
         notes: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Plan a fertilizer application for a bonsai after explicit user confirmation.
+        """Plan a single fertilizer application for a bonsai on a specific date. If no fertilizer is specified, automatically selects the most suitable one from the available catalog based on the bonsai's history and needs.
+
+        Use this when the user wants to schedule one fertilization event (not a recurring plan for a period of months).
 
         Args:
             bonsai_name: Name of the bonsai to plan the fertilizer application for.
-            scheduled_date: Date of the planned work in ISO format (YYYY-MM-DD).
-            fertilizer_name: Name of the fertilizer to apply.
+            scheduled_date: Date of the planned work in ISO format (YYYY-MM-DD). Defaults to next Saturday if not provided.
+            fertilizer_name: Name of the fertilizer to apply. Leave empty to auto-select from the catalog.
             amount: Amount of fertilizer to apply (e.g. "5 ml", "10 g").
             notes: Optional notes about the planned work.
 
@@ -39,7 +42,7 @@ def create_create_fertilizer_application_tool(
             Output JSON (success): {"status": "success", "message": "<confirmation>"}.
             Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
             Output JSON (error): {"status": "error", "message": "<reason>"}.
-            Error reasons: "bonsai_name_required", "scheduled_date_required", "fertilizer_name_required",
+            Error reasons: "bonsai_name_required", "scheduled_date_required", "no_fertilizers_available",
                 "invalid_scheduled_date_format", "bonsai_not_found", "fertilizer_not_found".
         """
         if not bonsai_name:
@@ -51,7 +54,12 @@ def create_create_fertilizer_application_tool(
             return {"status": "error", "message": "scheduled_date_required"}
 
         if not fertilizer_name:
-            return {"status": "error", "message": "fertilizer_name_required"}
+            if get_fertilizer_recommendation_func is None:
+                return {"status": "error", "message": "fertilizer_name_required"}
+            recommendation = await get_fertilizer_recommendation_func(bonsai_name)
+            if recommendation.get("status") != "success":
+                return recommendation
+            fertilizer_name = recommendation["fertilizer_name"]
 
         fertilizer = get_fertilizer_by_name_func(fertilizer_name)
         if not fertilizer:

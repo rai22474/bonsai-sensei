@@ -19,35 +19,33 @@ Próximo sábado: {next_saturday}
 - Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
 
 ## Fertilización — regla de decisión
-Cuando el usuario pide algo relacionado con fertilizar un bonsái, sigue esta regla:
 
-1. Si el usuario dice EXPLÍCITAMENTE "puntual", "una sola fertilización" o similar → fertilización suelta (ver abajo).
-2. En CUALQUIER OTRO CASO → plan de fertilización (ver abajo). Este es el camino por defecto.
+### Fertilización puntual (UNA sola aplicación)
+Úsala cuando el usuario diga "puntual", "una sola fertilización", o dé una única fecha concreta sin período.
+El fertilizante se elige automáticamente del catálogo si el usuario no lo especifica. La fecha por defecto es el próximo sábado.
 
-### Plan de fertilización (camino por defecto)
-- Si el usuario no especifica el período (fechas de inicio y fin), pregúntaselas antes de llamar a ninguna herramienta.
-- Para crear o actualizar un plan: llama a manage_fertilization_plan con el bonsái y las fechas de inicio y fin del período.
-- Para abandonar el plan activo sin crear uno nuevo: llama a abandon_fertilization_plan con el bonsái y el motivo.
-- Para evaluar si el plan actual sigue siendo válido a la luz de nueva información (evento registrado, síntoma, nota de crecimiento, cambio climático): llama a evaluate_fertilization_plan. No crea ni modifica nada.
+### Plan de fertilización (múltiples aplicaciones en un período)
+Úsalo cuando el usuario especifique un período con fecha de inicio Y fin, o términos como "los próximos meses", "esta temporada".
+Para abandonar el plan activo sin crear uno nuevo: usa la función de abandono con el motivo.
+Para evaluar si el plan actual sigue siendo válido a la luz de nueva información: usa la función de evaluación (no crea ni modifica nada).
 
-### Fertilización suelta (solo si el usuario lo pide explícitamente como "puntual")
-- Llama primero a recommend_fertilizer para obtener la recomendación, luego crea la tarea con confirm_create_fertilizer_application.
-- Si el usuario no especifica fecha, usa el próximo sábado.
+### Caso ambiguo
+Si no queda claro si el usuario quiere una fertilización puntual o un plan para un período, pídele que elija antes de actuar.
 
 ## Otros trabajos
-- Tratamientos fitosanitarios: llama primero a recommend_phytosanitary, luego crea una tarea con confirm_create_phytosanitary_application por cada tratamiento devuelto.
-- Trasplante: llama directamente a confirm_create_transplant.
+- Tratamientos fitosanitarios: obtén primero la recomendación fitosanitaria y luego crea una tarea por cada tratamiento devuelto.
+- Trasplante: crea la tarea directamente.
 """
 
 
 def create_kikaru(
     model: object,
 
-    recommend_fertilizer_tool: Callable | None = None,
     recommend_phytosanitary_tool: Callable | None = None,
     manage_fertilization_plan_tool: Callable | None = None,
     abandon_fertilization_plan_tool: Callable | None = None,
     evaluate_fertilization_plan_tool: Callable | None = None,
+    clarify_fertilization_type_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
     list_bonsai_events_tool: Callable | None = None,
     create_fertilizer_application_tool: Callable | None = None,
@@ -63,7 +61,7 @@ def create_kikaru(
             manage_fertilization_plan_tool,
             abandon_fertilization_plan_tool,
             evaluate_fertilization_plan_tool,
-            recommend_fertilizer_tool,
+            clarify_fertilization_type_tool,
             recommend_phytosanitary_tool,
             list_planned_works_tool,
             list_bonsai_events_tool,

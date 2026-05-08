@@ -60,6 +60,10 @@ from bonsai_sensei.domain.services.cultivation.plan.delete_planned_work import (
 )
 from bonsai_sensei.domain.services.cultivation.plan.recommend_fertilizer import (
     create_recommend_fertilizer_tool,
+    create_fertilizer_recommender_func,
+)
+from bonsai_sensei.domain.services.cultivation.plan.clarify_fertilization_type import (
+    create_clarify_fertilization_type_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.recommend_phytosanitary import (
     create_recommend_phytosanitary_tool,
@@ -86,6 +90,7 @@ def create_cultivation_group(
     ask_human: Callable,
     ask_selection: Callable,
     ask_plan_review: Callable,
+    build_fertilization_type_question: Callable,
     build_fertilizer_confirmation: Callable,
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
@@ -121,6 +126,12 @@ def create_cultivation_group(
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
     )
+    fertilizer_recommender_func = _create_fertilizer_recommender_func(
+        model=model,
+        session_factory=session_factory,
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+    )
     recommend_phytosanitary_tool = _create_recommend_phytosanitary_tool(
         model=model,
         session_factory=session_factory,
@@ -134,6 +145,7 @@ def create_cultivation_group(
     create_fertilizer_tool = _create_fertilizer_application_tool(
         session_factory=session_factory, ask_confirmation=ask_confirmation,
         build_confirmation_message=build_fertilizer_confirmation,
+        get_fertilizer_recommendation_func=fertilizer_recommender_func,
     )
     create_phytosanitary_tool = _create_phytosanitary_application_tool(
         session_factory=session_factory, ask_confirmation=ask_confirmation,
@@ -170,6 +182,11 @@ def create_cultivation_group(
         run_plan_evaluation=create_plan_evaluation_runner(model=effective_orchestrator_model),
     )
 
+    clarify_fertilization_type_tool = create_clarify_fertilization_type_tool(
+        ask_selection=ask_selection,
+        build_question=build_fertilization_type_question,
+    )
+
     kikaru = _create_kikaru(
         model=model,
         session_factory=session_factory,
@@ -178,7 +195,7 @@ def create_cultivation_group(
         manage_fertilization_plan_tool=manage_fertilization_plan_tool,
         abandon_fertilization_plan_tool=abandon_fertilization_plan_tool,
         evaluate_fertilization_plan_tool=evaluate_fertilization_plan_tool,
-        recommend_fertilizer_tool=recommend_fertilizer_tool,
+        clarify_fertilization_type_tool=clarify_fertilization_type_tool,
         recommend_phytosanitary_tool=recommend_phytosanitary_tool,
         list_planned_works_tool=list_planned_works_tool,
         list_bonsai_events_tool=list_bonsai_events_tool,
@@ -328,6 +345,18 @@ def _create_recommend_fertilizer_tool(model, session_factory, read_wiki_page_fun
     )
 
 
+def _create_fertilizer_recommender_func(model, session_factory, read_wiki_page_func, write_wiki_page_func):
+    from bonsai_sensei.domain.services.cultivation.plan.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
+    return create_fertilizer_recommender_func(
+        get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+        list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
+        list_fertilizers_func=partial(fertilizer_catalog.list_fertilizers, create_session=session_factory),
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+        run_recommendation=create_fertilizer_recommendation_runner(model=model),
+    )
+
+
 def _create_recommend_phytosanitary_tool(model, session_factory, read_wiki_page_func, write_wiki_page_func):
     from bonsai_sensei.domain.services.cultivation.plan.phytosanitary_recommendation_runner import create_phytosanitary_recommendation_runner
     return create_recommend_phytosanitary_tool(
@@ -351,13 +380,14 @@ def _create_list_planned_works_tool(session_factory):
     )
 
 
-def _create_fertilizer_application_tool(session_factory, ask_confirmation, build_confirmation_message):
+def _create_fertilizer_application_tool(session_factory, ask_confirmation, build_confirmation_message, get_fertilizer_recommendation_func=None):
     return create_create_fertilizer_application_tool(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         get_fertilizer_by_name_func=partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory),
         create_planned_work_func=partial(cultivation_plan.create_planned_work, create_session=session_factory),
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_confirmation_message,
+        get_fertilizer_recommendation_func=get_fertilizer_recommendation_func,
     )
 
 
@@ -384,7 +414,8 @@ def _create_kikaru(
     model, session_factory, ask_confirmation, build_delete_confirmation,
     manage_fertilization_plan_tool, abandon_fertilization_plan_tool,
     evaluate_fertilization_plan_tool,
-    recommend_fertilizer_tool, recommend_phytosanitary_tool,
+    clarify_fertilization_type_tool,
+    recommend_phytosanitary_tool,
     list_planned_works_tool, list_bonsai_events_tool,
     create_fertilizer_tool, create_phytosanitary_tool, create_transplant_tool,
 ):
@@ -413,7 +444,7 @@ def _create_kikaru(
         manage_fertilization_plan_tool=manage_fertilization_plan_tool,
         abandon_fertilization_plan_tool=abandon_fertilization_plan_tool,
         evaluate_fertilization_plan_tool=evaluate_fertilization_plan_tool,
-        recommend_fertilizer_tool=recommend_fertilizer_tool,
+        clarify_fertilization_type_tool=clarify_fertilization_type_tool,
         recommend_phytosanitary_tool=recommend_phytosanitary_tool,
         list_planned_works_tool=list_planned_works_tool,
         list_bonsai_events_tool=list_bonsai_events_tool,

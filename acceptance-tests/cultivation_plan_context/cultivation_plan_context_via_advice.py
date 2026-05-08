@@ -1,7 +1,7 @@
 from pytest_bdd import scenario, when, then, parsers
 
 from cultivation_plan.planned_works_api import list_planned_works
-from http_client import accept_confirmation, accept_plan_review, advise, get
+from http_client import accept_confirmation, accept_plan_review, advise, choose_selection, get
 
 
 @scenario(
@@ -22,18 +22,21 @@ def test_agent_consults_event_history():
 
 @when(
     parsers.parse(
-        'I ask to plan a fertilization for "{bonsai_name}" on "{scheduled_date}" without specifying a fertilizer'
+        'I ask to plan a punctual fertilization for "{bonsai_name}" on "{scheduled_date}" without specifying a fertilizer'
     )
 )
 def plan_fertilization_without_specifying_fertilizer(context, bonsai_name, scheduled_date):
     response = advise(
         text=(
-            f"Quiero planificar una fertilización para el bonsái {bonsai_name} "
+            f"Quiero planificar una fertilización puntual para el bonsái {bonsai_name} "
             f"para el {scheduled_date}. No tengo preferencia por el fertilizante, "
             f"elige el que esté disponible."
         ),
         user_id=context["user_id"],
     )
+    if response.get("pending_selections"):
+        selection_id = response["pending_selections"][0]["id"]
+        response = choose_selection(context["user_id"], selection_id, "Fertilización puntual")
     context["pending_confirmations"] = response.get("pending_confirmations", [])
     context["pending_plan_reviews"] = response.get("pending_plan_reviews", [])
 

@@ -27,6 +27,7 @@ from bonsai_sensei.telegram.messages.gardener_messages import (
     build_delete_bonsai_photo_confirmation,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
+    build_fertilization_type_question,
     build_fertilizer_confirmation,
     build_phytosanitary_confirmation,
     build_transplant_confirmation,
@@ -365,6 +366,7 @@ async def lifespan(app: FastAPI):
         ask_human=ask_human_func,
         ask_selection=ask_selection_func,
         ask_plan_review=ask_plan_review_func,
+        build_fertilization_type_question=build_fertilization_type_question,
         build_fertilizer_confirmation=build_fertilizer_confirmation,
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,

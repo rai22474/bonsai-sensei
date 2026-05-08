@@ -5,7 +5,7 @@ from typing import Callable
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_recommend_fertilizer_tool(
+def create_fertilizer_recommender_func(
     get_bonsai_by_name_func: Callable,
     list_bonsai_events_func: Callable,
     list_fertilizers_func: Callable,
@@ -13,20 +13,8 @@ def create_recommend_fertilizer_tool(
     write_wiki_page_func: Callable,
     run_recommendation: Callable,
 ) -> Callable:
-    @trace_tool_call
-    async def recommend_fertilizer(
-        bonsai_name: str,
-    ) -> dict:
-        """Recommend the best fertilizer for a bonsai based on its history, existing plan, and available fertilizers. Saves the recommendation and rationale in the bonsai's wiki.
-
-        Args:
-            bonsai_name: Name of the bonsai to recommend fertilizer for.
-
-        Returns:
-            A JSON-ready dictionary with status 'success' and the recommendation, or 'error'.
-            Output JSON (success): {"status": "success", "fertilizer_name": "...", "reasoning": "..."}.
-            Output JSON (error): {"status": "error", "message": "bonsai_not_found" | "no_fertilizers_available"}.
-        """
+    """Create a callable that selects the best fertilizer for a bonsai without ADK tool decorators."""
+    async def recommend(bonsai_name: str) -> dict:
         bonsai = get_bonsai_by_name_func(bonsai_name)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
@@ -58,6 +46,42 @@ def create_recommend_fertilizer_tool(
             "fertilizer_name": recommendation["fertilizer_name"],
             "reasoning": recommendation["reasoning"],
         }
+
+    return recommend
+
+
+def create_recommend_fertilizer_tool(
+    get_bonsai_by_name_func: Callable,
+    list_bonsai_events_func: Callable,
+    list_fertilizers_func: Callable,
+    read_wiki_page_func: Callable,
+    write_wiki_page_func: Callable,
+    run_recommendation: Callable,
+) -> Callable:
+    recommend = create_fertilizer_recommender_func(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_events_func=list_bonsai_events_func,
+        list_fertilizers_func=list_fertilizers_func,
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+        run_recommendation=run_recommendation,
+    )
+
+    @trace_tool_call
+    async def recommend_fertilizer(
+        bonsai_name: str,
+    ) -> dict:
+        """Recommend the best fertilizer for a bonsai based on its history, existing plan, and available fertilizers. Saves the recommendation and rationale in the bonsai's wiki.
+
+        Args:
+            bonsai_name: Name of the bonsai to recommend fertilizer for.
+
+        Returns:
+            A JSON-ready dictionary with status 'success' and the recommendation, or 'error'.
+            Output JSON (success): {"status": "success", "fertilizer_name": "...", "reasoning": "..."}.
+            Output JSON (error): {"status": "error", "message": "bonsai_not_found" | "no_fertilizers_available"}.
+        """
+        return await recommend(bonsai_name)
 
     return recommend_fertilizer
 

@@ -24,6 +24,7 @@ Forbidden:
 - `#ROL`, `# OBJETIVO`, `# INSTRUCCIONES` headers — the opening line replaces them.
 - Instructions that duplicate tool docstrings (e.g. "validates that the bonsai exists internally").
 - The phrase "Usa las herramientas disponibles para cada operación" as the only behavioral guidance.
+- Naming specific tool function names in agent instructions. Describe the intent or behavior; the model reads tool docstrings to decide which tool to call.
 
 # LANGUAGE RULES: 
 - Ensure all comments and logs are in English.
