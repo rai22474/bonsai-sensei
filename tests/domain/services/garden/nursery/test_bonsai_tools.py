@@ -22,6 +22,7 @@ def should_list_bonsai_with_species(list_bonsai_tool):
                     "name": "Olmo 1",
                     "species_id": 1,
                     "species_name": "Olmo",
+                    "species_emoji": "🌱",
                 }
             ]
         ),
@@ -40,6 +41,7 @@ def should_get_bonsai_by_name(get_bonsai_tool):
                 "name": "Olmo 1",
                 "species_id": 1,
                 "species_name": "Olmo",
+                "species_emoji": "🌱",
             }
         ),
     )

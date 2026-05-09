@@ -25,14 +25,7 @@ def create_list_bonsai_tool(
             return {"status": "success", "bonsai": []}
         species_map = _build_species_map(list_species_func())
         items = [
-            {
-                "id": bonsai.id,
-                "name": bonsai.name,
-                "species_id": bonsai.species_id,
-                "species_name": species_map.get(
-                    bonsai.species_id, f"Especie {bonsai.species_id}"
-                ),
-            }
+            _build_bonsai_dict(bonsai, species_map)
             for bonsai in bonsai_items
         ]
         return {"status": "success", "bonsai": items}
@@ -64,23 +57,21 @@ def create_get_bonsai_by_name_tool(
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
         species_map = _build_species_map(list_species_func())
-        species_name = species_map.get(
-            bonsai.species_id, f"Especie {bonsai.species_id}"
-        )
-        return {
-            "status": "success",
-            "bonsai": {
-                "id": bonsai.id,
-                "name": bonsai.name,
-                "species_id": bonsai.species_id,
-                "species_name": species_name,
-            },
-        }
+        return {"status": "success", "bonsai": _build_bonsai_dict(bonsai, species_map)}
 
     return get_bonsai_by_name
 
 
-def _build_species_map(species_items: list[Species]) -> dict[int, str]:
+def _build_species_map(species_items: list[Species]) -> dict[int, Species]:
+    return {species.id: species for species in species_items if species.id is not None}
+
+
+def _build_bonsai_dict(bonsai: Bonsai, species_map: dict[int, Species]) -> dict:
+    species = species_map.get(bonsai.species_id)
     return {
-        species.id: species.name for species in species_items if species.id is not None
+        "id": bonsai.id,
+        "name": bonsai.name,
+        "species_id": bonsai.species_id,
+        "species_name": species.name if species else f"Especie {bonsai.species_id}",
+        "species_emoji": species.get_emoji() if species else "🌱",
     }
