@@ -20,11 +20,6 @@ def test_advise_no_protection_for_mild_night():
 
 
 @pytest.fixture
-def context():
-    return {}
-
-
-@pytest.fixture
 def weather_stub_server():
     server = HTTPServer(host="0.0.0.0", port=STUB_PORT)
     server.start()
@@ -84,7 +79,7 @@ def bonsai_fixture(weather_stub_server):
 
 @when(parsers.parse('I ask "{question}"'))
 def ask_for_protection(context, bonsai_fixture, question):
-    response = advise(question, "bdd")
+    response = advise(question, context["user_id"])
     context["prompt"] = question
     context["response"] = response.get("text", "")
 

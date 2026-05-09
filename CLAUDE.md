@@ -62,4 +62,5 @@ DESIGN RULES:
   - `given` steps: MUST use REST API only. NEVER call `advise()` or `accept_confirmation()`. These are preconditions that must be deterministic and fast. The LLM may normalize or paraphrase input (e.g., "10 g" → "10g"), breaking assertions. If the required REST endpoint does not exist, create it.
   - `when` steps: MUST use `advise()` (and `accept_confirmation()` if needed). These are the user actions under test.
   - `then` steps: MUST use REST API only. NEVER call `advise()`. Assertions must be based on deterministic data from the API, not on LLM-generated text unless that text is the explicit subject of the test.
+- Each acceptance test scenario MUST use an isolated ADK session. The `context` fixture in every test module's `conftest.py` MUST include `"user_id": f"bdd-<suite>-{uuid.uuid4().hex}"`. Never hardcode a fixed user_id string — shared sessions cause `tool_call_counters` to accumulate across scenarios, producing false failures. The global `reset_adk_session_after_test` fixture in `acceptance-tests/conftest.py` resets the session only when `context["user_id"]` is set.
 
