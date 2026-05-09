@@ -5,7 +5,7 @@ from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.fertilizer import Fertilizer
-from bonsai_sensei.domain.services.garden.apply_fertilizer import (
+from bonsai_sensei.domain.services.garden.caretaker.apply_fertilizer import (
     create_apply_fertilizer_tool,
 )
 

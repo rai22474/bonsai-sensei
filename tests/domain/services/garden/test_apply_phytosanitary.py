@@ -5,7 +5,7 @@ from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.services.garden.apply_phytosanitary import (
+from bonsai_sensei.domain.services.garden.caretaker.apply_phytosanitary import (
     create_apply_phytosanitary_tool,
 )
 

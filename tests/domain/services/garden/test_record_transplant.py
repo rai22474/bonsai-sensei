@@ -4,7 +4,7 @@ from hamcrest import assert_that, equal_to
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
-from bonsai_sensei.domain.services.garden.record_transplant import (
+from bonsai_sensei.domain.services.garden.caretaker.record_transplant import (
     create_record_transplant_tool,
 )
 

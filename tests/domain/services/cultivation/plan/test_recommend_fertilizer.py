@@ -3,7 +3,7 @@ from hamcrest import assert_that, equal_to, contains_string
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.fertilizer import Fertilizer
-from bonsai_sensei.domain.services.cultivation.plan.recommend_fertilizer import (
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.recommend_fertilizer import (
     create_recommend_fertilizer_tool,
 )
 

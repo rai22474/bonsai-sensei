@@ -152,3 +152,45 @@ Más allá de profundidad 3 el filtro de similitud coseno debe ser muy estricto 
 2. Actualizar el prompt del keeper con las reglas de enlazado
 3. Re-ingestar transcripciones existentes con el keeper actualizado para poblar la taxonomía
 4. Validar traversal desde un bonsái real hasta conocimiento general relevante
+
+---
+
+## FUTURE-004 — Eventos de plaga por bonsái
+
+**Contexto:**
+El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes fitosanitarios, pero no tiene forma de registrar una observación de plaga como evento independiente. Sin este registro no hay trazabilidad infección → tratamiento, ni historial de plagas por bonsái para informar futuras recomendaciones.
+
+### Nuevas entidades
+
+**`Pest`** — catálogo de plagas por especie:
+- Generado automáticamente al dar de alta una especie (paso LLM separado, re-ejecutable)
+- Campos: id, name, species_id (FK), wiki_path
+- Misma forma que `Phytosanitary` (catálogo de productos); cada plaga tiene su ficha en la wiki
+
+**`PestEvent`** — observación de plaga en un bonsái:
+- Campos: id, bonsai_id (FK), pest_id (FK), detected_at
+- Tratamiento: `PhytosanitaryApplication` existente, con un campo `pest_event_id` (FK nullable) añadido
+- El tratamiento es opcional en el momento del alta del evento (puede detectarse sin tratar aún)
+
+### Flujo conversacional
+
+1. Usuario reporta plaga en "Hanako" → agente filtra `Pest` por la especie de Hanako → usuario selecciona
+2. Se crea `PestEvent` con la plaga seleccionada
+3. Agente pregunta si se ha aplicado tratamiento → si sí, flujo `apply_phytosanitary` habitual con `pest_event_id` enlazado
+4. Si hay plan fitosanitario activo → agente propone revisión del plan con confirmación (no automática)
+
+### Decisiones de diseño
+
+- El catálogo de plagas vive en la wiki igual que los productos fitosanitarios: una página por plaga generada por LLM al crear la especie.
+- Reutilizar `apply_phytosanitary` en lugar de crear un mecanismo nuevo: añadir `pest_event_id` nullable a `PhytosanitaryApplication` preserva la trazabilidad sin romper el flujo existente.
+- La modificación del plan es siempre una propuesta con confirmación — nunca automática.
+
+### Orden de trabajo al implementar
+
+1. Migración: tabla `pest`, añadir `pest_event_id` a `phytosanitary_application`
+2. Store functions + REST endpoints para `Pest` y `PestEvent`
+3. Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)
+4. Herramienta de agente: alta de `PestEvent` con selección de plaga
+5. Enlace a `apply_phytosanitary` desde el evento
+6. Propuesta de revisión de plan si hay uno activo
+7. Tests de aceptación

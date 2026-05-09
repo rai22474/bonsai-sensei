@@ -5,7 +5,7 @@ from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.create_fertilizer_application import (
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.create_fertilizer_application import (
     create_create_fertilizer_application_tool,
 )
 

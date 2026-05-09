@@ -3,7 +3,7 @@ from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult, SelectionNoneResult
 from bonsai_sensei.domain.bonsai import Bonsai
-from bonsai_sensei.domain.services.garden.create_bonsai import (
+from bonsai_sensei.domain.services.garden.nursery.create_bonsai import (
     create_create_bonsai_tool,
 )
 from bonsai_sensei.domain.species import Species

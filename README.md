@@ -38,12 +38,14 @@ sensei                        [orchestrator model]
 └── command_pipeline          SequentialAgent for write operations
     ├── mitori                Planner [orchestrator model]: analyses the request and produces a JSON action plan
     └── shokunin              Executor [leaf model]: runs the plan step by step using the agents below
-        ├── botanist              Species registry (CRUD + wiki generation) [leaf model]
-        ├── weather_advisor       Climate risk assessment [leaf model]
-        ├── kikaru                Cultivation plan [leaf model]: recommends, plans and schedules work
-        │   └── [planning tools]      recommend_fertilizer, recommend_phytosanitary, confirm_create/delete_planned_work, list_*, list_weekend_planned_works
-        ├── gardener              Bonsai collection (CRUD + event recording + photos) [leaf model]
-        └── storekeeper           Fertilizer & phytosanitary catalogues (CRUD + wiki generation) [leaf model]
+        ├── botanist          Species registry (CRUD + wiki generation) [leaf model]
+        ├── weather_advisor   Climate risk assessment [leaf model]
+        ├── kikaru            Cultivation plan [leaf model]: recommends, plans and schedules work
+        ├── nursery           Bonsai CRUD + wiki page per species [leaf model]
+        ├── caretaker         Event recording: fertilizations, treatments, transplants, planned work [leaf model]
+        ├── gallery           Photo management: add, list, delete bonsai photos [leaf model]
+        ├── kantei            Visual analysis: analyze and compare bonsai photos, write reports [leaf model]
+        └── storekeeper       Fertilizer & phytosanitary catalogues (CRUD + wiki generation) [leaf model]
 ```
 
 ### Agent naming
@@ -57,7 +59,7 @@ Agents with domain-specific complexity are named after Japanese bonsai craft con
 | **shokunin** | 職人 | craftsman | Executes the plan with precision, step by step |
 | **kikaru** | 木刈る | to prune trees | Manages the cultivation work calendar — recommends, plans and schedules care work |
 
-Domain-facing agents (botanist, gardener, storekeeper, weather_advisor) use descriptive English names that make their responsibility self-evident.
+Domain-facing agents (botanist, nursery, caretaker, gallery, kantei, storekeeper, weather_advisor) use descriptive English names that make their responsibility self-evident.
 
 ### Models
 
@@ -65,7 +67,7 @@ The system supports a dual-model setup via environment variables:
 
 | Variable | Role | Default |
 |---|---|---|
-| `GEMINI_MODEL` | Leaf agents (botanist, weather_advisor, gardener, storekeeper, kikaru) | `gemini-2.0-flash-lite` |
+| `GEMINI_MODEL` | Leaf agents (botanist, weather_advisor, kikaru, nursery, caretaker, gallery, kantei, storekeeper) | `gemini-2.0-flash-lite` |
 | `GEMINI_ORCHESTRATOR_MODEL` | Orchestrators (sensei, mitori) | falls back to `GEMINI_MODEL` |
 
 ### Roles
@@ -78,7 +80,10 @@ The system supports a dual-model setup via environment variables:
 | **botanist** | Manages the species registry (CRUD). Resolves scientific names via Trefle and generates wiki care guides via Tavily at confirmation time. |
 | **weather_advisor** | Fetches weather forecasts and advises on frost/heat protection for specific species. |
 | **kikaru** | Manages the cultivation work calendar (fertilizations, transplants, treatments). Uses deterministic recommendation tools that gather context, reason, and persist the plan to the wiki in a single guaranteed step. Applies next-Saturday default when the user specifies no date. |
-| **gardener** | Manages the bonsai collection (CRUD), records completed events (fertilizations, transplants, treatments, planned work execution) and manages bonsai photos. |
+| **nursery** | Manages the bonsai collection (CRUD). Creates wiki pages per species at confirmation time. |
+| **caretaker** | Records completed care events: fertilizations applied, phytosanitary treatments, transplants, and planned work execution. |
+| **gallery** | Manages bonsai photos: receives photos from Telegram, associates them to a bonsai, lists and deletes them. |
+| **kantei** | Visual analysis of bonsai photos. Analyzes individual photos, compares two photos over time, and writes structured reports to the wiki. |
 | **storekeeper** | Manages the fertilizer and phytosanitary catalogues (CRUD + wiki page generation via Tavily). |
 
 ### Tools
@@ -87,11 +92,14 @@ The system supports a dual-model setup via environment variables:
 |---|---|
 | **sensei** | `list_bonsai`, `get_bonsai_by_name`, `list_bonsai_events`, `list_bonsai_photos`, `list_species`, `list_fertilizers`, `get_fertilizer_by_name`, `list_phytosanitary`, `get_phytosanitary_by_name`, `list_planned_works_for_bonsai`, `command_pipeline` |
 | **mitori** | — |
-| **shokunin** | `botanist`, `weather_advisor`, `kikaru`, `gardener`, `storekeeper` |
+| **shokunin** | `botanist`, `weather_advisor`, `kikaru`, `nursery`, `caretaker`, `gallery`, `kantei`, `storekeeper` |
 | **botanist** | `confirm_create_species`, `confirm_update_species`, `confirm_delete_species`, `confirm_refresh_species_wiki` |
 | **weather_advisor** | `get_weather`, `list_bonsai_species` |
 | **kikaru** | `recommend_fertilizer`, `recommend_phytosanitary`, `list_planned_works_for_bonsai`, `list_bonsai_events_for_cultivation`, `confirm_create_fertilizer_application`, `confirm_create_phytosanitary_application`, `confirm_create_transplant`, `confirm_delete_planned_work`, `list_bonsai`, `list_weekend_planned_works` |
-| **gardener** | `list_bonsai`, `get_bonsai_by_name`, `confirm_create_bonsai`, `confirm_update_bonsai`, `confirm_delete_bonsai`, `confirm_apply_fertilizer`, `confirm_apply_phytosanitary`, `confirm_record_transplant`, `list_bonsai_events`, `list_planned_works_for_bonsai`, `confirm_execute_planned_work`, `add_bonsai_photo`, `list_bonsai_photos` |
+| **nursery** | `list_bonsai`, `get_bonsai_by_name`, `confirm_create_bonsai`, `confirm_update_bonsai`, `confirm_delete_bonsai` |
+| **caretaker** | `apply_fertilizer`, `apply_phytosanitary`, `record_transplant`, `list_bonsai_events`, `list_planned_works_for_bonsai`, `execute_planned_work` |
+| **gallery** | `add_bonsai_photo`, `list_bonsai_photos`, `delete_bonsai_photo` |
+| **kantei** | `analyze_bonsai_photo`, `compare_bonsai_photos`, `write_wiki_page`, `update_bonsai_reports_index` |
 | **storekeeper** | `list_fertilizers`, `confirm_create_fertilizer`, `confirm_update_fertilizer`, `confirm_delete_fertilizer`, `confirm_refresh_fertilizer_wiki`, `list_phytosanitary`, `confirm_create_phytosanitary`, `confirm_update_phytosanitary`, `confirm_delete_phytosanitary`, `confirm_refresh_phytosanitary_wiki` |
 
 ### Confirmation flow
@@ -104,7 +112,7 @@ When a command is ambiguous (e.g. multiple scientific names found for a species)
 
 ### Photo flow
 
-When the user sends a photo in Telegram, the bot uploads it and sends the gardener a `[FOTO RECIBIDA: <path>]` marker. The gardener shows an inline keyboard with the available bonsais for the user to pick. After confirmation, the photo is stored under `photos/{bonsai_id}/` and associated to the bonsai in the database. Photos are returned via `list_bonsai_photos` and delivered back to the user as Telegram photos.
+When the user sends a photo in Telegram, the bot uploads it and sends `gallery` a `[FOTO RECIBIDA: <path>]` marker. Gallery shows an inline keyboard with the available bonsais for the user to pick. After confirmation, the photo is stored under `photos/{bonsai_name}/` and associated to the bonsai in the database. Photos are returned via `list_bonsai_photos` and delivered back to the user as Telegram photos.
 
 ## Prerequisites
 

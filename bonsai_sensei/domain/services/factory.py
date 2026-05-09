@@ -16,16 +16,16 @@ from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
     create_list_species_tool,
 )
-from bonsai_sensei.domain.services.garden.bonsai_tools import (
+from bonsai_sensei.domain.services.garden.nursery.bonsai_tools import (
     create_get_bonsai_by_name_tool,
-    create_list_bonsai_events_tool,
     create_list_bonsai_tool,
 )
-from bonsai_sensei.domain.services.garden.list_bonsai_photos import (
+from bonsai_sensei.domain.services.garden.caretaker.bonsai_events_tool import create_list_bonsai_events_tool
+from bonsai_sensei.domain.services.garden.gallery.list_bonsai_photos import (
     create_list_bonsai_photos_tool,
     create_show_bonsai_photos_tool,
 )
-from bonsai_sensei.domain.services.kantei.factory import create_kantei_group
+from bonsai_sensei.domain.services.garden.kantei.factory import create_kantei_group
 from bonsai_sensei.domain.services.mitori import create_mitori
 from bonsai_sensei.domain.services.sensei import create_sensei
 from bonsai_sensei.domain.services.shokunin import create_shokunin
@@ -146,7 +146,7 @@ def create_agents(
     create_kantei_group,
 ):
     botanist, weather_advisor, kikaru = create_cultivation_group(model=model)
-    gardener = create_gardener_group(model=model)
+    nursery, caretaker, gallery = create_gardener_group(model=model)
     storekeeper = create_storekeeper_group(model=model)
     kantei = create_kantei_group(model=model)
 
@@ -156,7 +156,9 @@ def create_agents(
             botanist,
             weather_advisor,
             kikaru,
-            gardener,
+            nursery,
+            caretaker,
+            gallery,
             kantei,
             storekeeper,
         ],

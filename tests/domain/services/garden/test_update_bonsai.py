@@ -2,7 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.garden.update_bonsai import (
+from bonsai_sensei.domain.services.garden.nursery.update_bonsai import (
     create_update_bonsai_tool,
 )
 from bonsai_sensei.domain.species import Species

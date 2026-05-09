@@ -3,7 +3,7 @@ from typing import Callable
 from bonsai_sensei.domain.bonsai import Bonsai
 from google.adk.tools.tool_context import ToolContext
 
-from bonsai_sensei.domain.services.garden.bonsai_index_page import build_bonsai_index_page, build_bonsai_wiki_path
+from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import build_bonsai_index_page, build_bonsai_wiki_path
 from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call

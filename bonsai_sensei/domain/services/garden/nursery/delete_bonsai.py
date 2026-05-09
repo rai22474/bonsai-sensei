@@ -36,7 +36,7 @@ def create_delete_bonsai_tool(
         """
         if not bonsai_id:
             return {"status": "error", "message": "bonsai_id_required"}
-        
+
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
 

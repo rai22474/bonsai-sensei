@@ -6,7 +6,7 @@ from hamcrest import assert_that, equal_to
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.garden.execute_planned_work import (
+from bonsai_sensei.domain.services.garden.caretaker.execute_planned_work import (
     create_execute_planned_work_tool,
 )
 

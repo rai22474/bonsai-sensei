@@ -4,7 +4,7 @@ from hamcrest import assert_that, equal_to
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.create_phytosanitary_application import (
+from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.create_phytosanitary_application import (
     create_create_phytosanitary_application_tool,
 )
 

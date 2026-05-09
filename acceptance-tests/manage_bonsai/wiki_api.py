@@ -1,6 +1,6 @@
 import aiohttp
 
-from bonsai_sensei.domain.services.garden.bonsai_index_page import build_bonsai_wiki_path
+from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import build_bonsai_wiki_path
 
 
 def get_wiki_page(get_func, path: str) -> dict | None:

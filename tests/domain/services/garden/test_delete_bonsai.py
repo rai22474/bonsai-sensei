@@ -2,7 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to, not_, has_key
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
-from bonsai_sensei.domain.services.garden.delete_bonsai import (
+from bonsai_sensei.domain.services.garden.nursery.delete_bonsai import (
     create_delete_bonsai_tool,
 )
 

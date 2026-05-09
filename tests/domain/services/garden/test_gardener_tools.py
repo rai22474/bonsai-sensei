@@ -3,11 +3,11 @@ from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.species import Species
-from bonsai_sensei.domain.services.garden.bonsai_tools import (
+from bonsai_sensei.domain.services.garden.nursery.bonsai_tools import (
     create_get_bonsai_by_name_tool,
     create_list_bonsai_tool,
-    create_list_bonsai_events_tool,
 )
+from bonsai_sensei.domain.services.garden.caretaker.bonsai_events_tool import create_list_bonsai_events_tool
 
 
 def should_list_bonsai_with_species(list_bonsai_tool):

@@ -7,7 +7,7 @@ from manage_bonsai.conftest import (
     find_bonsai_by_name_api,
 )
 from manage_bonsai.wiki_api import get_wiki_page
-from bonsai_sensei.domain.services.garden.bonsai_index_page import build_bonsai_wiki_path
+from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import build_bonsai_wiki_path
 
 
 @scenario("../features/manage_bonsai.feature", "Create a bonsai via advice")

@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 from hamcrest import assert_that, equal_to, not_none
 
@@ -37,8 +36,9 @@ async def should_timeout_when_user_does_not_respond_to_question(pending_response
 
     ask = create_ask_human(send_without_response, pending_responses, timeout_seconds=0.01)
 
-    with pytest.raises(asyncio.TimeoutError):
-        await ask("What species is it?", tool_context=MockToolContext(user_id="user-123"))
+    result = await ask("What species is it?", tool_context=MockToolContext(user_id="user-123"))
+
+    assert_that(result, equal_to(""), "ask_human should return empty string on timeout")
 
 
 @pytest.mark.asyncio
@@ -101,8 +101,10 @@ async def should_timeout_when_user_does_not_respond_to_confirmation(pending_resp
 
     ask = create_ask_confirmation(send_without_response, pending_responses, timeout_seconds=0.01)
 
-    with pytest.raises(asyncio.TimeoutError):
-        await ask("Delete Naruto?", tool_context=MockToolContext(user_id="user-123"))
+    result = await ask("Delete Naruto?", tool_context=MockToolContext(user_id="user-123"))
+
+    assert_that(result, equal_to(ConfirmationResult(accepted=False, reason="timeout")),
+        "ask_confirmation should return cancelled result with timeout reason on timeout")
 
 
 @pytest.fixture
