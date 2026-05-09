@@ -20,7 +20,7 @@ def create_create_bonsai_tool(
     write_wiki_page_func: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="nursery")
     async def create_bonsai(
         name: str,
         species_name: str = "",

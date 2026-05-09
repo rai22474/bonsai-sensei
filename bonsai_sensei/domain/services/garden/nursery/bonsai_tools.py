@@ -11,7 +11,7 @@ def create_list_bonsai_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="nursery")
     def list_bonsai() -> dict:
         """Return JSON with status and bonsai list.
 
@@ -45,7 +45,7 @@ def create_get_bonsai_by_name_tool(
     list_species_func: Callable[[], list[Species]],
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="nursery")
     def get_bonsai_by_name(name: str) -> dict:
         """Lookup a bonsai by name and return JSON with status and record.
 

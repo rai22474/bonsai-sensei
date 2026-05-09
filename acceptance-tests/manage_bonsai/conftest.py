@@ -1,4 +1,5 @@
 import re
+import uuid
 
 import pytest
 from pytest_httpserver import HTTPServer
@@ -43,6 +44,7 @@ def external_stubs():
 @pytest.fixture
 def context():
     return {
+        "user_id": f"bdd-bonsai-{uuid.uuid4().hex}",
         "bonsai_created": [],
         "species_created": [],
         "bonsai_ids": {},

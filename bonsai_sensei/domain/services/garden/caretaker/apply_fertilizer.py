@@ -15,7 +15,7 @@ def create_apply_fertilizer_tool(
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="caretaker")
     async def apply_fertilizer(
         bonsai_name: str,
         fertilizer_name: str,

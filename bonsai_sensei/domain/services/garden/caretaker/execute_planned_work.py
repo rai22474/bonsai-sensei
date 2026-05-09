@@ -15,7 +15,7 @@ def create_execute_planned_work_tool(
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="caretaker")
     async def execute_planned_work(
         work_id: int,
         tool_context: ToolContext | None = None,

@@ -12,7 +12,7 @@ def create_delete_bonsai_tool(
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="nursery")
     async def delete_bonsai(
         bonsai_id: int,
         bonsai_name: str,

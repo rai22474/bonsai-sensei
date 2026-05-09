@@ -29,7 +29,7 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 def request_bonsai_delete(context, bonsai_name):
     response = advise(
         text=f"Elimina el bonsái {bonsai_name}.",
-        user_id="bdd-cancel-bonsai",
+        user_id=context["user_id"],
     )
     context["pending_confirmations"] = response.get("pending_confirmations", [])
 
@@ -37,7 +37,7 @@ def request_bonsai_delete(context, bonsai_name):
 @when(parsers.parse('I cancel the deletion with reason "{reason}"'))
 def cancel_deletion_with_reason(context, reason):
     for confirmation in context.get("pending_confirmations", []):
-        reject_confirmation("bdd-cancel-bonsai", confirmation["id"], reason=reason)
+        reject_confirmation(context["user_id"], confirmation["id"], reason=reason)
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should still exist'))

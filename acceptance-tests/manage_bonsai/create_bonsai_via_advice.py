@@ -24,18 +24,18 @@ def ensure_species_exists(context, name, scientific_name):
 def request_bonsai_creation(context, bonsai_name, species_name):
     response = advise(
         text=f"Da de alta un bonsái llamado {bonsai_name} de la especie {species_name}.",
-        user_id="bdd-bonsai",
+        user_id=context["user_id"],
     )
     if response.get("pending_selections"):
         selection_id = response["pending_selections"][0]["id"]
-        response = choose_selection("bdd-bonsai", selection_id, species_name)
+        response = choose_selection(context["user_id"], selection_id, species_name)
     context["pending_confirmations"] = response.get("pending_confirmations", [])
 
 
 @when(parsers.parse('I confirm the bonsai creation for "{bonsai_name}"'))
 def confirm_bonsai_creation(context, bonsai_name):
     for confirmation in context.get("pending_confirmations", []):
-        accept_confirmation("bdd-bonsai", confirmation["id"])
+        accept_confirmation(context["user_id"], confirmation["id"])
     if bonsai_name not in context["bonsai_created"]:
         context["bonsai_created"].append(bonsai_name)
 

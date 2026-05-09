@@ -10,7 +10,7 @@ def create_list_bonsai_events_tool(
     list_bonsai_events_func: Callable[[int], list[dict]],
 ):
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="caretaker")
     def list_bonsai_events(bonsai_name: str) -> dict:
         """List all recorded events for a bonsai by name and return JSON with status and events.
 

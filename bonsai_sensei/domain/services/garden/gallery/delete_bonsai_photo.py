@@ -21,7 +21,7 @@ def create_delete_bonsai_photo_tool(
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
 
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="gallery")
     async def delete_bonsai_photo(
         bonsai_name: str,
         tool_context: ToolContext | None = None,

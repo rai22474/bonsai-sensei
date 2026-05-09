@@ -14,7 +14,7 @@ def create_record_transplant_tool(
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="caretaker")
     async def record_transplant(
         bonsai_name: str,
         pot_size: str,

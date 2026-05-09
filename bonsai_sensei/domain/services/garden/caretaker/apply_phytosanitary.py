@@ -15,7 +15,7 @@ def create_apply_phytosanitary_tool(
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="caretaker")
     async def apply_phytosanitary(
         bonsai_name: str,
         phytosanitary_name: str,

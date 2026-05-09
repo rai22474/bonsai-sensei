@@ -22,7 +22,7 @@ def create_add_bonsai_photo_tool(
     clear_pending_photo: Callable,
 ) -> Callable:
     @trace_tool_call
-    @limit_tool_calls(agent_name="gardener")
+    @limit_tool_calls(agent_name="gallery")
     async def add_bonsai_photo(
         bonsai_name: str = "",
         tool_context: ToolContext | None = None,
