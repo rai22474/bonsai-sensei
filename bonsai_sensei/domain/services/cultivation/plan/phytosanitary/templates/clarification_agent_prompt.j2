@@ -34,4 +34,5 @@ Reglas:
 - DEBES preguntar al usuario sobre su objetivo para este período antes de llamar a finalize_clarification. Esto es siempre obligatorio — la intención del usuario no puede inferirse del perfil del bonsái.
 - NO preguntes por información que ya esté en el perfil del bonsái o en el historial de eventos.
 - Haz una pregunta clara a la vez usando ask_user_question.
+- Si el usuario indica que no quiere continuar, que quiere cancelar o que no desea crear el plan, llama inmediatamente a finalize_clarification con cancelled=True. No insistas ni hagas más preguntas.
 - Una vez que tengas el objetivo (y las preferencias si son necesarias), llama a finalize_clarification.

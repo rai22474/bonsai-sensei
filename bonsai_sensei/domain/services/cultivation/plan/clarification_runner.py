@@ -21,15 +21,17 @@ def create_clarification_loop_runner(model: object, ask_human: Callable, app_nam
             preferences: str,
             context: str,
             tool_context: ToolContext,
+            cancelled: bool = False,
         ) -> str:
-            """Signal that enough information has been gathered. Call this when you have clear objectives, preferences, and context to build the plan."""
+            """Signal that clarification is complete. Call with cancelled=True if the user explicitly says they do not want to continue. Otherwise call when you have clear objectives, preferences, and context to build the plan."""
             tool_context.actions.escalate = True
             tool_context.state["clarification_result"] = {
                 "objectives": objectives,
                 "preferences": preferences,
                 "context": context,
+                "cancelled": cancelled,
             }
-            return "ready"
+            return "cancelled" if cancelled else "ready"
 
         inner_agent = LlmAgent(
             name="clarifier",
@@ -64,6 +66,7 @@ def create_clarification_loop_runner(model: object, ask_human: Callable, app_nam
             "objectives": result.get("objectives", ""),
             "preferences": result.get("preferences", "no preference"),
             "context": result.get("context", "none"),
+            "cancelled": result.get("cancelled", False),
         }
 
     return run_clarification_loop

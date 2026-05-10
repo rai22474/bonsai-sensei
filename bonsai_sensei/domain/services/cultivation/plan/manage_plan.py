@@ -94,6 +94,9 @@ def create_manage_plan_tool(
             outer_tool_context=tool_context,
         )
 
+        if clarification.get("cancelled"):
+            return {"status": "cancelled", "reason": "user_cancelled_during_clarification"}
+
         proposal = await run_plan_proposal(
             rendered_prompt=plan_proposal_prompt_template.render(
                 bonsai_name=bonsai_name,

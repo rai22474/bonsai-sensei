@@ -25,7 +25,8 @@ def create_clarify_fertilization_type_tool(
         application on a specific date or a recurring plan covering several months.
 
         Returns:
-            "puntual" if the user wants a single application, "plan" if they want a period plan.
+            "puntual" if the user wants a single application, "plan" if they want a period plan,
+            "cancelled" if the user does not want to proceed with any fertilization action.
         """
         question = build_question()
         result = await ask_selection(
@@ -34,7 +35,7 @@ def create_clarify_fertilization_type_tool(
             tool_context=tool_context,
         )
         if isinstance(result, SelectionNoneResult):
-            return "puntual"
+            return "cancelled"
         return "puntual" if result == OPTION_PUNTUAL else "plan"
 
     return clarify_fertilization_type
