@@ -6,13 +6,10 @@ from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
-OPTION_PUNTUAL = "Fertilización puntual"
-OPTION_PLAN = "Plan de fertilización"
-
-
 def create_clarify_fertilization_type_tool(
     ask_selection: Callable,
     build_question: Callable,
+    build_options: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
@@ -29,13 +26,14 @@ def create_clarify_fertilization_type_tool(
             "cancelled" if the user does not want to proceed with any fertilization action.
         """
         question = build_question()
+        options = build_options()
         result = await ask_selection(
             question=question,
-            options=[OPTION_PUNTUAL, OPTION_PLAN],
+            options=options,
             tool_context=tool_context,
         )
         if isinstance(result, SelectionNoneResult):
             return "cancelled"
-        return "puntual" if result == OPTION_PUNTUAL else "plan"
+        return "puntual" if result == options[0] else "plan"
 
     return clarify_fertilization_type

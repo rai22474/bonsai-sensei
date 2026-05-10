@@ -56,6 +56,7 @@ def create_kikaru_group(
     ask_selection: Callable,
     ask_plan_review: Callable,
     build_fertilization_type_question: Callable,
+    build_fertilization_type_options: Callable,
     build_fertilizer_confirmation: Callable,
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
@@ -114,6 +115,7 @@ def create_kikaru_group(
     clarify_fertilization_type_tool = create_clarify_fertilization_type_tool(
         ask_selection=ask_selection,
         build_question=build_fertilization_type_question,
+        build_options=build_fertilization_type_options,
     )
 
     manage_phytosanitary_plan_tool = _create_manage_phytosanitary_plan_tool(

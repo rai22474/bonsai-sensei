@@ -1,40 +1,16 @@
+from pathlib import Path
+
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.planners import BuiltInPlanner
 from google.genai.types import ThinkingConfig
+from jinja2 import Environment, FileSystemLoader
 
-MITORI_INSTRUCTION = """
-Eres el estratega del sistema de bonsáis. Analizas la petición del usuario, diseñas un plan de acción y lo auto-revisas antes de darlo por válido.
-
-# Contexto
-Fecha de hoy: {{current_date}}
-Ubicación del usuario: {{user_location?}}
-
-# Agentes disponibles
-{available_agents}
-
-# Comportamiento
-Genera siempre un plan. Si la petición es ambigua, delégala al agente más probable — él sabrá cómo resolverla o pedir aclaraciones.
-
-Diseña un plan en JSON con esta estructura:
-{{
-  "goal": "<descripción clara del objetivo>",
-  "steps": [
-    {{"order": 1, "agent": "<nombre del agente>", "request": "<instrucción detallada>"}},
-    ...
-  ]
-}}
-
-Auto-revisa el plan antes de responder:
-- ¿Los agentes elegidos son los correctos para cada paso?
-- ¿Falta algún paso necesario?
-- ¿El request transmite la intención del usuario con suficiente contexto? (No es necesario incluir todos los datos — las tools de creación, actualización y eliminación recopilan internamente los datos que faltan. Nunca añadas pasos para solicitar información al usuario.)
-
-Responde ÚNICAMENTE con el JSON del plan, sin texto adicional.
-"""
+_TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 
 def create_mitori(model: object, agent_descriptions: list[str]) -> LlmAgent:
-    instruction = MITORI_INSTRUCTION.format(
+    env = Environment(loader=FileSystemLoader(str(_TEMPLATE_DIR)), trim_blocks=True, lstrip_blocks=True)
+    instruction = env.get_template("mitori_instruction.j2").render(
         available_agents="\n".join(agent_descriptions)
     )
     return LlmAgent(

@@ -5,6 +5,10 @@ def build_fertilization_type_question() -> str:
     return "¿Qué tipo de fertilización quieres planificar?"
 
 
+def build_fertilization_type_options() -> list[str]:
+    return ["Fertilización puntual", "Plan de fertilización"]
+
+
 def build_fertilizer_confirmation(bonsai_name: str, fertilizer_name: str, amount: str, scheduled_date: str) -> str:
     date_str = format_date(scheduled_date)
     detail = f"'{fertilizer_name}'" + (f" ({amount})" if amount else "")
