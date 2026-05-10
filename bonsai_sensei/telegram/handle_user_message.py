@@ -68,6 +68,12 @@ async def handle_user_message(
             if pending_confirmation_cleanups is not None:
                 pending_confirmation_cleanups.setdefault(user_id, []).append(processing_message.delete)
             pending["event"].set()
+        elif pending.get("type") == "awaiting_poll_free_text":
+            pending["response"] = update.message.text
+            processing_message = await update.message.reply_text(random_processing_message())
+            if pending_confirmation_cleanups is not None:
+                pending_confirmation_cleanups.setdefault(user_id, []).append(processing_message.delete)
+            pending["event"].set()
         else:
             pending["response"] = update.message.text
             processing_message = await update.message.reply_text(random_processing_message())

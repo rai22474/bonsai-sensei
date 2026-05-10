@@ -10,11 +10,27 @@ from google.genai import types
 _MAX_ITERATIONS = 5
 
 
-def create_clarification_loop_runner(model: object, ask_human: Callable, app_name: str) -> Callable:
+def create_clarification_loop_runner(model: object, ask_human: Callable, app_name: str, ask_poll: Callable | None = None) -> Callable:
     async def run_clarification_loop(rendered_prompt: str, outer_tool_context) -> dict:
         async def ask_user_question(question: str) -> str:
-            """Ask the user a clarification question. Call this once per question."""
+            """Ask the user an open clarification question and wait for their text response. Use when the answer space is completely open-ended."""
             return await ask_human(question, tool_context=outer_tool_context)
+
+        async def ask_user_with_poll(question: str, options: list[str]) -> str:
+            """Ask the user a clarification question as a Telegram poll with selectable options you provide.
+
+            Use when you can anticipate the most likely answers. Provide short, mutually exclusive
+            option labels (max 6 options, each max 90 characters, in the user's language).
+            The user can also choose to write a free-text answer instead.
+
+            Args:
+                question: The clarification question (max 300 characters).
+                options: Short option labels. Max 6 items, each max 90 characters.
+
+            Returns:
+                The selected option text, or the user's free-text response.
+            """
+            return await ask_poll(question, options, tool_context=outer_tool_context)
 
         async def finalize_clarification(
             objectives: str,
@@ -33,11 +49,16 @@ def create_clarification_loop_runner(model: object, ask_human: Callable, app_nam
             }
             return "cancelled" if cancelled else "ready"
 
+        if ask_poll is not None:
+            tools = [ask_user_question, ask_user_with_poll, finalize_clarification]
+        else:
+            tools = [ask_user_question, finalize_clarification]
+
         inner_agent = LlmAgent(
             name="clarifier",
             model=model,
             instruction=rendered_prompt,
-            tools=[ask_user_question, finalize_clarification],
+            tools=tools,
         )
         loop = LoopAgent(
             name=app_name,

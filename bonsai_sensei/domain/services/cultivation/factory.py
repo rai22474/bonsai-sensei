@@ -25,6 +25,7 @@ def create_cultivation_group(
     build_update_species_confirmation: Callable,
     build_refresh_species_wiki_confirmation: Callable,
     orchestrator_model: object = None,
+    ask_poll: Callable | None = None,
 ):
     botanist, weather_advisor = create_botanist_group(
         model=model,
@@ -53,5 +54,6 @@ def create_cultivation_group(
         build_abandon_plan_confirmation=build_abandon_plan_confirmation,
         build_abandon_phytosanitary_plan_confirmation=build_abandon_phytosanitary_plan_confirmation,
         orchestrator_model=orchestrator_model,
+        ask_poll=ask_poll,
     )
     return botanist, weather_advisor, kikaru

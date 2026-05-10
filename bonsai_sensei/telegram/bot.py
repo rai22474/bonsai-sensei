@@ -54,8 +54,9 @@ class TelegramBot:
         if not self.application:
             logger.error("Cannot send selection message: Bot not configured")
             return
+        option_emojis = ["⚡", "📅", "🌸", "🍂", "🍃", "🌾", "🎋", "🌿"]
         keyboard = InlineKeyboardMarkup([
-            *[[InlineKeyboardButton(f"🌿 {option}", callback_data=f"selection:{selection_id}:{index}")]
+            *[[InlineKeyboardButton(f"{option_emojis[index % len(option_emojis)]} {option}", callback_data=f"selection:{selection_id}:{index}")]
               for index, option in enumerate(options)],
             [InlineKeyboardButton("🚫 Ninguna de las anteriores", callback_data=f"selection:{selection_id}:none")],
         ])
@@ -118,5 +119,20 @@ class TelegramBot:
             text=text,
             reply_markup=ForceReply(selective=True, input_field_placeholder="Escribe el motivo..."),
         )
+
+    async def send_poll_message(self, chat_id: str, question: str, options: list[str]) -> str:
+        """Send a native Telegram poll and return the poll_id."""
+        if not self.application:
+            logger.error("Cannot send poll: Bot not configured")
+            return ""
+        all_options = options + ["✏️ Escribir mi propia respuesta"]
+        message = await self.application.bot.send_poll(
+            chat_id=chat_id,
+            question=question,
+            options=all_options,
+            is_anonymous=False,
+            allows_multiple_answers=False,
+        )
+        return message.poll.id
 
 

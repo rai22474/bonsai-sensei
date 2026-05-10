@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
@@ -17,6 +17,7 @@ from bonsai_sensei.domain.services.human_input import (
     create_ask_confirmation,
     create_ask_human,
     create_ask_plan_review,
+    create_ask_poll,
     create_ask_selection,
 )
 from bonsai_sensei.domain.services.cultivation.weather.weather_alert_scheduler import create_weather_alert_scheduler
@@ -77,6 +78,7 @@ from bonsai_sensei.telegram.error_handler import error_handler
 from bonsai_sensei.telegram.handle_confirmation_callback import handle_confirmation_callback
 from bonsai_sensei.telegram.handle_plan_review_callback import handle_plan_review_callback
 from bonsai_sensei.telegram.handle_selection_callback import handle_selection_callback
+from bonsai_sensei.telegram.handle_poll_answer import handle_poll_answer
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
 from bonsai_sensei.telegram.start import start
@@ -134,6 +136,7 @@ async def lifespan(app: FastAPI):
     app.state.pending_confirmation_cleanups = {}
     app.state.active_tasks = {}
     app.state.pending_photos = {}
+    app.state.poll_id_to_user_id = {}
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
     model_factory = get_local_model_factory() if provider == "local" else get_cloud_model_factory()
@@ -188,6 +191,11 @@ async def lifespan(app: FastAPI):
     ask_selection_func = create_ask_selection(send_selection_func, app.state.pending_human_responses, send_photo_selection_func=send_photo_selection_func)
     ask_plan_review_func = create_ask_plan_review(send_plan_review_func, app.state.pending_human_responses)
 
+    async def send_poll_func(user_id: str, question: str, options: list[str]) -> str:
+        return await bot_instance.send_poll_message(chat_id=user_id, question=question, options=options)
+
+    ask_poll_func = create_ask_poll(send_poll_func, app.state.pending_human_responses, app.state.poll_id_to_user_id, send_message_func=send_message_func)
+
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
     transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
 
@@ -201,6 +209,7 @@ async def lifespan(app: FastAPI):
         ask_human=ask_human_func,
         ask_selection=ask_selection_func,
         ask_plan_review=ask_plan_review_func,
+        ask_poll=ask_poll_func,
         cultivation_messages={
             "build_fertilization_type_question": build_fertilization_type_question,
             "build_fertilization_type_options": build_fertilization_type_options,
@@ -289,6 +298,12 @@ async def lifespan(app: FastAPI):
         pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
         send_none_reason_prompt=bot_instance.send_force_reply_message,
     )
+    poll_answer_handler = partial(
+        handle_poll_answer,
+        pending_human_responses=app.state.pending_human_responses,
+        poll_id_to_user_id=app.state.poll_id_to_user_id,
+        send_free_text_prompt=bot_instance.send_force_reply_message,
+    )
 
     handlers = [
         CommandHandler("start", start),
@@ -297,6 +312,7 @@ async def lifespan(app: FastAPI):
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),
         CallbackQueryHandler(plan_review_handler, pattern=r"^plan_review:.+:(confirm|correct|cancel)$"),
         CallbackQueryHandler(selection_handler, pattern=r"^selection:.+:(\d+|none)$"),
+        PollAnswerHandler(poll_answer_handler),
     ]
     if bot_instance.application:
         for handler in handlers:
