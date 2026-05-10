@@ -1,5 +1,6 @@
 from typing import List
 from sqlmodel import select, Session
+from sqlalchemy import func
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.species import Species
 from bonsai_sensei.database.session_wrapper import with_session
@@ -15,7 +16,7 @@ def list_bonsai(session: Session) -> List[Bonsai]:
 def get_bonsai_by_name(session: Session, name: str) -> Bonsai | None:
     if not name:
         return None
-    statement = select(Bonsai).where(Bonsai.name == name)
+    statement = select(Bonsai).where(func.lower(Bonsai.name) == name.lower())
     return session.exec(statement).first()
 
 
@@ -24,6 +25,7 @@ def create_bonsai(session: Session, bonsai: Bonsai) -> Bonsai | None:
     species = session.get(Species, bonsai.species_id)
     if not species:
         return None
+    bonsai.name = bonsai.name.lower()
     session.add(bonsai)
     return bonsai
 
@@ -40,7 +42,7 @@ def update_bonsai(session: Session, bonsai_id: int, bonsai_data: dict) -> Bonsai
             return None
     for key, value in (bonsai_data or {}).items():
         if value is not None:
-            setattr(bonsai, key, value)
+            setattr(bonsai, key, value.lower() if key == "name" else value)
     session.add(bonsai)
     return bonsai
 

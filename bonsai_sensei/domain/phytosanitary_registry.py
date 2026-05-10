@@ -1,5 +1,6 @@
 from typing import List
 from sqlmodel import select, Session
+from sqlalchemy import func
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
 from bonsai_sensei.database.session_wrapper import with_session
 
@@ -22,6 +23,7 @@ def create_phytosanitary(
     session: Session,
     phytosanitary: Phytosanitary,
 ) -> Phytosanitary:
+    phytosanitary.name = phytosanitary.name.lower()
     session.add(phytosanitary)
     return phytosanitary
 
@@ -59,5 +61,5 @@ def _find_phytosanitary_by_name(
     session: Session,
     name: str,
 ) -> Phytosanitary | None:
-    statement = select(Phytosanitary).where(Phytosanitary.name == name)
+    statement = select(Phytosanitary).where(func.lower(Phytosanitary.name) == name.lower())
     return session.exec(statement).first()

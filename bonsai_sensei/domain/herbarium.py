@@ -48,6 +48,7 @@ def search_species_by_name(session: Session, name: str) -> List[Species]:
 
 @with_session
 def create_species(session: Session, species: Species) -> Species:
+    species.name = species.name.lower()
     session.add(species)
     return species
 
@@ -62,7 +63,7 @@ def update_species(
 
     for key, value in species_data.items():
         if value is not None:
-            setattr(species, key, value)
+            setattr(species, key, value.lower() if key == "name" else value)
 
     session.add(species)
     return species

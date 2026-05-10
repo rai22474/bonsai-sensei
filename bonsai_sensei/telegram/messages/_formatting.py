@@ -28,3 +28,7 @@ def format_date(date_value) -> str:
     if isinstance(date_value, str):
         date_value = datetime.strptime(date_value, "%Y-%m-%d").date()
     return date_value.strftime("%d/%m/%Y")
+
+
+def display_name(name: str) -> str:
+    return name.capitalize() if name else name

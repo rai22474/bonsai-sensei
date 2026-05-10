@@ -1,5 +1,6 @@
 from typing import List
 from sqlmodel import select, Session
+from sqlalchemy import func
 from bonsai_sensei.domain.fertilizer import Fertilizer
 from bonsai_sensei.database.session_wrapper import with_session
 
@@ -19,6 +20,7 @@ def get_fertilizer_by_name(session: Session, name: str) -> Fertilizer | None:
 
 @with_session
 def create_fertilizer(session: Session, fertilizer: Fertilizer) -> Fertilizer:
+    fertilizer.name = fertilizer.name.lower()
     session.add(fertilizer)
     return fertilizer
 
@@ -56,5 +58,5 @@ def _find_fertilizer_by_name(
     session: Session,
     name: str,
 ) -> Fertilizer | None:
-    statement = select(Fertilizer).where(Fertilizer.name == name)
+    statement = select(Fertilizer).where(func.lower(Fertilizer.name) == name.lower())
     return session.exec(statement).first()

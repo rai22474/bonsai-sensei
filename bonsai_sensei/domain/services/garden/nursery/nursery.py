@@ -18,6 +18,7 @@ NURSERY_INSTRUCTION = """Eres el encargado del registro de la colección de bons
 - Para crear, actualizar o eliminar: llama directamente a la tool con los datos disponibles. Las tools gestionan internamente la confirmación.
 - Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
 - Para listar o consultar: llama directamente a la tool.
+- Al mencionar nombres de bonsáis o especies en tu respuesta, escríbelos con la primera letra en mayúscula.
 """
 
 

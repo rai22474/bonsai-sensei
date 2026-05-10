@@ -25,6 +25,7 @@ Si el resultado indica que el usuario ha cancelado la operación: comunícalo br
 Responde siempre en castellano.
 Usa HTML compatible con Telegram: <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea. No uses Markdown.
 Cuando muestres fotos, el sistema las envía automáticamente. No incluyas nombres de archivo ni rutas en tu respuesta de texto.
+Al presentar nombres de bonsáis, especies, fertilizantes o productos fitosanitarios, escríbelos con la primera letra en mayúscula (p.ej. "Naruto", "Elm", "Biogold").
 """
 
 
