@@ -5,6 +5,7 @@ from google.adk.agents.llm_agent import Agent
 from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
 from bonsai_sensei.domain.services.garden.caretaker.apply_fertilizer import create_apply_fertilizer_tool
 from bonsai_sensei.domain.services.garden.caretaker.apply_phytosanitary import create_apply_phytosanitary_tool
+from bonsai_sensei.domain.services.garden.caretaker.create_pest_event import create_create_pest_event_tool
 from bonsai_sensei.domain.services.garden.caretaker.record_transplant import create_record_transplant_tool
 from bonsai_sensei.domain.services.garden.caretaker.bonsai_events_tool import create_list_bonsai_events_tool
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import create_list_planned_works_tool
@@ -25,6 +26,7 @@ def create_caretaker(
     get_bonsai_by_name_func: Callable,
     get_fertilizer_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
+    get_pest_by_name_func: Callable,
     record_bonsai_event_func: Callable,
     list_bonsai_events_func: Callable,
     list_planned_works_func: Callable,
@@ -35,6 +37,7 @@ def create_caretaker(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_create_pest_event_confirmation: Callable,
 ) -> Agent:
     apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -77,15 +80,24 @@ def create_caretaker(
         build_confirmation_message=build_execute_planned_work_confirmation,
     )
     execute_planned_work_tool.__name__ = "execute_planned_work"
+    pest_event_tool = create_create_pest_event_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        get_pest_by_name_func=get_pest_by_name_func,
+        record_bonsai_event_func=record_bonsai_event_func,
+        ask_confirmation=ask_confirmation,
+        build_confirmation_message=build_create_pest_event_confirmation,
+    )
+    pest_event_tool.__name__ = "create_pest_event"
     return Agent(
         model=model,
         name="caretaker",
-        description="Registra cuidados realizados en bonsáis: fertilizaciones, tratamientos fitosanitarios, trasplantes, y ejecuta trabajos planificados.",
+        description="Registra cuidados realizados en bonsáis: fertilizaciones, tratamientos fitosanitarios, trasplantes, detección de plagas, y ejecuta trabajos planificados.",
         instruction=CARETAKER_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[
             apply_fertilizer_tool,
             apply_phytosanitary_tool,
+            pest_event_tool,
             record_transplant_tool,
             list_events_tool,
             list_works_tool,

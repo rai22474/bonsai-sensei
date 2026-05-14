@@ -4,6 +4,7 @@ from typing import Callable
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
+from bonsai_sensei.domain import pest_catalog
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain.services.garden.caretaker.caretaker import create_caretaker
@@ -17,10 +18,13 @@ def create_caretaker_group(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_create_pest_event_confirmation: Callable,
 ):
+    list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     get_fertilizer_by_name_func = partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory)
     get_phytosanitary_by_name_func = partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory)
+    get_pest_by_name_func = partial(pest_catalog.get_pest_by_name, create_session=session_factory)
     record_bonsai_event_func = partial(bonsai_history.record_bonsai_event, create_session=session_factory)
     list_bonsai_events_func = partial(bonsai_history.list_bonsai_events, create_session=session_factory)
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
@@ -30,8 +34,10 @@ def create_caretaker_group(
     return create_caretaker(
         model=model,
         get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_func=list_bonsai_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        get_pest_by_name_func=get_pest_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         list_bonsai_events_func=list_bonsai_events_func,
         list_planned_works_func=list_planned_works_func,
@@ -42,4 +48,5 @@ def create_caretaker_group(
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
+        build_create_pest_event_confirmation=build_create_pest_event_confirmation,
     )

@@ -19,7 +19,7 @@ def request_fertilizer_list(context):
 
 @then(parsers.parse('fertilizer list includes "{name}"'))
 def assert_fertilizer_list(context, name):
-    match = name in context.get("response", "")
+    match = name.lower() in context.get("response", "").lower()
     assert match, (
         f"Expected fertilizer list to include '{name}', got response: {context.get('response')}."
     )

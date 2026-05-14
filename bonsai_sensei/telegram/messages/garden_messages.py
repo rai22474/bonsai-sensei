@@ -53,3 +53,7 @@ def build_delete_bonsai_photo_selection_question(bonsai_name: str) -> str:
 
 def build_delete_bonsai_photo_confirmation(bonsai_name: str, taken_on: str) -> str:
     return f"¿Eliminar la foto del {format_date(taken_on)} del bonsái '{display_name(bonsai_name)}'? Esta acción es permanente."
+
+
+def build_create_pest_event_confirmation(bonsai_name: str, pest_name: str) -> str:
+    return f"¿Registrar detección de '{display_name(pest_name)}' en '{display_name(bonsai_name)}'?"

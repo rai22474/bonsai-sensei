@@ -1,3 +1,4 @@
+import asyncio
 from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
@@ -17,6 +18,7 @@ def create_create_species_tool(
     ask_selection: Callable,
     build_selection_question: Callable,
     build_confirmation_message: Callable,
+    post_create_hook: Callable[[str], None] | None = None,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="botanist")
@@ -84,6 +86,8 @@ def create_create_species_tool(
                     wiki_path=wiki_path,
                 )
             )
+            if post_create_hook:
+                asyncio.create_task(post_create_hook(common_name))
             return {"status": "success", "message": f"Species '{common_name}' created."}
 
         return {"status": "cancelled", "reason": confirmed.reason}

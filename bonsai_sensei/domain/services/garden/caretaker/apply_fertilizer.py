@@ -61,7 +61,7 @@ def create_apply_fertilizer_tool(
                 bonsai_event=BonsaiEvent(
                     bonsai_id=bonsai.id,
                     event_type="fertilizer_application",
-                    payload={"fertilizer_id": fertilizer.id, "fertilizer_name": fertilizer_name, "amount": amount},
+                    payload={"fertilizer_id": fertilizer.id, "fertilizer_name": fertilizer.name, "amount": amount},
                 )
             )
             return {"status": "success", "message": f"Fertilizer '{fertilizer_name}' application recorded on '{bonsai_name}'."}

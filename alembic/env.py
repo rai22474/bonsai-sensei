@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
-from bonsai_sensei.domain import species, bonsai, fertilizer, phytosanitary, bonsai_event, user_settings, planned_work, bonsai_photo, fertilization_plan, phytosanitary_plan
+from bonsai_sensei.domain import species, bonsai, fertilizer, phytosanitary, bonsai_event, user_settings, planned_work, bonsai_photo, fertilization_plan, phytosanitary_plan, pest
 
 config = context.config
 

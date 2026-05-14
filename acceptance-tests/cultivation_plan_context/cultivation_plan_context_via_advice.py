@@ -76,6 +76,6 @@ def assert_planned_fertilization_uses_fertilizer(context, bonsai_name, fertilize
 @then(parsers.parse('the response mentions "{fertilizer_name}"'))
 def assert_response_mentions_fertilizer(context, fertilizer_name):
     response_text = context.get("response_text", "")
-    assert fertilizer_name in response_text, (
+    assert fertilizer_name.lower() in response_text.lower(), (
         f"Expected response to mention '{fertilizer_name}', but got: {response_text}"
     )

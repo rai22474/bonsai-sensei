@@ -17,6 +17,7 @@ def create_gardener_group(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_create_pest_event_confirmation: Callable,
     build_create_bonsai_species_selection_question: Callable = None,
     build_add_bonsai_photo_selection_question: Callable = None,
     build_add_bonsai_photo_confirmation: Callable = None,
@@ -42,6 +43,7 @@ def create_gardener_group(
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
+        build_create_pest_event_confirmation=build_create_pest_event_confirmation,
     )
     gallery = create_gallery_group(
         model=model,

@@ -88,6 +88,13 @@ async def get_advice(request_body: AdviceRequest, request: Request):
                     {"id": pending["review_id"]}
                 ],
             }
+        if pending and pending.get("type") == "poll":
+            return {
+                "text": "",
+                "pending_text_questions": [
+                    {"question": pending.get("question", "")}
+                ],
+            }
 
     active_tasks.pop(user_id, None)
     if task.exception():
@@ -160,7 +167,7 @@ async def submit_text_response(request_body: TextResponseRequest, request: Reque
     active_tasks = getattr(request.app.state, "active_tasks", {})
 
     pending = pending_human_responses.get(user_id)
-    if pending and pending.get("type") == "text":
+    if pending and pending.get("type") in ("text", "poll"):
         pending["response"] = request_body.text
         pending["event"].set()
         task = active_tasks.get(user_id)
@@ -187,11 +194,11 @@ async def submit_text_response(request_body: TextResponseRequest, request: Reque
                                 }
                             ],
                         }
-                    if next_pending.get("type") == "text":
+                    if next_pending.get("type") in ("text", "poll"):
                         return {
                             "text": "",
                             "pending_text_questions": [
-                                {"question": next_pending.get("summary", "")}
+                                {"question": next_pending.get("question", next_pending.get("summary", ""))}
                             ],
                         }
                     if next_pending.get("type") == "plan_review":

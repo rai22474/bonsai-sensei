@@ -2,8 +2,10 @@ import os
 from functools import partial
 from typing import Callable
 
-from bonsai_sensei.domain import herbarium
+from bonsai_sensei.domain import herbarium, pest_catalog
 from bonsai_sensei.domain import user_settings_store
+from bonsai_sensei.domain.services.cultivation.pests.pest_catalog_seeder import create_pest_catalog_seeder
+from bonsai_sensei.domain.services.cultivation.pests.pest_wiki_compiler import create_pest_wiki_compiler
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import create_list_species_tool
 from bonsai_sensei.domain.services.cultivation.species.refresh_species_wiki import create_refresh_species_wiki_tool
@@ -28,6 +30,8 @@ def create_botanist_group(
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
     build_refresh_species_wiki_confirmation: Callable,
+    build_create_pest_confirmation: Callable,
+    build_delete_pest_confirmation: Callable,
 ):
     list_species_tool = _create_list_species_tool(session_factory)
     botanist = _create_botanist(
@@ -40,12 +44,14 @@ def create_botanist_group(
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
         build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
+        build_create_pest_confirmation=build_create_pest_confirmation,
+        build_delete_pest_confirmation=build_delete_pest_confirmation,
     )
     weather_advisor = _create_weather_advisor(model, list_species_tool, session_factory)
     return botanist, weather_advisor
 
 
-def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation):
+def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation, build_create_pest_confirmation, build_delete_pest_confirmation):
     get_species_by_name_func = partial(herbarium.get_species_by_name, create_session=session_factory)
     search_species_func = partial(herbarium.search_species_by_name, create_session=session_factory)
 
@@ -57,10 +63,23 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
 
     tavily_base_url = os.getenv("TAVILY_API_BASE")
     wiki_root = os.getenv("WIKI_PATH", "./wiki")
+    tavily_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     wiki_page_builder = create_species_wiki_compiler(
         model=model,
         wiki_root=wiki_root,
-        searcher=create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url),
+        searcher=tavily_searcher,
+    )
+    compile_pest_page = create_pest_wiki_compiler(
+        model=model,
+        wiki_root=wiki_root,
+        searcher=tavily_searcher,
+    )
+    pest_catalog_seeder = create_pest_catalog_seeder(
+        model=model,
+        searcher=tavily_searcher,
+        compile_pest_page=compile_pest_page,
+        create_pest_func=partial(pest_catalog.create_pest, create_session=session_factory),
+        get_pest_by_name_func=partial(pest_catalog.get_pest_by_name, create_session=session_factory),
     )
     read_wiki_page_tool = create_read_wiki_page_tool(wiki_root=wiki_root)
 
@@ -74,6 +93,11 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
         create_species_func=partial(herbarium.create_species, create_session=session_factory),
         update_species_func=partial(herbarium.update_species, create_session=session_factory),
         delete_species_func=partial(herbarium.delete_species, create_session=session_factory),
+        list_pests_func=partial(pest_catalog.list_pests, create_session=session_factory),
+        get_pest_by_name_func=partial(pest_catalog.get_pest_by_name, create_session=session_factory),
+        create_pest_func=partial(pest_catalog.create_pest, create_session=session_factory),
+        delete_pest_func=partial(pest_catalog.delete_pest, create_session=session_factory),
+        compile_pest_page=compile_pest_page,
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
         build_create_species_selection_question=build_create_species_selection_question,
@@ -81,6 +105,8 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
         build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
+        build_create_pest_confirmation=build_create_pest_confirmation,
+        build_delete_pest_confirmation=build_delete_pest_confirmation,
         refresh_species_wiki_tool=create_refresh_species_wiki_tool(
             get_species_by_name_func=get_species_by_name_func,
             update_species_func=partial(herbarium.update_species, create_session=session_factory),
@@ -88,6 +114,7 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
             ask_confirmation=ask_confirmation,
             build_confirmation_message=build_refresh_species_wiki_confirmation,
         ),
+        post_create_species_hook=pest_catalog_seeder,
     )
 
 

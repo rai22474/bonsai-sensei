@@ -3,8 +3,8 @@ Feature: Manage fertilizers via advice
   Scenario: Create a fertilizer via advice
     When I request to register fertilizer "BioGrow"
     And I confirm the fertilizer creation for "BioGrow"
-    Then fertilizer "BioGrow" should exist
-    And fertilizer "BioGrow" should have a wiki page
+    Then fertilizer "biogrow" should exist
+    And fertilizer "biogrow" should have a wiki page
 
   Scenario: Update fertilizer recommended amount via advice
     Given fertilizer "BioGrow" exists
@@ -21,7 +21,7 @@ Feature: Manage fertilizers via advice
   Scenario: List fertilizers via advice
     Given fertilizer "BioBloom" exists
     When I request the fertilizer list
-    Then fertilizer list includes "BioBloom"
+    Then fertilizer list includes "biobloom"
 
   Scenario: Refresh fertilizer wiki via advice
     Given fertilizer "BioGrow" exists

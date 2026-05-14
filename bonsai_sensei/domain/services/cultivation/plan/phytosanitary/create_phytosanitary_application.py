@@ -57,7 +57,7 @@ def create_create_phytosanitary_application_tool(
         if not phytosanitary:
             return {"status": "error", "message": "phytosanitary_not_found"}
 
-        payload = build_phytosanitary_payload(phytosanitary.id, phytosanitary_name, amount)
+        payload = build_phytosanitary_payload(phytosanitary.id, phytosanitary.name, amount)
         confirmation_message = build_confirmation_message(bonsai_name, phytosanitary_name, amount, scheduled_date)
 
         return await execute_planned_work_creation(

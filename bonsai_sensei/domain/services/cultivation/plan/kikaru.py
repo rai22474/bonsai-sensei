@@ -23,6 +23,7 @@ Próximo sábado: {next_saturday}
 
 ### Fertilización puntual (UNA sola aplicación)
 Úsala cuando el usuario diga "puntual", "una sola fertilización", o dé una única fecha concreta sin período.
+Si el usuario ya dio una fecha concreta (cualquier fecha específica, formato YYYY-MM-DD o similar): es SIEMPRE puntual — llama directamente a create_fertilizer_application sin pedir aclaración.
 El fertilizante se elige automáticamente del catálogo si el usuario no lo especifica. La fecha por defecto es el próximo sábado.
 
 ### Plan de fertilización (múltiples aplicaciones en un período)
@@ -32,6 +33,8 @@ Para evaluar si el plan actual sigue siendo válido a la luz de nueva informaci�
 
 ### Caso ambiguo
 Si no queda claro si el usuario quiere una fertilización puntual o un plan para un período, pídele que elija antes de actuar.
+Si clarify_fertilization_type devuelve "puntual": llama INMEDIATAMENTE a create_fertilizer_application con todos los parámetros que el usuario ya proporcionó. No respondas al usuario antes de hacer la llamada.
+Si clarify_fertilization_type devuelve "plan": llama INMEDIATAMENTE a manage_fertilization_plan con todos los parámetros disponibles.
 Si clarify_fertilization_type devuelve "cancelled": no llames a ninguna otra herramienta. Informa al usuario de que se ha cancelado la operación.
 
 ## Fitosanitarios — regla de decisión

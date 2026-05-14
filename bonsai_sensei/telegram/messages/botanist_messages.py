@@ -20,3 +20,11 @@ def build_update_species_confirmation(species_name: str, species_data: dict) -> 
 
 def build_refresh_species_wiki_confirmation(name: str) -> str:
     return f"¿Regenerar la ficha wiki de '{display_name(name)}' con información actualizada de internet?"
+
+
+def build_create_pest_confirmation(name: str) -> str:
+    return f"¿Registrar plaga '{display_name(name)}' en el catálogo y generar su ficha wiki?"
+
+
+def build_delete_pest_confirmation(name: str) -> str:
+    return f"¿Eliminar plaga '{display_name(name)}' del catálogo? Esta acción es permanente."

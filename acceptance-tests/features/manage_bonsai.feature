@@ -5,7 +5,7 @@ Feature: Manage bonsai via advice
     When I request to register bonsai "Momiji" for species "Acer Palmatum"
     And I confirm the bonsai creation for "Momiji"
     Then bonsai "Momiji" should exist
-    And the wiki index page for bonsai "Momiji" should exist with species "Acer Palmatum"
+    And the wiki index page for bonsai "Momiji" should exist with species "acer palmatum"
 
   Scenario: Update a bonsai name via advice
     Given species "Pinus Thunbergii" exists with scientific name "Pinus thunbergii"

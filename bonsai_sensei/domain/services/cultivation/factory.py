@@ -24,6 +24,8 @@ def create_cultivation_group(
     build_delete_species_confirmation: Callable,
     build_update_species_confirmation: Callable,
     build_refresh_species_wiki_confirmation: Callable,
+    build_create_pest_confirmation: Callable,
+    build_delete_pest_confirmation: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
 ):
@@ -37,6 +39,8 @@ def create_cultivation_group(
         build_delete_species_confirmation=build_delete_species_confirmation,
         build_update_species_confirmation=build_update_species_confirmation,
         build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
+        build_create_pest_confirmation=build_create_pest_confirmation,
+        build_delete_pest_confirmation=build_delete_pest_confirmation,
     )
     kikaru = create_kikaru_group(
         model=model,

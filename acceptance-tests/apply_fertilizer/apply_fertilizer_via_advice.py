@@ -114,7 +114,7 @@ def assert_no_fertilizer_events(context, bonsai_name):
 )
 def assert_list_contains_application(context, fertilizer_name, amount):
     response_text = context.get("fertilizer_applications_response", "")
-    assert fertilizer_name in response_text, (
+    assert fertilizer_name.lower() in response_text.lower(), (
         f"Expected response to mention '{fertilizer_name}', but got: {response_text}"
     )
     assert amount in response_text, (

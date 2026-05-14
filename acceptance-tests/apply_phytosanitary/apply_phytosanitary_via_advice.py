@@ -110,7 +110,7 @@ def assert_no_phytosanitary_events(context, bonsai_name):
 @then(parsers.parse('the treatment list should contain "{phytosanitary_name}" with amount "{amount}"'))
 def assert_treatment_list_contains(context, phytosanitary_name, amount):
     response_text = context.get("phytosanitary_treatments_response", "")
-    assert phytosanitary_name in response_text, (
+    assert phytosanitary_name.lower() in response_text.lower(), (
         f"Expected response to mention '{phytosanitary_name}', but got: {response_text}"
     )
     assert amount in response_text, (

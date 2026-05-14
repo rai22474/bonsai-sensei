@@ -10,6 +10,7 @@ from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import fertilization_plan_store
 from bonsai_sensei.domain import phytosanitary_plan_store
 from bonsai_sensei.domain import bonsai_photo_store
+from bonsai_sensei.domain import pest_catalog
 
 
 def create_data_services(session_factory) -> dict:
@@ -76,5 +77,11 @@ def create_data_services(session_factory) -> dict:
             "list_bonsai_photos": partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory),
             "delete_bonsai_photo": partial(bonsai_photo_store.delete_bonsai_photo, create_session=session_factory),
             "delete_bonsai_photos": partial(bonsai_photo_store.delete_bonsai_photos, create_session=session_factory),
+        },
+        "pest": {
+            "list_pests": partial(pest_catalog.list_pests, create_session=session_factory),
+            "get_pest_by_name": partial(pest_catalog.get_pest_by_name, create_session=session_factory),
+            "create_pest": partial(pest_catalog.create_pest, create_session=session_factory),
+            "delete_pest": partial(pest_catalog.delete_pest, create_session=session_factory),
         },
     }

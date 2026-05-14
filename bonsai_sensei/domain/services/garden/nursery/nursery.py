@@ -73,7 +73,7 @@ def create_nursery(
     return Agent(
         model=model,
         name="nursery",
-        description="Gestiona el registro de la colección de bonsáis: crear, consultar, actualizar y eliminar.",
+        description="Gestiona el registro de la colección de bonsáis: crear, consultar, actualizar y eliminar. Al crear un bonsái, la herramienta valida internamente la especie — no se necesita invocar al botanist antes ni como paso previo.",
         instruction=NURSERY_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[

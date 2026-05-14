@@ -61,7 +61,7 @@ def create_apply_phytosanitary_tool(
                 bonsai_event=BonsaiEvent(
                     bonsai_id=bonsai.id,
                     event_type="phytosanitary_application",
-                    payload={"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary_name, "amount": amount},
+                    payload={"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary.name, "amount": amount},
                 )
             )
             return {"status": "success", "message": f"Phytosanitary '{phytosanitary_name}' treatment recorded on '{bonsai_name}'."}

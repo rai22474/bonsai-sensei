@@ -65,7 +65,7 @@ def create_create_fertilizer_application_tool(
         if not fertilizer:
             return {"status": "error", "message": "fertilizer_not_found"}
 
-        payload = build_fertilizer_payload(fertilizer.id, fertilizer_name, amount)
+        payload = build_fertilizer_payload(fertilizer.id, fertilizer.name, amount)
         confirmation_message = build_confirmation_message(bonsai_name, fertilizer_name, amount, scheduled_date)
 
         return await execute_planned_work_creation(

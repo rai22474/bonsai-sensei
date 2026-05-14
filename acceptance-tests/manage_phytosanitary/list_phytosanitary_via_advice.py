@@ -19,7 +19,7 @@ def request_phytosanitary_list(context):
 
 @then(parsers.parse('phytosanitary list includes "{name}"'))
 def assert_phytosanitary_list(context, name):
-    match = name in context.get("response", "")
+    match = name.lower() in context.get("response", "").lower()
     assert match, (
         f"Expected phytosanitary list to include '{name}', got response: {context.get('response')}."
     )

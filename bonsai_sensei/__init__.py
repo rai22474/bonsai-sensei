@@ -47,6 +47,7 @@ from bonsai_sensei.telegram.messages.garden_messages import (
     build_add_bonsai_photo_confirmation,
     build_delete_bonsai_photo_selection_question,
     build_delete_bonsai_photo_confirmation,
+    build_create_pest_event_confirmation,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilization_type_question,
@@ -72,6 +73,8 @@ from bonsai_sensei.telegram.messages.botanist_messages import (
     build_delete_species_confirmation,
     build_update_species_confirmation,
     build_refresh_species_wiki_confirmation,
+    build_create_pest_confirmation,
+    build_delete_pest_confirmation,
 )
 from bonsai_sensei.telegram.bot import TelegramBot
 from bonsai_sensei.telegram.error_handler import error_handler
@@ -97,6 +100,7 @@ from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.api.transcripts import router as transcripts_router
+from bonsai_sensei.api.pests import router as pests_router
 
 
 async def _generic_exception_handler(request, exc):
@@ -132,6 +136,7 @@ async def lifespan(app: FastAPI):
     app.state.fertilization_plan_service = services["fertilization_plan"]
     app.state.phytosanitary_plan_service = services["phytosanitary_plan"]
     app.state.bonsai_photo_service = services["bonsai_photo"]
+    app.state.pest_service = services["pest"]
     app.state.pending_human_responses = {}
     app.state.pending_confirmation_cleanups = {}
     app.state.active_tasks = {}
@@ -229,6 +234,7 @@ async def lifespan(app: FastAPI):
             "build_apply_phytosanitary_confirmation": build_apply_phytosanitary_confirmation,
             "build_record_transplant_confirmation": build_record_transplant_confirmation,
             "build_execute_planned_work_confirmation": build_execute_planned_work_confirmation,
+            "build_create_pest_event_confirmation": build_create_pest_event_confirmation,
             "build_add_bonsai_photo_selection_question": build_add_bonsai_photo_selection_question,
             "build_add_bonsai_photo_confirmation": build_add_bonsai_photo_confirmation,
             "build_delete_bonsai_photo_selection_question": build_delete_bonsai_photo_selection_question,
@@ -248,6 +254,8 @@ async def lifespan(app: FastAPI):
             "build_delete_species_confirmation": build_delete_species_confirmation,
             "build_update_species_confirmation": build_update_species_confirmation,
             "build_refresh_species_wiki_confirmation": build_refresh_species_wiki_confirmation,
+            "build_create_pest_confirmation": build_create_pest_confirmation,
+            "build_delete_pest_confirmation": build_delete_pest_confirmation,
         },
     )
 
@@ -359,4 +367,5 @@ app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanita
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])
+app.include_router(pests_router, prefix="/api", tags=["pests"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])
