@@ -9,6 +9,7 @@ from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import herbarium
+from bonsai_sensei.domain import pest_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
     create_list_planned_works_tool,
@@ -21,6 +22,7 @@ from bonsai_sensei.domain.services.garden.nursery.bonsai_tools import (
     create_list_bonsai_tool,
 )
 from bonsai_sensei.domain.services.garden.caretaker.bonsai_events_tool import create_list_bonsai_events_tool
+from bonsai_sensei.domain.services.cultivation.pests.pest_tools import create_list_pests_tool
 from bonsai_sensei.domain.services.garden.gallery.list_bonsai_photos import (
     create_list_bonsai_photos_tool,
     create_show_bonsai_photos_tool,
@@ -92,6 +94,10 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_bonsai_photos_func=list_bonsai_photos_func,
     )
     show_bonsai_photos_tool.__name__ = "show_bonsai_photos"
+    list_pests_tool = create_list_pests_tool(
+        list_pests_func=partial(pest_catalog.list_pests, create_session=session_factory),
+    )
+    list_pests_tool.__name__ = "list_pests"
 
     return [
         list_bonsai_tool,
@@ -105,6 +111,7 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_planned_works_tool,
         list_bonsai_photos_tool,
         show_bonsai_photos_tool,
+        list_pests_tool,
     ]
 
 

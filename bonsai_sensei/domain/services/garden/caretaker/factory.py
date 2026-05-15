@@ -20,7 +20,6 @@ def create_caretaker_group(
     build_execute_planned_work_confirmation: Callable,
     build_create_pest_event_confirmation: Callable,
 ):
-    list_bonsai_func = partial(garden.list_bonsai, create_session=session_factory)
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     get_fertilizer_by_name_func = partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory)
     get_phytosanitary_by_name_func = partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory)
@@ -34,7 +33,6 @@ def create_caretaker_group(
     return create_caretaker(
         model=model,
         get_bonsai_by_name_func=get_bonsai_by_name_func,
-        list_bonsai_func=list_bonsai_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         get_pest_by_name_func=get_pest_by_name_func,
