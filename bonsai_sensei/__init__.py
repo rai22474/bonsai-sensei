@@ -47,7 +47,11 @@ from bonsai_sensei.telegram.messages.garden_messages import (
     build_add_bonsai_photo_confirmation,
     build_delete_bonsai_photo_selection_question,
     build_delete_bonsai_photo_confirmation,
+    build_delete_bonsai_photo_option_label,
     build_create_pest_event_confirmation,
+    build_phytosanitary_plan_review_proposal,
+    build_applied_treatment_question,
+    build_treatment_selection_question,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilization_type_question,
@@ -235,10 +239,14 @@ async def lifespan(app: FastAPI):
             "build_record_transplant_confirmation": build_record_transplant_confirmation,
             "build_execute_planned_work_confirmation": build_execute_planned_work_confirmation,
             "build_create_pest_event_confirmation": build_create_pest_event_confirmation,
+            "build_phytosanitary_plan_review_proposal": build_phytosanitary_plan_review_proposal,
+            "build_applied_treatment_question": build_applied_treatment_question,
+            "build_treatment_selection_question": build_treatment_selection_question,
             "build_add_bonsai_photo_selection_question": build_add_bonsai_photo_selection_question,
             "build_add_bonsai_photo_confirmation": build_add_bonsai_photo_confirmation,
             "build_delete_bonsai_photo_selection_question": build_delete_bonsai_photo_selection_question,
             "build_delete_bonsai_photo_confirmation": build_delete_bonsai_photo_confirmation,
+            "build_delete_bonsai_photo_option_label": build_delete_bonsai_photo_option_label,
         },
         storekeeper_messages={
             "build_create_fertilizer_confirmation": build_create_fertilizer_confirmation,

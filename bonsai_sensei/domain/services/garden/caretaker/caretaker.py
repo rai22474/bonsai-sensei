@@ -17,6 +17,7 @@ CARETAKER_INSTRUCTION = """Eres el encargado del historial de cuidados de la col
 # Comportamiento
 - Para registrar un evento o ejecutar un trabajo planificado: llama directamente a la tool con los datos disponibles. Las tools gestionan internamente la confirmación.
 - Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
+- Cuando una herramienta devuelva status 'error', informa al usuario del motivo sin llamar a otras herramientas ni intentar resolver el problema por otra vía.
 - Para ejecutar un trabajo planificado: usa primero list_planned_works_for_bonsai para obtener el ID, luego llama a execute_planned_work.
 """
 
@@ -27,17 +28,24 @@ def create_caretaker(
     get_fertilizer_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
     get_pest_by_name_func: Callable,
+    list_phytosanitary_func: Callable,
+    get_active_phytosanitary_plan_func: Callable,
     record_bonsai_event_func: Callable,
     list_bonsai_events_func: Callable,
     list_planned_works_func: Callable,
     get_planned_work_func: Callable,
     delete_planned_work_func: Callable,
     ask_confirmation: Callable,
+    ask_selection: Callable,
+    ask_plan_review: Callable,
     build_apply_fertilizer_confirmation: Callable,
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
     build_create_pest_event_confirmation: Callable,
+    build_phytosanitary_plan_review_proposal: Callable,
+    build_applied_treatment_question: Callable,
+    build_treatment_selection_question: Callable,
 ) -> Agent:
     apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -83,15 +91,23 @@ def create_caretaker(
     pest_event_tool = create_create_pest_event_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_pest_by_name_func=get_pest_by_name_func,
+        list_phytosanitary_func=list_phytosanitary_func,
+        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
+        get_active_phytosanitary_plan_func=get_active_phytosanitary_plan_func,
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
+        ask_plan_review=ask_plan_review,
         build_confirmation_message=build_create_pest_event_confirmation,
+        build_applied_treatment_question=build_applied_treatment_question,
+        build_treatment_selection_question=build_treatment_selection_question,
+        build_plan_review_proposal=build_phytosanitary_plan_review_proposal,
     )
     pest_event_tool.__name__ = "create_pest_event"
     return Agent(
         model=model,
         name="caretaker",
-        description="Registra cuidados realizados en bonsáis: fertilizaciones, tratamientos fitosanitarios, trasplantes, detección de plagas, y ejecuta trabajos planificados.",
+        description="Registra cuidados realizados en bonsáis: fertilizaciones, tratamientos fitosanitarios, trasplantes, detección de plagas (incluyendo plagas no registradas en el catálogo), y ejecuta trabajos planificados. Es el único agente que debe recibir solicitudes de registro de eventos de cuidado, aunque la plaga o producto no esté en el catálogo.",
         instruction=CARETAKER_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=[

@@ -20,14 +20,20 @@ def create_apply_phytosanitary_tool(
         bonsai_name: str,
         phytosanitary_name: str,
         amount: str,
+        pest_event_id: int | None = None,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Record a phytosanitary treatment on a bonsai after explicit user confirmation.
+        """Record a standalone phytosanitary treatment on a bonsai after explicit user confirmation.
+
+        Use this tool when the user reports ONLY a treatment (no pest detection). If the user is
+        reporting a pest detection AND a treatment together, use create_pest_event with
+        phytosanitary_name and amount instead — it links them automatically.
 
         Args:
             bonsai_name: Name of the bonsai that received the treatment.
             phytosanitary_name: Name of the phytosanitary product that was applied.
             amount: Amount of product applied (e.g. "5 ml", "10 g").
+            pest_event_id: Optional ID of a previously recorded pest event to link to this treatment.
 
         Returns:
             A JSON-ready dictionary with status 'success' or 'cancelled'.
@@ -57,11 +63,14 @@ def create_apply_phytosanitary_tool(
         confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, phytosanitary_name, amount), tool_context=tool_context)
 
         if confirmed:
+            payload = {"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary.name, "amount": amount}
+            if pest_event_id is not None:
+                payload["pest_event_id"] = pest_event_id
             record_bonsai_event_func(
                 bonsai_event=BonsaiEvent(
                     bonsai_id=bonsai.id,
                     event_type="phytosanitary_application",
-                    payload={"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary.name, "amount": amount},
+                    payload=payload,
                 )
             )
             return {"status": "success", "message": f"Phytosanitary '{phytosanitary_name}' treatment recorded on '{bonsai_name}'."}

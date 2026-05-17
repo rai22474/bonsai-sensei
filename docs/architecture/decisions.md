@@ -204,3 +204,99 @@ Los builders de mensajes de confirmación se inyectan en los tools como `build_c
 - Cambiar el idioma o formato de las confirmaciones requiere tocar únicamente la capa de presentación.
 - Añadir un nuevo tipo de trabajo requiere un nuevo builder en `telegram/messages/`, no un cambio en el código de dominio.
 - El LLM ya no genera el texto de confirmación, eliminando una fuente de no-determinismo en el mensaje al usuario.
+
+---
+
+## ADR-010 — Contrato mitori→sub-agente: Option A adoptada; Option C diferida
+
+**Estado:** Parcialmente decidido (Option A adoptada; Option C diferida pendiente evaluación)
+
+**Contexto:**
+El pipeline `mitori → shokunin → AgentTool` (ADR-002) transmite cada paso del plan al sub-agente como un campo `request` en texto natural. Esto produce pérdida de información: los valores concretos del mensaje del usuario (fechas, dosis, nombres) quedan enterrados en lenguaje natural y los sub-agentes los reinterpretan con variabilidad. Se evaluaron tres opciones de corrección:
+
+- **Option A** — enriquecer el JSON del plan con un campo `parameters` (dict) por paso, de forma que mitori incluya los valores estructurados junto al `request` en texto libre.
+- **Option B** — schema parcial solo para las acciones de alta frecuencia (aplicar fertilizante, aplicar fitosanitario).
+- **Option C** — capa de despacho determinista: mitori elige un `action_type` canónico en lugar de un agente por nombre; un dispatcher Python resuelve el agente y valida el payload antes de invocarlo.
+
+**Decisión:**
+Se adopta **Option A** como solución inmediata. El campo `parameters` se añade al schema de `mitori_instruction.j2`; shokunin lo pasa a los sub-agentes junto al `request`. Coste mínimo, sin cambios de contrato entre agentes, compatible con el esquema de instrucciones existente.
+
+**Option C se difiere explícitamente.** La evaluación concluye que Option C resolvería de forma estructural la variabilidad de routing y la dependencia de calibración de descripciones, pero impone costes y riesgos que no están justificados en este momento:
+- Requiere definir y mantener un schema por cada `action_type` que mitori delega — alto coste de diseño inicial.
+- Añade una capa de routing determinista (dispatcher Python) que va en la dirección opuesta al principio de vision.md de favorecer flexibilidad conversacional frente a control de pipeline.
+- Afecta a todos los sub-agentes (caretaker, nursery, botanist, kikaru, etc.) simultáneamente — cambio de alto riesgo sin piloto.
+
+Option B se descarta: el schema parcial introduce inconsistencia de contrato según la acción — peor que Option A (sin schema) y peor que Option C (schema completo).
+
+**Relación con ADRs existentes:**
+- Extiende ADR-002: el pipeline mitori/shokunin sigue siendo el mecanismo; solo se enriquece el payload.
+- No contradice ADR-009: los tools deterministas con LLM embebido siguen siendo el patrón para flujos de pasos fijos. Option C añadiría determinismo en la capa de despacho, que es un nivel por encima de ADR-009.
+
+**Condiciones para retomar Option C:**
+Option C puede retomarse si se observa alguna de estas señales: (a) el routing de mitori falla con frecuencia inaceptable a pesar de Option A y del ajuste de descripciones; (b) se incorpora un nuevo tipo de acción con contrato estricto que hace evidente la necesidad de un dispatcher; (c) el número de `action_type` distintos supera ~10 y la calibración de descripciones se vuelve inmanejable. Ver `docs/project/future-work.md#FUTURE-006` para el plan de implementación al retomar.
+
+**Consecuencias:**
+- Los sub-agentes reciben `parameters` como dict validado por mitori, además del `request` en texto libre. La pérdida de información queda resuelta con coste mínimo.
+- El contrato sigue siendo semántico: mitori elige el agente por nombre. La calibración de descripciones sigue siendo necesaria.
+- El dispatcher Python (Option C) no existe: no hay una capa que valide el contrato entre mitori y sub-agentes en Python. Si mitori genera `parameters` incorrectos, el error se detecta en el sub-agente, no en el punto de despacho.
+- Option C queda documentada y evaluada — no se pierde el análisis si las condiciones cambian.
+
+---
+
+## ADR-011 — Los tools gestionan sus propios flujos interactivos en Python, no en el prompt
+
+**Estado:** Aceptado
+
+**Contexto:**
+Algunos tools necesitan llevar a cabo múltiples interacciones con el usuario en secuencia antes de completar su operación (p.ej.: confirmar detección de plaga → preguntar si se aplicó tratamiento → seleccionar producto). El enfoque inicial intentaba orquestar estas interacciones desde el prompt del agente: la instrucción decía al LLM que llamase primero a `create_pest_event`, tomase el `pest_event_id` del resultado y luego llamase a `apply_phytosanitary` con ese ID. Este enfoque falló de forma repetida e impredecible: el LLM ignoraba el orden, omitía pasos o llamaba a tools en orden incorrecto.
+
+**Señal de alerta:** cuando la instrucción de un agente dice "llama primero a X, toma el resultado Y, luego llama a Z con Y", es síntoma de que el flujo debe estar en Python **si y solo si** Y es un detalle de implementación que no debería pasar por el LLM (p.ej. un ID de BD generado en el paso anterior). Si X y Z son tools genuinamente independientes y reutilizables por separado, el patrón de dos tools con orquestación LLM puede ser correcto — el síntoma por sí solo no basta. Extensión del principio de ADR-009.
+
+**Decisión:**
+Los tools que requieren múltiples interacciones con el usuario gestionan ese flujo íntegramente en Python, usando `ask_confirmation` y `ask_selection` internamente. El LLM solo invoca el tool una vez con los datos que tiene disponibles; el tool suspende y reanuda su ejecución async cuantas veces necesite para completar el flujo.
+
+El flujo interno de un tool multi-paso se organiza en tres fases para eliminar el riesgo de escritura parcial:
+
+**Fase 1 — Recopilar:** todos los `await ask_*` necesarios para tomar decisiones. Sin ninguna escritura a BD.
+**Fase 2 — Escribir:** llamar a una función de dominio pura que ejecuta todas las escrituras de una vez. Sin `await ask_*`.
+**Fase 3 — Post-write:** interacciones opcionales que no afectan los datos ya escritos (p.ej. proponer revisión de plan). Puede incluir `await ask_*`.
+
+La función de dominio de la Fase 2 se extrae como función privada del módulo (prefijo `_`), sin `ask_*`, testeable e invocable desde cualquier contexto sin UI (batch, tests de dominio, otros agentes).
+
+Ejemplo canónico — `create_pest_event`:
+```
+Fase 1:
+  await ask_confirmation(...)          # confirmar detección
+  if hay productos:
+    await ask_confirmation(...)        # ¿aplicaste tratamiento?
+    await ask_selection(...)           # seleccionar producto
+
+Fase 2:
+  record_pest_with_optional_treatment(bonsai_id, pest_id, phytosanitary, ...)
+  # escribe pest_detection + phytosanitary_application en una sola función
+
+Fase 3:
+  if active_plan:
+    await ask_plan_review(...)
+```
+
+Todo este flujo es Python determinista. El LLM no toma ninguna decisión de orquestación entre pasos.
+
+**Criterio de aplicación:**
+
+| Situación | Patrón |
+|---|---|
+| El estado intermedio entre pasos es un detalle de implementación (ID de BD, resultado parcial) que no debe pasar por el LLM | Flujo async en Python dentro del tool |
+| El LLM necesita elegir qué tool llamar según el contexto | Agente con tools + descripción de tool bien calibrada |
+| Pasos de recopilación + razonamiento + escritura todos obligatorios | Tool determinista con LLM embebido (ADR-009) |
+| Dos tools son independientes y reutilizables por separado, aunque en este caso se llamen en secuencia | Dos tools separados; la secuencia la gestiona el LLM |
+
+**Consecuencias:**
+- El flujo interactivo multi-paso es 100% determinista — no depende de que el LLM respete un orden descrito en prosa.
+- La tool puede reutilizar datos intermedios (p.ej. `pest_event_id`) sin pasarlos por el LLM.
+- El `accept_confirmation` del API debe hacer polling hasta encontrar el siguiente estado pendiente (confirmación, selección o revisión de plan) para devolverlo al cliente en la misma respuesta HTTP — evita un round-trip extra.
+- Los flujos condicionales (p.ej. solo preguntar por tratamiento si existen productos) son lógica Python, no instrucciones al LLM.
+- **Reusabilidad:** la función de dominio de la Fase 2 es independiente del flujo interactivo — testeable y reutilizable sin UI. El workflow (Fases 1+3) es el único sitio que mezcla interacción con orquestación.
+- **Sin escritura parcial:** la separación en fases garantiza que ninguna escritura a BD ocurre antes de que el usuario haya tomado todas las decisiones. Si el usuario abandona en la Fase 1, no queda nada escrito. Si falla la Fase 2 a mitad (p.ej. dos escrituras y la segunda lanza excepción), sí puede haber inconsistencia — eso es un problema de transacción de BD, no de este patrón.
+- **Testing:** la función de dominio (Fase 2) se testea sin ningún mock de `ask_*`. El workflow completo se testea con mocks de `ask_*` que devuelven respuestas predefinidas en secuencia — más complejo que un tool atómico, pero la función de dominio cubre los casos de escritura de forma simple.
+- **Tensión con ADR-005:** ADR-005 establece que el dominio no formatea texto para el usuario (los builders se inyectan). Este ADR extiende esa separación al *cuándo* interactuar: el tool decide el momento y la condición de cada `ask_*`, lo que mezcla lógica de dominio con orquestación de presentación. Se acepta esta tensión porque la alternativa (orquestación via prompt) tiene un coste mayor en fiabilidad.

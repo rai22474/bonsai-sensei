@@ -17,6 +17,7 @@ def create_delete_bonsai_photo_tool(
     ask_selection: Callable,
     build_selection_question: Callable,
     build_confirmation_message: Callable,
+    build_photo_option_label: Callable,
 ) -> Callable:
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
 
@@ -50,9 +51,7 @@ def create_delete_bonsai_photo_tool(
         if not photos:
             return {"status": "error", "message": "no_photos_available"}
 
-        options = [
-            f"Foto del {photo.taken_on}" for photo in photos
-        ]
+        options = [build_photo_option_label(photo.taken_on) for photo in photos]
         photo_paths = [photo.file_path for photo in photos]
 
         selection = await ask_selection(

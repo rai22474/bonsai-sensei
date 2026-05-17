@@ -20,6 +20,7 @@ def create_gallery_group(
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
     build_delete_bonsai_photo_confirmation: Callable = None,
+    build_delete_bonsai_photo_option_label: Callable = None,
     pending_photos: dict | None = None,
 ):
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
@@ -57,6 +58,7 @@ def create_gallery_group(
         build_add_bonsai_photo_confirmation=build_add_bonsai_photo_confirmation,
         build_delete_bonsai_photo_selection_question=build_delete_bonsai_photo_selection_question,
         build_delete_bonsai_photo_confirmation=build_delete_bonsai_photo_confirmation,
+        build_delete_bonsai_photo_option_label=build_delete_bonsai_photo_option_label,
         get_pending_photo_bytes=get_pending_photo_bytes,
         save_photo_file=save_photo_file,
         clear_pending_photo=clear_pending_photo,

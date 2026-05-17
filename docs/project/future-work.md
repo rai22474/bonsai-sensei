@@ -155,10 +155,12 @@ Más allá de profundidad 3 el filtro de similitud coseno debe ser muy estricto 
 
 ---
 
-## FUTURE-004 — Eventos de plaga por bonsái
+## FUTURE-004 — Eventos de plaga por bonsái (parcialmente completado)
 
 **Contexto:**
 El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes fitosanitarios, pero no tiene forma de registrar una observación de plaga como evento independiente. Sin este registro no hay trazabilidad infección → tratamiento, ni historial de plagas por bonsái para informar futuras recomendaciones.
+
+**Estado (2026-05-15):** Catálogo `Pest` implementado y flujo básico de detección completado: migración, REST endpoints, generación LLM al alta de especie, páginas wiki, `list_pests` en sensei, herramienta `create_pest_event` en caretaker con confirmación, tests de aceptación verdes. Pendiente: enlace a `apply_phytosanitary` y propuesta de revisión de plan.
 
 ### Nuevas entidades
 
@@ -187,10 +189,66 @@ El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes
 
 ### Orden de trabajo al implementar
 
-1. Migración: tabla `pest`, añadir `pest_event_id` a `phytosanitary_application`
-2. Store functions + REST endpoints para `Pest` y `PestEvent`
-3. Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)
-4. Herramienta de agente: alta de `PestEvent` con selección de plaga
+1. ~~Migración: tabla `pest`, añadir `pest_event_id` a `phytosanitary_application`~~ (done)
+2. ~~Store functions + REST endpoints para `Pest` y `PestEvent`~~ (done — `Pest` solo; `PestEvent` pendiente)
+3. ~~Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)~~ (done)
+4. ~~Herramienta de agente: alta de `PestEvent` con confirmación~~ (done — versión básica; selección filtrada por especie pendiente)
 5. Enlace a `apply_phytosanitary` desde el evento
 6. Propuesta de revisión de plan si hay uno activo
-7. Tests de aceptación
+7. ~~Tests de aceptación (detectar + confirmar, plaga no registrada)~~ (done 2026-05-15)
+
+---
+
+## FUTURE-005 — Mejoras de orquestación entre agentes (COMPLETADO 2026-05-14)
+
+**Contexto:**
+Varias debilidades en el protocolo mitori → shokunin → sub-agente producían pérdida de información, pasos de pre-validación redundantes y comportamiento no determinista en Kikaru. Las siguientes mejoras se implementaron en una sola sesión.
+
+### Schema de plan estructurado (Option A)
+
+`mitori_instruction.j2` actualizado: los pasos del plan ahora incluyen un campo `parameters` (dict) junto al campo `request` en texto natural. Shokunin pasa ambos a los sub-agentes. Esto resuelve la pérdida de información donde los sub-agentes (caretaker, nursery, etc.) solo recibían una cadena `request` vaga sin los valores específicos del mensaje original del usuario.
+
+La decisión de adoptar Option A y diferir Option C está registrada en ADR-010 (`docs/architecture/decisions.md`).
+
+### Corrección de routing nursery + botanist
+
+Descripciones de agentes actualizadas para que mitori no genere un paso botanist de pre-validación antes de crear un bonsái. La descripción de nursery ahora indica que la validación de especie es interna; la descripción de botanist indica que no debe invocarse como pre-paso antes de la creación de bonsái.
+
+### Determinismo en Kikaru (selección de tipo de abonado)
+
+`KIKARU_INSTRUCTION` actualizado: regla explícita de que una fecha concreta siempre implica abonado puntual (nunca llamar a `clarify_fertilization_type`). Tras recibir "puntual" de `clarify_fertilization_type`, llamar inmediatamente a `create_fertilizer_application`.
+
+### Descripción de botanist ampliada
+
+La descripción del agente botanist se actualizó para incluir la gestión del catálogo de plagas, de modo que mitori enruta consultas de plagas a botanist en lugar de caretaker.
+
+### list_pests como herramienta de consulta directa en sensei
+
+`list_pests` añadido a las herramientas de consulta directa de sensei (`factory.py`), de modo que "¿tengo plagas registradas?" se responde sin pasar por mitori/shokunin.
+
+### Corrección del endpoint text-response para encuestas
+
+`submit_text_response` en `advice.py` actualizado para aceptar `type` en `("text", "poll")`, corrigiendo fallos de test en los flujos de propuesta de plan de abonado y fitosanitario.
+
+**Archivos clave modificados:**
+- `bonsai_sensei/domain/services/templates/mitori_instruction.j2`
+- `bonsai_sensei/domain/services/cultivation/species/botanist.py`
+- `bonsai_sensei/domain/services/cultivation/plan/kikaru.py`
+- `bonsai_sensei/domain/services/factory.py`
+- `bonsai_sensei/api/advice.py`
+
+---
+
+## FUTURE-006 — Option C: despacho determinista entre agentes
+
+**Contexto:**
+La evaluación de esta opción, la comparación con Option A (adoptada en FUTURE-005) y Option B (descartada), y las condiciones bajo las cuales retomar esta iniciativa están registradas en ADR-010 (`docs/architecture/decisions.md`).
+
+### Punto de partida al retomar
+
+1. Inventariar todas las `action_type` que mitori delega actualmente.
+2. Evaluar si Option B (schema parcial solo para acciones de alta frecuencia) es suficiente.
+3. Decidir si el contrato se valida con Pydantic en el dispatcher o con JSON Schema en la instrucción de mitori.
+4. Implementar en una acción piloto (e.g., `apply_fertilizer`) antes de generalizar.
+
+**Dependencia:** Ninguna — puede retomarse independientemente de FUTURE-004.

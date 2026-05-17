@@ -90,20 +90,18 @@ def external_stubs_ambiguous():
     server.expect_request("/search").respond_with_json(
         {
             "answer": (
-                "Ficus retusa es una especie tropical de bonsái muy popular. "
-                "Riego: abundante en verano, moderado en invierno; evitar encharcamiento. "
-                "Luz: pleno sol o semisombra, mínimo 4 horas de luz directa al día. "
-                "Suelo: mezcla drenante de akadama y volcánica en proporción 60/40. "
-                "Poda: formación en primavera y verano; pinzado continuo durante el crecimiento. "
-                "Plagas habituales: cochinilla, araña roja y pulgones; tratar con aceite de neem. "
-                "Cuidados por estación: en primavera fertilizar cada 15 días; en verano riego diario; "
-                "en otoño reducir fertilización; en invierno proteger de heladas."
+                "Juniperus chinensis es una conífera de origen asiático muy utilizada en bonsái. "
+                "Riego: moderado, dejando secar ligeramente el sustrato entre riegos; evitar encharcamiento. "
+                "Luz: pleno sol al menos 4-6 horas diarias; prefiere exterior. "
+                "Suelo: mezcla muy drenante de akadama y arena gruesa. "
+                "Poda: eliminar ramas cruzadas en primavera; pellizco durante el crecimiento activo. "
+                "Plagas habituales: araña roja en época seca, cochinilla y hongos por exceso de humedad. "
+                "Cuidados por estación: fertilizar en primavera y otoño; proteger de heladas severas en invierno."
             ),
             "results": [],
         }
     )
     yield server
     server.stop()
-
 
 

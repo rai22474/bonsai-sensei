@@ -104,6 +104,16 @@ async def get_advice(request_body: AdviceRequest, request: Request):
 
 @router.delete("/advice/sessions/{user_id}", status_code=204)
 async def reset_session(user_id: str, request: Request):
+    active_tasks = getattr(request.app.state, "active_tasks", {})
+    task = active_tasks.pop(user_id, None)
+    if task and not task.done():
+        task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):
+            pass
+    pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
+    pending_human_responses.pop(user_id, None)
     await request.app.state.reset_session(user_id)
 
 
@@ -121,11 +131,42 @@ async def accept_confirmation(
         pending["event"].set()
         task = active_tasks.get(user_id)
         if task:
-            try:
-                await asyncio.wait_for(asyncio.shield(task), timeout=30)
-                active_tasks.pop(user_id, None)
-            except asyncio.TimeoutError:
-                pass
+            loop = asyncio.get_event_loop()
+            deadline = loop.time() + 55
+            while not task.done():
+                await asyncio.sleep(0.05)
+                if loop.time() > deadline:
+                    return {"status": "accepted"}
+                next_pending = pending_human_responses.get(user_id)
+                if next_pending is not None and next_pending is not pending:
+                    if next_pending.get("type") == "confirmation":
+                        return {
+                            "status": "accepted",
+                            "pending_confirmations": [
+                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
+                            ],
+                        }
+                    if next_pending.get("type") == "plan_review":
+                        return {
+                            "status": "accepted",
+                            "pending_plan_reviews": [
+                                {"id": next_pending["review_id"]}
+                            ],
+                        }
+                    if next_pending.get("type") == "selection":
+                        return {
+                            "status": "accepted",
+                            "pending_selections": [
+                                {
+                                    "id": next_pending["selection_id"],
+                                    "question": next_pending.get("question", ""),
+                                    "options": next_pending.get("options", []),
+                                }
+                            ],
+                        }
+            active_tasks.pop(user_id, None)
+            if task.exception():
+                raise task.exception()
         return {"status": "accepted"}
 
     raise HTTPException(status_code=404, detail="confirmation_not_found")
@@ -236,8 +277,12 @@ async def choose_selection(
         pending["event"].set()
         task = active_tasks.get(user_id)
         if task:
+            loop = asyncio.get_event_loop()
+            deadline = loop.time() + 8
             while not task.done():
                 await asyncio.sleep(0.05)
+                if loop.time() > deadline:
+                    return {"status": "chosen", "option": request_body.option}
                 next_pending = pending_human_responses.get(user_id)
                 if next_pending is not None and next_pending.get("selection_id") != selection_id:
                     if next_pending.get("type") == "confirmation":

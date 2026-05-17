@@ -41,6 +41,7 @@ def create_sensei_agent(
         session_factory=session_factory,
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
+        ask_plan_review=ask_plan_review,
         pending_photos=pending_photos,
         **garden_messages,
     )

@@ -4,6 +4,7 @@ from typing import Callable
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain import fertilizer_catalog
 from bonsai_sensei.domain import phytosanitary_registry
+from bonsai_sensei.domain import phytosanitary_plan_store
 from bonsai_sensei.domain import pest_catalog
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
@@ -14,16 +15,23 @@ def create_caretaker_group(
     model: object,
     session_factory,
     ask_confirmation: Callable,
+    ask_selection: Callable,
+    ask_plan_review: Callable,
     build_apply_fertilizer_confirmation: Callable,
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
     build_create_pest_event_confirmation: Callable,
+    build_phytosanitary_plan_review_proposal: Callable,
+    build_applied_treatment_question: Callable,
+    build_treatment_selection_question: Callable,
 ):
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     get_fertilizer_by_name_func = partial(fertilizer_catalog.get_fertilizer_by_name, create_session=session_factory)
     get_phytosanitary_by_name_func = partial(phytosanitary_registry.get_phytosanitary_by_name, create_session=session_factory)
+    list_phytosanitary_func = partial(phytosanitary_registry.list_phytosanitary, create_session=session_factory)
     get_pest_by_name_func = partial(pest_catalog.get_pest_by_name, create_session=session_factory)
+    get_active_phytosanitary_plan_func = partial(phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory)
     record_bonsai_event_func = partial(bonsai_history.record_bonsai_event, create_session=session_factory)
     list_bonsai_events_func = partial(bonsai_history.list_bonsai_events, create_session=session_factory)
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
@@ -36,15 +44,22 @@ def create_caretaker_group(
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         get_pest_by_name_func=get_pest_by_name_func,
+        list_phytosanitary_func=list_phytosanitary_func,
+        get_active_phytosanitary_plan_func=get_active_phytosanitary_plan_func,
         record_bonsai_event_func=record_bonsai_event_func,
         list_bonsai_events_func=list_bonsai_events_func,
         list_planned_works_func=list_planned_works_func,
         get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
+        ask_plan_review=ask_plan_review,
         build_apply_fertilizer_confirmation=build_apply_fertilizer_confirmation,
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
         build_create_pest_event_confirmation=build_create_pest_event_confirmation,
+        build_phytosanitary_plan_review_proposal=build_phytosanitary_plan_review_proposal,
+        build_applied_treatment_question=build_applied_treatment_question,
+        build_treatment_selection_question=build_treatment_selection_question,
     )

@@ -32,6 +32,7 @@ def create_gallery(
     build_add_bonsai_photo_confirmation: Callable = None,
     build_delete_bonsai_photo_selection_question: Callable = None,
     build_delete_bonsai_photo_confirmation: Callable = None,
+    build_delete_bonsai_photo_option_label: Callable = None,
     get_pending_photo_bytes: Callable = None,
     save_photo_file: Callable = None,
     clear_pending_photo: Callable = None,
@@ -62,6 +63,7 @@ def create_gallery(
         ask_selection=ask_selection,
         build_selection_question=build_delete_bonsai_photo_selection_question,
         build_confirmation_message=build_delete_bonsai_photo_confirmation,
+        build_photo_option_label=build_delete_bonsai_photo_option_label,
     )
     delete_photo_tool.__name__ = "delete_bonsai_photo"
     return Agent(
