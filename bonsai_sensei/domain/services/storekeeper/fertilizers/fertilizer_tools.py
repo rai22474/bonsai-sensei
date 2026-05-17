@@ -21,7 +21,7 @@ def create_list_fertilizers_tool(list_fertilizers_func: Callable[[], list[Fertil
         items = [
             {
                 "id": fertilizer.id,
-                "name": fertilizer.name,
+                "name": fertilizer.name.capitalize(),
             }
             for fertilizer in fertilizers
         ]
@@ -39,7 +39,7 @@ def create_get_fertilizer_by_name_tool(
     @trace_tool_call
     @limit_tool_calls(agent_name="storekeeper")
     def get_fertilizer_by_name(name: str) -> dict:
-        """Lookup a fertilizer by name and return its full wiki page content.
+        """Look up a fertilizer and return its full technical sheet. Use when the user asks for details, specifications, or the ficha of a fertilizer. The 'content' field in the result contains the full wiki page and must be returned to the user as-is.
 
         Args:
             name: Fertilizer name to look up.
@@ -64,7 +64,7 @@ def create_get_fertilizer_by_name_tool(
             "status": "success",
             "fertilizer": {
                 "id": fertilizer.id,
-                "name": fertilizer.name,
+                "name": fertilizer.name.capitalize(),
                 "recommended_amount": fertilizer.recommended_amount,
                 "content": content,
             },

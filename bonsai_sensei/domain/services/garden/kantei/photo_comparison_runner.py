@@ -17,8 +17,7 @@ Indica claramente qué ha cambiado, en qué dirección y qué aspectos permanece
 Sé preciso y útil, no genérico.
 
 Responde en castellano.
-Usa HTML compatible con Telegram: <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea.
-No uses Markdown.
+Usa Markdown: **negrita**, *cursiva*, listas con - y saltos de línea.
 """
 
 

@@ -1,3 +1,4 @@
+import re
 from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
@@ -11,6 +12,8 @@ def create_compare_bonsai_photos_tool(
     list_bonsai_photos_func: Callable,
     load_photo_bytes: Callable,
     run_photo_comparison: Callable,
+    write_wiki_page_func: Callable,
+    update_reports_index_func: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="kantei")
@@ -32,6 +35,7 @@ def create_compare_bonsai_photos_tool(
 
         Returns:
             JSON dict with status 'comparison_complete', 'only_one_photo', 'no_photos', or 'error'.
+            On 'comparison_complete' the report is automatically saved to the wiki and the index updated.
             Output JSON (comparison_complete): {"status": "comparison_complete", "bonsai_name": str,
                 "older_taken_on": "YYYY-MM-DD", "newer_taken_on": "YYYY-MM-DD", "comparison": str}.
             Output JSON (only_one_photo): {"status": "only_one_photo", "bonsai_name": str,
@@ -75,13 +79,17 @@ def create_compare_bonsai_photos_tool(
             analyzed.append(str(newer_photo.taken_on))
             tool_context.state["photos_for_analysis_taken_on"] = analyzed
 
+        slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
+        report_path = f"bonsai/{slug}/reports/{newer_photo.taken_on}-comparison.md"
+        report_content = f"[[{older_photo.file_path}|Foto anterior]] · [[{newer_photo.file_path}|Foto reciente]]\n\n{comparison}"
+        write_wiki_page_func(path=report_path, content=report_content)
+        await update_reports_index_func(bonsai_name)
+
         return {
             "status": "comparison_complete",
             "bonsai_name": bonsai_name,
             "older_taken_on": str(older_photo.taken_on),
-            "older_photo_path": older_photo.file_path,
             "newer_taken_on": str(newer_photo.taken_on),
-            "newer_photo_path": newer_photo.file_path,
             "comparison": comparison,
         }
 

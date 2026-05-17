@@ -43,6 +43,7 @@ DESIGN RULES:
 - Inject external dependencies into functions for testability (e.g., translators, HTTP clients).
 - Never use single-letter or abbreviated variable names (e.g., `c`, `e`, `f`). Always use descriptive names, including in list comprehensions and lambda expressions.
 - Never hardcode user-facing strings (questions, confirmation texts, error messages) inside domain tools. Any text that reaches the user must be defined in `telegram/messages/` and injected as a `Callable` (e.g. `build_selection_question`, `build_confirmation_message`). Tools call the callable — they never build the string.
+- When an operation requires first fetching an ID and then acting on it (list → pick → execute), merge both steps into a single tool that accepts the entity name, resolves the ID internally, and handles selection via `ask_selection` if multiple results exist. Never expose the ID-lookup step as a separate tool the LLM must orchestrate.
 
 # DOMAIN RULES: 
 - Keep domain entities in `bonsai_sensei/domain`, not in `bonsai_sensei/database`.

@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from typing import Callable
 
@@ -20,6 +21,8 @@ def create_analyze_bonsai_photo_tool(
     list_bonsai_photos_func: Callable,
     load_photo_bytes: Callable,
     run_photo_analysis: Callable,
+    write_wiki_page_func: Callable,
+    update_reports_index_func: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="kantei")
@@ -44,6 +47,7 @@ def create_analyze_bonsai_photo_tool(
 
         Returns:
             JSON dict with status 'analysis_complete', 'no_photos', or 'error'.
+            On 'analysis_complete' the report is automatically saved to the wiki and the index updated.
             Output JSON (analysis_complete): {"status": "analysis_complete", "bonsai_name": str, "taken_on": "YYYY-MM-DD", "analysis_type": str, "analysis": str}.
             Output JSON (no_photos): {"status": "no_photos", "bonsai_name": str}.
             Output JSON (error): {"status": "error", "message": str}.
@@ -72,11 +76,16 @@ def create_analyze_bonsai_photo_tool(
             analyzed.append(str(photo.taken_on))
             tool_context.state["photos_for_analysis_taken_on"] = analyzed
 
+        slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
+        report_path = f"bonsai/{slug}/reports/{photo.taken_on}-{analysis_type}.md"
+        report_content = f"[[{photo.file_path}|Ver foto]]\n\n{analysis}"
+        write_wiki_page_func(path=report_path, content=report_content)
+        await update_reports_index_func(bonsai_name)
+
         return {
             "status": "analysis_complete",
             "bonsai_name": bonsai_name,
             "taken_on": str(photo.taken_on),
-            "photo_path": photo.file_path,
             "analysis_type": analysis_type,
             "analysis": analysis,
         }

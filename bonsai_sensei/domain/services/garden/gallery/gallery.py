@@ -6,16 +6,17 @@ from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_sin
 from bonsai_sensei.domain.services.garden.gallery.add_bonsai_photo import create_add_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.gallery.list_bonsai_photos import create_list_bonsai_photos_tool
 from bonsai_sensei.domain.services.garden.gallery.delete_bonsai_photo import create_delete_bonsai_photo_tool
+from bonsai_sensei.domain.services.tool_contract import TOOL_CONTRACT
 
 
-GALLERY_INSTRUCTION = """Eres el encargado del álbum fotográfico de la colección de bonsáis.
+GALLERY_INSTRUCTION = f"""Eres el encargado del álbum fotográfico de la colección de bonsáis.
 
 # Comportamiento
-- Cuando el usuario envíe una foto (visible en la conversación), llama directamente a add_bonsai_photo; la herramienta mostrará la lista de bonsáis al usuario.
-- Cuando el usuario quiera registrar una foto para un bonsái concreto, usa add_bonsai_photo con el bonsai_name proporcionado.
-- Para consultar o listar las fotos registradas de un bonsái (sin analizarlas), usa list_bonsai_photos.
-- Para eliminar una foto, llama DIRECTAMENTE a delete_bonsai_photo sin preguntar ni listar fotos antes; la herramienta gestiona la selección y confirmación internamente.
-- Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
+{TOOL_CONTRACT}
+- Cuando haya una foto en la conversación, regístrala directamente; la herramienta gestiona la selección del bonsái.
+- Cuando el usuario quiera registrar una foto para un bonsái concreto, usa el nombre del bonsái proporcionado directamente.
+- Para consultar el inventario de fotos registradas de un bonsái (sin analizarlas), usa la herramienta de listado.
+- Para eliminar una foto, actúa directamente con el nombre del bonsái; la herramienta gestiona la selección y confirmación. No listes fotos antes.
 """
 
 

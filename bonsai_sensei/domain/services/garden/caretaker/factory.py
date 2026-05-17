@@ -21,6 +21,8 @@ def create_caretaker_group(
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
     build_execute_planned_work_confirmation: Callable,
+    build_execute_planned_work_selection_question: Callable,
+    build_execute_planned_work_option_label: Callable,
     build_create_pest_event_confirmation: Callable,
     build_phytosanitary_plan_review_proposal: Callable,
     build_applied_treatment_question: Callable,
@@ -35,7 +37,6 @@ def create_caretaker_group(
     record_bonsai_event_func = partial(bonsai_history.record_bonsai_event, create_session=session_factory)
     list_bonsai_events_func = partial(bonsai_history.list_bonsai_events, create_session=session_factory)
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
-    get_planned_work_func = partial(cultivation_plan.get_planned_work, create_session=session_factory)
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
 
     return create_caretaker(
@@ -49,7 +50,6 @@ def create_caretaker_group(
         record_bonsai_event_func=record_bonsai_event_func,
         list_bonsai_events_func=list_bonsai_events_func,
         list_planned_works_func=list_planned_works_func,
-        get_planned_work_func=get_planned_work_func,
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
@@ -58,6 +58,8 @@ def create_caretaker_group(
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,
         build_execute_planned_work_confirmation=build_execute_planned_work_confirmation,
+        build_execute_planned_work_selection_question=build_execute_planned_work_selection_question,
+        build_execute_planned_work_option_label=build_execute_planned_work_option_label,
         build_create_pest_event_confirmation=build_create_pest_event_confirmation,
         build_phytosanitary_plan_review_proposal=build_phytosanitary_plan_review_proposal,
         build_applied_treatment_question=build_applied_treatment_question,

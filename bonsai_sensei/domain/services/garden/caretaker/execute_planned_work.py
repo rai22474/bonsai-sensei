@@ -3,55 +3,82 @@ from typing import Callable
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from google.adk.tools.tool_context import ToolContext
 
+from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_execute_planned_work_tool(
-    get_planned_work_func: Callable,
+    get_bonsai_by_name_func: Callable,
+    list_planned_works_func: Callable,
     record_bonsai_event_func: Callable,
     delete_planned_work_func: Callable,
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_confirmation_message: Callable,
+    build_selection_question: Callable,
+    build_work_option_label: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="caretaker")
-    async def execute_planned_work(
-        work_id: int,
+    async def execute_planned_work_for_bonsai(
+        bonsai_name: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Execute a planned work item after explicit user confirmation, recording the event and removing it from the plan.
+        """Execute a planned work for a bonsai after user confirmation. Handles work selection internally if multiple works are scheduled.
+
+        Call this directly with just the bonsai name — do not list planned works beforehand.
+        This tool handles work listing, selection (if multiple), and confirmation internally.
 
         Args:
-            work_id: ID of the planned work to execute.
+            bonsai_name: Name of the bonsai whose planned work to execute.
 
         Returns:
-            A JSON-ready dictionary with status 'success' or 'cancelled'.
+            A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
             Output JSON (success): {"status": "success", "message": "<confirmation>"}.
-            Output JSON (cancelled): {"status": "cancelled", "message": "<reason>"}.
+            Output JSON (cancelled): {"status": "cancelled", "reason": "<reason>"}.
             Output JSON (error): {"status": "error", "message": "<reason>"}.
-            Error reasons: "work_id_required", "planned_work_not_found".
+            Error reasons: "bonsai_not_found", "no_planned_works".
         """
-        if not work_id:
-            return {"status": "error", "message": "work_id_required"}
+        bonsai = get_bonsai_by_name_func(bonsai_name)
+        if not bonsai:
+            return {"status": "error", "message": "bonsai_not_found"}
 
-        planned_work = get_planned_work_func(work_id=work_id)
-        if not planned_work:
-            return {"status": "error", "message": "planned_work_not_found"}
+        works = list_planned_works_func(bonsai_id=bonsai.id)
+        if not works:
+            return {"status": "error", "message": "no_planned_works"}
 
-        confirmed = await ask_confirmation(build_confirmation_message(planned_work), tool_context=tool_context)
-
-        if confirmed:
-            record_bonsai_event_func(
-                bonsai_event=BonsaiEvent(
-                    bonsai_id=planned_work.bonsai_id,
-                    event_type=planned_work.work_type,
-                    payload=planned_work.payload,
-                )
+        if len(works) > 1:
+            options = [build_work_option_label(work) for work in works]
+            selection = await ask_selection(
+                build_selection_question(bonsai_name),
+                options,
+                tool_context=tool_context,
             )
-            delete_planned_work_func(work_id=work_id)
-            return {"status": "success", "message": f"Planned work {work_id} executed and removed from plan."}
+            if isinstance(selection, SelectionNoneResult):
+                return {"status": "cancelled", "reason": selection.reason}
+            selected_index = options.index(selection) if selection in options else -1
+            if selected_index == -1:
+                return {"status": "error", "message": "invalid_selection"}
+            work = works[selected_index]
+        else:
+            work = works[0]
 
-        return {"status": "cancelled", "reason": confirmed.reason}
+        confirmed = await ask_confirmation(
+            build_confirmation_message(work, bonsai_name),
+            tool_context=tool_context,
+        )
+        if not confirmed:
+            return {"status": "cancelled", "reason": confirmed.reason}
 
-    return execute_planned_work
+        record_bonsai_event_func(
+            bonsai_event=BonsaiEvent(
+                bonsai_id=work.bonsai_id,
+                event_type=work.work_type,
+                payload=work.payload,
+            )
+        )
+        delete_planned_work_func(work_id=work.id)
+        return {"status": "success", "message": f"Work '{work.work_type}' executed for '{bonsai_name}'."}
+
+    return execute_planned_work_for_bonsai

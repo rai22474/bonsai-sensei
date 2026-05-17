@@ -40,6 +40,8 @@ def create_kantei_group(model: object, session_factory) -> object:
         list_bonsai_photos_func=list_bonsai_photos_func,
         load_photo_bytes=load_photo_bytes,
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=write_wiki_page_tool,
+        update_reports_index_func=update_reports_index_tool,
     )
     analyze_tool.__name__ = "analyze_bonsai_photo"
 
@@ -48,6 +50,8 @@ def create_kantei_group(model: object, session_factory) -> object:
         list_bonsai_photos_func=list_bonsai_photos_func,
         load_photo_bytes=load_photo_bytes,
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=write_wiki_page_tool,
+        update_reports_index_func=update_reports_index_tool,
     )
     compare_tool.__name__ = "compare_bonsai_photos"
 
@@ -55,6 +59,4 @@ def create_kantei_group(model: object, session_factory) -> object:
         model=model,
         analyze_bonsai_photo_tool=analyze_tool,
         compare_bonsai_photos_tool=compare_tool,
-        write_wiki_page_tool=write_wiki_page_tool,
-        update_reports_index_tool=update_reports_index_tool,
     )

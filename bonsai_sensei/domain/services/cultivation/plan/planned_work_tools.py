@@ -53,7 +53,7 @@ def create_list_weekend_planned_works_tool(list_planned_works_in_date_range_func
             "sunday": sunday.isoformat(),
             "planned_works": [
                 {
-                    "bonsai_name": bonsai_map.get(work.bonsai_id, f"Bonsái {work.bonsai_id}"),
+                    "bonsai_name": bonsai_map.get(work.bonsai_id, f"Bonsái {work.bonsai_id}").capitalize(),
                     "work_type": work.work_type,
                     "scheduled_date": work.scheduled_date.isoformat(),
                     "payload": work.payload,

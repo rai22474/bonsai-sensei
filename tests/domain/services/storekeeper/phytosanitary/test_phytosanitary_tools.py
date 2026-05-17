@@ -13,18 +13,18 @@ def should_list_phytosanitary(list_phytosanitary_tool):
 
     assert_that(result, equal_to({
         "status": "success",
-        "phytosanitary": [{"id": 1, "name": "Phytosanitary A"}],
+        "phytosanitary": [{"id": 1, "name": "Phytosanitary"}],
     }), "Should list phytosanitary with only id and name")
 
 
 def should_get_phytosanitary_by_name(get_phytosanitary_tool):
-    result = get_phytosanitary_tool("Phytosanitary A")
+    result = get_phytosanitary_tool("phytosanitary")
 
     assert_that(result, equal_to({
         "status": "success",
         "phytosanitary": {
             "id": 1,
-            "name": "Phytosanitary A",
+            "name": "Phytosanitary",
             "recommended_amount": "10 ml/L",
             "content": None,
         },
@@ -42,9 +42,9 @@ def should_return_error_when_phytosanitary_not_found(get_phytosanitary_tool):
 def phytosanitary_a():
     return Phytosanitary(
         id=1,
-        name="Phytosanitary A",
+        name="phytosanitary",
         recommended_amount="10 ml/L",
-        wiki_path="phytosanitaries/phytosanitary-a.md",
+        wiki_path="phytosanitaries/phytosanitary.md",
     )
 
 
@@ -59,7 +59,7 @@ def list_phytosanitary_func(phytosanitary_a):
 @pytest.fixture
 def get_phytosanitary_by_name_func(phytosanitary_a):
     def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
-        if name == "Phytosanitary A":
+        if name.lower() == "phytosanitary":
             return phytosanitary_a
         return None
 

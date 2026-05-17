@@ -13,18 +13,18 @@ def should_list_fertilizers(list_fertilizers_tool):
 
     assert_that(result, equal_to({
         "status": "success",
-        "fertilizers": [{"id": 1, "name": "Fertilizer A"}],
+        "fertilizers": [{"id": 1, "name": "Fertilizer"}],
     }), "Should list fertilizers with only id and name")
 
 
 def should_get_fertilizer_by_name(get_fertilizer_tool):
-    result = get_fertilizer_tool("Fertilizer A")
+    result = get_fertilizer_tool("fertilizer")
 
     assert_that(result, equal_to({
         "status": "success",
         "fertilizer": {
             "id": 1,
-            "name": "Fertilizer A",
+            "name": "Fertilizer",
             "recommended_amount": "10 ml/L",
             "content": None,
         },
@@ -42,9 +42,9 @@ def should_return_error_when_fertilizer_not_found(get_fertilizer_tool):
 def fertilizer_a():
     return Fertilizer(
         id=1,
-        name="Fertilizer A",
+        name="fertilizer",
         recommended_amount="10 ml/L",
-        wiki_path="fertilizers/fertilizer-a.md",
+        wiki_path="fertilizers/fertilizer.md",
     )
 
 
@@ -59,7 +59,7 @@ def list_fertilizers_func(fertilizer_a):
 @pytest.fixture
 def get_fertilizer_by_name_func(fertilizer_a):
     def get_fertilizer_by_name(name: str) -> Fertilizer | None:
-        if name == "Fertilizer A":
+        if name.lower() == "fertilizer":
             return fertilizer_a
         return None
 

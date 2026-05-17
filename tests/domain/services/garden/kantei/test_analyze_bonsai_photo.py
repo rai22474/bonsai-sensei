@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from hamcrest import assert_that, equal_to, has_key, less_than
+from hamcrest import assert_that, equal_to, has_key, contains_string
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_photo import BonsaiPhoto
@@ -70,11 +70,16 @@ async def should_use_latest_photo_when_no_date_hint(tool_context, existing_bonsa
     async def run_photo_analysis(photo_bytes, analysis_type):
         return "analysis result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     tool = create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: used_paths.append(path) or b"bytes",
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
     await tool("Olmo", "health", date_hint="", tool_context=tool_context)
@@ -94,11 +99,16 @@ async def should_select_photo_by_month_hint(tool_context, existing_bonsai):
     async def run_photo_analysis(photo_bytes, analysis_type):
         return "analysis result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     tool = create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: used_paths.append(path) or b"bytes",
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
     await tool("Olmo", "health", date_hint="marzo", tool_context=tool_context)
@@ -115,6 +125,94 @@ async def should_record_taken_on_in_tool_context_state(analyze_tool, tool_contex
         tool_context.state["photos_for_analysis_taken_on"],
         equal_to(["2025-03-15"]),
         "Tool should record taken_on date in tool_context state",
+    )
+
+
+@pytest.mark.asyncio
+async def should_save_wiki_report_with_wikilink_after_analysis(tool_context, existing_bonsai, existing_photo):
+    written_pages = {}
+
+    async def update_reports_index(bonsai_name):
+        pass
+
+    tool = _make_tool_with_captures(
+        existing_bonsai=existing_bonsai,
+        existing_photo=existing_photo,
+        written_pages=written_pages,
+        update_reports_index=update_reports_index,
+    )
+
+    await tool("Olmo", "health", tool_context=tool_context)
+
+    assert_that(
+        written_pages.get("bonsai/olmo/reports/2025-03-15-health.md", ""),
+        contains_string("[[bonsai/olmo/photo1.jpg|Ver foto]]"),
+        "Report should contain wikilink to the analysed photo",
+    )
+
+
+@pytest.mark.asyncio
+async def should_update_reports_index_after_analysis(tool_context, existing_bonsai, existing_photo):
+    index_calls = []
+
+    async def update_reports_index(bonsai_name):
+        index_calls.append(bonsai_name)
+
+    tool = _make_tool_with_captures(
+        existing_bonsai=existing_bonsai,
+        existing_photo=existing_photo,
+        update_reports_index=update_reports_index,
+    )
+
+    await tool("Olmo", "health", tool_context=tool_context)
+
+    assert_that(index_calls, equal_to(["Olmo"]),
+        "Reports index should be updated with the bonsai name after analysis")
+
+
+@pytest.mark.asyncio
+async def should_not_save_report_when_bonsai_not_found(tool_context, existing_bonsai, existing_photo):
+    written_pages = {}
+
+    async def update_reports_index(bonsai_name):
+        pass
+
+    tool = _make_tool_with_captures(
+        existing_bonsai=existing_bonsai,
+        existing_photo=existing_photo,
+        written_pages=written_pages,
+        update_reports_index=update_reports_index,
+        get_bonsai_by_name_func=lambda name: None,
+    )
+
+    await tool("Unknown", "health", tool_context=tool_context)
+
+    assert_that(written_pages, equal_to({}),
+        "No report should be saved when bonsai is not found")
+
+
+def _make_tool_with_captures(
+    existing_bonsai,
+    existing_photo,
+    written_pages=None,
+    update_reports_index=None,
+    get_bonsai_by_name_func=None,
+):
+    pages = written_pages if written_pages is not None else {}
+
+    async def _noop_update_index(bonsai_name):
+        pass
+
+    async def run_photo_analysis(photo_bytes, analysis_type):
+        return "analysis result"
+
+    return create_analyze_bonsai_photo_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func or (lambda name: existing_bonsai if name == existing_bonsai.name else None),
+        list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
+        load_photo_bytes=lambda path: b"photo_bytes",
+        run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: pages.update({path: content}),
+        update_reports_index_func=update_reports_index or _noop_update_index,
     )
 
 
@@ -138,11 +236,16 @@ def analyze_tool(existing_bonsai, existing_photo):
     async def run_photo_analysis(photo_bytes, analysis_type):
         return "detailed analysis text"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
 
@@ -151,11 +254,16 @@ def analyze_tool_no_photos(existing_bonsai):
     async def run_photo_analysis(photo_bytes, analysis_type):
         return "detailed analysis text"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
 
@@ -164,9 +272,14 @@ def analyze_tool_missing_file(existing_bonsai, existing_photo):
     async def run_photo_analysis(photo_bytes, analysis_type):
         return "detailed analysis text"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: None,
         run_photo_analysis=run_photo_analysis,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )

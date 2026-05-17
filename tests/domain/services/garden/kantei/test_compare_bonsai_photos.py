@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from hamcrest import assert_that, equal_to, less_than
+from hamcrest import assert_that, equal_to, less_than, contains_string
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.bonsai_photo import BonsaiPhoto
@@ -49,11 +49,16 @@ async def should_return_error_when_older_photo_file_not_found(tool_context, exis
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     tool = create_compare_bonsai_photos_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=load_photo_bytes_first_missing,
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
     result = await tool("Olmo", tool_context=tool_context)
@@ -73,11 +78,16 @@ async def should_return_error_when_newer_photo_file_not_found(tool_context, exis
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     tool = create_compare_bonsai_photos_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=load_photo_bytes_second_missing,
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
     result = await tool("Olmo", tool_context=tool_context)
@@ -120,6 +130,57 @@ async def should_record_both_taken_on_in_tool_context_state(compare_tool, tool_c
     )
 
 
+@pytest.mark.asyncio
+async def should_save_wiki_report_with_wikilinks_after_comparison(tool_context, existing_bonsai, two_photos):
+    written_pages = {}
+
+    async def noop_update_index(bonsai_name):
+        pass
+
+    async def run_photo_comparison(older_bytes, newer_bytes, intent):
+        return "comparison result"
+
+    tool = create_compare_bonsai_photos_tool(
+        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
+        load_photo_bytes=lambda path: b"photo_bytes",
+        run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: written_pages.update({path: content}),
+        update_reports_index_func=noop_update_index,
+    )
+
+    await tool("Olmo", tool_context=tool_context)
+
+    report_content = written_pages.get("bonsai/olmo/reports/2025-06-20-comparison.md", "")
+    assert_that(report_content, contains_string("[[photo_jan.jpg|Foto anterior]] · [[photo_jun.jpg|Foto reciente]]"),
+        "Comparison report should contain wikilinks for both photos")
+
+
+@pytest.mark.asyncio
+async def should_update_reports_index_after_comparison(tool_context, existing_bonsai, two_photos):
+    index_calls = []
+
+    async def track_update_index(bonsai_name):
+        index_calls.append(bonsai_name)
+
+    async def run_photo_comparison(older_bytes, newer_bytes, intent):
+        return "comparison result"
+
+    tool = create_compare_bonsai_photos_tool(
+        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
+        load_photo_bytes=lambda path: b"photo_bytes",
+        run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=track_update_index,
+    )
+
+    await tool("Olmo", tool_context=tool_context)
+
+    assert_that(index_calls, equal_to(["Olmo"]),
+        "Reports index should be updated with the bonsai name after comparison")
+
+
 @pytest.fixture
 def existing_bonsai():
     return Bonsai(id=1, name="Olmo", species_id=1)
@@ -143,11 +204,16 @@ def compare_tool(existing_bonsai, two_photos):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_compare_bonsai_photos_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
 
@@ -156,11 +222,16 @@ def compare_tool_no_photos(existing_bonsai):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_compare_bonsai_photos_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )
 
 
@@ -171,9 +242,14 @@ def compare_tool_one_photo(existing_bonsai):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
+    async def noop_update_index(bonsai_name):
+        pass
+
     return create_compare_bonsai_photos_tool(
         get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [single_photo] if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
+        write_wiki_page_func=lambda path, content: None,
+        update_reports_index_func=noop_update_index,
     )

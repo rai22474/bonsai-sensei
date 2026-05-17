@@ -11,8 +11,7 @@ _MAX_LLM_CALLS = 5
 _ANALYSIS_INSTRUCTION = """
 Eres el kantei de bonsáis, experto en evaluación visual de árboles.
 Sé preciso y útil, no genérico. Responde en castellano.
-Usa HTML compatible con Telegram: <b>negrita</b>, <i>cursiva</i>, listas con • y saltos de línea.
-No uses Markdown.
+Usa Markdown: **negrita**, *cursiva*, listas con - y saltos de línea.
 """
 
 _PROMPTS = {

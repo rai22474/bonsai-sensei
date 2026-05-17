@@ -31,7 +31,7 @@ def create_list_species_tool(get_all_species_func: Callable[[], list[dict]]):
             return {"status": "success", "species": []}
         items = [
             {
-                "common_name": item["common_name"],
+                "common_name": item["common_name"].capitalize(),
                 "scientific_name": item["scientific_name"],
             }
             for item in species_list
@@ -64,7 +64,7 @@ def create_search_species_tool(
             "status": "success",
             "species": [
                 {
-                    "common_name": species.name,
+                    "common_name": species.name.capitalize(),
                     "scientific_name": species.scientific_name or "",
                     "wiki_path": species.wiki_path or "",
                 }

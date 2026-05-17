@@ -19,7 +19,7 @@ def create_list_pests_tool(list_pests_func: Callable[[], list[Pest]]):
         items = list_pests_func()
         return {
             "status": "success",
-            "pests": [{"id": pest.id, "name": pest.name, "wiki_path": pest.wiki_path} for pest in items],
+            "pests": [{"id": pest.id, "name": pest.name.capitalize(), "wiki_path": pest.wiki_path} for pest in items],
         }
 
     return list_pests
@@ -45,6 +45,6 @@ def create_get_pest_by_name_tool(get_pest_by_name_func: Callable[[str], Pest | N
         pest = get_pest_by_name_func(name)
         if not pest:
             return {"status": "error", "message": "pest_not_found"}
-        return {"status": "success", "pest": {"id": pest.id, "name": pest.name, "wiki_path": pest.wiki_path}}
+        return {"status": "success", "pest": {"id": pest.id, "name": pest.name.capitalize(), "wiki_path": pest.wiki_path}}
 
     return get_pest_by_name

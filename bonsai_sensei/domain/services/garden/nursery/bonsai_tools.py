@@ -70,8 +70,8 @@ def _build_bonsai_dict(bonsai: Bonsai, species_map: dict[int, Species]) -> dict:
     species = species_map.get(bonsai.species_id)
     return {
         "id": bonsai.id,
-        "name": bonsai.name,
+        "name": bonsai.name.capitalize(),
         "species_id": bonsai.species_id,
-        "species_name": species.name if species else f"Especie {bonsai.species_id}",
+        "species_name": species.name.capitalize() if species else f"Especie {bonsai.species_id}",
         "species_emoji": species.get_emoji() if species else "🌱",
     }

@@ -44,6 +44,7 @@ async def should_return_cancelled_when_selection_is_cancelled(tool_context, exis
         ask_selection=ask_selection_cancel,
         build_selection_question=lambda name: f"Select photo for '{name}'",
         build_confirmation_message=lambda name, taken_on: f"Delete photo from {taken_on}?",
+        build_photo_option_label=lambda taken_on: str(taken_on),
     )
 
     result = await tool("Olmo", tool_context=tool_context)
@@ -77,6 +78,7 @@ async def should_return_cancelled_when_user_declines_confirmation(tool_context, 
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",
         build_confirmation_message=lambda name, taken_on: f"Delete photo from {taken_on}?",
+        build_photo_option_label=lambda taken_on: str(taken_on),
     )
 
     result = await tool("Olmo", tool_context=tool_context)
@@ -127,6 +129,7 @@ def delete_photo_tool(existing_bonsai, existing_photo, deleted_photo_ids):
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",
         build_confirmation_message=lambda name, taken_on: f"Delete photo from {taken_on}?",
+        build_photo_option_label=lambda taken_on: str(taken_on),
     )
 
 
@@ -140,4 +143,5 @@ def delete_photo_tool_no_photos(existing_bonsai):
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",
         build_confirmation_message=lambda name, taken_on: f"Delete photo from {taken_on}?",
+        build_photo_option_label=lambda taken_on: str(taken_on),
     )

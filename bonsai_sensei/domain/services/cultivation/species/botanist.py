@@ -9,17 +9,17 @@ from bonsai_sensei.domain.services.cultivation.pests.pest_tools import create_li
 from bonsai_sensei.domain.services.cultivation.pests.create_pest import create_create_pest_tool
 from bonsai_sensei.domain.services.cultivation.pests.delete_pest import create_delete_pest_tool
 from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
+from bonsai_sensei.domain.services.tool_contract import TOOL_CONTRACT
 from bonsai_sensei.domain.species import Species
 
 
-BOTANIST_INSTRUCTION = """
+BOTANIST_INSTRUCTION = f"""
 Eres el responsable del herbario de especies de bonsáis.
 Mantienes el registro actualizado: registrar nuevas especies, actualizar su información y eliminar las que ya no estén en uso.
-Cada especie tiene una ficha de cultivo en la wiki que puedes consultar con read_wiki_page.
+Cada especie tiene una ficha de cultivo en la wiki que puedes consultar directamente.
 
 # Comportamiento
-- Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
-- Al mencionar nombres de especies en tu respuesta, escríbelos con la primera letra en mayúscula.
+{TOOL_CONTRACT}
 """
 
 

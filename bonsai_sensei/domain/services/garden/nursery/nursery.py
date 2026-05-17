@@ -10,15 +10,13 @@ from bonsai_sensei.domain.services.garden.nursery.bonsai_tools import (
 from bonsai_sensei.domain.services.garden.nursery.create_bonsai import create_create_bonsai_tool
 from bonsai_sensei.domain.services.garden.nursery.update_bonsai import create_update_bonsai_tool
 from bonsai_sensei.domain.services.garden.nursery.delete_bonsai import create_delete_bonsai_tool
+from bonsai_sensei.domain.services.tool_contract import TOOL_CONTRACT
 
 
-NURSERY_INSTRUCTION = """Eres el encargado del registro de la colección de bonsáis.
+NURSERY_INSTRUCTION = f"""Eres el encargado del registro de la colección de bonsáis.
 
 # Comportamiento
-- Para crear, actualizar o eliminar: llama directamente a la tool con los datos disponibles. Las tools gestionan internamente la confirmación.
-- Cuando una herramienta devuelva status 'success' o 'cancelled', responde al usuario sin llamar a más herramientas.
-- Para listar o consultar: llama directamente a la tool.
-- Al mencionar nombres de bonsáis o especies en tu respuesta, escríbelos con la primera letra en mayúscula.
+{TOOL_CONTRACT}
 """
 
 
