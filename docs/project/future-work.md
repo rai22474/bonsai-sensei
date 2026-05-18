@@ -258,3 +258,97 @@ La evaluación de esta opción, la comparación con Option A (adoptada en FUTURE
 4. Implementar en una acción piloto (e.g., `apply_fertilizer`) antes de generalizar.
 
 **Dependencia:** Ninguna — puede retomarse independientemente de FUTURE-004.
+
+---
+
+## FUTURE-007 — Memoria episódica con ADK MemoryService + mem0
+
+**Contexto:**
+Los agentes Sensei no retienen conocimiento entre sesiones. Las observaciones que emergen de conversaciones (síntomas, diagnósticos, resultados de tratamientos, decisiones de cultivo) se pierden cuando termina la sesión ADK. Sin captura episódica, el keeper no puede enriquecer la wiki con conocimiento derivado de interacciones reales — solo ingesta fuentes externas (transcripciones de YouTube).
+
+Esta feature también mitiga ISSUE-002: el reset de sesión a los 50 eventos sigue ocurriendo, pero el contexto semántico sobrevive — `PreloadMemory` lo recupera automáticamente en el turno siguiente, haciendo el reset transparente al usuario.
+
+**Decisión de diseño:**
+ADK tiene soporte nativo de memoria larga a través de `BaseMemoryService` (ver [adk.dev/sessions/memory](https://adk.dev/sessions/memory/)). El patrón correcto es implementar esta interfaz sobre [mem0](https://github.com/mem0ai/mem0) como backend self-hosted.
+
+Evaluadas y descartadas:
+- `VertexAiMemoryBankService` / `VertexAiRagMemoryService` (backends nativos ADK): cloud-only, datos salen del Ryzen 5.
+- `agentmemory`: TypeScript/Rust, ecosistema incompatible.
+- `Zep`: cloud-only desde abril 2025.
+- `LangMem`: acoplado a LangGraph, descartado en ADR-001.
+- Tools custom + inyección en `_sync_session`: subóptimo — ADK ya tiene el patrón correcto en `BaseMemoryService`.
+
+mem0 es Python-native, self-hostable (Postgres + pgvector), mantenido activamente (v2.0.2, mayo 2026).
+
+**Arquitectura en dos fases:**
+
+```
+Fase 1 — Memoria episódica
+ADK InMemoryRunner
+  └── MemoryService = Mem0MemoryService  ← custom impl de BaseMemoryService
+        └── mem0 client (Postgres + pgvector, Ryzen 5)
+
+Fase 2 — Memoria compuesta (episódica + wiki)
+ADK InMemoryRunner
+  └── MemoryService = CompositeMemoryService
+        ├── Mem0MemoryService   ← observaciones recientes de conversaciones
+        └── WikiMemoryService   ← conocimiento estructurado de la wiki (= FUTURE-002 como BaseMemoryService)
+```
+
+`BaseMemoryService` define 4 métodos:
+- `add_session_to_memory(session)` — ingesta sesión completada; mem0 extrae hechos vía LLM pass
+- `add_events_to_memory(events)` — opcional; ingesta incremental
+- `add_memory(entry)` — opcional; inserción directa
+- `search_memory(app_name, user_id, query)` — búsqueda semántica; devuelve `SearchMemoryResponse`
+
+**Integración con el runner:**
+ADK provee dos tools built-in activas cuando el runner tiene `MemoryService`:
+- `PreloadMemory` — recupera contexto relevante al inicio de cada turno, sin tool call explícita
+- `LoadMemory` — el agente llama cuando necesita explorar memoria activamente
+
+La ingesta se dispara vía `after_agent_callback` al finalizar cada turno — sin cambios en `_run_agent`.
+
+**Scope de memoria — decisión de diseño pendiente al implementar:**
+Usar `user_id=telegram_id` + `agent_id=bonsai_slug`:
+- Privacidad por usuario: usuario A no ve datos de B aunque tengan un bonsái con el mismo nombre.
+- El keeper puede filtrar por `agent_id=bonsai_slug` para sintetizar en wiki sin mezclar usuarios.
+
+**Flujo completo:**
+
+```
+turno completado  → after_agent_callback → Mem0MemoryService.add_session_to_memory()
+                                         → mem0 extrae hechos (LLM pass interno)
+turno siguiente   → PreloadMemory        → CompositeMemoryService.search_memory(query)
+                                         → snippets episódicos + wiki inyectados automáticamente
+keeper (cron)     → mem0 API directa     → get_all(agent_id=bonsai_slug, created_at ≥ last_run)
+                                         → sintetiza → escribe wiki
+```
+
+**Límites de esta arquitectura — no elimina búsquedas directas en wiki:**
+`PreloadMemory` inyecta contexto semántico en sensei al inicio del turno. Los sub-agentes (kikaru, kantei, etc.) tienen sus propios `InMemoryRunner` y no heredan este contexto. Los context builders (`load_bonsai_plan_context`, etc.) siguen siendo necesarios: cargan páginas completas y específicas para operaciones concretas dentro de los sub-agentes. `PreloadMemory` y los context builders son capas complementarias, no sustitutos.
+
+**Infra:**
+- Postgres + pgvector (aceptado; mem0 gestiona schema internamente)
+- Docker Compose en Ryzen 5, sin servicio externo
+
+**Riesgo principal:**
+mem0 hace LLM pass al ingestar — puede reformular o consolidar observaciones. El keeper recibe la versión procesada, no el texto literal. Aceptable si la fidelidad semántica se mantiene; monitorizar en fase de validación.
+
+### Orden de trabajo al implementar
+
+**Fase 1 — Memoria episódica:**
+1. Añadir pgvector a la migración de Postgres y levantar mem0 en Docker Compose
+2. Implementar `Mem0MemoryService(BaseMemoryService)` wrapeando mem0 client
+3. Registrar `MemoryService` en el runner de `advisor.py` y activar `PreloadMemory`
+4. Configurar `after_agent_callback` para `add_session_to_memory()` al finalizar turno
+5. Extender el keeper para leer mem0 con high-watermark y sintetizar en wiki
+6. Tests de aceptación: observación en conversación → keeper la ingesta → página wiki actualizada
+
+**Fase 2 — Memoria compuesta (tras completar FUTURE-002):**
+7. Implementar `WikiMemoryService(BaseMemoryService)` usando el traversal de embeddings de FUTURE-002
+8. Combinar en `CompositeMemoryService` que delega `search_memory()` a ambos servicios
+9. Sustituir `Mem0MemoryService` por `CompositeMemoryService` en el runner
+
+**Dependencias:**
+- Fase 1: FUTURE-001 §Calidad (el keeper debe producir páginas de calidad antes de alimentarlo con observaciones conversacionales).
+- Fase 2: FUTURE-002 (índice de wiki con embeddings).

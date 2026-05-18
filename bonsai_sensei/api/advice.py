@@ -129,9 +129,14 @@ async def accept_confirmation(
     if pending and pending.get("confirmation_id") == confirmation_id:
         pending["response"] = ConfirmationResult(accepted=True)
         pending["event"].set()
+        loop = asyncio.get_event_loop()
+        consume_deadline = loop.time() + 10
+        while pending_human_responses.get(user_id) is pending:
+            if loop.time() > consume_deadline:
+                break
+            await asyncio.sleep(0.05)
         task = active_tasks.get(user_id)
         if task:
-            loop = asyncio.get_event_loop()
             deadline = loop.time() + 55
             while not task.done():
                 await asyncio.sleep(0.05)
