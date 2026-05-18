@@ -12,6 +12,7 @@ from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, P
 
 from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
+from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
 from bonsai_sensei.domain.services.data_services import create_data_services
 from bonsai_sensei.domain.services.human_input import (
     create_ask_confirmation,
@@ -51,9 +52,6 @@ from bonsai_sensei.telegram.messages.garden_messages import (
     build_delete_bonsai_photo_confirmation,
     build_delete_bonsai_photo_option_label,
     build_create_pest_event_confirmation,
-    build_phytosanitary_plan_review_proposal,
-    build_applied_treatment_question,
-    build_treatment_selection_question,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
     build_fertilization_type_question,
@@ -210,6 +208,10 @@ async def lifespan(app: FastAPI):
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
     transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
 
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    tavily_base_url = os.getenv("TAVILY_API_BASE")
+    tavily_searcher = create_tavily_searcher(tavily_api_key, tavily_base_url) if tavily_api_key else None
+
     sensei_agent = create_sensei_agent(
         model=model,
         session_factory=get_session_partial,
@@ -221,6 +223,7 @@ async def lifespan(app: FastAPI):
         ask_selection=ask_selection_func,
         ask_plan_review=ask_plan_review_func,
         ask_poll=ask_poll_func,
+        searcher=tavily_searcher,
         cultivation_messages={
             "build_fertilization_type_question": build_fertilization_type_question,
             "build_fertilization_type_options": build_fertilization_type_options,
@@ -243,9 +246,6 @@ async def lifespan(app: FastAPI):
             "build_execute_planned_work_selection_question": build_execute_planned_work_selection_question,
             "build_execute_planned_work_option_label": build_execute_planned_work_option_label,
             "build_create_pest_event_confirmation": build_create_pest_event_confirmation,
-            "build_phytosanitary_plan_review_proposal": build_phytosanitary_plan_review_proposal,
-            "build_applied_treatment_question": build_applied_treatment_question,
-            "build_treatment_selection_question": build_treatment_selection_question,
             "build_add_bonsai_photo_selection_question": build_add_bonsai_photo_selection_question,
             "build_add_bonsai_photo_confirmation": build_add_bonsai_photo_confirmation,
             "build_delete_bonsai_photo_selection_question": build_delete_bonsai_photo_selection_question,

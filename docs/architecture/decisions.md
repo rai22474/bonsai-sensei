@@ -267,20 +267,23 @@ Ejemplo canónico — `create_pest_event`:
 ```
 Fase 1:
   await ask_confirmation(...)          # confirmar detección
-  if hay productos:
-    await ask_confirmation(...)        # ¿aplicaste tratamiento?
-    await ask_selection(...)           # seleccionar producto
 
 Fase 2:
-  record_pest_with_optional_treatment(bonsai_id, pest_id, phytosanitary, ...)
-  # escribe pest_detection + phytosanitary_application en una sola función
+  record_bonsai_event(...)             # escribe pest_detection
+  active_plan = get_active_plan(...)   # consulta sin efecto secundario
 
-Fase 3:
-  if active_plan:
-    await ask_plan_review(...)
+Fase 3 (eliminada — ver nota):
+  return {"status": "success", "active_plan": bool(active_plan), ...}
+  # el LLM menciona el plan activo en texto; no hay ask_plan_review
 ```
 
 Todo este flujo es Python determinista. El LLM no toma ninguna decisión de orquestación entre pasos.
+
+**Nota — cuándo NO usar `ask_*` dentro del tool (lección de `create_pest_event`):**
+La versión original de `create_pest_event` incluía una Fase 3 con `await ask_plan_review(...)` si había un plan activo. Esto se eliminó por dos razones:
+1. **Loop de re-registro:** la propuesta era una pregunta Y/N. Si el usuario respondía "sí", mitori re-enrutaba a caretaker, que intentaba registrar la plaga de nuevo.
+2. **Timing prematuro:** la propuesta se disparaba antes de que el LLM pudiera ofrecer asesoramiento; el usuario ni siquiera había pedido ayuda todavía.
+La solución: el tool devuelve `active_plan: bool` como dato; el LLM lo menciona pasivamente en su respuesta de texto. El usuario inicia la conversación de revisión cuando quiera. Regla derivada: un `ask_*` dentro de un tool solo es apropiado cuando la respuesta es necesaria para completar la escritura a BD de ese mismo tool. Si la información es solo contexto para el siguiente turno del usuario, devuélvela como campo del resultado y deja que el LLM la presente.
 
 **Criterio de aplicación:**
 

@@ -23,6 +23,7 @@ def create_sensei_agent(
     storekeeper_messages: dict,
     botanist_messages: dict,
     ask_poll: Callable | None = None,
+    searcher: Callable | None = None,
 ):
     cultivation_group_factory = partial(
         create_cultivation_group,
@@ -33,6 +34,7 @@ def create_sensei_agent(
         ask_plan_review=ask_plan_review,
         ask_poll=ask_poll,
         orchestrator_model=orchestrator_model,
+        searcher=searcher,
         **cultivation_messages,
         **botanist_messages,
     )
@@ -41,7 +43,6 @@ def create_sensei_agent(
         session_factory=session_factory,
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
-        ask_plan_review=ask_plan_review,
         pending_photos=pending_photos,
         **garden_messages,
     )

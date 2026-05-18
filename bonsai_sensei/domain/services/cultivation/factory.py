@@ -28,6 +28,7 @@ def create_cultivation_group(
     build_delete_pest_confirmation: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
+    searcher: Callable | None = None,
 ):
     botanist, weather_advisor = create_botanist_group(
         model=model,
@@ -59,5 +60,6 @@ def create_cultivation_group(
         build_abandon_phytosanitary_plan_confirmation=build_abandon_phytosanitary_plan_confirmation,
         orchestrator_model=orchestrator_model,
         ask_poll=ask_poll,
+        searcher=searcher,
     )
     return botanist, weather_advisor, kikaru

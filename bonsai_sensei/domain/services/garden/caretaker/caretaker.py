@@ -17,7 +17,7 @@ CARETAKER_INSTRUCTION = f"""Eres el encargado del historial de cuidados de la co
 # Comportamiento
 {TOOL_CONTRACT}
 - Si el usuario menciona que ha ejecutado o completado un trabajo planificado, usa la herramienta de ejecución de trabajos planificados — nunca la de aplicación directa de fertilizante o fitosanitario.
-- Si el usuario reporta una plaga y un tratamiento en el mismo mensaje, registra ambos como eventos separados.
+- Tras registrar con éxito una detección de plaga, informa brevemente al usuario del resultado. Si la herramienta devuelve active_plan=true, menciona que hay un plan fitosanitario activo que podría necesitar revisión. No hagas preguntas — limítate a informar y dejar que el usuario decida el siguiente paso.
 """
 
 
@@ -27,7 +27,6 @@ def create_caretaker(
     get_fertilizer_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
     get_pest_by_name_func: Callable,
-    list_phytosanitary_func: Callable,
     get_active_phytosanitary_plan_func: Callable,
     record_bonsai_event_func: Callable,
     list_bonsai_events_func: Callable,
@@ -35,7 +34,6 @@ def create_caretaker(
     delete_planned_work_func: Callable,
     ask_confirmation: Callable,
     ask_selection: Callable,
-    ask_plan_review: Callable,
     build_apply_fertilizer_confirmation: Callable,
     build_apply_phytosanitary_confirmation: Callable,
     build_record_transplant_confirmation: Callable,
@@ -43,9 +41,6 @@ def create_caretaker(
     build_execute_planned_work_selection_question: Callable,
     build_execute_planned_work_option_label: Callable,
     build_create_pest_event_confirmation: Callable,
-    build_phytosanitary_plan_review_proposal: Callable,
-    build_applied_treatment_question: Callable,
-    build_treatment_selection_question: Callable,
 ) -> Agent:
     apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -90,17 +85,10 @@ def create_caretaker(
     pest_event_tool = create_create_pest_event_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_pest_by_name_func=get_pest_by_name_func,
-        list_phytosanitary_func=list_phytosanitary_func,
-        get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
         record_bonsai_event_func=record_bonsai_event_func,
         get_active_phytosanitary_plan_func=get_active_phytosanitary_plan_func,
         ask_confirmation=ask_confirmation,
-        ask_selection=ask_selection,
-        ask_plan_review=ask_plan_review,
         build_confirmation_message=build_create_pest_event_confirmation,
-        build_applied_treatment_question=build_applied_treatment_question,
-        build_treatment_selection_question=build_treatment_selection_question,
-        build_plan_review_proposal=build_phytosanitary_plan_review_proposal,
     )
     pest_event_tool.__name__ = "create_pest_event"
     return Agent(

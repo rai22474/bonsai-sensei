@@ -11,7 +11,7 @@ from manage_phytosanitary.phytosanitary_api import create_phytosanitary, delete_
 from manage_species.species_api import delete_species_by_name, create_species
 from pest_event.pest_api import create_pest, delete_pest_by_name
 
-STUB_PORT = 8076
+STUB_PORT = 8070
 
 
 @pytest.fixture

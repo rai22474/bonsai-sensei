@@ -81,22 +81,3 @@ def build_delete_bonsai_photo_confirmation(bonsai_name: str, taken_on: str) -> s
 
 def build_create_pest_event_confirmation(bonsai_name: str, pest_name: str) -> str:
     return f"¿Registrar detección de '{display_name(pest_name)}' en '{display_name(bonsai_name)}'?"
-
-
-def build_applied_treatment_question(bonsai_name: str, pest_name: str) -> str:
-    return (
-        f"Se ha registrado la detección de '{display_name(pest_name)}' en '{display_name(bonsai_name)}'. "
-        f"¿Has aplicado algún tratamiento fitosanitario?"
-    )
-
-
-def build_treatment_selection_question() -> str:
-    return "¿Qué producto fitosanitario has aplicado?"
-
-
-def build_phytosanitary_plan_review_proposal(bonsai_name: str, pest_name: str) -> str:
-    return (
-        f"Se ha detectado '{display_name(pest_name)}' en '{display_name(bonsai_name)}'. "
-        f"Hay un plan fitosanitario activo que podría necesitar revisión. "
-        f"¿Deseas revisar el plan?"
-    )

@@ -18,6 +18,12 @@ Próximo sábado: {{next_saturday}}
 {TOOL_CONTRACT}
 - Si una herramienta devuelve status 'cancelled': no ofrezcas alternativas, no hagas más preguntas.
 
+# Consejo fitosanitario puntual
+SOLO actúa en esta sección si el usuario pide consejo de forma explícita — términos como "qué uso para", "cómo trato", "qué insecticida", "busca alternativas", "busca en internet". NO uses estas herramientas por iniciativa propia aunque hayas recibido contexto de una detección de plaga.
+- Si el usuario pide consejo sobre qué insecticida, fungicida o producto fitosanitario usar (sin querer crear un plan completo): usa la herramienta de recomendación puntual. Esta herramienta consulta el catálogo de productos disponibles y el historial del bonsái para dar una recomendación basada en lo que el usuario ya tiene.
+- Si la herramienta devuelve error 'no_products_available': usa la herramienta de búsqueda online para encontrar productos recomendados. Informa al usuario de que el resultado proviene de fuentes externas ya que no tiene productos registrados en el almacén.
+- Si el usuario pide explícitamente buscar alternativas en internet, nuevos compuestos, o productos que no tiene en el almacén: usa directamente la herramienta de búsqueda online sin llamar primero a la de recomendación puntual.
+
 # Regla de decisión (fertilización y fitosanitarios)
 
 ## Caso puntual
@@ -53,6 +59,8 @@ def create_kikaru(
     manage_phytosanitary_plan_tool: Callable | None = None,
     abandon_phytosanitary_plan_tool: Callable | None = None,
     evaluate_phytosanitary_plan_tool: Callable | None = None,
+    recommend_phytosanitary_tool: Callable | None = None,
+    search_phytosanitary_online_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
     list_bonsai_events_tool: Callable | None = None,
     create_fertilizer_application_tool: Callable | None = None,
@@ -72,6 +80,8 @@ def create_kikaru(
             manage_phytosanitary_plan_tool,
             abandon_phytosanitary_plan_tool,
             evaluate_phytosanitary_plan_tool,
+            recommend_phytosanitary_tool,
+            search_phytosanitary_online_tool,
             list_planned_works_tool,
             list_bonsai_events_tool,
             create_fertilizer_application_tool,

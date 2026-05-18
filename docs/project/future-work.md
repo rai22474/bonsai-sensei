@@ -160,7 +160,7 @@ Más allá de profundidad 3 el filtro de similitud coseno debe ser muy estricto 
 **Contexto:**
 El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes fitosanitarios, pero no tiene forma de registrar una observación de plaga como evento independiente. Sin este registro no hay trazabilidad infección → tratamiento, ni historial de plagas por bonsái para informar futuras recomendaciones.
 
-**Estado (2026-05-15):** Catálogo `Pest` implementado y flujo básico de detección completado: migración, REST endpoints, generación LLM al alta de especie, páginas wiki, `list_pests` en sensei, herramienta `create_pest_event` en caretaker con confirmación, tests de aceptación verdes. Pendiente: enlace a `apply_phytosanitary` y propuesta de revisión de plan.
+**Estado (2026-05-18):** Catálogo `Pest` implementado y flujo básico de detección completado: migración, REST endpoints, generación LLM al alta de especie, páginas wiki, `list_pests` en sensei, herramienta `create_pest_event` en caretaker con confirmación, tests de aceptación verdes. Integración Tavily para búsqueda fitosanitaria online implementada (FUTURE-004b). Propuesta de revisión de plan reemplazada por aviso pasivo en texto (ver paso 6). Pendiente: enlace a `apply_phytosanitary`.
 
 ### Nuevas entidades
 
@@ -194,8 +194,14 @@ El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes
 3. ~~Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)~~ (done)
 4. ~~Herramienta de agente: alta de `PestEvent` con confirmación~~ (done — versión básica; selección filtrada por especie pendiente)
 5. Enlace a `apply_phytosanitary` desde el evento
-6. Propuesta de revisión de plan si hay uno activo
+6. ~~Propuesta de revisión de plan si hay uno activo~~ — reemplazado por aviso pasivo: `create_pest_event` devuelve `active_plan: bool`; caretaker lo menciona en texto sin preguntar. Ver ADR-011 para el razonamiento.
 7. ~~Tests de aceptación (detectar + confirmar, plaga no registrada)~~ (done 2026-05-15)
+
+---
+
+## FUTURE-004b — Búsqueda fitosanitaria online (COMPLETADO 2026-05-18)
+
+Kikaru puede buscar productos fitosanitarios online vía Tavily cuando: (a) el catálogo no tiene productos (`no_products_available`) o (b) el usuario pide explícitamente alternativas en internet. La herramienta `search_phytosanitary_online` está implementada, wired a través de toda la cadena de fábricas, con test de aceptación verde. La recomendación puntual (`recommend_phytosanitary`) sigue siendo el camino principal cuando hay productos en catálogo.
 
 ---
 
