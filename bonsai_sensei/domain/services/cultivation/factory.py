@@ -11,6 +11,7 @@ def create_cultivation_group(
     ask_human: Callable,
     ask_selection: Callable,
     ask_plan_review: Callable,
+    build_fertilizer_selection_question: Callable,
     build_fertilization_type_question: Callable,
     build_fertilization_type_options: Callable,
     build_fertilizer_confirmation: Callable,
@@ -42,6 +43,7 @@ def create_cultivation_group(
         build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
         build_create_pest_confirmation=build_create_pest_confirmation,
         build_delete_pest_confirmation=build_delete_pest_confirmation,
+        orchestrator_model=orchestrator_model,
     )
     kikaru = create_kikaru_group(
         model=model,
@@ -50,6 +52,7 @@ def create_cultivation_group(
         ask_human=ask_human,
         ask_selection=ask_selection,
         ask_plan_review=ask_plan_review,
+        build_fertilizer_selection_question=build_fertilizer_selection_question,
         build_fertilization_type_question=build_fertilization_type_question,
         build_fertilization_type_options=build_fertilization_type_options,
         build_fertilizer_confirmation=build_fertilizer_confirmation,

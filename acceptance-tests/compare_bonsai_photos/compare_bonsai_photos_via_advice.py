@@ -1,7 +1,9 @@
-from hamcrest import assert_that, not_, equal_to, empty, has_length
+import re
+
+from hamcrest import assert_that, not_, equal_to, empty, not_none
 from pytest_bdd import scenario, when, then, parsers
 
-from http_client import advise
+from http_client import advise, get
 
 
 @scenario("../features/compare_bonsai_photos.feature", "Observable changes are described when comparing two photos from different dates")
@@ -41,7 +43,14 @@ def ask_to_compare_photos(context, bonsai_name):
 def assert_changes_described(context):
     response = context.get("advice_response", {})
     assert_that(response.get("text", ""), not_(equal_to("")), "Expected a non-empty comparison description")
-    assert_that(response.get("photos_taken_on", []), has_length(2), "Expected both compared photos to be tracked")
+    bonsai_name = context["bonsai_created"][0]
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    photos = get(f"/api/bonsai/{bonsai_id}/photos") or []
+    newest_taken_on = max(photo["taken_on"] for photo in photos)
+    slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
+    report_path = f"bonsai/{slug}/reports/{newest_taken_on}-comparison.md"
+    wiki_response = get(f"/api/wiki?path={report_path}")
+    assert_that(wiki_response, not_none(), "Expected a comparison wiki report to have been created")
 
 
 @then("I am informed that only one photo is available")

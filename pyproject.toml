@@ -19,6 +19,7 @@ dependencies = [
     "python-telegram-bot>=22.5",
     "sqlmodel>=0.0.31",
     "Pillow>=11.0.0",
+    "mem0ai[postgres]>=0.1.0",
     "tavily-python>=0.7.19",
     "youtube-transcript-api>=0.6.3",
     "uvicorn",
@@ -46,6 +47,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 markers = [
     "integration: marks tests as integration tests (select with '-m integration')",
 ]

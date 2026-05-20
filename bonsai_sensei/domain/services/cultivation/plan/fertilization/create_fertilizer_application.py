@@ -4,6 +4,7 @@ from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_creation import execute_planned_work_creation
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_payload_builders import build_fertilizer_payload
+from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -11,10 +12,12 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_create_fertilizer_application_tool(
     get_bonsai_by_name_func: Callable,
     get_fertilizer_by_name_func: Callable,
+    list_fertilizers_func: Callable,
     create_planned_work_func: Callable,
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_confirmation_message: Callable,
-    get_fertilizer_recommendation_func: Callable | None = None,
+    build_selection_question: Callable,
 ):
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
@@ -54,12 +57,18 @@ def create_create_fertilizer_application_tool(
             return {"status": "error", "message": "scheduled_date_required"}
 
         if not fertilizer_name:
-            if get_fertilizer_recommendation_func is None:
-                return {"status": "error", "message": "fertilizer_name_required"}
-            recommendation = await get_fertilizer_recommendation_func(bonsai_name)
-            if recommendation.get("status") != "success":
-                return recommendation
-            fertilizer_name = recommendation["fertilizer_name"]
+            fertilizers = list_fertilizers_func()
+            if not fertilizers:
+                return {"status": "error", "message": "no_fertilizers_available"}
+            if len(fertilizers) == 1:
+                fertilizer_name = fertilizers[0].name
+            else:
+                question = build_selection_question(bonsai_name)
+                options = [fertilizer.name for fertilizer in fertilizers]
+                selected = await ask_selection(question=question, options=options, tool_context=tool_context)
+                if isinstance(selected, SelectionNoneResult):
+                    return {"status": "cancelled", "message": "fertilizer_selection_cancelled"}
+                fertilizer_name = selected
 
         fertilizer = get_fertilizer_by_name_func(fertilizer_name)
         if not fertilizer:

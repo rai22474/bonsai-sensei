@@ -43,7 +43,7 @@ def create_show_bonsai_photos_tool(
         bonsai_name: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        """Retrieve and display the photos of a bonsai. Use this only when the user explicitly asks to see, view, or show the photos. Sends the actual images to the user.
+        """Retrieve and display ALL stored photos of a bonsai at once. Use this only when the user asks to see all the photos together. Do not use this when the user asks for a specific photo or the one closest to a given date; use show_bonsai_photo for that. Sends all images to the user.
 
         Args:
             bonsai_name: Name of the bonsai.

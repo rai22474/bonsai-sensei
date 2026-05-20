@@ -29,7 +29,7 @@ services:
     command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8000"
 
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     restart: always
     environment:
       - POSTGRES_USER=bonsai_user

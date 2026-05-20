@@ -34,6 +34,10 @@ def create_analyze_bonsai_photo_tool(
     ) -> dict:
         """Retrieve a stored photo of the given bonsai and produce a typed visual analysis.
 
+        Use this to analyse a single photo of the bonsai (health, design, or general
+        assessment). Do not use this when the user asks to compare photos across different
+        dates or see the evolution of the bonsai over time; use the comparison tool for that.
+
         Selects the photo matching the date hint (or the latest if omitted), runs the
         visual analysis for the given type and returns the result.
 

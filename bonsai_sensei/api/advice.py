@@ -115,6 +115,9 @@ async def reset_session(user_id: str, request: Request):
     pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
     pending_human_responses.pop(user_id, None)
     await request.app.state.reset_session(user_id)
+    mem0_client = getattr(request.app.state, "mem0_client", None)
+    if mem0_client is not None:
+        await mem0_client.delete_all(user_id=user_id)
 
 
 @router.post("/advice/confirmations/{confirmation_id}/accept")

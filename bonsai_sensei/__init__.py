@@ -11,6 +11,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
+from bonsai_sensei.memory.mem0_memory_service import Mem0MemoryService, create_mem0_client
 from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
 from bonsai_sensei.domain.services.data_services import create_data_services
@@ -54,6 +55,7 @@ from bonsai_sensei.telegram.messages.garden_messages import (
     build_create_pest_event_confirmation,
 )
 from bonsai_sensei.telegram.messages.planning_messages import (
+    build_fertilizer_selection_question,
     build_fertilization_type_question,
     build_fertilization_type_options,
     build_fertilizer_confirmation,
@@ -225,6 +227,7 @@ async def lifespan(app: FastAPI):
         ask_poll=ask_poll_func,
         searcher=tavily_searcher,
         cultivation_messages={
+            "build_fertilizer_selection_question": build_fertilizer_selection_question,
             "build_fertilization_type_question": build_fertilization_type_question,
             "build_fertilization_type_options": build_fertilization_type_options,
             "build_fertilizer_confirmation": build_fertilizer_confirmation,
@@ -271,11 +274,18 @@ async def lifespan(app: FastAPI):
         },
     )
 
-    app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root)
-    app.state.run_wiki_keeper = create_wiki_keeper(model, transcripts_root, wiki_root)
+    database_url = os.getenv("DATABASE_URL", "")
+    mem0_client = create_mem0_client(database_url) if database_url else None
+    memory_service = Mem0MemoryService(mem0_client) if mem0_client else None
+
+    app.state.mem0_client = mem0_client
+    app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root, orchestrator_model=orchestrator_model)
+    app.state.run_wiki_keeper = create_wiki_keeper(orchestrator_model or model, transcripts_root, wiki_root, mem0_client=mem0_client)
+
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
         get_user_settings_func=services["user_settings"]["get_user_settings"],
+        memory_service=memory_service,
     )
 
     save_telegram_chat_id_func = partial(

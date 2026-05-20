@@ -24,6 +24,10 @@ def create_compare_bonsai_photos_tool(
     ) -> dict:
         """Compare two stored photos of a bonsai to track visual progress over time.
 
+        Use this when the user asks to compare photos across different dates, see how
+        the bonsai has evolved, or track differences between two moments in time.
+        Do not use this to analyse a single photo; use the analysis tool for that.
+
         Selects the oldest and newest stored photos, runs a visual comparison
         oriented to the given intent and returns the result.
 

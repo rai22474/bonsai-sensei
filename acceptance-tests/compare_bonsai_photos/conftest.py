@@ -1,5 +1,6 @@
 import re
 import uuid
+import aiohttp
 
 import pytest
 from pytest_bdd import given, parsers
@@ -53,6 +54,15 @@ def cleanup_records(context):
     for name in context["bonsai_created"]:
         bonsai = find_bonsai_by_name_api_func(get, name)
         if bonsai:
+            bonsai_photos = get(f"/api/bonsai/{bonsai['id']}/photos") or []
+            if bonsai_photos:
+                newest_taken_on = max(photo["taken_on"] for photo in bonsai_photos)
+                slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+                report_path = f"bonsai/{slug}/reports/{newest_taken_on}-comparison.md"
+                try:
+                    delete(f"/api/wiki?path={report_path}")
+                except aiohttp.ClientResponseError:
+                    pass
             delete(f"/api/bonsai/{bonsai['id']}/photos")
         delete_bonsai_by_name_api_func(get, delete, name)
     for name in context["species_created"]:

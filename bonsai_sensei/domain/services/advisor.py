@@ -1,15 +1,23 @@
+import asyncio
+import logging
 import time
 from dataclasses import dataclass, field
-from datetime import date, timedelta
-from typing import Callable
+from datetime import date, datetime, timedelta, timezone
+from typing import Callable, Optional
 from functools import partial
 
-from google.adk.runners import InMemoryRunner, RunConfig
+from google.adk.artifacts import InMemoryArtifactService
+from google.adk.memory import BaseMemoryService
+from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
+from google.adk.runners import InMemoryRunner, Runner, RunConfig
+from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from opentelemetry import metrics, trace
 
 DEFAULT_MAX_LLM_CALLS = 20
 MAX_SESSION_EVENTS = 50
+INACTIVITY_THRESHOLD_HOURS = 8
+_LAST_ACTIVITY_KEY = "last_activity_at"
 
 _PROGRESS_MESSAGES = {
     "command_pipeline": "🗺️ Elaborando un plan de acción...",
@@ -46,8 +54,18 @@ class AdvisorResponse:
 def create_advisor(
     sensei_agent,
     get_user_settings_func: Callable | None = None,
+    memory_service: Optional[BaseMemoryService] = None,
 ) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
-    runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
+    if memory_service is not None:
+        runner = Runner(
+            agent=sensei_agent,
+            app_name="bonsai_sensei",
+            artifact_service=InMemoryArtifactService(),
+            session_service=InMemorySessionService(),
+            memory_service=memory_service,
+        )
+    else:
+        runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
 
     async def reset_session(user_id: str) -> None:
         await runner.session_service.delete_session(
@@ -61,6 +79,7 @@ def create_advisor(
             _generate_advise,
             runner=runner,
             get_user_settings_func=get_user_settings_func,
+            memory_service=memory_service,
         ),
         reset_session,
     )
@@ -72,11 +91,14 @@ async def _generate_advise(
     user_id: str = "default_user",
     get_user_settings_func: Callable | None = None,
     progress_callback: Callable[[str], None] | None = None,
+    memory_service: Optional[BaseMemoryService] = None,
 ) -> AdvisorResponse:
     state_delta = _build_context_state(user_id, get_user_settings_func)
     await _sync_session(runner, user_id, state_delta)
     message = content if isinstance(content, types.Content) else _build_user_message(content)
     events = await _run_agent(runner, user_id, message, progress_callback)
+    if memory_service is not None:
+        await _capture_session_to_memory_safe(runner, user_id, memory_service)
     photos_taken_on = await _pop_photos_taken_on(runner, user_id)
     response_text = "\n".join(_build_response_texts(events))
     photos = await _collect_and_clear_photos(runner, user_id)
@@ -95,6 +117,7 @@ def _build_context_state(user_id: str, get_user_settings_func: Callable | None) 
         "user_location": user_location,
         "photos_to_display": [],
         "photos_for_analysis_taken_on": [],
+        _LAST_ACTIVITY_KEY: datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -104,7 +127,7 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
         user_id=user_id,
         session_id=str(user_id),
     )
-    if session is not None and len(session.events) > MAX_SESSION_EVENTS:
+    if session is not None and _is_session_stale(session):
         await runner.session_service.delete_session(
             app_name="bonsai_sensei",
             user_id=user_id,
@@ -128,6 +151,18 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
     storage_session = runner.session_service.sessions.get("bonsai_sensei", {}).get(user_id, {}).get(str(user_id))
     if storage_session:
         storage_session.state.update(state_delta)
+
+
+def _is_session_stale(session) -> bool:
+    if len(session.events) > MAX_SESSION_EVENTS:
+        return True
+    last_activity_raw = session.state.get(_LAST_ACTIVITY_KEY)
+    if last_activity_raw is None:
+        return False
+    last_activity = datetime.fromisoformat(last_activity_raw)
+    if last_activity.tzinfo is None:
+        last_activity = last_activity.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - last_activity > timedelta(hours=INACTIVITY_THRESHOLD_HOURS)
 
 
 def _build_user_message(text: str) -> types.Content:
@@ -199,6 +234,23 @@ async def _collect_and_clear_photos(runner: InMemoryRunner, user_id: str) -> lis
     photos = list(session.state.get("photos_to_display") or [])
     session.state["photos_to_display"] = []
     return photos
+
+
+async def _capture_session_to_memory_safe(runner: InMemoryRunner, user_id: str, memory_service: BaseMemoryService) -> None:
+    try:
+        await _capture_session_to_memory(runner, user_id, memory_service)
+    except Exception:
+        logging.exception("Memory capture failed for user_id=%s", user_id)
+
+
+async def _capture_session_to_memory(runner: InMemoryRunner, user_id: str, memory_service: BaseMemoryService) -> None:
+    session = await runner.session_service.get_session(
+        app_name="bonsai_sensei",
+        user_id=user_id,
+        session_id=str(user_id),
+    )
+    if session is not None:
+        await memory_service.add_session_to_memory(session)
 
 
 def _build_response_texts(events: list) -> list[str]:

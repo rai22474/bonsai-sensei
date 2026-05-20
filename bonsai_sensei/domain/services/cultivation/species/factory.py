@@ -32,6 +32,7 @@ def create_botanist_group(
     build_refresh_species_wiki_confirmation: Callable,
     build_create_pest_confirmation: Callable,
     build_delete_pest_confirmation: Callable,
+    orchestrator_model: object = None,
 ):
     list_species_tool = _create_list_species_tool(session_factory)
     botanist = _create_botanist(
@@ -46,12 +47,14 @@ def create_botanist_group(
         build_refresh_species_wiki_confirmation=build_refresh_species_wiki_confirmation,
         build_create_pest_confirmation=build_create_pest_confirmation,
         build_delete_pest_confirmation=build_delete_pest_confirmation,
+        orchestrator_model=orchestrator_model,
     )
     weather_advisor = _create_weather_advisor(model, list_species_tool, session_factory)
     return botanist, weather_advisor
 
 
-def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation, build_create_pest_confirmation, build_delete_pest_confirmation):
+def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation, build_create_pest_confirmation, build_delete_pest_confirmation, orchestrator_model=None):
+    effective_orchestrator_model = orchestrator_model or model
     get_species_by_name_func = partial(herbarium.get_species_by_name, create_session=session_factory)
     search_species_func = partial(herbarium.search_species_by_name, create_session=session_factory)
 
@@ -65,12 +68,12 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
     wiki_root = os.getenv("WIKI_PATH", "./wiki")
     tavily_searcher = create_tavily_searcher(os.getenv("TAVILY_API_KEY"), tavily_base_url)
     wiki_page_builder = create_species_wiki_compiler(
-        model=model,
+        model=effective_orchestrator_model,
         wiki_root=wiki_root,
         searcher=tavily_searcher,
     )
     compile_pest_page = create_pest_wiki_compiler(
-        model=model,
+        model=effective_orchestrator_model,
         wiki_root=wiki_root,
         searcher=tavily_searcher,
     )

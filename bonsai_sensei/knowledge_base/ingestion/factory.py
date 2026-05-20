@@ -12,6 +12,7 @@ def create_ingestion_pipeline(
     model: object,
     transcripts_root: Path,
     wiki_root: Path,
+    orchestrator_model: object = None,
 ) -> Callable[[str, str], None]:
     """Create an async pipeline that ingests a YouTube video into the wiki.
 
@@ -21,17 +22,19 @@ def create_ingestion_pipeline(
     Each step is idempotent: if the output file already exists it is skipped.
 
     Args:
-        model: LLM model used by the cleaner, extractor, page writer and keeper agents.
+        model: LLM model used by the cleaner, extractor and page writer agents.
         transcripts_root: Root directory for raw, clean and card files.
         wiki_root: Root directory of the wiki where channel pages are written.
+        orchestrator_model: More capable model used by the wiki keeper for synthesis.
 
     Returns:
         Async callable: (url, channel) -> None
     """
+    effective_orchestrator_model = orchestrator_model or model
     clean_transcript = create_transcript_cleaner(model)
     extract_card = create_card_extractor(model)
     write_channel_page = create_channel_page_writer(model)
-    run_wiki_keeper = create_wiki_keeper(model, transcripts_root, wiki_root)
+    run_wiki_keeper = create_wiki_keeper(effective_orchestrator_model, transcripts_root, wiki_root)
 
     async def ingest(url: str, channel: str) -> None:
         raw_path = download_transcript(url, channel, transcripts_root)

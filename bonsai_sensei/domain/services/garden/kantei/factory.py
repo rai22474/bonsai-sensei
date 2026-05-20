@@ -13,7 +13,8 @@ from bonsai_sensei.domain.services.garden.kantei.update_reports_index import cre
 from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool, create_list_wiki_files_tool
 
 
-def create_kantei_group(model: object, session_factory) -> object:
+def create_kantei_group(model: object, session_factory, orchestrator_model: object = None) -> object:
+    effective_orchestrator_model = orchestrator_model or model
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
@@ -32,8 +33,8 @@ def create_kantei_group(model: object, session_factory) -> object:
         write_wiki_page_func=write_wiki_page_tool,
     )
 
-    run_photo_analysis = create_photo_analysis_runner(model)
-    run_photo_comparison = create_photo_comparison_runner(model)
+    run_photo_analysis = create_photo_analysis_runner(effective_orchestrator_model)
+    run_photo_comparison = create_photo_comparison_runner(effective_orchestrator_model)
 
     analyze_tool = create_analyze_bonsai_photo_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,

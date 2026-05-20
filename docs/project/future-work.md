@@ -352,3 +352,80 @@ mem0 hace LLM pass al ingestar — puede reformular o consolidar observaciones. 
 **Dependencias:**
 - Fase 1: FUTURE-001 §Calidad (el keeper debe producir páginas de calidad antes de alimentarlo con observaciones conversacionales).
 - Fase 2: FUTURE-002 (índice de wiki con embeddings).
+
+---
+
+## FUTURE-008 — Revisión de asignación de modelos: cloud vs orchestrator por agente
+
+**Contexto:**
+El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-flash-lite-preview` por defecto, más barato) y `GEMINI_ORCHESTRATOR_MODEL` (`gemini-3-flash-preview` por defecto, más capaz). La asignación actual es conservadora: el orchestrator solo llega a sensei, mitori y los runners de planificación interactiva (clarification, proposal, evaluate). El resto usa el modelo lite. Un análisis sistemático identifica cinco zonas donde el modelo lite produce salidas de menor calidad con impacto real en el sistema.
+
+**Modelos actuales:**
+- `cloud` = `GEMINI_MODEL` (lite, rápido, barato)
+- `orchestrator` = `GEMINI_ORCHESTRATOR_MODEL` (más capaz, más caro)
+
+### Asignaciones correctas — no cambiar
+
+| Agente | Modelo | Razón |
+|---|---|---|
+| sensei | orchestrator | Root router + respuesta al usuario |
+| mitori | orchestrator | Planificación estratégica con BuiltInPlanner |
+| shokunin | cloud | Lee JSON del estado y despacha al AgentTool nombrado; mecánico |
+| weather_advisor | cloud | Tool call simple sin razonamiento complejo |
+| caretaker / nursery / gallery / storekeeper | cloud | CRUD + `limit_to_single_tool_call`; sin ambigüedad de routing |
+| kantei (el agente) | cloud | Solo enruta a photo runners; el razonamiento real está en los runners |
+| clarification_runner | orchestrator (heredado del manage tool) | Diálogo interactivo con el usuario |
+| plan_proposal_runner | orchestrator (heredado del manage tool) | Propuesta de calendario complejo |
+| evaluate_fertilization/phytosanitary | orchestrator | Análisis de adherencia al plan |
+
+### Asignaciones incorrectas — cambiar a orchestrator
+
+**1. `fertilizer_recommendation_runner` y `phytosanitary_recommendation_runner`**
+
+Son el paso de razonamiento puro del patrón ADR-009: sin tools, entrada de texto → JSON con `fertilizer_name`/`treatments`, `reasoning` y `wiki_content`. Es el paso intelectualmente más exigente del sistema (razona sobre estación, historial de salud, rotación de productos) y produce un artefacto permanente escrito en la wiki. Paradoja: usan el modelo más barato mientras los runners interactivos que los rodean usan el orchestrator.
+
+**Cambio:** propagar `orchestrator_model` desde `create_kikaru_group` a `_create_recommend_fertilizer_tool` y `_create_recommend_phytosanitary_tool` en `cultivation/plan/factory.py`.
+
+**2. `species_wiki_compiler`**
+
+ADR-007 establece que el compilador "decide qué buscar, cuántas veces, cómo estructurar la ficha y qué wikilinks añadir". Es síntesis creativa multi-búsqueda → wiki permanente. Una ficha de mala calidad afecta todos los consejos futuros sobre esa especie. Flash-lite genera fichas más genéricas y con menos wikilinks que un junípero y un ficus requieren distintos.
+
+**Cambio:** recibir `orchestrator_model` en `create_botanist_group` → `create_species_wiki_compiler`. Actualmente recibe solo `model`.
+
+**3. `wiki_keeper` (keeper agent y su runner)**
+
+Tres fases: integrar observaciones de conversaciones → enriquecer de fichas → añadir wikilinks. Multi-step reasoning sobre conocimiento existente con múltiples tool calls de lectura/escritura. Escribe contenido permanente en la wiki. FUTURE-001 §Calidad ya documenta este problema parcialmente; esta entrada lo contextualiza en el mapa completo.
+
+**Cambio:** `__init__.py` línea 280 pasa `model` al runner del keeper; cambiar a `orchestrator_model`. Afecta también `create_ingestion_pipeline` en `knowledge_base/ingestion/factory.py` donde todos los agentes (cleaner, extractor, channel_page_writer, keeper) reciben el mismo `model`.
+
+**4. `photo_analysis_runner` y `photo_comparison_runner`**
+
+Diagnóstico visual de plagas y salud. Un diagnóstico incorrecto (confundir araña roja con cochinilla) lleva a un tratamiento incorrecto. Flash-lite tiene capacidades multimodales pero el orchestrator da más detalle y precisión en identificación visual. Estos runners producen informes persistentes.
+
+**Cambio:** propagar `orchestrator_model` desde `create_kantei_group` → `create_photo_analysis_runner` y `create_photo_comparison_runner` en `garden/kantei/factory.py`.
+
+### Borderline — evaluar con medición
+
+**`botanist`** — Da consejo hortícola directo al usuario. Flash-lite puede quedar corto en diagnósticos de cultivo complejos o preguntas sobre enfermedades raras. Vale la pena comparar con orchestrator bajo casos de prueba reales antes de decidir.
+
+**`kikaru`** — Enruta entre 10+ tools de plan. `limit_to_single_tool_call` activo: un error de routing no se autocorrige. Borderline hacia orchestrator si se observan errores de routing frecuentes.
+
+**`card_extractor` (ingestion)** — Extrae conocimiento de transcripts de vídeo. La calidad de extracción afecta directamente la calidad de las fichas y por tanto la wiki. Candidato a orchestrator si la calidad del keeper mejorada (punto 3) no es suficiente.
+
+### Patrón de implementación
+
+El patrón `effective_orchestrator_model = orchestrator_model or model` ya está establecido en `factory.py` y `cultivation/plan/factory.py`. Para cada runner afectado:
+1. Añadir `orchestrator_model: object = None` al factory que crea el runner.
+2. Calcular `effective_orchestrator_model = orchestrator_model or model`.
+3. Pasar `effective_orchestrator_model` al runner en lugar de `model`.
+4. Propagar `orchestrator_model` hacia arriba por la cadena de factories hasta `create_sensei_agent` en `agents_factory.py` (que ya recibe `orchestrator_model`).
+
+### Orden de trabajo al implementar
+
+1. `fertilizer_recommendation_runner` y `phytosanitary_recommendation_runner` (mayor impacto en calidad de consejos, menor radio de cambio)
+2. `wiki_keeper` (resolver junto con FUTURE-001 §Calidad)
+3. `photo_analysis_runner` y `photo_comparison_runner`
+4. `species_wiki_compiler`
+5. Medir `botanist` y `kikaru` antes de decidir
+
+**Dependencia con FUTURE-001:** el punto 3 (wiki_keeper) cubre el mismo problema que FUTURE-001 §Calidad paso 1 — usar un modelo más potente en el keeper. Esta entrada proporciona el contexto completo y el plan de implementación específico; FUTURE-001 §Orden de trabajo puede actualizarse para referenciar FUTURE-008 cuando se retome.

@@ -27,11 +27,7 @@ def test_agent_consults_event_history():
 )
 def plan_fertilization_without_specifying_fertilizer(context, bonsai_name, scheduled_date):
     response = advise(
-        text=(
-            f"Quiero planificar una fertilización puntual para el bonsái {bonsai_name} "
-            f"para el {scheduled_date}. No tengo preferencia por el fertilizante, "
-            f"elige el que esté disponible."
-        ),
+        text=f"Añade al calendario una aplicación de fertilizante para el bonsái {bonsai_name} el {scheduled_date}.",
         user_id=context["user_id"],
     )
     if response.get("pending_selections"):

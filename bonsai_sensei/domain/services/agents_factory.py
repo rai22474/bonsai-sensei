@@ -61,6 +61,7 @@ def create_sensei_agent(
     kantei_group_factory = partial(
         create_kantei_group,
         session_factory=session_factory,
+        orchestrator_model=orchestrator_model,
     )
     return create_agents(
         model=model,

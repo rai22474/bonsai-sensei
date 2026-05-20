@@ -2,6 +2,7 @@ from functools import partial
 
 from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.tools import AgentTool
+from google.adk.tools.preload_memory_tool import preload_memory_tool
 
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import bonsai_photo_store
@@ -27,6 +28,7 @@ from bonsai_sensei.domain.services.garden.gallery.list_bonsai_photos import (
     create_list_bonsai_photos_tool,
     create_show_bonsai_photos_tool,
 )
+from bonsai_sensei.domain.services.garden.gallery.show_bonsai_photo import create_show_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.kantei.factory import create_kantei_group
 from bonsai_sensei.domain.services.mitori import create_mitori
 from bonsai_sensei.domain.services.sensei import create_sensei
@@ -94,6 +96,11 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_bonsai_photos_func=list_bonsai_photos_func,
     )
     show_bonsai_photos_tool.__name__ = "show_bonsai_photos"
+    show_bonsai_photo_tool = create_show_bonsai_photo_tool(
+        get_bonsai_by_name_func=get_bonsai_by_name_func,
+        list_bonsai_photos_func=list_bonsai_photos_func,
+    )
+    show_bonsai_photo_tool.__name__ = "show_bonsai_photo"
     list_pests_tool = create_list_pests_tool(
         list_pests_func=partial(pest_catalog.list_pests, create_session=session_factory),
     )
@@ -111,6 +118,7 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_planned_works_tool,
         list_bonsai_photos_tool,
         show_bonsai_photos_tool,
+        show_bonsai_photo_tool,
         list_pests_tool,
     ]
 
@@ -140,7 +148,7 @@ def create_sensei_group(
 
     return create_sensei(
         model=effective_orchestrator_model,
-        tools=[*query_tools, AgentTool(command_pipeline)],
+        tools=[*query_tools, AgentTool(command_pipeline), preload_memory_tool],
     )
 
 

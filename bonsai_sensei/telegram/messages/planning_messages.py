@@ -1,6 +1,10 @@
 from bonsai_sensei.telegram.messages._formatting import format_date, display_name
 
 
+def build_fertilizer_selection_question(bonsai_name: str) -> str:
+    return f"¿Qué fertilizante quieres aplicar a '{display_name(bonsai_name)}'?"
+
+
 def build_fertilization_type_question() -> str:
     return "¿Qué tipo de fertilización quieres planificar?"
 
