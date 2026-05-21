@@ -47,8 +47,8 @@ async def should_use_next_saturday_when_scheduled_date_is_empty(fertilizer_tool,
 async def should_return_error_when_fertilizer_name_is_empty(fertilizer_tool, tool_context):
     result = await fertilizer_tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="", tool_context=tool_context)
 
-    assert_that(result, equal_to({"status": "error", "message": "fertilizer_name_required"}),
-        "Empty fertilizer_name should return a fertilizer_name_required error")
+    assert_that(result, equal_to({"status": "error", "message": "no_fertilizers_available"}),
+        "Empty fertilizer_name with no catalog entries should return no_fertilizers_available")
 
 
 @pytest.mark.asyncio
@@ -76,8 +76,8 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
         return "confirmation text"
 
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func,
-        ask_confirmation_confirm, build_confirmation_message,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        ask_confirmation_confirm, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
 
@@ -104,8 +104,8 @@ async def should_return_success_when_user_confirms(fertilizer_tool, tool_context
 @pytest.mark.asyncio
 async def should_not_create_when_user_cancels(tool_context, captured_planned_works, get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func, build_confirmation_message):
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func,
-        ask_confirmation_cancel, build_confirmation_message,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        ask_confirmation_cancel, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
 
@@ -116,8 +116,8 @@ async def should_not_create_when_user_cancels(tool_context, captured_planned_wor
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func, build_confirmation_message):
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func,
-        ask_confirmation_cancel, build_confirmation_message,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        ask_confirmation_cancel, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     result = await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
 
@@ -191,11 +191,31 @@ def build_confirmation_message():
 
 
 @pytest.fixture
-def fertilizer_tool(get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func, ask_confirmation_confirm, build_confirmation_message):
+def list_fertilizers_func():
+    return lambda: []
+
+
+@pytest.fixture
+def ask_selection_stub():
+    async def ask_selection(question, options, tool_context=None):
+        return options[0] if options else None
+    return ask_selection
+
+
+@pytest.fixture
+def build_selection_question():
+    return lambda bonsai_name: f"Select fertilizer for {bonsai_name}"
+
+
+@pytest.fixture
+def fertilizer_tool(get_bonsai_by_name_func, get_fertilizer_by_name_func, list_fertilizers_func, create_planned_work_func, ask_confirmation_confirm, build_confirmation_message, ask_selection_stub, build_selection_question):
     return create_create_fertilizer_application_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+        list_fertilizers_func=list_fertilizers_func,
         create_planned_work_func=create_planned_work_func,
         ask_confirmation=ask_confirmation_confirm,
+        ask_selection=ask_selection_stub,
         build_confirmation_message=build_confirmation_message,
+        build_selection_question=build_selection_question,
     )

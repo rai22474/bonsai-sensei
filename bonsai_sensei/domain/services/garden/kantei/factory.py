@@ -1,19 +1,28 @@
 import os
 from functools import partial
 from pathlib import Path
+from typing import Callable
 
 from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.domain import garden
 from bonsai_sensei.domain.services.garden.kantei.analyze_bonsai_photo import create_analyze_bonsai_photo_tool
 from bonsai_sensei.domain.services.garden.kantei.compare_bonsai_photos import create_compare_bonsai_photos_tool
-from bonsai_sensei.domain.services.garden.kantei.kantei import create_kantei
 from bonsai_sensei.domain.services.garden.kantei.photo_analysis_runner import create_photo_analysis_runner
 from bonsai_sensei.domain.services.garden.kantei.photo_comparison_runner import create_photo_comparison_runner
 from bonsai_sensei.domain.services.garden.kantei.update_reports_index import create_update_bonsai_reports_index_tool
 from bonsai_sensei.domain.services.wiki_page import create_write_wiki_page_tool, create_list_wiki_files_tool
 
+ANALYZE_TOOL_DESCRIPTION = (
+    "- analyze_bonsai_photo: Analiza visualmente una foto almacenada de un bonsái. "
+    "Parámetros: bonsai_name (str), analysis_type ('health'|'design'|'general'), date_hint (str, opcional — mes en español o fecha YYYY-MM-DD)."
+)
+COMPARE_TOOL_DESCRIPTION = (
+    "- compare_bonsai_photos: Compara la foto más antigua con la más reciente de un bonsái para ver su evolución. "
+    "Parámetros: bonsai_name (str), comparison_intent (str, opcional — qué aspecto comparar)."
+)
 
-def create_kantei_group(model: object, session_factory, orchestrator_model: object = None) -> object:
+
+def create_kantei_group(model: object, session_factory, orchestrator_model: object = None) -> tuple[Callable, Callable]:
     effective_orchestrator_model = orchestrator_model or model
     get_bonsai_by_name_func = partial(garden.get_bonsai_by_name, create_session=session_factory)
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)
@@ -56,8 +65,4 @@ def create_kantei_group(model: object, session_factory, orchestrator_model: obje
     )
     compare_tool.__name__ = "compare_bonsai_photos"
 
-    return create_kantei(
-        model=model,
-        analyze_bonsai_photo_tool=analyze_tool,
-        compare_bonsai_photos_tool=compare_tool,
-    )
+    return analyze_tool, compare_tool

@@ -2,7 +2,7 @@ from pytest_bdd import scenario, when, then, parsers
 
 from cultivation_plan.planned_works_api import list_planned_works
 from fertilization_plan.fertilization_plans_api import get_active_fertilization_plan, list_fertilization_plans
-from http_client import accept_confirmation, accept_plan_review, advise, get, send_text_response
+from http_client import accept_confirmation, accept_plan_review, advise, choose_selection, get, send_text_response
 
 _GENERIC_CLARIFICATION_ANSWER = (
     "Crecimiento activo. Sin preferencia de fertilizante. Sin contexto adicional."
@@ -29,6 +29,9 @@ def request_fertilization_plan(context, bonsai_name, start_date, end_date):
         ),
         user_id=context["user_id"],
     )
+    if response.get("pending_selections"):
+        selection_id = response["pending_selections"][0]["id"]
+        response = choose_selection(context["user_id"], selection_id, "Plan de fertilización")
     while response.get("pending_text_questions"):
         response = send_text_response(context["user_id"], _GENERIC_CLARIFICATION_ANSWER)
         if response.get("pending_plan_reviews"):

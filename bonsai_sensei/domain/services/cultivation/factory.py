@@ -31,7 +31,7 @@ def create_cultivation_group(
     ask_poll: Callable | None = None,
     searcher: Callable | None = None,
 ):
-    botanist, weather_advisor = create_botanist_group(
+    botanist = create_botanist_group(
         model=model,
         session_factory=session_factory,
         ask_confirmation=ask_confirmation,
@@ -65,4 +65,4 @@ def create_cultivation_group(
         ask_poll=ask_poll,
         searcher=searcher,
     )
-    return botanist, weather_advisor, kikaru
+    return botanist, kikaru

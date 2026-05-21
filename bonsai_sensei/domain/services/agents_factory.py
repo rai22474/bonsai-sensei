@@ -3,7 +3,6 @@ from typing import Callable
 
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
-from bonsai_sensei.domain.services.garden.kantei.factory import create_kantei_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
 from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
 
@@ -58,16 +57,10 @@ def create_sensei_agent(
         orchestrator_model=orchestrator_model,
         wiki_root=wiki_root,
     )
-    kantei_group_factory = partial(
-        create_kantei_group,
-        session_factory=session_factory,
-        orchestrator_model=orchestrator_model,
-    )
     return create_agents(
         model=model,
         create_cultivation_group=cultivation_group_factory,
         create_gardener_group=gardener_group_factory,
         create_storekeeper_group=storekeeper_group_factory,
         create_sensei_group=sensei_group_factory,
-        create_kantei_group=kantei_group_factory,
     )

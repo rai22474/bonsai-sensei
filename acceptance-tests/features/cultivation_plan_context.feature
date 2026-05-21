@@ -4,7 +4,7 @@ Feature: Cultivation plan agent is aware of available products and bonsai histor
     Given species "Ficus Retusa" exists with scientific name "Ficus retusa"
     And a bonsai named "Kaze" exists for species "Ficus Retusa"
     And fertilizer "biogrow" is registered
-    When I ask to plan a punctual fertilization for "Kaze" on "2026-04-01" without specifying a fertilizer
+    When I ask to plan a punctual fertilization for "Kaze" on "2026-07-01" without specifying a fertilizer
     And I confirm the planned work
     Then "Kaze" should have a planned fertilization using "biogrow"
 

@@ -14,9 +14,6 @@ from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher 
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_translator import translate_to_english
 from bonsai_sensei.domain.services.cultivation.species.species_wiki_compiler import create_species_wiki_compiler
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
-from bonsai_sensei.domain.services.cultivation.weather.get_user_location import create_get_user_location_tool
-from bonsai_sensei.domain.services.cultivation.weather.weather import create_weather_tool
-from bonsai_sensei.domain.services.cultivation.weather.weather_advisor import create_weather_advisor
 from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool
 
 
@@ -34,7 +31,6 @@ def create_botanist_group(
     build_delete_pest_confirmation: Callable,
     orchestrator_model: object = None,
 ):
-    list_species_tool = _create_list_species_tool(session_factory)
     botanist = _create_botanist(
         model=model,
         session_factory=session_factory,
@@ -49,8 +45,7 @@ def create_botanist_group(
         build_delete_pest_confirmation=build_delete_pest_confirmation,
         orchestrator_model=orchestrator_model,
     )
-    weather_advisor = _create_weather_advisor(model, list_species_tool, session_factory)
-    return botanist, weather_advisor
+    return botanist
 
 
 def _create_botanist(model, session_factory, ask_confirmation, ask_selection, build_create_species_selection_question, build_create_species_confirmation, build_delete_species_confirmation, build_update_species_confirmation, build_refresh_species_wiki_confirmation, build_create_pest_confirmation, build_delete_pest_confirmation, orchestrator_model=None):
@@ -124,18 +119,4 @@ def _create_botanist(model, session_factory, ask_confirmation, ask_selection, bu
 def _create_list_species_tool(session_factory):
     return create_list_species_tool(
         partial(herbarium.get_all_species, create_session=session_factory)
-    )
-
-
-def _create_weather_advisor(model, list_species_tool, session_factory):
-    weather_base_url = os.getenv("WEATHER_API_BASE", "https://wttr.in")
-    return create_weather_advisor(
-        model=model,
-        tools=[
-            create_weather_tool(weather_base_url),
-            list_species_tool,
-            create_get_user_location_tool(
-                get_user_settings_func=partial(user_settings_store.get_user_settings, create_session=session_factory)
-            ),
-        ],
     )

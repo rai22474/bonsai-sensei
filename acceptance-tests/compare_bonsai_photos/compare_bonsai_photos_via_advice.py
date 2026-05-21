@@ -24,7 +24,7 @@ def test_no_photos_available():
 @when(parsers.parse('I ask to compare the photos of "{bonsai_name}" from "{date_context}"'))
 def ask_to_compare_photos_with_context(context, bonsai_name, date_context):
     response = advise(
-        text=f"Compara las fotos de '{bonsai_name}' de {date_context}.",
+        text=f"Quiero ver la evolución de '{bonsai_name}'. Compara la foto más antigua con la más reciente ({date_context}) y guarda el informe.",
         user_id=context["user_id"],
     )
     context["advice_response"] = response

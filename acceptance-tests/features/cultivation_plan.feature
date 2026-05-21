@@ -4,9 +4,9 @@ Feature: Manage cultivation work plan for a bonsai via advice
     Given species "Ficus Retusa" exists with scientific name "Ficus retusa"
     And a bonsai named "Kaze" exists for species "Ficus Retusa"
     And fertilizer "biogrow" is registered
-    When I plan a fertilization of "biogrow" with amount "5 ml" for "Kaze" on "2026-03-15"
+    When I plan a fertilization of "biogrow" with amount "5 ml" for "Kaze" on "2026-07-15"
     And I confirm the planned work
-    Then "Kaze" should have a planned fertilization of "biogrow" on "2026-03-15"
+    Then "Kaze" should have a planned fertilization of "biogrow" on "2026-07-15"
 
   Scenario: Ask about weekend planned works
     Given species "Ficus Retusa" exists with scientific name "Ficus retusa"

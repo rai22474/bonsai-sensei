@@ -19,6 +19,7 @@ async def should_add_text_messages_to_mem0_on_session_ingest(mem0_client, sessio
             {"role": "assistant", "content": "Puede ser clorosis leve"},
         ],
         user_id="user-123",
+        agent_id="bonsai_sensei",
     )
 
 
@@ -30,6 +31,7 @@ async def should_only_send_new_events_when_some_already_synced(mem0_client, sess
     mem0_client.add.assert_called_once_with(
         [{"role": "assistant", "content": "Puede ser clorosis leve"}],
         user_id="user-123",
+        agent_id="bonsai_sensei",
     )
 
 
@@ -88,6 +90,7 @@ async def should_skip_tool_call_only_events(mem0_client):
             {"role": "assistant", "content": "Observacion registrada"},
         ],
         user_id="user-123",
+        agent_id="bonsai_sensei",
     )
 
 

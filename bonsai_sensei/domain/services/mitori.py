@@ -8,10 +8,11 @@ from jinja2 import Environment, FileSystemLoader
 _TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 
-def create_mitori(model: object, agent_descriptions: list[str]) -> LlmAgent:
+def create_mitori(model: object, agent_descriptions: list[str], tool_descriptions: list[str] = []) -> LlmAgent:
     env = Environment(loader=FileSystemLoader(str(_TEMPLATE_DIR)), trim_blocks=True, lstrip_blocks=True)
     instruction = env.get_template("mitori_instruction.j2").render(
-        available_agents="\n".join(agent_descriptions)
+        available_agents="\n".join(agent_descriptions),
+        available_tools="\n".join(tool_descriptions) if tool_descriptions else "(ninguna)",
     )
     return LlmAgent(
         model=model,

@@ -303,3 +303,43 @@ La solución: el tool devuelve `active_plan: bool` como dato; el LLM lo menciona
 - **Sin escritura parcial:** la separación en fases garantiza que ninguna escritura a BD ocurre antes de que el usuario haya tomado todas las decisiones. Si el usuario abandona en la Fase 1, no queda nada escrito. Si falla la Fase 2 a mitad (p.ej. dos escrituras y la segunda lanza excepción), sí puede haber inconsistencia — eso es un problema de transacción de BD, no de este patrón.
 - **Testing:** la función de dominio (Fase 2) se testea sin ningún mock de `ask_*`. El workflow completo se testea con mocks de `ask_*` que devuelven respuestas predefinidas en secuencia — más complejo que un tool atómico, pero la función de dominio cubre los casos de escritura de forma simple.
 - **Tensión con ADR-005:** ADR-005 establece que el dominio no formatea texto para el usuario (los builders se inyectan). Este ADR extiende esa separación al *cuándo* interactuar: el tool decide el momento y la condición de cada `ask_*`, lo que mezcla lógica de dominio con orquestación de presentación. Se acepta esta tensión porque la alternativa (orquestación via prompt) tiene un coste mayor en fiabilidad.
+
+---
+
+## ADR-012 — Shokunin como BaseAgent determinista, no LlmAgent
+
+**Estado:** Aceptado
+
+**Contexto:**
+`shokunin` era un `LlmAgent` que leía `action_plan` del estado de sesión y llamaba a los AgentTools de los sub-agentes. El LLM hacía de capa de routing: interpretaba el JSON del plan y decidía qué AgentTool invocar para cada paso. Este diseño tenía tres problemas:
+
+1. **Coste:** 2 LLM calls extra por paso de plan (entrada + salida del LLM de routing). Medido: ~72s para una operación de un solo paso.
+2. **No-determinismo:** el LLM podía alucinar el agente destino, reordenar pasos o ignorar parámetros — introduciendo variabilidad donde el comportamiento debía ser mecánico.
+3. **No testeable:** un `LlmAgent` no tiene superficie pública que se pueda unit-testear sin el runner completo de ADK.
+
+**Señal de alerta** (extensión de ADR-009/ADR-011): si un agente recibe un JSON estructurado y su única función es iterar sobre él e invocar los elementos que encuentra, el LLM es overhead puro. No hay razonamiento, solo traducción — y esa traducción debe estar en Python.
+
+**Decisión:**
+`shokunin` se reimplementa como `Shokunin(BaseAgent)` — un agente determinista sin LLM. El método público `execute(ctx: InvocationContext) -> list[Event]` implementa el bucle de ejecución:
+
+1. Lee `action_plan` del estado de sesión y lo parsea como JSON.
+2. Ordena los pasos por `order`.
+3. Por cada paso: resuelve el `AgentTool` por nombre, construye el `request` concatenando `request` + `parameters`, llama a `agent_tool.run_async(...)`.
+4. Si el resultado contiene `{"status": "cancelled"}` o `{"status": "error"}`, detiene la ejecución (no ejecuta pasos siguientes).
+5. Si el agente no está registrado, registra el error y continúa (no detiene el plan).
+6. Si `run_async` lanza una excepción, la convierte a `{"status": "error", "message": str(exc)}` — nunca propaga.
+7. Serializa todos los resultados como `execution_result` en el estado de sesión.
+
+`_run_async_impl` (hook requerido por `BaseAgent`) solo delega a `execute` y convierte la lista en un generador async.
+
+**Bugs corregidos respecto al LlmAgent original:**
+- `_is_terminal` usaba string matching frágil (`'"status": "cancelled"' in result`) — no detectaba `"error"` y fallaba con variaciones de formato JSON. Reemplazado por `json.loads` + `result.get("status") in ("cancelled", "error")`.
+- `_execute_step` no tenía try/except — una excepción en `AgentTool.run_async` propagaba como crash sin registrar el fallo del paso.
+
+**Consecuencias:**
+- **Velocidad:** ~72s → ~19s para operaciones de un paso. El ahorro escala linealmente con el número de pasos del plan.
+- **Determinismo:** el routing mitori→sub-agente es 100% determinista. El único LLM que razona sobre el plan es mitori (que lo genera). Shokunin solo lo ejecuta.
+- **Testeable:** `execute(ctx)` es un método público cubierto por 24 unit tests que verifican todos los caminos de error sin necesidad del runner de ADK.
+- **Error handling explícito:** los estados terminales (`cancelled`, `error`) detienen el plan de forma controlada. Los agentes no registrados no detienen el plan — el error queda en `execution_result` para que sensei lo presente al usuario.
+- **Compatibilidad:** `AgentTool.run_async` preserva el `user_id` de la sesión padre → las confirmaciones async (`ask_confirmation`, `ask_human`) siguen funcionando correctamente desde los sub-agentes invocados por shokunin.
+- **Relación con ADR-002:** la responsabilidad de shokunin sigue siendo "ejecutar el plan de mitori". Solo cambia la implementación: de LLM a Python determinista.
