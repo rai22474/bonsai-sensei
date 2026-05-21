@@ -37,15 +37,19 @@ sensei                        [orchestrator model]
 │
 └── command_pipeline          SequentialAgent for write operations
     ├── mitori                Planner [orchestrator model]: analyses the request and produces a JSON action plan
-    └── shokunin              Executor [leaf model]: runs the plan step by step using the agents below
-        ├── botanist          Species registry (CRUD + wiki generation) [leaf model]
-        ├── weather_advisor   Climate risk assessment [leaf model]
-        ├── kikaru            Cultivation plan [leaf model]: recommends, plans and schedules work
-        ├── nursery           Bonsai CRUD + wiki page per species [leaf model]
-        ├── caretaker         Event recording: fertilizations, treatments, transplants, planned work [leaf model]
-        ├── gallery           Photo management: add, list, delete bonsai photos [leaf model]
-        ├── kantei            Visual analysis: analyze and compare bonsai photos, write reports [leaf model]
-        └── storekeeper       Fertilizer & phytosanitary catalogues (CRUD + wiki generation) [leaf model]
+    └── shokunin              Deterministic executor (BaseAgent, no LLM): runs each plan step
+        ├── [callable tools]  Direct function calls — no LLM routing layer
+        │   ├── analyze_bonsai_photo    Visual analysis of a single stored photo
+        │   ├── compare_bonsai_photos   Side-by-side photo comparison over time
+        │   └── get_weather_risk        Weather forecast + climate risk assessment
+        │
+        └── [agent tools]     Sub-agents for interactive flows (ask_confirmation / ask_selection)
+            ├── botanist      Species registry (CRUD + wiki generation) [leaf model]
+            ├── kikaru        Cultivation plan [leaf model]: recommends, plans and schedules work
+            ├── nursery       Bonsai CRUD [leaf model]
+            ├── caretaker     Event recording: fertilizations, treatments, transplants [leaf model]
+            ├── gallery       Photo management: add, list, delete bonsai photos [leaf model]
+            └── storekeeper   Fertilizer & phytosanitary catalogues (CRUD + wiki) [leaf model]
 ```
 
 ### Agent naming
@@ -59,7 +63,7 @@ Agents with domain-specific complexity are named after Japanese bonsai craft con
 | **shokunin** | 職人 | craftsman | Executes the plan with precision, step by step |
 | **kikaru** | 木刈る | to prune trees | Manages the cultivation work calendar — recommends, plans and schedules care work |
 
-Domain-facing agents (botanist, nursery, caretaker, gallery, kantei, storekeeper, weather_advisor) use descriptive English names that make their responsibility self-evident.
+Domain-facing agents (botanist, nursery, caretaker, gallery, storekeeper) use descriptive English names that make their responsibility self-evident.
 
 ### Models
 
@@ -67,44 +71,43 @@ The system supports a dual-model setup via environment variables:
 
 | Variable | Role | Default |
 |---|---|---|
-| `GEMINI_MODEL` | Leaf agents (botanist, weather_advisor, kikaru, nursery, caretaker, gallery, kantei, storekeeper) | `gemini-2.0-flash-lite` |
-| `GEMINI_ORCHESTRATOR_MODEL` | Orchestrators (sensei, mitori) | falls back to `GEMINI_MODEL` |
+| `GEMINI_MODEL` | Leaf agents (botanist, kikaru, nursery, caretaker, gallery, storekeeper) | `gemini-2.0-flash-lite` |
+| `GEMINI_ORCHESTRATOR_MODEL` | Orchestrators (sensei, mitori) + photo/comparison runners | falls back to `GEMINI_MODEL` |
 
 ### Roles
 
-| Agent | Role |
+| Agent / Tool | Role |
 |---|---|
 | **sensei** | Entry point. Routes queries to direct tools, commands to `command_pipeline`. Formats responses for Telegram. |
-| **mitori** | Planner. Reads the request and the available agent descriptions, then outputs a self-audited JSON action plan. |
-| **shokunin** | Executor. Runs each step of mitori's plan, delegating to the appropriate leaf agent. Stops immediately on `confirmation_pending`. |
+| **mitori** | Planner. Reads the request and produces a self-audited JSON action plan with typed steps (`type: agent` or `type: tool`). |
+| **shokunin** | Deterministic executor (`BaseAgent`, no LLM). Dispatches each plan step: calls callable tools directly or delegates to sub-agents via `AgentTool`. Stops on `cancelled` or `error` status. |
+| **analyze_bonsai_photo** | Callable tool. Retrieves a stored photo, runs a typed visual analysis (health / design / general) and writes the report to the wiki. |
+| **compare_bonsai_photos** | Callable tool. Compares the oldest and newest stored photos of a bonsai and writes the comparison report to the wiki. |
+| **get_weather_risk** | Callable tool. Fetches weather forecast for the user's registered location and returns a climate risk summary. |
 | **botanist** | Manages the species registry (CRUD). Resolves scientific names via Trefle and generates wiki care guides via Tavily at confirmation time. |
-| **weather_advisor** | Fetches weather forecasts and advises on frost/heat protection for specific species. |
 | **kikaru** | Manages the cultivation work calendar (fertilizations, transplants, treatments). Uses deterministic recommendation tools that gather context, reason, and persist the plan to the wiki in a single guaranteed step. Applies next-Saturday default when the user specifies no date. |
-| **nursery** | Manages the bonsai collection (CRUD). Creates wiki pages per species at confirmation time. |
+| **nursery** | Manages the bonsai collection (CRUD). |
 | **caretaker** | Records completed care events: fertilizations applied, phytosanitary treatments, transplants, and planned work execution. |
 | **gallery** | Manages bonsai photos: receives photos from Telegram, associates them to a bonsai, lists and deletes them. |
-| **kantei** | Visual analysis of bonsai photos. Analyzes individual photos, compares two photos over time, and writes structured reports to the wiki. |
 | **storekeeper** | Manages the fertilizer and phytosanitary catalogues (CRUD + wiki page generation via Tavily). |
 
 ### Tools
 
-| Agent | Tools |
+| Agent / Tool | Tools |
 |---|---|
 | **sensei** | `list_bonsai`, `get_bonsai_by_name`, `list_bonsai_events`, `list_bonsai_photos`, `list_species`, `list_fertilizers`, `get_fertilizer_by_name`, `list_phytosanitary`, `get_phytosanitary_by_name`, `list_planned_works_for_bonsai`, `command_pipeline` |
 | **mitori** | — |
-| **shokunin** | `botanist`, `weather_advisor`, `kikaru`, `nursery`, `caretaker`, `gallery`, `kantei`, `storekeeper` |
-| **botanist** | `confirm_create_species`, `confirm_update_species`, `confirm_delete_species`, `confirm_refresh_species_wiki` |
-| **weather_advisor** | `get_weather`, `list_bonsai_species` |
-| **kikaru** | `recommend_fertilizer`, `recommend_phytosanitary`, `list_planned_works_for_bonsai`, `list_bonsai_events_for_cultivation`, `confirm_create_fertilizer_application`, `confirm_create_phytosanitary_application`, `confirm_create_transplant`, `confirm_delete_planned_work`, `list_bonsai`, `list_weekend_planned_works` |
-| **nursery** | `list_bonsai`, `get_bonsai_by_name`, `confirm_create_bonsai`, `confirm_update_bonsai`, `confirm_delete_bonsai` |
-| **caretaker** | `apply_fertilizer`, `apply_phytosanitary`, `record_transplant`, `list_bonsai_events`, `list_planned_works_for_bonsai`, `execute_planned_work` |
-| **gallery** | `add_bonsai_photo`, `list_bonsai_photos`, `delete_bonsai_photo` |
-| **kantei** | `analyze_bonsai_photo`, `compare_bonsai_photos`, `write_wiki_page`, `update_bonsai_reports_index` |
-| **storekeeper** | `list_fertilizers`, `confirm_create_fertilizer`, `confirm_update_fertilizer`, `confirm_delete_fertilizer`, `confirm_refresh_fertilizer_wiki`, `list_phytosanitary`, `confirm_create_phytosanitary`, `confirm_update_phytosanitary`, `confirm_delete_phytosanitary`, `confirm_refresh_phytosanitary_wiki` |
+| **shokunin** | callable: `analyze_bonsai_photo`, `compare_bonsai_photos`, `get_weather_risk` · agents: `botanist`, `kikaru`, `nursery`, `caretaker`, `gallery`, `storekeeper` |
+| **botanist** | `create_bonsai_species`, `update_species`, `delete_species`, `refresh_species_wiki`, `create_pest`, `delete_pest` |
+| **kikaru** | `recommend_fertilizer`, `recommend_phytosanitary`, `list_planned_works_for_bonsai`, `list_bonsai_events`, `create_fertilizer_application`, `create_phytosanitary_application`, `create_transplant`, `delete_planned_work`, `list_bonsai`, `list_weekend_planned_works` |
+| **nursery** | `list_bonsai`, `get_bonsai_by_name`, `create_bonsai`, `update_bonsai`, `delete_bonsai` |
+| **caretaker** | `apply_fertilizer`, `apply_phytosanitary`, `record_transplant`, `list_bonsai_events`, `execute_planned_work_for_bonsai`, `create_pest_event` |
+| **gallery** | `add_bonsai_photo`, `list_bonsai_photos`, `show_bonsai_photos`, `show_bonsai_photo`, `delete_bonsai_photo` |
+| **storekeeper** | `list_fertilizers`, `create_fertilizer`, `update_fertilizer`, `delete_fertilizer`, `refresh_fertilizer_wiki`, `list_phytosanitary`, `create_phytosanitary`, `update_phytosanitary`, `delete_phytosanitary`, `refresh_phytosanitary_wiki` |
 
 ### Confirmation flow
 
-Write operations that mutate data require explicit user confirmation. The leaf agent calls a `confirm_*` tool which queues the operation and returns `confirmation_pending`. Shokunin stops execution and sensei surfaces the pending confirmation to the user as a Telegram inline button. The operation executes only after the user taps "Accept". Cancellations can optionally include a free-text reason.
+Write operations that mutate data require explicit user confirmation. The leaf agent calls a write tool which internally calls `ask_confirmation`, suspending execution until the user responds via Telegram inline button. The operation executes only after the user taps "Accept". Cancellations can optionally include a free-text reason.
 
 ### Selection flow
 
