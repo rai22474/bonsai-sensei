@@ -28,6 +28,7 @@ def create_caretaker(
     get_phytosanitary_by_name_func: Callable,
     get_pest_by_name_func: Callable,
     get_active_phytosanitary_plan_func: Callable,
+    get_recent_unlinked_pest_events_func: Callable,
     record_bonsai_event_func: Callable,
     list_bonsai_events_func: Callable,
     list_planned_works_func: Callable,
@@ -41,6 +42,9 @@ def create_caretaker(
     build_execute_planned_work_selection_question: Callable,
     build_execute_planned_work_option_label: Callable,
     build_create_pest_event_confirmation: Callable,
+    build_link_pest_event_selection_question: Callable,
+    build_pest_event_selection_option: Callable,
+    no_link_option: str,
 ) -> Agent:
     apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -53,9 +57,14 @@ def create_caretaker(
     apply_phytosanitary_tool = create_apply_phytosanitary_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+        get_recent_unlinked_pest_events_func=get_recent_unlinked_pest_events_func,
         record_bonsai_event_func=record_bonsai_event_func,
         ask_confirmation=ask_confirmation,
+        ask_selection=ask_selection,
         build_confirmation_message=build_apply_phytosanitary_confirmation,
+        build_link_selection_question=build_link_pest_event_selection_question,
+        build_pest_event_option=build_pest_event_selection_option,
+        no_link_option=no_link_option,
     )
     apply_phytosanitary_tool.__name__ = "apply_phytosanitary"
     record_transplant_tool = create_record_transplant_tool(

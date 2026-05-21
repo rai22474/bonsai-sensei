@@ -1,6 +1,6 @@
 from pytest_bdd import scenario, when, then, parsers
 
-from http_client import accept_confirmation, advise, get
+from http_client import accept_confirmation, advise, choose_selection, get
 from manage_bonsai.bonsai_events_api import list_bonsai_events
 
 
@@ -12,6 +12,40 @@ def test_record_pest_detection_event():
 @scenario("../features/pest_event.feature", "Cannot record a pest event for an unregistered pest")
 def test_cannot_record_unregistered_pest_event():
     return None
+
+
+@scenario("../features/pest_event.feature", "Apply phytosanitary treatment linked to a pest detection event")
+def test_apply_phytosanitary_linked_to_pest_event():
+    return None
+
+
+@when(parsers.parse('I apply "{product_name}" to "{bonsai_name}" with amount "{amount}"'))
+def apply_phytosanitary_via_advice(context, product_name, bonsai_name, amount):
+    response = advise(
+        text=f"He aplicado {product_name} al bonsái {bonsai_name} con {amount}.",
+        user_id=context["user_id"],
+    )
+    context["pending_selections"] = response.get("pending_selections", [])
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
+
+
+@when(parsers.parse('I select the pest event for "{pest_name}" to link'))
+def select_pest_event_to_link(context, pest_name):
+    selections = context.get("pending_selections", [])
+    if not selections:
+        return
+    selection_id = selections[0]["id"]
+    options = selections[0].get("options", [])
+    matching = next((opt for opt in options if pest_name.lower() in opt.lower()), None)
+    assert matching is not None, f"No option containing '{pest_name}' found in: {options}"
+    response = choose_selection(context["user_id"], selection_id, matching)
+    context["pending_confirmations"] = response.get("pending_confirmations", [])
+
+
+@when("I confirm the phytosanitary application")
+def confirm_phytosanitary_application(context):
+    for confirmation in context.get("pending_confirmations", []):
+        accept_confirmation(context["user_id"], confirmation["id"])
 
 
 
@@ -63,4 +97,25 @@ def assert_no_pest_detection_events(context, bonsai_name):
         f"but found: {pest_events}"
     )
 
+
+@then(parsers.parse('the phytosanitary application on "{bonsai_name}" should be linked to the pest detection event'))
+def assert_phytosanitary_linked_to_pest_event(context, bonsai_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    events = list_bonsai_events(get, bonsai_id)
+
+    pest_detection_events = [event for event in events if event.get("event_type") == "pest_detection"]
+    assert len(pest_detection_events) > 0, (
+        f"Expected a pest_detection event for bonsai '{bonsai_name}', but found: {events}"
+    )
+    pest_event_id = pest_detection_events[0]["id"]
+
+    phytosanitary_events = [event for event in events if event.get("event_type") == "phytosanitary_application"]
+    linked_events = [
+        event for event in phytosanitary_events
+        if event.get("payload", {}).get("pest_event_id") == pest_event_id
+    ]
+    assert len(linked_events) > 0, (
+        f"Expected a phytosanitary_application event linked to pest_event_id={pest_event_id}, "
+        f"but found phytosanitary events: {phytosanitary_events}"
+    )
 

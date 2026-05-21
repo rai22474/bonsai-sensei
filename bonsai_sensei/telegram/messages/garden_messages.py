@@ -81,3 +81,14 @@ def build_delete_bonsai_photo_confirmation(bonsai_name: str, taken_on: str) -> s
 
 def build_create_pest_event_confirmation(bonsai_name: str, pest_name: str) -> str:
     return f"¿Registrar detección de '{display_name(pest_name)}' en '{display_name(bonsai_name)}'?"
+
+
+def build_link_pest_event_selection_question(bonsai_name: str) -> str:
+    return f"Hay detecciones de plaga recientes sin tratamiento vinculado en '{display_name(bonsai_name)}'. ¿Deseas vincular este tratamiento a alguna?"
+
+
+def build_pest_event_selection_option(pest_name: str, occurred_at: str) -> str:
+    return f"{display_name(pest_name)} ({format_date(occurred_at)})"
+
+
+NO_LINK_OPTION = "No vincular"

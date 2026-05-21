@@ -155,12 +155,12 @@ Más allá de profundidad 3 el filtro de similitud coseno debe ser muy estricto 
 
 ---
 
-## FUTURE-004 — Eventos de plaga por bonsái (parcialmente completado)
+## FUTURE-004 — Eventos de plaga por bonsái (COMPLETADO 2026-05-21)
 
 **Contexto:**
 El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes fitosanitarios, pero no tiene forma de registrar una observación de plaga como evento independiente. Sin este registro no hay trazabilidad infección → tratamiento, ni historial de plagas por bonsái para informar futuras recomendaciones.
 
-**Estado (2026-05-18):** Catálogo `Pest` implementado y flujo básico de detección completado: migración, REST endpoints, generación LLM al alta de especie, páginas wiki, `list_pests` en sensei, herramienta `create_pest_event` en caretaker con confirmación, tests de aceptación verdes. Integración Tavily para búsqueda fitosanitaria online implementada (FUTURE-004b). Propuesta de revisión de plan reemplazada por aviso pasivo en texto (ver paso 6). Pendiente: enlace a `apply_phytosanitary`.
+**Estado (2026-05-21):** COMPLETADO. Catálogo `Pest`, flujo de detección, integración Tavily (FUTURE-004b), y enlace a `apply_phytosanitary` implementados. `apply_phytosanitary` detecta automáticamente eventos de plaga recientes sin tratamiento vinculado y presenta selección al usuario. Tests de aceptación verdes.
 
 ### Nuevas entidades
 
@@ -190,12 +190,12 @@ El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes
 ### Orden de trabajo al implementar
 
 1. ~~Migración: tabla `pest`, añadir `pest_event_id` a `phytosanitary_application`~~ (done)
-2. ~~Store functions + REST endpoints para `Pest` y `PestEvent`~~ (done — `Pest` solo; `PestEvent` pendiente)
+2. ~~Store functions + REST endpoints para `Pest` y `PestEvent`~~ (done)
 3. ~~Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)~~ (done)
-4. ~~Herramienta de agente: alta de `PestEvent` con confirmación~~ (done — versión básica; selección filtrada por especie pendiente)
-5. Enlace a `apply_phytosanitary` desde el evento
+4. ~~Herramienta de agente: alta de `PestEvent` con confirmación~~ (done)
+5. ~~Enlace a `apply_phytosanitary` desde el evento~~ (done 2026-05-21 — selección de evento reciente sin vincular)
 6. ~~Propuesta de revisión de plan si hay uno activo~~ — reemplazado por aviso pasivo: `create_pest_event` devuelve `active_plan: bool`; caretaker lo menciona en texto sin preguntar. Ver ADR-011 para el razonamiento.
-7. ~~Tests de aceptación (detectar + confirmar, plaga no registrada)~~ (done 2026-05-15)
+7. ~~Tests de aceptación~~ (done)
 
 ---
 

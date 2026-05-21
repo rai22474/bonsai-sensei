@@ -7,6 +7,7 @@ from pytest_httpserver import HTTPServer
 
 from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, create_bonsai
+from manage_bonsai.bonsai_events_api import record_bonsai_event
 from manage_phytosanitary.phytosanitary_api import create_phytosanitary, delete_phytosanitary_by_name
 from manage_species.species_api import delete_species_by_name, create_species
 from pest_event.pest_api import create_pest, delete_pest_by_name
@@ -86,6 +87,18 @@ def ensure_phytosanitary_registered(context, name):
     phytosanitary = create_phytosanitary(post, name)
     context["phytosanitaries_registered"].append(name)
     context["phytosanitary_ids"][name] = phytosanitary.get("id")
+
+
+@given(parsers.parse('bonsai "{bonsai_name}" has a recent pest detection event for "{pest_name}"'))
+def ensure_recent_pest_detection_event(context, bonsai_name, pest_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    pest_id = context["pest_ids"][pest_name]
+    record_bonsai_event(
+        post_func=post,
+        bonsai_id=bonsai_id,
+        event_type="pest_detection",
+        payload={"pest_id": pest_id, "pest_name": pest_name},
+    )
 
 
 @given(parsers.parse('bonsai "{bonsai_name}" has an active phytosanitary plan'))

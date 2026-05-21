@@ -3,6 +3,7 @@ from typing import Callable
 from bonsai_sensei.domain.bonsai_event import BonsaiEvent
 from google.adk.tools.tool_context import ToolContext
 
+from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -10,9 +11,14 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_apply_phytosanitary_tool(
     get_bonsai_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
+    get_recent_unlinked_pest_events_func: Callable,
     record_bonsai_event_func: Callable,
     ask_confirmation: Callable,
+    ask_selection: Callable,
     build_confirmation_message: Callable,
+    build_link_selection_question: Callable,
+    build_pest_event_option: Callable,
+    no_link_option: str,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="caretaker")
@@ -59,6 +65,22 @@ def create_apply_phytosanitary_tool(
         phytosanitary = get_phytosanitary_by_name_func(phytosanitary_name)
         if not phytosanitary:
             return {"status": "error", "message": "phytosanitary_not_found"}
+
+        if pest_event_id is None:
+            unlinked_events = get_recent_unlinked_pest_events_func(bonsai_id=bonsai.id)
+            if unlinked_events:
+                options = [
+                    build_pest_event_option(event.payload.get("pest_name", ""), event.occurred_at)
+                    for event in unlinked_events
+                ] + [no_link_option]
+                selection = await ask_selection(
+                    build_link_selection_question(bonsai_name),
+                    options,
+                    tool_context=tool_context,
+                )
+                if not isinstance(selection, SelectionNoneResult) and selection != no_link_option and selection in options:
+                    selected_index = options.index(selection)
+                    pest_event_id = unlinked_events[selected_index].id
 
         confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, phytosanitary_name, amount), tool_context=tool_context)
 

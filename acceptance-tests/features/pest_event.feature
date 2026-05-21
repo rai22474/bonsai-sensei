@@ -15,3 +15,14 @@ Feature: Record pest detection events for a bonsai via advice
     Then no confirmation should be pending for the pest detection
     And bonsai "Kaze" should have no pest detection events
 
+  Scenario: Apply phytosanitary treatment linked to a pest detection event
+    Given species "Ficus Retusa" exists with scientific name "Ficus retusa"
+    And a bonsai named "Kaze" exists for species "Ficus Retusa"
+    And pest "araña roja" is registered in the catalog
+    And phytosanitary product "aceite de neem" is registered
+    And bonsai "Kaze" has a recent pest detection event for "araña roja"
+    When I apply "aceite de neem" to "Kaze" with amount "5 ml"
+    And I select the pest event for "araña roja" to link
+    And I confirm the phytosanitary application
+    Then the phytosanitary application on "Kaze" should be linked to the pest detection event
+
