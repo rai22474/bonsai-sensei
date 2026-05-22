@@ -14,6 +14,10 @@ def create_cultivation_group(
     build_fertilizer_selection_question: Callable,
     build_fertilization_type_question: Callable,
     build_fertilization_type_options: Callable,
+    build_period_question: Callable,
+    build_phytosanitary_type_question: Callable,
+    build_phytosanitary_type_options: Callable,
+    build_phytosanitary_period_question: Callable,
     build_fertilizer_confirmation: Callable,
     build_phytosanitary_confirmation: Callable,
     build_transplant_confirmation: Callable,
@@ -29,7 +33,6 @@ def create_cultivation_group(
     build_delete_pest_confirmation: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
-    searcher: Callable | None = None,
 ):
     botanist = create_botanist_group(
         model=model,
@@ -55,6 +58,10 @@ def create_cultivation_group(
         build_fertilizer_selection_question=build_fertilizer_selection_question,
         build_fertilization_type_question=build_fertilization_type_question,
         build_fertilization_type_options=build_fertilization_type_options,
+        build_period_question=build_period_question,
+        build_phytosanitary_type_question=build_phytosanitary_type_question,
+        build_phytosanitary_type_options=build_phytosanitary_type_options,
+        build_phytosanitary_period_question=build_phytosanitary_period_question,
         build_fertilizer_confirmation=build_fertilizer_confirmation,
         build_phytosanitary_confirmation=build_phytosanitary_confirmation,
         build_transplant_confirmation=build_transplant_confirmation,
@@ -63,6 +70,5 @@ def create_cultivation_group(
         build_abandon_phytosanitary_plan_confirmation=build_abandon_phytosanitary_plan_confirmation,
         orchestrator_model=orchestrator_model,
         ask_poll=ask_poll,
-        searcher=searcher,
     )
     return botanist, kikaru

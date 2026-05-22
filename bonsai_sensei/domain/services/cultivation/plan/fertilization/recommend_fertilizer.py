@@ -2,6 +2,8 @@ import re
 from datetime import date
 from typing import Callable
 
+from google.adk.tools.tool_context import ToolContext
+
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
@@ -70,6 +72,7 @@ def create_recommend_fertilizer_tool(
     @trace_tool_call
     async def recommend_fertilizer(
         bonsai_name: str,
+        tool_context: ToolContext | None = None,
     ) -> dict:
         """Recommend the best fertilizer for a bonsai based on its history, existing plan, and available fertilizers. Saves the recommendation and rationale in the bonsai's wiki.
 

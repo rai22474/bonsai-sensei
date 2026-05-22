@@ -9,6 +9,8 @@ from bonsai_sensei.domain.services.garden.caretaker.apply_phytosanitary import (
     create_apply_phytosanitary_tool,
 )
 
+NO_LINK_OPTION = "No vincular a evento de plaga"
+
 
 class MockToolContext:
     def __init__(self, user_id=None):
@@ -57,14 +59,23 @@ async def should_return_error_when_phytosanitary_not_found(apply_phytosanitary_t
 
 
 @pytest.mark.asyncio
-async def should_build_confirmation_message_with_correct_args(tool_context, get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm):
+async def should_build_confirmation_message_with_correct_args(
+    tool_context, get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+    get_recent_unlinked_pest_events_func, record_bonsai_event_func, ask_confirmation_confirm,
+    ask_selection_func, build_link_selection_question, build_pest_event_option,
+):
     captured_calls = []
 
     def build_confirmation_message(bonsai_name, phytosanitary_name, amount):
         captured_calls.append((bonsai_name, phytosanitary_name, amount))
         return "confirmation text"
 
-    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+    tool = create_apply_phytosanitary_tool(
+        get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+        get_recent_unlinked_pest_events_func, record_bonsai_event_func,
+        ask_confirmation_confirm, ask_selection_func, build_confirmation_message,
+        build_link_selection_question, build_pest_event_option, NO_LINK_OPTION,
+    )
     await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert_that(captured_calls, equal_to([("Kaze", "NimBio", "3 ml")]),
@@ -96,8 +107,17 @@ async def should_return_success_when_user_confirms(apply_phytosanitary_tool, too
 
 
 @pytest.mark.asyncio
-async def should_not_record_event_when_user_cancels(tool_context, captured_events, get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+async def should_not_record_event_when_user_cancels(
+    tool_context, captured_events, get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+    get_recent_unlinked_pest_events_func, record_bonsai_event_func, ask_selection_func,
+    build_confirmation_message, build_link_selection_question, build_pest_event_option,
+):
+    tool = create_apply_phytosanitary_tool(
+        get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+        get_recent_unlinked_pest_events_func, record_bonsai_event_func,
+        ask_confirmation_cancel, ask_selection_func, build_confirmation_message,
+        build_link_selection_question, build_pest_event_option, NO_LINK_OPTION,
+    )
     await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert_that(captured_events, equal_to([]),
@@ -105,8 +125,17 @@ async def should_not_record_event_when_user_cancels(tool_context, captured_event
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, build_confirmation_message):
-    tool = create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_cancel, build_confirmation_message)
+async def should_return_cancelled_when_user_declines(
+    tool_context, get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+    get_recent_unlinked_pest_events_func, record_bonsai_event_func, ask_selection_func,
+    build_confirmation_message, build_link_selection_question, build_pest_event_option,
+):
+    tool = create_apply_phytosanitary_tool(
+        get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+        get_recent_unlinked_pest_events_func, record_bonsai_event_func,
+        ask_confirmation_cancel, ask_selection_func, build_confirmation_message,
+        build_link_selection_question, build_pest_event_option, NO_LINK_OPTION,
+    )
     result = await tool(bonsai_name="Kaze", phytosanitary_name="NimBio", amount="3 ml", tool_context=tool_context)
 
     assert_that(result["status"], equal_to("cancelled"),
@@ -179,5 +208,43 @@ def build_confirmation_message():
 
 
 @pytest.fixture
-def apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message):
-    return create_apply_phytosanitary_tool(get_bonsai_by_name_func, get_phytosanitary_by_name_func, record_bonsai_event_func, ask_confirmation_confirm, build_confirmation_message)
+def get_recent_unlinked_pest_events_func():
+    def get_recent_unlinked_pest_events(bonsai_id):
+        return []
+    return get_recent_unlinked_pest_events
+
+
+@pytest.fixture
+def ask_selection_func():
+    async def ask_selection(question, options, tool_context=None):
+        return options[0] if options else None
+    return ask_selection
+
+
+@pytest.fixture
+def build_link_selection_question():
+    def build(bonsai_name):
+        return f"Vincular evento de plaga para {bonsai_name}?"
+    return build
+
+
+@pytest.fixture
+def build_pest_event_option():
+    def build(pest_name, occurred_at):
+        return f"{pest_name} ({occurred_at})"
+    return build
+
+
+@pytest.fixture
+def apply_phytosanitary_tool(
+    get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+    get_recent_unlinked_pest_events_func, record_bonsai_event_func,
+    ask_confirmation_confirm, ask_selection_func, build_confirmation_message,
+    build_link_selection_question, build_pest_event_option,
+):
+    return create_apply_phytosanitary_tool(
+        get_bonsai_by_name_func, get_phytosanitary_by_name_func,
+        get_recent_unlinked_pest_events_func, record_bonsai_event_func,
+        ask_confirmation_confirm, ask_selection_func, build_confirmation_message,
+        build_link_selection_question, build_pest_event_option, NO_LINK_OPTION,
+    )

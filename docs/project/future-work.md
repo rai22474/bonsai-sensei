@@ -155,96 +155,6 @@ Más allá de profundidad 3 el filtro de similitud coseno debe ser muy estricto 
 
 ---
 
-## FUTURE-004 — Eventos de plaga por bonsái (COMPLETADO 2026-05-21)
-
-**Contexto:**
-El sistema registra tratamientos fitosanitarios (`apply_phytosanitary`) y planes fitosanitarios, pero no tiene forma de registrar una observación de plaga como evento independiente. Sin este registro no hay trazabilidad infección → tratamiento, ni historial de plagas por bonsái para informar futuras recomendaciones.
-
-**Estado (2026-05-21):** COMPLETADO. Catálogo `Pest`, flujo de detección, integración Tavily (FUTURE-004b), y enlace a `apply_phytosanitary` implementados. `apply_phytosanitary` detecta automáticamente eventos de plaga recientes sin tratamiento vinculado y presenta selección al usuario. Tests de aceptación verdes.
-
-### Nuevas entidades
-
-**`Pest`** — catálogo de plagas por especie:
-- Generado automáticamente al dar de alta una especie (paso LLM separado, re-ejecutable)
-- Campos: id, name, species_id (FK), wiki_path
-- Misma forma que `Phytosanitary` (catálogo de productos); cada plaga tiene su ficha en la wiki
-
-**`PestEvent`** — observación de plaga en un bonsái:
-- Campos: id, bonsai_id (FK), pest_id (FK), detected_at
-- Tratamiento: `PhytosanitaryApplication` existente, con un campo `pest_event_id` (FK nullable) añadido
-- El tratamiento es opcional en el momento del alta del evento (puede detectarse sin tratar aún)
-
-### Flujo conversacional
-
-1. Usuario reporta plaga en "Hanako" → agente filtra `Pest` por la especie de Hanako → usuario selecciona
-2. Se crea `PestEvent` con la plaga seleccionada
-3. Agente pregunta si se ha aplicado tratamiento → si sí, flujo `apply_phytosanitary` habitual con `pest_event_id` enlazado
-4. Si hay plan fitosanitario activo → agente propone revisión del plan con confirmación (no automática)
-
-### Decisiones de diseño
-
-- El catálogo de plagas vive en la wiki igual que los productos fitosanitarios: una página por plaga generada por LLM al crear la especie.
-- Reutilizar `apply_phytosanitary` en lugar de crear un mecanismo nuevo: añadir `pest_event_id` nullable a `PhytosanitaryApplication` preserva la trazabilidad sin romper el flujo existente.
-- La modificación del plan es siempre una propuesta con confirmación — nunca automática.
-
-### Orden de trabajo al implementar
-
-1. ~~Migración: tabla `pest`, añadir `pest_event_id` a `phytosanitary_application`~~ (done)
-2. ~~Store functions + REST endpoints para `Pest` y `PestEvent`~~ (done)
-3. ~~Generación de catálogo de plagas al alta de especie (LLM + wiki, re-ejecutable)~~ (done)
-4. ~~Herramienta de agente: alta de `PestEvent` con confirmación~~ (done)
-5. ~~Enlace a `apply_phytosanitary` desde el evento~~ (done 2026-05-21 — selección de evento reciente sin vincular)
-6. ~~Propuesta de revisión de plan si hay uno activo~~ — reemplazado por aviso pasivo: `create_pest_event` devuelve `active_plan: bool`; caretaker lo menciona en texto sin preguntar. Ver ADR-011 para el razonamiento.
-7. ~~Tests de aceptación~~ (done)
-
----
-
-## FUTURE-004b — Búsqueda fitosanitaria online (COMPLETADO 2026-05-18)
-
-Kikaru puede buscar productos fitosanitarios online vía Tavily cuando: (a) el catálogo no tiene productos (`no_products_available`) o (b) el usuario pide explícitamente alternativas en internet. La herramienta `search_phytosanitary_online` está implementada, wired a través de toda la cadena de fábricas, con test de aceptación verde. La recomendación puntual (`recommend_phytosanitary`) sigue siendo el camino principal cuando hay productos en catálogo.
-
----
-
-## FUTURE-005 — Mejoras de orquestación entre agentes (COMPLETADO 2026-05-14)
-
-**Contexto:**
-Varias debilidades en el protocolo mitori → shokunin → sub-agente producían pérdida de información, pasos de pre-validación redundantes y comportamiento no determinista en Kikaru. Las siguientes mejoras se implementaron en una sola sesión.
-
-### Schema de plan estructurado (Option A)
-
-`mitori_instruction.j2` actualizado: los pasos del plan ahora incluyen un campo `parameters` (dict) junto al campo `request` en texto natural. Shokunin pasa ambos a los sub-agentes. Esto resuelve la pérdida de información donde los sub-agentes (caretaker, nursery, etc.) solo recibían una cadena `request` vaga sin los valores específicos del mensaje original del usuario.
-
-La decisión de adoptar Option A y diferir Option C está registrada en ADR-010 (`docs/architecture/decisions.md`).
-
-### Corrección de routing nursery + botanist
-
-Descripciones de agentes actualizadas para que mitori no genere un paso botanist de pre-validación antes de crear un bonsái. La descripción de nursery ahora indica que la validación de especie es interna; la descripción de botanist indica que no debe invocarse como pre-paso antes de la creación de bonsái.
-
-### Determinismo en Kikaru (selección de tipo de abonado)
-
-`KIKARU_INSTRUCTION` actualizado: regla explícita de que una fecha concreta siempre implica abonado puntual (nunca llamar a `clarify_fertilization_type`). Tras recibir "puntual" de `clarify_fertilization_type`, llamar inmediatamente a `create_fertilizer_application`.
-
-### Descripción de botanist ampliada
-
-La descripción del agente botanist se actualizó para incluir la gestión del catálogo de plagas, de modo que mitori enruta consultas de plagas a botanist en lugar de caretaker.
-
-### list_pests como herramienta de consulta directa en sensei
-
-`list_pests` añadido a las herramientas de consulta directa de sensei (`factory.py`), de modo que "¿tengo plagas registradas?" se responde sin pasar por mitori/shokunin.
-
-### Corrección del endpoint text-response para encuestas
-
-`submit_text_response` en `advice.py` actualizado para aceptar `type` en `("text", "poll")`, corrigiendo fallos de test en los flujos de propuesta de plan de abonado y fitosanitario.
-
-**Archivos clave modificados:**
-- `bonsai_sensei/domain/services/templates/mitori_instruction.j2`
-- `bonsai_sensei/domain/services/cultivation/species/botanist.py`
-- `bonsai_sensei/domain/services/cultivation/plan/kikaru.py`
-- `bonsai_sensei/domain/services/factory.py`
-- `bonsai_sensei/api/advice.py`
-
----
-
 ## FUTURE-006 — Option C: despacho determinista entre agentes
 
 **Contexto:**
@@ -358,7 +268,7 @@ mem0 hace LLM pass al ingestar — puede reformular o consolidar observaciones. 
 ## FUTURE-008 — Revisión de asignación de modelos: cloud vs orchestrator por agente
 
 **Contexto:**
-El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-flash-lite-preview` por defecto, más barato) y `GEMINI_ORCHESTRATOR_MODEL` (`gemini-3-flash-preview` por defecto, más capaz). La asignación actual es conservadora: el orchestrator solo llega a sensei, mitori y los runners de planificación interactiva (clarification, proposal, evaluate). El resto usa el modelo lite. Un análisis sistemático identifica cinco zonas donde el modelo lite produce salidas de menor calidad con impacto real en el sistema.
+El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-flash-lite-preview` por defecto, más barato) y `GEMINI_ORCHESTRATOR_MODEL` (`gemini-3-flash-preview` por defecto, más capaz). La asignación actual es conservadora: el orchestrator solo llega a sensei, mitori y los runners de planificación interactiva (clarification, proposal, evaluate). El resto usa el modelo lite. Un análisis sistemático identifica cuatro zonas donde el modelo lite produce salidas de menor calidad con impacto real en el sistema.
 
 **Modelos actuales:**
 - `cloud` = `GEMINI_MODEL` (lite, rápido, barato)
@@ -373,6 +283,7 @@ El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-fl
 | shokunin | cloud | Lee JSON del estado y despacha al AgentTool nombrado; mecánico |
 | weather_advisor | cloud | Tool call simple sin razonamiento complejo |
 | caretaker / nursery / gallery / storekeeper | cloud | CRUD + `limit_to_single_tool_call`; sin ambigüedad de routing |
+| kikaru | cloud | Extracción de entidades + dispatch; routing Python determinista en `schedule_work.py`; sin ambigüedad |
 | kantei (el agente) | cloud | Solo enruta a photo runners; el razonamiento real está en los runners |
 | clarification_runner | orchestrator (heredado del manage tool) | Diálogo interactivo con el usuario |
 | plan_proposal_runner | orchestrator (heredado del manage tool) | Propuesta de calendario complejo |
@@ -380,11 +291,13 @@ El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-fl
 
 ### Asignaciones incorrectas — cambiar a orchestrator
 
-**1. `fertilizer_recommendation_runner` y `phytosanitary_recommendation_runner`**
+**1. `fertilizer_recommendation_runner`**
 
-Son el paso de razonamiento puro del patrón ADR-009: sin tools, entrada de texto → JSON con `fertilizer_name`/`treatments`, `reasoning` y `wiki_content`. Es el paso intelectualmente más exigente del sistema (razona sobre estación, historial de salud, rotación de productos) y produce un artefacto permanente escrito en la wiki. Paradoja: usan el modelo más barato mientras los runners interactivos que los rodean usan el orchestrator.
+Es el paso de razonamiento puro del patrón ADR-009: sin tools, entrada de texto → JSON con `fertilizer_name`, `reasoning` y `wiki_content`. Es el paso intelectualmente más exigente del sistema (razona sobre estación, historial de salud, rotación de productos) y produce un artefacto permanente escrito en la wiki. Paradoja: usa el modelo más barato mientras los runners interactivos que lo rodean usan el orchestrator.
 
-**Cambio:** propagar `orchestrator_model` desde `create_kikaru_group` a `_create_recommend_fertilizer_tool` y `_create_recommend_phytosanitary_tool` en `cultivation/plan/factory.py`.
+`phytosanitary_recommendation_runner` quedó resuelto de otra forma: `recommend_phytosanitary` se movió a herramienta directa de sensei, fuera del pipeline.
+
+**Cambio:** propagar `orchestrator_model` desde `create_kikaru_group` a `_create_recommend_fertilizer_tool` en `cultivation/plan/factory.py`.
 
 **2. `species_wiki_compiler`**
 
@@ -408,8 +321,6 @@ Diagnóstico visual de plagas y salud. Un diagnóstico incorrecto (confundir ara
 
 **`botanist`** — Da consejo hortícola directo al usuario. Flash-lite puede quedar corto en diagnósticos de cultivo complejos o preguntas sobre enfermedades raras. Vale la pena comparar con orchestrator bajo casos de prueba reales antes de decidir.
 
-**`kikaru`** — Enruta entre 10+ tools de plan. `limit_to_single_tool_call` activo: un error de routing no se autocorrige. Borderline hacia orchestrator si se observan errores de routing frecuentes.
-
 **`card_extractor` (ingestion)** — Extrae conocimiento de transcripts de vídeo. La calidad de extracción afecta directamente la calidad de las fichas y por tanto la wiki. Candidato a orchestrator si la calidad del keeper mejorada (punto 3) no es suficiente.
 
 ### Patrón de implementación
@@ -422,10 +333,107 @@ El patrón `effective_orchestrator_model = orchestrator_model or model` ya está
 
 ### Orden de trabajo al implementar
 
-1. `fertilizer_recommendation_runner` y `phytosanitary_recommendation_runner` (mayor impacto en calidad de consejos, menor radio de cambio)
+1. `fertilizer_recommendation_runner` (mayor impacto en calidad de consejos, menor radio de cambio)
 2. `wiki_keeper` (resolver junto con FUTURE-001 §Calidad)
 3. `photo_analysis_runner` y `photo_comparison_runner`
 4. `species_wiki_compiler`
-5. Medir `botanist` y `kikaru` antes de decidir
+5. Medir `botanist` antes de decidir
 
 **Dependencia con FUTURE-001:** el punto 3 (wiki_keeper) cubre el mismo problema que FUTURE-001 §Calidad paso 1 — usar un modelo más potente en el keeper. Esta entrada proporciona el contexto completo y el plan de implementación específico; FUTURE-001 §Orden de trabajo puede actualizarse para referenciar FUTURE-008 cuando se retome.
+
+---
+
+## FUTURE-009 — Memoria de estrategias para mitori
+
+**Contexto:**
+Mitori genera un plan JSON en cada invocación desde cero. Para peticiones similares que ya han tenido éxito, debería recuperar el patrón de plan anterior y reutilizarlo como referencia, reduciendo errores de routing y mejorando la consistencia.
+
+**Diseño:**
+
+Pipeline actual: `[mitori, shokunin]`
+Pipeline propuesto: `[StrategyRecaller, mitori, shokunin, StrategySaver]` (cuando mem0 disponible)
+
+**`StrategyRecaller`** (`BaseAgent` sin LLM):
+- Extrae el último mensaje de usuario de `ctx.session.events`
+- Busca en mem0 con `filters={"user_id": ..., "agent_id": "mitori_strategies"}`, `top_k=1`
+- Si encuentra resultado: escribe `ctx.session.state["recalled_strategy"]` con el texto formateado (sección con header + contenido + instrucción de adaptación)
+- Si no: no escribe nada (estado ausente = sin estrategia previa)
+
+**`StrategySaver`** (`BaseAgent` sin LLM):
+- Lee `execution_result` y `action_plan` de session state
+- Si algún step tiene `status: error|cancelled` → no guarda
+- Si todo OK → llama `mem0.add([{"role": "assistant", "content": "Para el objetivo '...', el plan exitoso fue: {...}"}], user_id=..., agent_id="mitori_strategies")`
+
+**Inyección en mitori:**
+Añadir `{recalled_strategy?}` en `mitori_instruction.j2` entre la sección de herramientas disponibles y `# Comportamiento`. ADK sustituye el placeholder desde session state en tiempo de ejecución. Si vacío, no aparece nada.
+
+**Condicionalidad:**
+`StrategyRecaller` y `StrategySaver` solo se añaden al pipeline si `mem0_client is not None`. Sin `DATABASE_URL`, el pipeline no cambia.
+
+**Propagación de `mem0_client`:**
+`__init__.py` crea `mem0_client` antes de llamar a `create_sensei_agent` → `agents_factory.py:create_sensei_agent(mem0_client=...)` → `factory.py:create_sensei_group(mem0_client=...)`.
+
+**Nota sobre `async def _run_async_impl`:**
+Ambos agentes son pure side-effect (no yieldan eventos). Para que Python los trate como async generators (requerido por ADK), usar el patrón `if False: yield` al final del body.
+
+**Archivos afectados:**
+- `bonsai_sensei/domain/services/strategy_memory.py` (nuevo)
+- `bonsai_sensei/domain/services/templates/mitori_instruction.j2`
+- `bonsai_sensei/domain/services/factory.py`
+- `bonsai_sensei/domain/services/agents_factory.py`
+- `bonsai_sensei/__init__.py` (mover creación de mem0_client antes de `create_sensei_agent`)
+
+---
+
+## FUTURE-010 — Plan de diseño orientado a objetivo
+
+**Contexto:**
+El sistema gestiona actualmente trabajos de cultivo rutinarios (fertilización, fitosanitarios, trasplante) a través de kikaru. Pero el desarrollo artístico de un bonsái requiere un tipo diferente de planificación: el usuario tiene un objetivo de diseño concreto ("desarrollar nebari más ancha", "afinar ápice", "dar movimiento al primer tramo", "conseguir ramas secundarias definidas") y necesita que el sistema le ayude a trazar la secuencia de técnicas específicas para llegar a ese objetivo.
+
+Este caso de uso está identificado en `docs/project/vision.md` como "Generación de plan estándar por especie/diseño" y debe seguir el patrón de **agente libre** (no mitori/shokunin), por ser una planificación multi-turno con decisiones adaptadas al estado actual del árbol.
+
+**¿Qué diferencia este plan de los trabajos de kikaru?**
+Kikaru programa trabajos ya decididos por el usuario: "quiero fertilizar el día X". El plan de diseño responde a "¿qué tengo que hacer para conseguir Y?". El agente razona sobre el estado del árbol, la especie, la época del año y el objetivo, y genera una secuencia de técnicas con justificación y ventana temporal.
+
+**Técnicas a contemplar:**
+- Alambrado (wiring): dirección de ramas, momento óptimo según especie (otoño/invierno para caducifolias, evitar crecimiento activo)
+- Pinzado (pinching): control de elongación, favorece ramificación fina
+- Defoliado: reducción de tamaño de hoja, apertura de luz interior — solo especies que lo toleran
+- Poda de mantenimiento / poda estructural: eliminación de ramas sacrificadas, inversas, cruzadas
+- Poda de engrosamiento / jin / shari: técnicas de deadwood
+- Trasplante con trabajo de raíces: nebari, reducción de raíces gruesas
+- Nebari: guías de raíces aéreas, exposición progresiva
+
+**Modelo de dominio (por resolver):**
+
+Dos opciones a evaluar al implementar:
+
+**Opción A — Entidad `DesignObjective` en base de datos:**
+```
+DesignObjective:
+  id, bonsai_id, objective (text), created_at, achieved_at (nullable)
+
+DesignWork (extends PlannedWork o entidad separada):
+  id, objective_id, technique, rationale, window_start, window_end, status
+```
+Ventaja: trazabilidad, progreso cuantificable, filtros por estado.
+Desventaja: más tablas, más APIs REST, mayor coste de implementación.
+
+**Opción B — Plan como página wiki del bonsái:**
+El agente escribe un plan de diseño en `wiki/bonsai/<nombre>/design-plan.md` con secciones por técnica, ventana temporal y estado. Progreso se actualiza conversacionalmente o via keeper.
+Ventaja: simplicidad, integración natural con wiki existente, el agente puede leer y actualizar en lenguaje natural.
+Desventaja: sin datos estructurados, difícil de consultar programáticamente, sin reminder scheduling.
+
+**Recomendación:** empezar con Opción B (wiki) para validar el flujo sin infraestructura adicional. Migrar a Opción A si se necesita scheduling de recordatorios (integración con kikaru) o consultas estructuradas.
+
+**Patrón de agente:**
+Agente libre con acceso a:
+- herramienta de lectura/escritura de wiki (ya existe)
+- herramienta de consulta del bonsái y su historial (ya existe)
+- herramienta de consulta de especie (herbarium, ya existe)
+- opcionalmente: búsqueda de técnicas en base de conocimiento (FUTURE-002/003)
+
+El agente conduce una conversación para entender el objetivo, el estado actual del árbol y las limitaciones del usuario (tiempo disponible, nivel de experiencia), y produce el plan adaptado.
+
+**Vínculo con vision.md:**
+Cubre directamente el caso de uso "Generación de plan estándar por especie/diseño". Implementar después de FUTURE-002 si se quiere que el agente consulte la base de conocimiento de técnicas; puede implementarse antes si se apoya solo en el conocimiento del modelo.

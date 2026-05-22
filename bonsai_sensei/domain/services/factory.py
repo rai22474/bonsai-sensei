@@ -16,6 +16,13 @@ from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
     create_list_planned_works_tool,
+    create_list_weekend_planned_works_tool,
+)
+from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.recommend_phytosanitary import (
+    create_recommend_phytosanitary_tool,
+)
+from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.search_phytosanitary_online import (
+    create_search_phytosanitary_online_tool,
 )
 from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
     create_list_species_tool,
@@ -36,6 +43,10 @@ from bonsai_sensei.domain.services.cultivation.weather.weather_risk_tool import 
     create_weather_risk_tool,
     WEATHER_RISK_TOOL_DESCRIPTION,
 )
+from bonsai_sensei.domain.services.cultivation.plan.fertilization.recommend_fertilizer import (
+    create_recommend_fertilizer_tool,
+)
+from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool, create_write_wiki_page_tool
 from bonsai_sensei.domain.services.garden.kantei.factory import (
     create_kantei_group,
     ANALYZE_TOOL_DESCRIPTION,
@@ -51,6 +62,12 @@ from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools impo
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
     create_list_phytosanitary_tool,
     create_get_phytosanitary_by_name_tool,
+)
+
+
+RECOMMEND_FERTILIZER_TOOL_DESCRIPTION = (
+    "- recommend_fertilizer: Recomienda el mejor fertilizante para un bonsái según su historial y el catálogo disponible. Guarda la recomendación en la wiki del bonsái. "
+    "Parámetros: bonsai_name (str, obligatorio — nombre del bonsái)."
 )
 
 
@@ -116,6 +133,11 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_pests_func=partial(pest_catalog.list_pests, create_session=session_factory),
     )
     list_pests_tool.__name__ = "list_pests"
+    list_weekend_planned_works_tool = create_list_weekend_planned_works_tool(
+        list_planned_works_in_date_range_func=partial(cultivation_plan.list_planned_works_in_date_range, create_session=session_factory),
+        list_bonsai_func=partial(garden.list_bonsai, create_session=session_factory),
+    )
+    list_weekend_planned_works_tool.__name__ = "list_weekend_planned_works"
 
     return [
         list_bonsai_tool,
@@ -127,6 +149,7 @@ def _create_query_tools(session_factory, wiki_root: str) -> list:
         list_phytosanitary_tool,
         get_phytosanitary_by_name_tool,
         list_planned_works_tool,
+        list_weekend_planned_works_tool,
         list_bonsai_photos_tool,
         show_bonsai_photos_tool,
         show_bonsai_photo_tool,
@@ -140,6 +163,7 @@ def create_sensei_group(
     session_factory,
     wiki_root: str,
     orchestrator_model: object = None,
+    searcher=None,
 ):
     effective_orchestrator_model = orchestrator_model or model
     analyze_tool, compare_tool = create_kantei_group(
@@ -151,11 +175,23 @@ def create_sensei_group(
         get_user_settings_func=partial(user_settings_store.get_user_settings, create_session=session_factory),
         get_weather_func=create_weather_tool(os.getenv("WEATHER_API_BASE", "https://wttr.in")),
     )
-    tool_descriptions = [ANALYZE_TOOL_DESCRIPTION, COMPARE_TOOL_DESCRIPTION, WEATHER_RISK_TOOL_DESCRIPTION]
+    recommend_fertilizer_callable = _create_recommend_fertilizer_callable(
+        model=effective_orchestrator_model,
+        session_factory=session_factory,
+        wiki_root=wiki_root,
+    )
+    recommend_phytosanitary_callable = _create_recommend_phytosanitary_callable(
+        model=effective_orchestrator_model,
+        session_factory=session_factory,
+        wiki_root=wiki_root,
+    )
+    search_phytosanitary_online_callable = create_search_phytosanitary_online_tool(searcher) if searcher else None
+    tool_descriptions = [ANALYZE_TOOL_DESCRIPTION, COMPARE_TOOL_DESCRIPTION, WEATHER_RISK_TOOL_DESCRIPTION, RECOMMEND_FERTILIZER_TOOL_DESCRIPTION]
     callable_tools = {
         "analyze_bonsai_photo": analyze_tool,
         "compare_bonsai_photos": compare_tool,
         "get_weather_risk": weather_risk_tool,
+        "recommend_fertilizer": recommend_fertilizer_callable,
     }
     mitori = create_mitori(
         model=effective_orchestrator_model,
@@ -175,10 +211,37 @@ def create_sensei_group(
     )
 
     query_tools = _create_query_tools(session_factory, wiki_root)
+    phytosanitary_advice_tools = [recommend_phytosanitary_callable]
+    if search_phytosanitary_online_callable:
+        phytosanitary_advice_tools.append(search_phytosanitary_online_callable)
 
     return create_sensei(
         model=effective_orchestrator_model,
-        tools=[*query_tools, AgentTool(command_pipeline), preload_memory_tool],
+        tools=[*query_tools, recommend_fertilizer_callable, *phytosanitary_advice_tools, AgentTool(command_pipeline), preload_memory_tool],
+    )
+
+
+def _create_recommend_phytosanitary_callable(model, session_factory, wiki_root: str):
+    from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.phytosanitary_recommendation_runner import create_phytosanitary_recommendation_runner
+    return create_recommend_phytosanitary_tool(
+        get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+        list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
+        list_phytosanitary_func=partial(phytosanitary_registry.list_phytosanitary, create_session=session_factory),
+        read_wiki_page_func=create_read_wiki_page_tool(wiki_root=wiki_root),
+        write_wiki_page_func=create_write_wiki_page_tool(wiki_root=wiki_root),
+        run_recommendation=create_phytosanitary_recommendation_runner(model=model),
+    )
+
+
+def _create_recommend_fertilizer_callable(model, session_factory, wiki_root: str):
+    from bonsai_sensei.domain.services.cultivation.plan.fertilization.fertilizer_recommendation_runner import create_fertilizer_recommendation_runner
+    return create_recommend_fertilizer_tool(
+        get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+        list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
+        list_fertilizers_func=partial(fertilizer_catalog.list_fertilizers, create_session=session_factory),
+        read_wiki_page_func=create_read_wiki_page_tool(wiki_root=wiki_root),
+        write_wiki_page_func=create_write_wiki_page_tool(wiki_root=wiki_root),
+        run_recommendation=create_fertilizer_recommendation_runner(model=model),
     )
 
 

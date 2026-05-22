@@ -59,6 +59,22 @@ _DELETE_MESSAGE_BUILDERS = {
 }
 
 
+def build_period_question(bonsai_name: str) -> str:
+    return f"¿Para qué período quieres el plan de fertilización de '{display_name(bonsai_name)}'?\nIndica las fechas de inicio y fin en formato AAAA-MM-DD."
+
+
+def build_phytosanitary_type_question() -> str:
+    return "¿Qué tipo de tratamiento fitosanitario quieres planificar?"
+
+
+def build_phytosanitary_type_options() -> list[str]:
+    return ["Tratamiento puntual", "Plan fitosanitario"]
+
+
+def build_phytosanitary_period_question(bonsai_name: str) -> str:
+    return f"¿Para qué período quieres el plan fitosanitario de '{display_name(bonsai_name)}'?\nIndica las fechas de inicio y fin en formato AAAA-MM-DD."
+
+
 def build_fertilization_plan_confirmation(bonsai_name: str, period_start: str, period_end: str, entry_count: int) -> str:
     return f"¿Crear plan de fertilización para '{display_name(bonsai_name)}' del {format_date(period_start)} al {format_date(period_end)} con {entry_count} aplicaciones?"
 

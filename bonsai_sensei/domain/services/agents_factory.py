@@ -33,7 +33,6 @@ def create_sensei_agent(
         ask_plan_review=ask_plan_review,
         ask_poll=ask_poll,
         orchestrator_model=orchestrator_model,
-        searcher=searcher,
         **cultivation_messages,
         **botanist_messages,
     )
@@ -56,6 +55,7 @@ def create_sensei_agent(
         session_factory=session_factory,
         orchestrator_model=orchestrator_model,
         wiki_root=wiki_root,
+        searcher=searcher,
     )
     return create_agents(
         model=model,
