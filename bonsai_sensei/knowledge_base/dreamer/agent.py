@@ -3,12 +3,12 @@ from pathlib import Path
 from google.adk.agents.llm_agent import Agent
 
 from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool, create_write_wiki_page_tool
-from bonsai_sensei.knowledge_base.keeper.tools import create_list_cards_tool, create_list_wiki_pages_tool, create_read_card_tool
+from bonsai_sensei.knowledge_base.dreamer.tools import create_list_cards_tool, create_list_wiki_pages_tool, create_read_card_tool
 
-_APP_NAME = "wiki_keeper"
+_APP_NAME = "wiki_dreamer"
 
-_KEEPER_INSTRUCTION = """
-Eres el guardián de la wiki de bonsái. Tu misión es mantener la wiki coherente, completa y actualizada a partir del conocimiento extraído de vídeos de expertos y de observaciones capturadas en conversaciones con usuarios.
+_DREAMER_INSTRUCTION = """
+Eres el soñador de la wiki de bonsái. Tu misión es mantener la wiki coherente, completa y actualizada a partir del conocimiento extraído de vídeos de expertos y de observaciones capturadas en conversaciones con usuarios.
 
 # Comportamiento
 
@@ -53,7 +53,7 @@ Solo enlaza páginas que ya existen — no inventes rutas.
 """
 
 
-def create_wiki_keeper_agent(model: object, transcripts_root: Path, wiki_root: Path) -> Agent:
+def create_wiki_dreamer_agent(model: object, transcripts_root: Path, wiki_root: Path) -> Agent:
     list_cards = create_list_cards_tool(transcripts_root)
     read_card = create_read_card_tool(transcripts_root)
     list_wiki_pages = create_list_wiki_pages_tool(wiki_root)
@@ -63,6 +63,6 @@ def create_wiki_keeper_agent(model: object, transcripts_root: Path, wiki_root: P
     return Agent(
         model=model,
         name=_APP_NAME,
-        instruction=_KEEPER_INSTRUCTION,
+        instruction=_DREAMER_INSTRUCTION,
         tools=[list_cards, read_card, list_wiki_pages, read_wiki_page, write_wiki_page],
     )

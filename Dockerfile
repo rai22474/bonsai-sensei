@@ -14,7 +14,8 @@ RUN uv venv .venv && \
 
 FROM python:3.12-alpine
 
-RUN apk add --no-cache libjpeg libpng freetype ttf-dejavu
+RUN apk add --no-cache libjpeg libpng freetype ttf-dejavu git && \
+    git config --global safe.directory '*'
 
 WORKDIR /app
 

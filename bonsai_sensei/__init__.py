@@ -24,9 +24,10 @@ from bonsai_sensei.domain.services.human_input import (
 )
 from bonsai_sensei.domain.services.cultivation.weather.weather_alert_scheduler import create_weather_alert_scheduler
 from bonsai_sensei.domain.services.cultivation.plan.weekend_plan_scheduler import create_weekend_plan_scheduler
+from bonsai_sensei.knowledge_base.dreamer.scheduler import create_wiki_dreamer_scheduler
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.knowledge_base.ingestion.factory import create_ingestion_pipeline
-from bonsai_sensei.knowledge_base.keeper.runner import create_wiki_keeper
+from bonsai_sensei.knowledge_base.dreamer.runner import create_wiki_dreamer
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
@@ -94,7 +95,9 @@ from bonsai_sensei.telegram.handle_selection_callback import handle_selection_ca
 from bonsai_sensei.telegram.handle_poll_answer import handle_poll_answer
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
+from bonsai_sensei.telegram.handle_wiki_review_callback import handle_wiki_review_callback
 from bonsai_sensei.telegram.start import start
+from bonsai_sensei.telegram.admin_bot import AdminBotManager
 
 from bonsai_sensei.api.species import router as species_router
 from bonsai_sensei.api.bonsai import router as bonsai_router
@@ -109,8 +112,10 @@ from bonsai_sensei.api.fertilization_plans import router as fertilization_plans_
 from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
+from bonsai_sensei.api.wiki_review import router as wiki_review_router
 from bonsai_sensei.api.transcripts import router as transcripts_router
 from bonsai_sensei.api.pests import router as pests_router
+from bonsai_sensei.admin_config import load_admin_chat_id, load_review_sessions
 
 
 async def _generic_exception_handler(request, exc):
@@ -152,6 +157,8 @@ async def lifespan(app: FastAPI):
     app.state.active_tasks = {}
     app.state.pending_photos = {}
     app.state.poll_id_to_user_id = {}
+    wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
+    app.state.wiki_review_sessions = load_review_sessions(wiki_root)
 
     provider = os.getenv("MODEL_PROVIDER", "cloud").lower()
     model_factory = get_local_model_factory() if provider == "local" else get_cloud_model_factory()
@@ -159,6 +166,7 @@ async def lifespan(app: FastAPI):
     orchestrator_model = get_cloud_orchestrator_model_factory()() if provider == "cloud" else None
 
     bot_instance = TelegramBot(error_handler=error_handler)
+    admin_bot_instance = TelegramBot(token=os.getenv("ADMIN_TELEGRAM_BOT_TOKEN"), error_handler=error_handler)
 
     async def send_confirmation_func(user_id: str, question: str, confirmation_id: str):
         await bot_instance.send_confirmation_message(chat_id=user_id, text=question, confirmation_id=confirmation_id)
@@ -211,7 +219,6 @@ async def lifespan(app: FastAPI):
 
     ask_poll_func = create_ask_poll(send_poll_func, app.state.pending_human_responses, app.state.poll_id_to_user_id, send_message_func=send_message_func)
 
-    wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
     transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
 
     tavily_api_key = os.getenv("TAVILY_API_KEY")
@@ -288,7 +295,8 @@ async def lifespan(app: FastAPI):
 
     app.state.mem0_client = mem0_client
     app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root, orchestrator_model=orchestrator_model)
-    app.state.run_wiki_keeper = create_wiki_keeper(orchestrator_model or model, transcripts_root, wiki_root, mem0_client=mem0_client)
+
+    admin_chat_id = load_admin_chat_id(wiki_root) or os.getenv("ADMIN_TELEGRAM_CHAT_ID")
 
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
@@ -311,6 +319,7 @@ async def lifespan(app: FastAPI):
         users_awaiting_location=users_awaiting_location,
         pending_human_responses=app.state.pending_human_responses,
         pending_confirmation_cleanups=app.state.pending_confirmation_cleanups,
+        admin_chat_id=admin_chat_id,
     )
     photo_handler = partial(
         handle_user_photo,
@@ -343,7 +352,36 @@ async def lifespan(app: FastAPI):
         send_free_text_prompt=bot_instance.send_force_reply_message,
     )
 
-    handlers = [
+    wiki_review_handler = partial(
+        handle_wiki_review_callback,
+        wiki_review_sessions=app.state.wiki_review_sessions,
+        send_page_diff_message=admin_bot_instance.send_wiki_page_diff_message,
+        send_review_status=admin_bot_instance.send_wiki_review_status,
+        wiki_root=wiki_root,
+        admin_chat_id=admin_chat_id,
+    )
+
+    admin_bot_manager = AdminBotManager(
+        bot=admin_bot_instance,
+        wiki_root=wiki_root,
+        wiki_review_sessions=app.state.wiki_review_sessions,
+        run_wiki_dreamer=None,
+        ingest_transcript=app.state.ingest_transcript,
+        user_message_handler=message_handler,
+        wiki_review_handler=wiki_review_handler,
+    )
+    admin_bot_manager.set_chat_id(admin_chat_id)
+    app.state.admin_bot_manager = admin_bot_manager
+
+    app.state.run_wiki_dreamer = create_wiki_dreamer(
+        orchestrator_model or model,
+        transcripts_root,
+        wiki_root,
+        mem0_client=mem0_client,
+        notify_admin=admin_bot_manager.notify_wiki_changes,
+    )
+    admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
+    user_bot_handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         MessageHandler(filters.PHOTO, photo_handler),
@@ -353,11 +391,18 @@ async def lifespan(app: FastAPI):
         PollAnswerHandler(poll_answer_handler),
     ]
     if bot_instance.application:
-        for handler in handlers:
+        for handler in user_bot_handlers:
             bot_instance.application.add_handler(handler)
+    if admin_bot_instance.application:
+        for handler in admin_bot_manager.build_handlers():
+            admin_bot_instance.application.add_handler(handler)
 
     app.state.bot = bot_instance
+    app.state.admin_bot = admin_bot_instance
     await bot_instance.initialize()
+    await admin_bot_instance.initialize()
+
+    await admin_bot_manager.re_notify_pending_sessions()
 
     weather_scheduler = create_weather_alert_scheduler(
         advisor=app.state.advisor,
@@ -371,12 +416,15 @@ async def lifespan(app: FastAPI):
         list_bonsai_func=services["garden"]["list_bonsai"],
         send_telegram_message_func=app.state.bot.send_message,
     )
+    wiki_dreamer_scheduler = create_wiki_dreamer_scheduler(run_wiki_dreamer=app.state.run_wiki_dreamer)
 
     yield
 
     weather_scheduler.shutdown()
     weekend_scheduler.shutdown()
+    wiki_dreamer_scheduler.shutdown()
     await bot_instance.shutdown()
+    await admin_bot_instance.shutdown()
 
 
 configure_logging()
@@ -396,6 +444,7 @@ app.include_router(fertilization_plans_router, prefix="/api", tags=["fertilizati
 app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanitary_plans"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
+app.include_router(wiki_review_router, prefix="/api", tags=["wiki-review"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])
 app.include_router(pests_router, prefix="/api", tags=["pests"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

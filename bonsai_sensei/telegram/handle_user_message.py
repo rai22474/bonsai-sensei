@@ -34,6 +34,9 @@ LOCATION_REQUEST_MESSAGE = (
 )
 
 
+_ADMIN_USER_ID = "wiki_admin"
+
+
 async def handle_user_message(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -45,13 +48,18 @@ async def handle_user_message(
     users_awaiting_location: set | None = None,
     pending_human_responses: dict | None = None,
     pending_confirmation_cleanups: dict | None = None,
+    admin_chat_id: str | None = None,
 ):
     user_id = str(update.effective_user.id)
     chat_id = str(update.effective_chat.id)
 
     logger.info(f"Received message from {user_id}: {update.message.text}")
 
-    if save_telegram_chat_id_func:
+    is_admin_channel = admin_chat_id and chat_id == admin_chat_id
+    if is_admin_channel:
+        user_id = _ADMIN_USER_ID
+
+    if save_telegram_chat_id_func and not is_admin_channel:
         save_telegram_chat_id_func(user_id, chat_id)
 
     if pending_human_responses and user_id in pending_human_responses:
@@ -82,17 +90,18 @@ async def handle_user_message(
             pending["event"].set()
         return
 
-    if _is_location_response(user_id, users_awaiting_location):
-        users_awaiting_location.discard(user_id)
-        await _confirm_and_save_location(
-            update, user_id, update.message.text, ask_confirmation, save_user_settings_func
-        )
-        return
+    if not is_admin_channel:
+        if _is_location_response(user_id, users_awaiting_location):
+            users_awaiting_location.discard(user_id)
+            await _confirm_and_save_location(
+                update, user_id, update.message.text, ask_confirmation, save_user_settings_func
+            )
+            return
 
-    if _needs_location(user_id, get_user_settings_func, users_awaiting_location):
-        users_awaiting_location.add(user_id)
-        await update.message.reply_text(LOCATION_REQUEST_MESSAGE)
-        return
+        if _needs_location(user_id, get_user_settings_func, users_awaiting_location):
+            users_awaiting_location.add(user_id)
+            await update.message.reply_text(LOCATION_REQUEST_MESSAGE)
+            return
 
     if not message_processor:
         logger.error("No message processor configured for message handler")

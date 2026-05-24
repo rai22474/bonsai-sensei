@@ -46,7 +46,11 @@ from bonsai_sensei.domain.services.cultivation.weather.weather_risk_tool import 
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.recommend_fertilizer import (
     create_recommend_fertilizer_tool,
 )
-from bonsai_sensei.domain.services.wiki_page import create_read_wiki_page_tool, create_write_wiki_page_tool
+from bonsai_sensei.domain.services.wiki_page import (
+    create_read_wiki_page_tool,
+    create_write_wiki_page_tool,
+    create_get_wiki_page_diff_tool,
+)
 from bonsai_sensei.domain.services.garden.kantei.factory import (
     create_kantei_group,
     ANALYZE_TOOL_DESCRIPTION,
@@ -211,13 +215,14 @@ def create_sensei_group(
     )
 
     query_tools = _create_query_tools(session_factory, wiki_root)
+    wiki_page_diff_tool = create_get_wiki_page_diff_tool(wiki_root)
     phytosanitary_advice_tools = [recommend_phytosanitary_callable]
     if search_phytosanitary_online_callable:
         phytosanitary_advice_tools.append(search_phytosanitary_online_callable)
 
     return create_sensei(
         model=effective_orchestrator_model,
-        tools=[*query_tools, recommend_fertilizer_callable, *phytosanitary_advice_tools, AgentTool(command_pipeline), preload_memory_tool],
+        tools=[*query_tools, wiki_page_diff_tool, recommend_fertilizer_callable, *phytosanitary_advice_tools, AgentTool(command_pipeline), preload_memory_tool],
     )
 
 

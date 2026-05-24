@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
+from bonsai_sensei.knowledge_base import wiki_git
 
 
 def create_write_wiki_page_tool(wiki_root: str | Path) -> Callable:
@@ -97,3 +98,34 @@ def create_list_wiki_files_tool(wiki_root: str | Path) -> Callable:
         ]
 
     return list_wiki_files
+
+
+def create_get_wiki_page_diff_tool(wiki_root: str | Path) -> Callable:
+    """Create a tool that returns the diff introduced by the last keeper commit for a wiki page."""
+    wiki_root_path = Path(wiki_root).resolve()
+
+    def get_wiki_page_diff(page_path: str) -> dict:
+        """Return the changes introduced by the last keeper run for a specific wiki page.
+
+        Use this after the keeper has run to review what changed in a given page.
+        The diff is in unified format (lines starting with '+' were added, '-' removed).
+
+        Args:
+            page_path: Path to the wiki page relative to the wiki root (e.g. 'bonsai/goku/index.md').
+
+        Returns:
+            Output JSON (success): {"status": "success", "diff": "<unified diff text>"}.
+            Output JSON (no_changes): {"status": "no_changes"}.
+            Output JSON (error): {"status": "error", "message": "no_git_history" | "invalid_path"}.
+        """
+        resolved = (wiki_root_path / page_path).resolve()
+        if not str(resolved).startswith(str(wiki_root_path)):
+            return {"status": "error", "message": "invalid_path"}
+        if not (wiki_root_path / ".git").exists():
+            return {"status": "error", "message": "no_git_history"}
+        diff = wiki_git.get_page_diff(wiki_root_path, page_path, "HEAD")
+        if not diff.strip():
+            return {"status": "no_changes"}
+        return {"status": "success", "diff": diff}
+
+    return get_wiki_page_diff

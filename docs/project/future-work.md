@@ -16,25 +16,65 @@ El keeper usa actualmente un modelo ligero (`gemini-flash-lite`) y produce pági
 - Bucle crítico/autocrítica: generar → evaluar → refinar → escribir
 
 ### Flujo de revisión humana
-El keeper escribe páginas de forma autónoma. Es deseable un paso de revisión por un administrador antes de que los cambios sean visibles para los agentes Sensei. Conclusiones de las discusiones de diseño:
-- **Mecanismo de borradores**: el keeper escribe en `wiki/drafts/` o en una rama `drafts`; los agentes Sensei leen solo desde el estado aprobado.
-- **Git como control de versiones**: inicializar `wiki/` como repositorio git local; el keeper hace commit tras cada ejecución; ofrece historial y rollback sin coste adicional.
-- **La UX de revisión es el problema sin resolver**: sin un remoto (GitHub/Gitea), el administrador no tiene una forma cómoda de ver cambios sin acceso SSH. Opciones evaluadas:
-  - Flujo de PR en GitHub: UX de diff limpia pero alta complejidad operativa (credenciales en el servidor, webhooks, gestión de PRs).
-  - Git local + pull por SSH: más simple pero sigue requiriendo acceso al servidor para revisar.
-  - Endpoint REST que devuelve el diff: funcional pero mala UX para markdown.
-  - Notificación por Telegram + aprobación por defecto con endpoint de rollback: la opción más pragmática por ahora.
-- **Punto de partida recomendado al retomar**: implementar git local para la wiki (historial + rollback) y aprobación por defecto. Añadir un endpoint `POST /api/wiki/revert` para deshacer el último commit del keeper. Posponer la puerta de borradores/aprobación hasta que la UX de revisión esté resuelta.
+El keeper escribe páginas de forma autónoma. Se requiere un paso de revisión por el administrador antes de que los cambios se consideren definitivos.
+
+**Diseño resuelto: canal Telegram de administración + sesión ADK por página.**
+
+El canal admin es un grupo privado de Telegram separado del canal de usuarios, configurado via `ADMIN_TELEGRAM_CHAT_ID`. El mismo bot atiende ambos canales; los mensajes del canal admin se enrutan a una sesión ADK con `user_id=admin` que tiene acceso a tools de wiki y git.
+
+**Flujo de revisión tras cada ejecución del keeper:**
+
+```
+Keeper termina → git commit local → bot notifica al canal admin:
+  "3 páginas actualizadas:
+   • bonsai/goku/index.md
+   • species/ficus-retusa.md
+   • techniques/wiring.md"
+  [Botones inline por página]
+
+Admin toca una página →
+  Agente presenta resumen del diff (LLM sobre git diff)
+  Conversación libre: explorar, preguntar, editar
+  Admin decide → [✅ Confirmar] [↩️ Revertir]
+
+  Si Confirmar → página sale de pendientes, se presenta lista restante
+  Si Revertir  → git checkout HEAD~1 -- <path> + nuevo commit, página sale de pendientes
+
+→ "2 páginas pendientes: ..." → siguiente ciclo
+→ "Revisión completada ✓"
+```
+
+**Reglas de UX:**
+- Una página a la vez: foco y decisión explícita antes de pasar a la siguiente.
+- El admin puede volver a una página ya confirmada en cualquier momento ("muéstrame goku otra vez") — puede revertirla aunque esté confirmada.
+- Aprobación implícita si el admin no inicia revisión en N horas (el commit ya está, no se requiere acción).
+- El diff se muestra como resumen LLM, no como raw `git diff` — Telegram no maneja diffs largos bien.
+
+**Tools nuevas necesarias en el agente admin:**
+- `get_wiki_page_diff(page_path)` → resumen LLM de `git diff HEAD~1 -- <path>`
+- `revert_wiki_page(page_path)` → `git checkout HEAD~1 -- <path>` + nuevo commit de revert
+
+**Estado de la sesión de revisión** (guardado en `app.state` por `review_session_id`):
+```python
+{
+  "commit_hash": "abc123",
+  "pending": ["bonsai/goku/index.md", "species/ficus-retusa.md"],
+  "confirmed": [],
+  "reverted": [],
+  "current_page": None,
+}
+```
 
 ### Descubrimiento de páginas del keeper
 Los agentes Sensei descubren páginas wiki a través del `wiki_path` almacenado en la base de datos. Las páginas creadas por el keeper no están registradas en la base de datos, por lo que los agentes no pueden encontrarlas. Este problema se resuelve con el índice de navegación descrito en FUTURE-002 — no requiere infraestructura adicional.
 
 ### Orden de trabajo al retomar
 1. Mejorar la calidad de salida del keeper (modelo + llamadas, o bucle crítico)
-2. Git local para la wiki (historial + rollback)
-3. Aprobación por defecto + endpoint de revert
-4. Índice de navegación (FUTURE-002) — permite a los agentes encontrar páginas del keeper
-5. Revisitar la UX de revisión una vez lo anterior esté estable
+2. Git local para la wiki (historial + rollback + `git init` en `WIKI_PATH`)
+3. Canal admin de Telegram: notificación post-keeper con lista de páginas cambiadas
+4. Tools `get_wiki_page_diff` y `revert_wiki_page` en el agente admin
+5. Sesión ADK para el canal admin con estado de revisión en `app.state`
+6. Índice de navegación (FUTURE-002) — permite a los agentes encontrar páginas del keeper
 
 ---
 
@@ -262,84 +302,6 @@ mem0 hace LLM pass al ingestar — puede reformular o consolidar observaciones. 
 **Dependencias:**
 - Fase 1: FUTURE-001 §Calidad (el keeper debe producir páginas de calidad antes de alimentarlo con observaciones conversacionales).
 - Fase 2: FUTURE-002 (índice de wiki con embeddings).
-
----
-
-## FUTURE-008 — Revisión de asignación de modelos: cloud vs orchestrator por agente
-
-**Contexto:**
-El sistema tiene dos modelos cloud configurables: `GEMINI_MODEL` (`gemini-3.1-flash-lite-preview` por defecto, más barato) y `GEMINI_ORCHESTRATOR_MODEL` (`gemini-3-flash-preview` por defecto, más capaz). La asignación actual es conservadora: el orchestrator solo llega a sensei, mitori y los runners de planificación interactiva (clarification, proposal, evaluate). El resto usa el modelo lite. Un análisis sistemático identifica cuatro zonas donde el modelo lite produce salidas de menor calidad con impacto real en el sistema.
-
-**Modelos actuales:**
-- `cloud` = `GEMINI_MODEL` (lite, rápido, barato)
-- `orchestrator` = `GEMINI_ORCHESTRATOR_MODEL` (más capaz, más caro)
-
-### Asignaciones correctas — no cambiar
-
-| Agente | Modelo | Razón |
-|---|---|---|
-| sensei | orchestrator | Root router + respuesta al usuario |
-| mitori | orchestrator | Planificación estratégica con BuiltInPlanner |
-| shokunin | cloud | Lee JSON del estado y despacha al AgentTool nombrado; mecánico |
-| weather_advisor | cloud | Tool call simple sin razonamiento complejo |
-| caretaker / nursery / gallery / storekeeper | cloud | CRUD + `limit_to_single_tool_call`; sin ambigüedad de routing |
-| kikaru | cloud | Extracción de entidades + dispatch; routing Python determinista en `schedule_work.py`; sin ambigüedad |
-| kantei (el agente) | cloud | Solo enruta a photo runners; el razonamiento real está en los runners |
-| clarification_runner | orchestrator (heredado del manage tool) | Diálogo interactivo con el usuario |
-| plan_proposal_runner | orchestrator (heredado del manage tool) | Propuesta de calendario complejo |
-| evaluate_fertilization/phytosanitary | orchestrator | Análisis de adherencia al plan |
-
-### Asignaciones incorrectas — cambiar a orchestrator
-
-**1. `fertilizer_recommendation_runner`**
-
-Es el paso de razonamiento puro del patrón ADR-009: sin tools, entrada de texto → JSON con `fertilizer_name`, `reasoning` y `wiki_content`. Es el paso intelectualmente más exigente del sistema (razona sobre estación, historial de salud, rotación de productos) y produce un artefacto permanente escrito en la wiki. Paradoja: usa el modelo más barato mientras los runners interactivos que lo rodean usan el orchestrator.
-
-`phytosanitary_recommendation_runner` quedó resuelto de otra forma: `recommend_phytosanitary` se movió a herramienta directa de sensei, fuera del pipeline.
-
-**Cambio:** propagar `orchestrator_model` desde `create_kikaru_group` a `_create_recommend_fertilizer_tool` en `cultivation/plan/factory.py`.
-
-**2. `species_wiki_compiler`**
-
-ADR-007 establece que el compilador "decide qué buscar, cuántas veces, cómo estructurar la ficha y qué wikilinks añadir". Es síntesis creativa multi-búsqueda → wiki permanente. Una ficha de mala calidad afecta todos los consejos futuros sobre esa especie. Flash-lite genera fichas más genéricas y con menos wikilinks que un junípero y un ficus requieren distintos.
-
-**Cambio:** recibir `orchestrator_model` en `create_botanist_group` → `create_species_wiki_compiler`. Actualmente recibe solo `model`.
-
-**3. `wiki_keeper` (keeper agent y su runner)**
-
-Tres fases: integrar observaciones de conversaciones → enriquecer de fichas → añadir wikilinks. Multi-step reasoning sobre conocimiento existente con múltiples tool calls de lectura/escritura. Escribe contenido permanente en la wiki. FUTURE-001 §Calidad ya documenta este problema parcialmente; esta entrada lo contextualiza en el mapa completo.
-
-**Cambio:** `__init__.py` línea 280 pasa `model` al runner del keeper; cambiar a `orchestrator_model`. Afecta también `create_ingestion_pipeline` en `knowledge_base/ingestion/factory.py` donde todos los agentes (cleaner, extractor, channel_page_writer, keeper) reciben el mismo `model`.
-
-**4. `photo_analysis_runner` y `photo_comparison_runner`**
-
-Diagnóstico visual de plagas y salud. Un diagnóstico incorrecto (confundir araña roja con cochinilla) lleva a un tratamiento incorrecto. Flash-lite tiene capacidades multimodales pero el orchestrator da más detalle y precisión en identificación visual. Estos runners producen informes persistentes.
-
-**Cambio:** propagar `orchestrator_model` desde `create_kantei_group` → `create_photo_analysis_runner` y `create_photo_comparison_runner` en `garden/kantei/factory.py`.
-
-### Borderline — evaluar con medición
-
-**`botanist`** — Da consejo hortícola directo al usuario. Flash-lite puede quedar corto en diagnósticos de cultivo complejos o preguntas sobre enfermedades raras. Vale la pena comparar con orchestrator bajo casos de prueba reales antes de decidir.
-
-**`card_extractor` (ingestion)** — Extrae conocimiento de transcripts de vídeo. La calidad de extracción afecta directamente la calidad de las fichas y por tanto la wiki. Candidato a orchestrator si la calidad del keeper mejorada (punto 3) no es suficiente.
-
-### Patrón de implementación
-
-El patrón `effective_orchestrator_model = orchestrator_model or model` ya está establecido en `factory.py` y `cultivation/plan/factory.py`. Para cada runner afectado:
-1. Añadir `orchestrator_model: object = None` al factory que crea el runner.
-2. Calcular `effective_orchestrator_model = orchestrator_model or model`.
-3. Pasar `effective_orchestrator_model` al runner en lugar de `model`.
-4. Propagar `orchestrator_model` hacia arriba por la cadena de factories hasta `create_sensei_agent` en `agents_factory.py` (que ya recibe `orchestrator_model`).
-
-### Orden de trabajo al implementar
-
-1. `fertilizer_recommendation_runner` (mayor impacto en calidad de consejos, menor radio de cambio)
-2. `wiki_keeper` (resolver junto con FUTURE-001 §Calidad)
-3. `photo_analysis_runner` y `photo_comparison_runner`
-4. `species_wiki_compiler`
-5. Medir `botanist` antes de decidir
-
-**Dependencia con FUTURE-001:** el punto 3 (wiki_keeper) cubre el mismo problema que FUTURE-001 §Calidad paso 1 — usar un modelo más potente en el keeper. Esta entrada proporciona el contexto completo y el plan de implementación específico; FUTURE-001 §Orden de trabajo puede actualizarse para referenciar FUTURE-008 cuando se retome.
 
 ---
 

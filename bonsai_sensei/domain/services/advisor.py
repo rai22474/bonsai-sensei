@@ -6,18 +6,20 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Callable, Optional
 from functools import partial
 
+from google.adk.apps.app import App, EventsCompactionConfig
 from google.adk.artifacts import InMemoryArtifactService
 from google.adk.memory import BaseMemoryService
-from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
 from google.adk.runners import InMemoryRunner, Runner, RunConfig
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from opentelemetry import metrics, trace
 
 DEFAULT_MAX_LLM_CALLS = 20
-MAX_SESSION_EVENTS = 50
 INACTIVITY_THRESHOLD_HOURS = 8
 _LAST_ACTIVITY_KEY = "last_activity_at"
+
+_COMPACTION_INTERVAL = 5
+_COMPACTION_OVERLAP = 2
 
 _PROGRESS_MESSAGES = {
     "command_pipeline": "🗺️ Elaborando un plan de acción...",
@@ -56,16 +58,24 @@ def create_advisor(
     get_user_settings_func: Callable | None = None,
     memory_service: Optional[BaseMemoryService] = None,
 ) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
+    app = App(
+        name="bonsai_sensei",
+        root_agent=sensei_agent,
+        events_compaction_config=EventsCompactionConfig(
+            compaction_interval=_COMPACTION_INTERVAL,
+            overlap_size=_COMPACTION_OVERLAP,
+        ),
+    )
     if memory_service is not None:
         runner = Runner(
-            agent=sensei_agent,
+            app=app,
             app_name="bonsai_sensei",
             artifact_service=InMemoryArtifactService(),
             session_service=InMemorySessionService(),
             memory_service=memory_service,
         )
     else:
-        runner = InMemoryRunner(agent=sensei_agent, app_name="bonsai_sensei")
+        runner = InMemoryRunner(app=app)
 
     async def reset_session(user_id: str) -> None:
         await runner.session_service.delete_session(
@@ -154,8 +164,6 @@ async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict)
 
 
 def _is_session_stale(session) -> bool:
-    if len(session.events) > MAX_SESSION_EVENTS:
-        return True
     last_activity_raw = session.state.get(_LAST_ACTIVITY_KEY)
     if last_activity_raw is None:
         return False

@@ -6,21 +6,19 @@ from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
-
 class TelegramBot:
-    def __init__(self, handlers: list = None, error_handler=None):
+    def __init__(self, token: str | None = None, handlers: list = None, error_handler=None):
         self.application = None
-        if TOKEN:
-            self.application = Application.builder().token(TOKEN).concurrent_updates(True).build()
+        resolved_token = token or os.getenv("TELEGRAM_BOT_TOKEN")
+        if resolved_token:
+            self.application = Application.builder().token(resolved_token).concurrent_updates(True).build()
             if handlers:
                 for handler in handlers:
                     self.application.add_handler(handler)
             if error_handler:
                 self.application.add_error_handler(error_handler)
         else:
-            logger.warning("TELEGRAM_BOT_TOKEN not set. Bot will not function.")
+            logger.warning("No bot token provided. Bot will not function.")
 
     async def initialize(self):
         if self.application:
@@ -118,6 +116,74 @@ class TelegramBot:
             chat_id=chat_id,
             text=text,
             reply_markup=ForceReply(selective=True, input_field_placeholder="Escribe el motivo..."),
+        )
+
+    async def send_wiki_review_notification(self, chat_id: str, changed_files: list[str], review_id: str) -> None:
+        if not self.application:
+            logger.error("Cannot send wiki review notification: Bot not configured")
+            return
+        lines = ["📝 <b>El dreamer actualizó estas páginas:</b>"]
+        for page_path in changed_files:
+            lines.append(f"• {html.escape(page_path)}")
+        text = "\n".join(lines)
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"🔍 {page_path}", callback_data=f"wiki:select:{review_id}:{index}")]
+            for index, page_path in enumerate(changed_files)
+        ])
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=keyboard,
+            parse_mode="HTML",
+        )
+
+    async def send_wiki_page_diff_message(
+        self,
+        chat_id: str,
+        page_path: str,
+        diff_summary: str,
+        review_id: str,
+        page_index: int,
+    ) -> None:
+        if not self.application:
+            logger.error("Cannot send wiki page diff message: Bot not configured")
+            return
+        text = f"📄 <b>{html.escape(page_path)}</b>\n\n{html.escape(diff_summary)}"
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("✅ Confirmar", callback_data=f"wiki:confirm:{review_id}:{page_index}"),
+            InlineKeyboardButton("↩️ Revertir", callback_data=f"wiki:revert:{review_id}:{page_index}"),
+        ]])
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=keyboard,
+            parse_mode="HTML",
+        )
+
+    async def send_wiki_review_status(self, chat_id: str, review_id: str, pending: list[str]) -> None:
+        if not self.application:
+            logger.error("Cannot send wiki review status: Bot not configured")
+            return
+        if not pending:
+            await self.application.bot.send_message(
+                chat_id=chat_id,
+                text="✅ <b>Revisión completada.</b>",
+                parse_mode="HTML",
+            )
+            return
+        lines = ["📋 <b>Páginas pendientes de revisión:</b>"]
+        for page_path in pending:
+            lines.append(f"• {html.escape(page_path)}")
+        text = "\n".join(lines)
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"🔍 {page_path}", callback_data=f"wiki:select:{review_id}:{index}")]
+            for index, page_path in enumerate(pending)
+        ])
+        await self.application.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=keyboard,
+            parse_mode="HTML",
         )
 
     async def send_poll_message(self, chat_id: str, question: str, options: list[str]) -> str:
