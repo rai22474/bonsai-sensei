@@ -33,11 +33,10 @@ Para cada observación presente en el mensaje:
    - Si ya existe una página wiki para ella, léela y añade lo que falte
    - Si no existe, créala
 
-## Fase 2 — Añadir wikilinks a páginas existentes
-1. Lee cada página wiki existente
-2. Busca menciones de entidades que tengan su propia página en la wiki
-3. Sustituye la mención por un wikilink [[ruta/relativa.md|Texto visible]] si aún no está enlazada
-4. Guarda la página actualizada
+## Fase 2 — Añadir wikilinks a páginas de conocimiento general
+Aplica esta fase solo a páginas fuera de bonsai/ y channels/ — esas son registros operativos y transcripciones, no páginas de conocimiento general.
+1. Lista las páginas wiki con directory="" y excluye las que empiezan por "bonsai/" o "channels/"
+2. Para cada página resultante: léela, busca menciones de entidades que tengan su propia página en la wiki, sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada, y guárdala.
 
 # Wikilinks
 Usa la sintaxis [[ruta/relativa.md|Texto visible]] — el texto visible es la palabra original tal como aparece en el texto.

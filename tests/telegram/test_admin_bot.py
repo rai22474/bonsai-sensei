@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import telegram
-from hamcrest import assert_that, calling, equal_to, has_key, not_none, raises
+from hamcrest import assert_that, contains_string, equal_to
 
 from bonsai_sensei.telegram.admin_bot import AdminBotManager
 
@@ -37,7 +37,6 @@ async def should_not_notify_when_chat_id_not_set(bot, tmp_path):
         wiki_review_sessions=wiki_review_sessions,
         run_wiki_dreamer=MagicMock(),
         ingest_transcript=MagicMock(),
-        user_message_handler=MagicMock(),
         wiki_review_handler=MagicMock(),
     )
 
@@ -71,10 +70,56 @@ async def should_re_notify_all_pending_sessions(manager, bot, wiki_review_sessio
 
 
 async def should_set_chat_id_on_start(manager, tmp_path):
-    with patch("bonsai_sensei.telegram.admin_bot.save_admin_chat_id") as mock_save:
+    with patch("bonsai_sensei.telegram.admin_bot.save_admin_chat_id"):
         manager.set_chat_id("new-chat-99")
 
         assert_that(manager.chat_id, equal_to("new-chat-99"), "chat_id property should reflect set value")
+
+
+async def should_save_feedback_to_mem0(manager_with_mem0, mem0_client):
+    handlers = manager_with_mem0.build_handlers()
+    feedback_handler = next(
+        handler for handler in handlers if hasattr(handler, "callback") and handler.callback.__name__ == "feedback_command"
+    )
+
+    update = _make_update("/feedback Corregir: el abeto no es subtropical")
+    await feedback_handler.callback(update, MagicMock())
+
+    mem0_client.add.assert_awaited_once()
+    call_kwargs = mem0_client.add.call_args.kwargs
+    assert_that(call_kwargs["agent_id"], equal_to("bonsai_sensei"), "Should save with bonsai_sensei agent_id")
+
+
+async def should_reply_when_no_feedback_text(manager_with_mem0):
+    handlers = manager_with_mem0.build_handlers()
+    feedback_handler = next(
+        handler for handler in handlers if hasattr(handler, "callback") and handler.callback.__name__ == "feedback_command"
+    )
+
+    update = _make_update("/feedback")
+    await feedback_handler.callback(update, MagicMock())
+
+    reply_text = update.message.reply_text.call_args.args[0]
+    assert_that(reply_text, contains_string("Uso:"), "Should include usage instructions when no text provided")
+
+
+async def should_reply_unavailable_when_wiki_editor_not_set(manager_with_mem0):
+    handlers = manager_with_mem0.build_handlers()
+    plain_text_handler = handlers[-2]
+
+    update = _make_update("hello there")
+    update.effective_chat.id = "admin-chat-42"
+    await plain_text_handler.callback(update, MagicMock())
+
+    reply_text = update.message.reply_text.call_args.args[0]
+    assert_that(reply_text, contains_string("no está disponible"), "Should reply that wiki editor is unavailable when not configured")
+
+
+def _make_update(text: str) -> MagicMock:
+    update = MagicMock()
+    update.message.text = text
+    update.message.reply_text = AsyncMock()
+    return update
 
 
 @pytest.fixture
@@ -90,6 +135,13 @@ def wiki_review_sessions():
 
 
 @pytest.fixture
+def mem0_client():
+    mock_client = MagicMock()
+    mock_client.add = AsyncMock()
+    return mock_client
+
+
+@pytest.fixture
 def manager(bot, tmp_path, wiki_review_sessions):
     instance = AdminBotManager(
         bot=bot,
@@ -97,8 +149,22 @@ def manager(bot, tmp_path, wiki_review_sessions):
         wiki_review_sessions=wiki_review_sessions,
         run_wiki_dreamer=MagicMock(),
         ingest_transcript=MagicMock(),
-        user_message_handler=MagicMock(),
         wiki_review_handler=MagicMock(),
+    )
+    instance.set_chat_id("admin-chat-42")
+    return instance
+
+
+@pytest.fixture
+def manager_with_mem0(bot, tmp_path, wiki_review_sessions, mem0_client):
+    instance = AdminBotManager(
+        bot=bot,
+        wiki_root=tmp_path,
+        wiki_review_sessions=wiki_review_sessions,
+        run_wiki_dreamer=MagicMock(),
+        ingest_transcript=MagicMock(),
+        wiki_review_handler=MagicMock(),
+        mem0_client=mem0_client,
     )
     instance.set_chat_id("admin-chat-42")
     return instance

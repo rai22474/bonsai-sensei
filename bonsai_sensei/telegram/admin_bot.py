@@ -2,9 +2,10 @@ import asyncio
 import uuid
 from functools import partial
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 import telegram
+from mem0 import AsyncMemory
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 from bonsai_sensei.admin_config import save_admin_chat_id, save_review_sessions
@@ -25,16 +26,18 @@ class AdminBotManager:
         wiki_review_sessions: dict,
         run_wiki_dreamer: Callable,
         ingest_transcript: Callable,
-        user_message_handler: Callable,
         wiki_review_handler: Callable,
+        mem0_client: Optional[AsyncMemory] = None,
+        wiki_editor: Optional[Callable] = None,
     ):
         self._bot = bot
         self._wiki_root = wiki_root
         self._wiki_review_sessions = wiki_review_sessions
         self._run_wiki_dreamer = run_wiki_dreamer
         self._ingest_transcript = ingest_transcript
-        self._user_message_handler = user_message_handler
         self._wiki_review_handler = wiki_review_handler
+        self._mem0_client = mem0_client
+        self._wiki_editor = wiki_editor
         self._chat_id: str | None = None
 
     def set_chat_id(self, chat_id: str | None) -> None:
@@ -63,14 +66,57 @@ class AdminBotManager:
             task = asyncio.create_task(self._run_dreamer_and_notify(chat_id))
             task.add_done_callback(self._log_task_exception)
 
+        async def feedback_command(update, context):
+            feedback_text = update.message.text.removeprefix("/feedback").strip()
+            if not feedback_text:
+                await update.message.reply_text("Uso: /feedback <corrección a incorporar en la wiki>")
+                return
+            if self._mem0_client is None:
+                await update.message.reply_text("⚠️ La memoria no está configurada.")
+                return
+            await self._mem0_client.add(
+                [{"role": "user", "content": feedback_text}],
+                user_id="admin",
+                agent_id="bonsai_sensei",
+            )
+            await update.message.reply_text("✅ Corrección guardada. Se incorporará en la próxima pasada del dreamer.")
+
+        async def wiki_editor_handler(update, telegram_context):
+            if self._wiki_editor is None:
+                await update.message.reply_text("El editor de wiki no está disponible.")
+                return
+            chat_id = str(update.effective_chat.id)
+            text = update.message.text or ""
+            thinking_message = await update.message.reply_text("⏳ Pensando...")
+
+            async def keep_typing():
+                steps = ["⏳ Pensando...", "🔍 Buscando en la wiki...", "✍️ Editando páginas...", "💾 Guardando cambios..."]
+                step_index = 0
+                while True:
+                    await asyncio.sleep(6)
+                    step_index = (step_index + 1) % len(steps)
+                    try:
+                        await thinking_message.edit_text(steps[step_index])
+                    except Exception:
+                        pass
+
+            typing_task = asyncio.create_task(keep_typing())
+            try:
+                response = await self._wiki_editor(chat_id, text)
+            finally:
+                typing_task.cancel()
+                await thinking_message.delete()
+            await update.message.reply_text(response, parse_mode="HTML")
+
         return [
             CommandHandler("start", admin_start_command),
             CommandHandler("dreamer", dreamer_command),
+            CommandHandler("feedback", feedback_command),
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & filters.Regex(_YOUTUBE_URL_PATTERN),
                 admin_ingest_handler,
             ),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, self._user_message_handler),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, wiki_editor_handler),
             CallbackQueryHandler(self._wiki_review_handler, pattern=r"^wiki:(select|confirm|revert):.+:\d+$"),
         ]
 

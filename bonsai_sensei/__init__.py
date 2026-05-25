@@ -28,6 +28,7 @@ from bonsai_sensei.knowledge_base.dreamer.scheduler import create_wiki_dreamer_s
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.knowledge_base.ingestion.factory import create_ingestion_pipeline
 from bonsai_sensei.knowledge_base.dreamer.runner import create_wiki_dreamer
+from bonsai_sensei.knowledge_base.wiki_editor.runner import create_wiki_editor
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.model_factory import (
     get_cloud_model_factory,
@@ -367,8 +368,8 @@ async def lifespan(app: FastAPI):
         wiki_review_sessions=app.state.wiki_review_sessions,
         run_wiki_dreamer=None,
         ingest_transcript=app.state.ingest_transcript,
-        user_message_handler=message_handler,
         wiki_review_handler=wiki_review_handler,
+        mem0_client=mem0_client,
     )
     admin_bot_manager.set_chat_id(admin_chat_id)
     app.state.admin_bot_manager = admin_bot_manager
@@ -381,6 +382,12 @@ async def lifespan(app: FastAPI):
         notify_admin=admin_bot_manager.notify_wiki_changes,
     )
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
+    app.state.wiki_editor = create_wiki_editor(
+        orchestrator_model or model,
+        wiki_root,
+        notify_admin=admin_bot_manager.notify_wiki_changes,
+    )
+    admin_bot_manager._wiki_editor = app.state.wiki_editor
     user_bot_handlers = [
         CommandHandler("start", start),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
