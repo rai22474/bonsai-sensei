@@ -9,6 +9,7 @@ from mem0 import AsyncMemory
 from bonsai_sensei.knowledge_base.dreamer.agent import _APP_NAME, create_wiki_dreamer_agent
 from bonsai_sensei.knowledge_base.dreamer.memory_reader import read_new_observations, update_high_watermark
 from bonsai_sensei.knowledge_base import wiki_git
+from bonsai_sensei.knowledge_base.wiki_index.indexer import update_page_index
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -30,6 +31,7 @@ def create_wiki_dreamer(
     wiki_root: Path,
     mem0_client: Optional[AsyncMemory] = None,
     notify_admin: Optional[Callable[[list[str], str], None]] = None,
+    embed: Optional[Callable] = None,
 ) -> Callable[[], None]:
     """Create the wiki dreamer, an autonomous agent that maintains wiki coherence.
 
@@ -71,9 +73,13 @@ def create_wiki_dreamer(
             update_high_watermark(wiki_root)
 
         commit_hash = wiki_git.commit_wiki_changes(wiki_root, "dreamer: update wiki pages")
-        if commit_hash and notify_admin:
+        if commit_hash:
             changed_files = wiki_git.get_changed_files(wiki_root, commit_hash)
-            if changed_files:
+            if changed_files and embed is not None:
+                for file_path in changed_files:
+                    if file_path.endswith(".md"):
+                        await update_page_index(file_path, wiki_root, embed)
+            if changed_files and notify_admin:
                 await notify_admin(changed_files, commit_hash)
 
         logger.info("Wiki dreamer run completed")

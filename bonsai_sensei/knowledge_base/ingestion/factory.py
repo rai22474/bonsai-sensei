@@ -4,7 +4,6 @@ from typing import Callable
 from bonsai_sensei.knowledge_base.ingestion.channel_page_writer import create_channel_page_writer
 from bonsai_sensei.knowledge_base.ingestion.knowledge_card_extractor import create_card_extractor
 from bonsai_sensei.knowledge_base.ingestion.transcript_cleaner import create_transcript_cleaner
-from bonsai_sensei.knowledge_base.ingestion.transcript_loader import download_transcript
 from bonsai_sensei.knowledge_base.dreamer.runner import create_wiki_dreamer
 
 
@@ -12,6 +11,7 @@ def create_ingestion_pipeline(
     model: object,
     transcripts_root: Path,
     wiki_root: Path,
+    download_transcript: Callable,
     orchestrator_model: object = None,
 ) -> Callable[[str, str], None]:
     """Create an async pipeline that ingests a YouTube video into the wiki.
@@ -25,6 +25,7 @@ def create_ingestion_pipeline(
         model: LLM model used by the cleaner, extractor and page writer agents.
         transcripts_root: Root directory for raw, clean and card files.
         wiki_root: Root directory of the wiki where channel pages are written.
+        download_transcript: Callable that downloads a YouTube transcript to disk.
         orchestrator_model: More capable model used by the wiki dreamer for synthesis.
 
     Returns:

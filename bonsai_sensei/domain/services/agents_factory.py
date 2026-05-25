@@ -23,6 +23,7 @@ def create_sensei_agent(
     botanist_messages: dict,
     ask_poll: Callable | None = None,
     searcher: Callable | None = None,
+    search_wiki_knowledge_callable: Callable | None = None,
 ):
     cultivation_group_factory = partial(
         create_cultivation_group,
@@ -56,6 +57,7 @@ def create_sensei_agent(
         orchestrator_model=orchestrator_model,
         wiki_root=wiki_root,
         searcher=searcher,
+        search_wiki_knowledge_callable=search_wiki_knowledge_callable,
     )
     return create_agents(
         model=model,

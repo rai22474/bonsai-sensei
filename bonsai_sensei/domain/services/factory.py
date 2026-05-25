@@ -168,6 +168,7 @@ def create_sensei_group(
     wiki_root: str,
     orchestrator_model: object = None,
     searcher=None,
+    search_wiki_knowledge_callable=None,
 ):
     effective_orchestrator_model = orchestrator_model or model
     analyze_tool, compare_tool = create_kantei_group(
@@ -219,10 +220,11 @@ def create_sensei_group(
     phytosanitary_advice_tools = [recommend_phytosanitary_callable]
     if search_phytosanitary_online_callable:
         phytosanitary_advice_tools.append(search_phytosanitary_online_callable)
+    wiki_tools = [search_wiki_knowledge_callable] if search_wiki_knowledge_callable else []
 
     return create_sensei(
         model=effective_orchestrator_model,
-        tools=[*query_tools, wiki_page_diff_tool, recommend_fertilizer_callable, *phytosanitary_advice_tools, AgentTool(command_pipeline), preload_memory_tool],
+        tools=[*query_tools, wiki_page_diff_tool, recommend_fertilizer_callable, *phytosanitary_advice_tools, *wiki_tools, AgentTool(command_pipeline), preload_memory_tool],
     )
 
 

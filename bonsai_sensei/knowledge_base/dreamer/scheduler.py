@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Callable
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -11,13 +10,11 @@ async def _run_wiki_dreamer(run_wiki_dreamer: Callable) -> None:
     await run_wiki_dreamer()
 
 
-def create_wiki_dreamer_scheduler(run_wiki_dreamer: Callable) -> AsyncIOScheduler:
+def create_wiki_dreamer_scheduler(run_wiki_dreamer: Callable, interval_seconds: int) -> AsyncIOScheduler:
     """Create and start an APScheduler that runs the wiki dreamer at a configurable interval.
 
-    The interval is read from WIKI_DREAMER_INTERVAL_SECONDS (default 1800 = 30 minutes).
     The scheduler must be shut down by the caller.
     """
-    interval_seconds = int(os.getenv("WIKI_DREAMER_INTERVAL_SECONDS", str(30 * 60)))
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         _run_wiki_dreamer,

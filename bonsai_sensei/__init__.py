@@ -14,6 +14,10 @@ from bonsai_sensei.domain.services.advisor import create_advisor
 from bonsai_sensei.memory.mem0_memory_service import Mem0MemoryService, create_mem0_client
 from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
+from bonsai_sensei.domain.services.wiki_search import create_search_wiki_knowledge_tool
+from bonsai_sensei.knowledge_base.wiki_index.embedder import create_embed_text
+from bonsai_sensei.knowledge_base.wiki_index.searcher import search_by_embedding
+from bonsai_sensei.knowledge_base.wiki_index.store import load_all_entries
 from bonsai_sensei.domain.services.data_services import create_data_services
 from bonsai_sensei.domain.services.human_input import (
     create_ask_confirmation,
@@ -27,6 +31,8 @@ from bonsai_sensei.domain.services.cultivation.plan.weekend_plan_scheduler impor
 from bonsai_sensei.knowledge_base.dreamer.scheduler import create_wiki_dreamer_scheduler
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.knowledge_base.ingestion.factory import create_ingestion_pipeline
+from bonsai_sensei.knowledge_base.ingestion.transcript_loader import create_transcript_downloader
+from youtube_transcript_api import YouTubeTranscriptApi
 from bonsai_sensei.knowledge_base.dreamer.runner import create_wiki_dreamer
 from bonsai_sensei.knowledge_base.wiki_editor.runner import create_wiki_editor
 from bonsai_sensei.logging_config import configure_logging
@@ -114,6 +120,7 @@ from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.wiki import router as wiki_router
 from bonsai_sensei.api.wiki_review import router as wiki_review_router
+from bonsai_sensei.api.wiki_index import router as wiki_index_router
 from bonsai_sensei.api.transcripts import router as transcripts_router
 from bonsai_sensei.api.pests import router as pests_router
 from bonsai_sensei.admin_config import load_admin_chat_id, load_review_sessions
@@ -222,6 +229,12 @@ async def lifespan(app: FastAPI):
 
     transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
 
+    embed_text = create_embed_text(os.getenv("GEMINI_API_KEY", ""))
+    app.state.embed_text = embed_text
+    entry_loader = partial(load_all_entries, wiki_root)
+    search_index = partial(search_by_embedding, load_entries=entry_loader)
+    search_wiki_knowledge_callable = create_search_wiki_knowledge_tool(embed_text, search_index)
+
     tavily_api_key = os.getenv("TAVILY_API_KEY")
     tavily_base_url = os.getenv("TAVILY_API_BASE")
     tavily_searcher = create_tavily_searcher(tavily_api_key, tavily_base_url) if tavily_api_key else None
@@ -238,6 +251,7 @@ async def lifespan(app: FastAPI):
         ask_plan_review=ask_plan_review_func,
         ask_poll=ask_poll_func,
         searcher=tavily_searcher,
+        search_wiki_knowledge_callable=search_wiki_knowledge_callable,
         cultivation_messages={
             "build_fertilizer_selection_question": build_fertilizer_selection_question,
             "build_fertilization_type_question": build_fertilization_type_question,
@@ -295,7 +309,8 @@ async def lifespan(app: FastAPI):
     memory_service = Mem0MemoryService(mem0_client) if mem0_client else None
 
     app.state.mem0_client = mem0_client
-    app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root, orchestrator_model=orchestrator_model)
+    download_transcript = create_transcript_downloader(YouTubeTranscriptApi())
+    app.state.ingest_transcript = create_ingestion_pipeline(model, transcripts_root, wiki_root, download_transcript=download_transcript, orchestrator_model=orchestrator_model)
 
     admin_chat_id = load_admin_chat_id(wiki_root) or os.getenv("ADMIN_TELEGRAM_CHAT_ID")
 
@@ -370,6 +385,7 @@ async def lifespan(app: FastAPI):
         ingest_transcript=app.state.ingest_transcript,
         wiki_review_handler=wiki_review_handler,
         mem0_client=mem0_client,
+        embed=embed_text,
     )
     admin_bot_manager.set_chat_id(admin_chat_id)
     app.state.admin_bot_manager = admin_bot_manager
@@ -380,12 +396,14 @@ async def lifespan(app: FastAPI):
         wiki_root,
         mem0_client=mem0_client,
         notify_admin=admin_bot_manager.notify_wiki_changes,
+        embed=embed_text,
     )
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
     app.state.wiki_editor = create_wiki_editor(
         orchestrator_model or model,
         wiki_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
+        embed=embed_text,
     )
     admin_bot_manager._wiki_editor = app.state.wiki_editor
     user_bot_handlers = [
@@ -409,8 +427,6 @@ async def lifespan(app: FastAPI):
     await bot_instance.initialize()
     await admin_bot_instance.initialize()
 
-    await admin_bot_manager.re_notify_pending_sessions()
-
     weather_scheduler = create_weather_alert_scheduler(
         advisor=app.state.advisor,
         list_all_user_settings_func=services["user_settings"]["list_all_user_settings"],
@@ -423,7 +439,8 @@ async def lifespan(app: FastAPI):
         list_bonsai_func=services["garden"]["list_bonsai"],
         send_telegram_message_func=app.state.bot.send_message,
     )
-    wiki_dreamer_scheduler = create_wiki_dreamer_scheduler(run_wiki_dreamer=app.state.run_wiki_dreamer)
+    wiki_dreamer_interval = int(os.getenv("WIKI_DREAMER_INTERVAL_SECONDS", str(30 * 60)))
+    wiki_dreamer_scheduler = create_wiki_dreamer_scheduler(run_wiki_dreamer=app.state.run_wiki_dreamer, interval_seconds=wiki_dreamer_interval)
 
     yield
 
@@ -452,6 +469,7 @@ app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanita
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(wiki_review_router, prefix="/api", tags=["wiki-review"])
+app.include_router(wiki_index_router, prefix="/api", tags=["wiki-index"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])
 app.include_router(pests_router, prefix="/api", tags=["pests"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

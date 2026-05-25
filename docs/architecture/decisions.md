@@ -343,3 +343,41 @@ La solución: el tool devuelve `active_plan: bool` como dato; el LLM lo menciona
 - **Error handling explícito:** los estados terminales (`cancelled`, `error`) detienen el plan de forma controlada. Los agentes no registrados no detienen el plan — el error queda en `execution_result` para que sensei lo presente al usuario.
 - **Compatibilidad:** `AgentTool.run_async` preserva el `user_id` de la sesión padre → las confirmaciones async (`ask_confirmation`, `ask_human`) siguen funcionando correctamente desde los sub-agentes invocados por shokunin.
 - **Relación con ADR-002:** la responsabilidad de shokunin sigue siendo "ejecutar el plan de mitori". Solo cambia la implementación: de LLM a Python determinista.
+
+---
+
+## ADR-013 — Índice semántico de wiki con embeddings (FUTURE-002)
+
+**Estado:** Implementado (2026-05-25)
+
+**Contexto:**
+Los agentes no podían encontrar páginas wiki creadas por el dreamer porque no están registradas en la base de datos. Al mismo tiempo, cargar todas las páginas añade ruido innecesario. FUTURE-002 proponía un índice con embeddings para búsqueda semántica.
+
+**Decisión:**
+Índice plano (no grafo) de embeddings en `wiki-index/`, un JSON por página, búsqueda top-k por similitud coseno en memoria con numpy.
+
+**Estructura:**
+```
+wiki-index/<page_path>.json  →  {page_path, abstract, links, embedding}
+```
+
+**Modelo de embedding:** `gemini-embedding-001` (3072 dims). `text-embedding-004` no disponible con la API key usada — descubierto en producción; `gemini-embedding-001` es el equivalente disponible.
+
+**Patrón de dependencias:** todas las funciones del paquete `wiki_index/` siguen el patrón DI del proyecto — los colaboradores (embed callable, load_entries callable) se inyectan, nunca se instancian internamente. `create_embed_text(api_key)` crea el cliente una vez; `create_search_wiki_knowledge_tool(embed, search_index)` recibe ambas funciones.
+
+**Diferencias respecto al diseño de FUTURE-002:**
+- El traversal por grafo (seguir links con poda) no está implementado — la búsqueda es plana sobre todos los embeddings. Suficiente para <500 páginas (microsegundos).
+- Los sub-agentes (kikaru, kantei, etc.) no usan el índice — solo sensei tiene `search_wiki_knowledge`. Los context builders siguen cargando páginas específicas desde la BD.
+- `wiki-index/` en `.gitignore` — se trata como caché regenerable.
+
+**Integración:**
+- Dreamer y wiki editor actualizan el índice automáticamente al escribir páginas (en el commit hook post-run).
+- Sensei tiene `search_wiki_knowledge` como tool directa; la instrucción lo guía a usarla para preguntas de conocimiento antes de responder.
+- Bot admin: `/index` reconstruye el índice completo. REST: `POST /api/wiki/index/rebuild`.
+
+**Consecuencias:**
+- El sensei puede encontrar y usar páginas wiki que el dreamer creó, sin depender de la BD.
+- Páginas con abstract vacío se omiten del índice (guard en indexer).
+- El índice se puede reconstruir desde cero en cualquier momento sin pérdida de datos — es solo caché de los `.md`.
+- No hay índice global que gestionar: cada página actualiza su propio JSON.
+

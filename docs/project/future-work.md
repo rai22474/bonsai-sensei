@@ -78,53 +78,22 @@ Los agentes Sensei descubren páginas wiki a través del `wiki_path` almacenado 
 
 ---
 
-## FUTURE-002 — Índice de navegación de la wiki con embeddings
+## FUTURE-002 — Índice semántico de la wiki con embeddings ✅ IMPLEMENTADO (2026-05-25)
 
-**Contexto:**
-Los constructores de contexto cargan páginas wiki siguiendo enlaces conocidos registrados en la base de datos. Dos problemas a medida que la wiki crece:
-1. Las páginas creadas por el keeper no están en la base de datos — los agentes no las encuentran.
-2. Cargar todas las páginas enlazadas añade ruido y coste en tokens — no todas son relevantes para la petición actual.
+**Estado:** Implementado y en producción.
 
-**Solución: grafo de metadatos paralelo a la wiki.**
-El keeper mantiene una estructura `wiki-index/` que espeja `wiki/` con un fichero JSON por página:
+**Implementación:**
+- `bonsai_sensei/knowledge_base/wiki_index/` — paquete completo (embedder, entry, store, searcher, indexer)
+- Modelo de embedding: `gemini-embedding-001` (3072 dims). `text-embedding-004` no disponible con la API key actual.
+- `wiki-index/` en `.gitignore` — se trata como caché regenerable.
+- El dreamer y el wiki editor actualizan el índice automáticamente al escribir páginas.
+- El agente sensei tiene la tool `search_wiki_knowledge` (búsqueda semántica top-5).
+- `/index` en el bot admin reconstruye el índice completo.
+- `POST /api/wiki/index/rebuild` disponible para reconstrucción via REST.
 
-```
-wiki/                          wiki-index/
-  bonsai/                        bonsai/
-    goku/                          goku/
-      index.md          →            index.json
-      reports/                       reports/
-        2026-04-10-health.md →         2026-04-10-health.json
-```
-
-Cada `page.json` contiene:
-```json
-{
-  "abstract": "Ficus retusa. Análisis de salud de abril 2026. Clorosis leve en ápice.",
-  "updated": "2026-04-10",
-  "links": ["bonsai/goku/index.md"],
-  "embedding": [0.12, -0.34, 0.08, "..."]
-}
-```
-
-**Responsabilidad del keeper:**
-Cada vez que escribe una página, genera el abstract + embedding y escribe/actualiza su `page.json` en `wiki-index/`. La actualización es local al nodo — sin fichero global que gestionar.
-
-**Navegación por los agentes (traversal con poda):**
-1. Empezar en raíces conocidas (nombres de bonsáis desde la base de datos).
-2. Cargar `index.json` → calcular similitud coseno entre su embedding y el embedding del intent del usuario.
-3. Seguir solo los links con similitud por encima del umbral.
-4. Parar en profundidad N o cuando la similitud cae.
-5. Cargar los `.md` completos solo de las páginas seleccionadas.
-
-**Por qué JSON y no pgvector:**
-Para el volumen esperado (<500 páginas), la similitud coseno sobre arrays en memoria con numpy es suficiente — microsegundos por búsqueda. pgvector añade infraestructura sin beneficio real a esta escala.
-
-**Notas de implementación:**
-- Modelo de embedding: `text-embedding-004` (Google, ya es dependencia).
-- `wiki-index/` puede ir en `.gitignore` si se trata como caché regenerable, o versionarse para historial de embeddings.
-- La firma de los constructores de contexto necesita recibir el intent del usuario para puntuar — cambio que afecta a todos los callers de `load_bonsai_plan_context`.
-- Implementar después de FUTURE-001 §Calidad — no tiene sentido indexar páginas de baja calidad.
+**Pendiente / diferencias con el diseño original:**
+- El traversal por grafo (seguir links con poda por similitud) no está implementado — la búsqueda es plana (top-k sobre todos los embeddings). Suficiente para el volumen actual (<500 páginas).
+- Los constructores de contexto de los sub-agentes (kikaru, kantei, etc.) no usan el índice todavía — solo el sensei tiene `search_wiki_knowledge`.
 
 ---
 

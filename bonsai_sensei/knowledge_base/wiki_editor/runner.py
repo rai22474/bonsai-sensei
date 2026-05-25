@@ -7,6 +7,7 @@ from google.genai import types
 
 from bonsai_sensei.knowledge_base import wiki_git
 from bonsai_sensei.knowledge_base.wiki_editor.agent import _APP_NAME, create_wiki_editor_agent
+from bonsai_sensei.knowledge_base.wiki_index.indexer import update_page_index
 from bonsai_sensei.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -18,6 +19,7 @@ def create_wiki_editor(
     model: object,
     wiki_root: Path,
     notify_admin: Optional[Callable] = None,
+    embed: Optional[Callable] = None,
 ) -> Callable:
     """Creates the wiki editor runner, a conversational agent for admin wiki management.
 
@@ -49,9 +51,13 @@ def create_wiki_editor(
                     last_text = candidate_text
 
         commit_hash = wiki_git.commit_wiki_changes(wiki_root, "wiki-editor: admin update")
-        if commit_hash and notify_admin:
+        if commit_hash:
             changed_files = wiki_git.get_changed_files(wiki_root, commit_hash)
-            if changed_files:
+            if changed_files and embed is not None:
+                for file_path in changed_files:
+                    if file_path.endswith(".md"):
+                        await update_page_index(file_path, wiki_root, embed)
+            if changed_files and notify_admin:
                 await notify_admin(changed_files, commit_hash)
 
         return last_text

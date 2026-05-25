@@ -10,6 +10,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, f
 
 from bonsai_sensei.admin_config import save_admin_chat_id, save_review_sessions
 from bonsai_sensei.domain.wiki_review_session import WikiReviewSession
+from bonsai_sensei.knowledge_base.wiki_index.indexer import build_full_index
 from bonsai_sensei.logging_config import get_logger
 from bonsai_sensei.telegram.handle_admin_ingest import handle_admin_ingest
 
@@ -29,6 +30,7 @@ class AdminBotManager:
         wiki_review_handler: Callable,
         mem0_client: Optional[AsyncMemory] = None,
         wiki_editor: Optional[Callable] = None,
+        embed: Optional[Callable] = None,
     ):
         self._bot = bot
         self._wiki_root = wiki_root
@@ -38,6 +40,7 @@ class AdminBotManager:
         self._wiki_review_handler = wiki_review_handler
         self._mem0_client = mem0_client
         self._wiki_editor = wiki_editor
+        self._embed = embed
         self._chat_id: str | None = None
 
     def set_chat_id(self, chat_id: str | None) -> None:
@@ -65,6 +68,14 @@ class AdminBotManager:
             await update.message.reply_text("🌙 Lanzando wiki dreamer...")
             task = asyncio.create_task(self._run_dreamer_and_notify(chat_id))
             task.add_done_callback(self._log_task_exception)
+
+        async def index_command(update, context):
+            if self._embed is None:
+                await update.message.reply_text("⚠️ El indexador no está configurado.")
+                return
+            await update.message.reply_text("🔍 Indexando wiki...")
+            count = await build_full_index(self._wiki_root, self._embed)
+            await update.message.reply_text(f"✅ Índice construido: {count} páginas indexadas.")
 
         async def feedback_command(update, context):
             feedback_text = update.message.text.removeprefix("/feedback").strip()
@@ -111,6 +122,7 @@ class AdminBotManager:
         return [
             CommandHandler("start", admin_start_command),
             CommandHandler("dreamer", dreamer_command),
+            CommandHandler("index", index_command),
             CommandHandler("feedback", feedback_command),
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & filters.Regex(_YOUTUBE_URL_PATTERN),
