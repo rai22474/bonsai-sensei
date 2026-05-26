@@ -13,7 +13,7 @@ _AGENT_ID = "bonsai_sensei"
 
 async def read_new_observations(mem0_client: AsyncMemory, wiki_root: Path) -> list[str]:
     """Reads episodic observations captured since the last keeper run."""
-    last_run = _read_high_watermark(wiki_root)
+    last_run = read_high_watermark(wiki_root)
     results = await mem0_client.get_all(filters={"agent_id": _AGENT_ID})
     all_memories = results.get("results", [])
     new_memories = [
@@ -41,7 +41,7 @@ def update_high_watermark(wiki_root: Path) -> None:
     )
 
 
-def _read_high_watermark(wiki_root: Path) -> datetime:
+def read_high_watermark(wiki_root: Path) -> datetime:
     sync_file = wiki_root / _SYNC_FILE_NAME
     if not sync_file.exists():
         return _DEFAULT_START

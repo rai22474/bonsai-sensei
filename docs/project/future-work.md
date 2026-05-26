@@ -10,9 +10,9 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 El módulo `knowledge_base/` (pipeline de ingesta + keeper) está operativo: ingesta transcripciones de YouTube, extrae tarjetas de conocimiento y el keeper mantiene la wiki a partir de esas tarjetas. Sin embargo, faltan varias capas antes de que pueda considerarse listo para producción.
 
 ### Calidad de las páginas generadas
-El keeper usa actualmente un modelo ligero (`gemini-flash-lite`) y produce páginas demasiado escasas. Antes de invertir en un flujo de revisión, hay que resolver primero el problema de calidad. Opciones a evaluar:
-- Cambiar el keeper a un modelo más potente (`flash` o `pro`)
-- Aumentar `_MAX_LLM_CALLS` en el runner
+El dreamer (orquestador de síntesis) ya usa `gemini-3-flash-preview` (vía `GEMINI_ORCHESTRATOR_MODEL`) con `_MAX_LLM_CALLS=100`. Los agentes auxiliares (cleaner, extractor, channel_page_writer) usan `gemini-3.1-flash-lite-preview` — correcto, no son ellos los que sintetizan.
+
+Pendiente de evaluar:
 - Bucle crítico/autocrítica: generar → evaluar → refinar → escribir
 
 ### Flujo de revisión humana
@@ -69,7 +69,7 @@ Admin toca una página →
 Los agentes Sensei descubren páginas wiki a través del `wiki_path` almacenado en la base de datos. Las páginas creadas por el keeper no están registradas en la base de datos, por lo que los agentes no pueden encontrarlas. Este problema se resuelve con el índice de navegación descrito en FUTURE-002 — no requiere infraestructura adicional.
 
 ### Orden de trabajo al retomar
-1. Mejorar la calidad de salida del keeper (modelo + llamadas, o bucle crítico)
+1. Evaluar bucle crítico/autocrítica en el dreamer (modelo y llamadas ya OK)
 2. Git local para la wiki (historial + rollback + `git init` en `WIKI_PATH`)
 3. Canal admin de Telegram: notificación post-keeper con lista de páginas cambiadas
 4. Tools `get_wiki_page_diff` y `revert_wiki_page` en el agente admin

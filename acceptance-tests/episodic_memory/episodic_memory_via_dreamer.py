@@ -6,8 +6,8 @@ from pytest_bdd import scenario, when, then, parsers
 from http_client import advise, get, post
 
 
-@scenario("../features/episodic_memory.feature", "Keeper incorporates bonsai observation from conversation into wiki")
-def test_keeper_incorporates_bonsai_observation():
+@scenario("../features/episodic_memory.feature", "Dreamer incorporates bonsai observation from conversation into wiki")
+def test_dreamer_incorporates_bonsai_observation():
     return None
 
 
@@ -16,9 +16,9 @@ def report_observation(context, observation):
     advise(text=observation, user_id=context["user_id"])
 
 
-@when("the wiki keeper runs synchronously")
-def run_keeper_sync(context):
-    post("/api/wiki/transcripts/wiki-keeper/run/sync")
+@when("the wiki dreamer runs synchronously")
+def run_dreamer_sync(context):
+    post("/api/wiki/transcripts/wiki-dreamer/run/sync")
 
 
 @then(parsers.parse('the wiki page for "{bonsai_name}" exists and contains information about the observation'))

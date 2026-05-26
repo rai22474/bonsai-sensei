@@ -26,17 +26,20 @@ Para cada observación presente en el mensaje:
 - Si la observación es sobre técnicas, enfermedades o cuidados generales: busca la página temática correspondiente y actualízala.
 
 ## Fase 1 — Enriquecer con nuevo conocimiento de fichas
+Esta fase es obligatoria si el mensaje incluye fichas nuevas.
+Las fichas nuevas a procesar están listadas en el mensaje. No uses list_cards — procesa solo las fichas indicadas.
+
 1. Lista todas las páginas wiki existentes
-2. Lista todas las fichas disponibles
-3. Si no hay fichas, termina esta fase
-4. Lee cada ficha y para cada entidad relevante (especie, fertilizante, técnica, producto):
-   - Si ya existe una página wiki para ella, léela y añade lo que falte
-   - Si no existe, créala
+2. Para cada ficha nueva indicada en el mensaje:
+   - Léela
+   - Para cada entidad relevante (especie, fertilizante, técnica, producto):
+     - Si ya existe una página wiki para ella, léela y añade lo que falte
+     - Si no existe, créala
 
 ## Fase 2 — Añadir wikilinks a páginas de conocimiento general
 Aplica esta fase solo a páginas fuera de bonsai/ y channels/ — esas son registros operativos y transcripciones, no páginas de conocimiento general.
 1. Lista las páginas wiki con directory="" y excluye las que empiezan por "bonsai/" o "channels/"
-2. Para cada página resultante: léela, busca menciones de entidades que tengan su propia página en la wiki, sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada, y guárdala.
+2. Para cada página resultante: léela, busca menciones de entidades que tengan su propia página en la wiki, sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada, y guárdala solo si añadiste al menos un nuevo wikilink.
 
 # Wikilinks
 Usa la sintaxis [[ruta/relativa.md|Texto visible]] — el texto visible es la palabra original tal como aparece en el texto.

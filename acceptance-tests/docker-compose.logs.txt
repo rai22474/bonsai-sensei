@@ -1,59 +1,21 @@
-acceptance-tests-db-1  | The files belonging to this database system will be owned by user "postgres".
-acceptance-tests-db-1  | This user must also own the server process.
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-tests-db-1  | The default database encoding has accordingly been set to "UTF8".
-acceptance-tests-db-1  | The default text search configuration will be set to "english".
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | Data page checksums are disabled.
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
-acceptance-tests-db-1  | creating subdirectories ... ok
-acceptance-tests-db-1  | selecting dynamic shared memory implementation ... posix
-acceptance-tests-db-1  | selecting default max_connections ... 100
-acceptance-tests-db-1  | selecting default shared_buffers ... 128MB
-acceptance-tests-db-1  | selecting default time zone ... Etc/UTC
-acceptance-tests-db-1  | creating configuration files ... ok
-acceptance-tests-db-1  | running bootstrap script ... ok
-acceptance-tests-db-1  | performing post-bootstrap initialization ... ok
-acceptance-tests-db-1  | syncing data to disk ... ok
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | Success. You can now start the database server using:
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | initdb: warning: enabling "trust" authentication for local connections
-acceptance-tests-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-tests-db-1  | waiting for server to start....2026-05-24 09:38:10.737 UTC [49] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
-acceptance-tests-db-1  | 2026-05-24 09:38:10.739 UTC [49] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1  | 2026-05-24 09:38:10.747 UTC [52] LOG:  database system was shut down at 2026-05-24 09:38:10 UTC
-acceptance-tests-db-1  | 2026-05-24 09:38:10.758 UTC [49] LOG:  database system is ready to accept connections
-acceptance-tests-db-1  |  done
-acceptance-tests-db-1  | server started
-acceptance-tests-db-1  | CREATE DATABASE
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | waiting for server to shut down....2026-05-24 09:38:10.913 UTC [49] LOG:  received fast shutdown request
-acceptance-tests-db-1  | 2026-05-24 09:38:10.916 UTC [49] LOG:  aborting any active transactions
-acceptance-tests-db-1  | 2026-05-24 09:38:10.919 UTC [49] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
-acceptance-tests-db-1  | 2026-05-24 09:38:10.919 UTC [50] LOG:  shutting down
-acceptance-tests-db-1  | 2026-05-24 09:38:10.923 UTC [50] LOG:  checkpoint starting: shutdown immediate
-acceptance-tests-db-1  | 2026-05-24 09:38:10.980 UTC [50] LOG:  checkpoint complete: wrote 918 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.018 s, sync=0.036 s, total=0.061 s; sync files=301, longest=0.004 s, average=0.001 s; distance=4222 kB, estimate=4222 kB
-acceptance-tests-db-1  | 2026-05-24 09:38:10.986 UTC [49] LOG:  database system is shut down
-acceptance-tests-db-1  |  done
-acceptance-tests-db-1  | server stopped
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | PostgreSQL init process complete; ready for start up.
-acceptance-tests-db-1  | 
-acceptance-tests-db-1  | 2026-05-24 09:38:11.034 UTC [1] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
-acceptance-tests-db-1  | 2026-05-24 09:38:11.035 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-tests-db-1  | 2026-05-24 09:38:11.035 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-tests-db-1  | 2026-05-24 09:38:11.040 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-tests-db-1  | 2026-05-24 09:38:11.045 UTC [65] LOG:  database system was shut down at 2026-05-24 09:38:10 UTC
-acceptance-tests-db-1  | 2026-05-24 09:38:11.051 UTC [1] LOG:  database system is ready to accept connections
+acceptance-tests-db-1   | The files belonging to this database system will be owned by user "postgres".
+acceptance-tests-db-1   | This user must also own the server process.
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-tests-db-1   | The default database encoding has accordingly been set to "UTF8".
+acceptance-tests-db-1   | The default text search configuration will be set to "english".
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | Data page checksums are disabled.
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+acceptance-tests-db-1   | creating subdirectories ... ok
+acceptance-tests-db-1   | selecting dynamic shared memory implementation ... posix
+acceptance-tests-db-1   | selecting default max_connections ... 100
+acceptance-tests-db-1   | selecting default shared_buffers ... 128MB
+acceptance-tests-db-1   | selecting default time zone ... Etc/UTC
+acceptance-tests-db-1   | creating configuration files ... ok
+acceptance-tests-db-1   | running bootstrap script ... ok
+acceptance-tests-db-1   | performing post-bootstrap initialization ... ok
 acceptance-tests-app-1  | INFO:__main__:Running database migrations...
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Will assume transactional DDL.
@@ -69,101 +31,80 @@ acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Running upgrade g1h2
 acceptance-tests-app-1  | INFO  [alembic.runtime.migration] Running upgrade h1i2j3k4l5m6 -> i1j2k3l4m5n6, add_pest
 acceptance-tests-app-1  | /app/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
 acceptance-tests-app-1  |   warnings.warn(  # deprecated in 14.0 - 2024-11-09
+acceptance-tests-db-1   | syncing data to disk ... ok
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | Success. You can now start the database server using:
+acceptance-tests-db-1   | 
 acceptance-tests-app-1  | /app/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
 acceptance-tests-app-1  |   from websockets.server import WebSocketServerProtocol
 acceptance-tests-app-1  | INFO:     Started server process [1]
 acceptance-tests-app-1  | INFO:     Waiting for application startup.
-acceptance-tests-app-1  | 2026-05-24 09:38:22,469 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
-acceptance-tests-app-1  | 2026-05-24 09:38:22,469 - bonsai_sensei.telegram.bot - WARNING - No bot token provided. Bot will not function.
-acceptance-tests-app-1  | 2026-05-24 09:38:22,540 - mem0.vector_stores.pgvector - INFO - Using psycopg2 with ThreadedConnectionPool for PostgreSQL connections
+acceptance-tests-app-1  | 2026-05-26 08:26:28,608 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=/app/traces/traces.jsonl
+acceptance-tests-app-1  | 2026-05-26 08:26:28,608 - bonsai_sensei.telegram.bot - WARNING - No bot token provided. Bot will not function.
+acceptance-tests-app-1  | 2026-05-26 08:26:28,608 - bonsai_sensei.telegram.bot - WARNING - No bot token provided. Bot will not function.
+acceptance-tests-app-1  | 2026-05-26 08:26:28,690 - mem0.vector_stores.pgvector - INFO - Using psycopg2 with ThreadedConnectionPool for PostgreSQL connections
 acceptance-tests-app-1  | /app/bonsai_sensei/domain/services/advisor.py:64: UserWarning: [EXPERIMENTAL] EventsCompactionConfig: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
 acceptance-tests-app-1  |   events_compaction_config=EventsCompactionConfig(
-acceptance-tests-app-1  | 2026-05-24 09:38:23,832 - apscheduler.scheduler - INFO - Scheduler started
-acceptance-tests-app-1  | 2026-05-24 09:38:23,832 - telegram.ext.Application - INFO - Application started
 acceptance-tests-app-1  | /app/.venv/lib/python3.12/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
 acceptance-tests-app-1  |   warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
-acceptance-tests-app-1  | 2026-05-24 09:38:23,901 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-05-24 09:38:23,901 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Scheduler started
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Scheduler started
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Added job "_run_wiki_dreamer" to job store "default"
-acceptance-tests-app-1  | 2026-05-24 09:38:23,902 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-05-26 08:26:28,816 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-app-1  | 2026-05-26 08:26:28,816 - apscheduler.scheduler - INFO - Added job "_dispatch_weather_alerts" to job store "default"
+acceptance-tests-app-1  | 2026-05-26 08:26:28,816 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-05-26 08:26:28,816 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-db-1   |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | initdb: warning: enabling "trust" authentication for local connections
+acceptance-tests-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-tests-db-1   | waiting for server to start....2026-05-26 08:26:16.221 UTC [49] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+acceptance-tests-db-1   | 2026-05-26 08:26:16.223 UTC [49] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-05-26 08:26:16.228 UTC [52] LOG:  database system was shut down at 2026-05-26 08:26:16 UTC
+acceptance-tests-db-1   | 2026-05-26 08:26:16.233 UTC [49] LOG:  database system is ready to accept connections
+acceptance-tests-db-1   |  done
+acceptance-tests-db-1   | server started
+acceptance-tests-db-1   | CREATE DATABASE
+acceptance-tests-db-1   | 
+acceptance-tests-app-1  | 2026-05-26 08:26:28,817 - apscheduler.scheduler - INFO - Added job "_dispatch_weekend_plan_reminders" to job store "default"
+acceptance-tests-app-1  | 2026-05-26 08:26:28,817 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-tests-app-1  | 2026-05-26 08:26:28,817 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+acceptance-tests-db-1   | 
+acceptance-tests-app-1  | 2026-05-26 08:26:28,817 - apscheduler.scheduler - INFO - Added job "_run_wiki_dreamer" to job store "default"
+acceptance-tests-app-1  | 2026-05-26 08:26:28,817 - apscheduler.scheduler - INFO - Scheduler started
 acceptance-tests-app-1  | INFO:     Application startup complete.
 acceptance-tests-app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-acceptance-tests-app-1  | 2026-05-24 09:38:29,100 - telegram.ext.Updater - ERROR - Exception happened while polling for updates.
-acceptance-tests-app-1  | Traceback (most recent call last):
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_utils/networkloop.py", line 161, in network_retry_loop
-acceptance-tests-app-1  |     await do_action()
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_utils/networkloop.py", line 154, in do_action
-acceptance-tests-app-1  |     action_cb_task.result()
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_updater.py", line 340, in polling_action_cb
-acceptance-tests-app-1  |     updates = await self.bot.get_updates(
-acceptance-tests-app-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_extbot.py", line 672, in get_updates
-acceptance-tests-app-1  |     updates = await super().get_updates(
-acceptance-tests-app-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 4865, in get_updates
-acceptance-tests-app-1  |     await self._post(
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 704, in _post
-acceptance-tests-app-1  |     return await self._do_post(
-acceptance-tests-app-1  |            ^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_extbot.py", line 370, in _do_post
-acceptance-tests-app-1  |     return await super()._do_post(
-acceptance-tests-app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 733, in _do_post
-acceptance-tests-app-1  |     result = await request.post(
-acceptance-tests-app-1  |              ^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/request/_baserequest.py", line 198, in post
-acceptance-tests-app-1  |     result = await self._request_wrapper(
-acceptance-tests-app-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/request/_baserequest.py", line 375, in _request_wrapper
-acceptance-tests-app-1  |     raise exception
-acceptance-tests-app-1  | telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
-acceptance-tests-app-1  | 2026-05-24 09:38:34,708 - telegram.ext.Updater - ERROR - Exception happened while polling for updates.
-acceptance-tests-app-1  | Traceback (most recent call last):
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_utils/networkloop.py", line 161, in network_retry_loop
-acceptance-tests-app-1  |     await do_action()
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_utils/networkloop.py", line 154, in do_action
-acceptance-tests-app-1  |     action_cb_task.result()
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_updater.py", line 340, in polling_action_cb
-acceptance-tests-app-1  |     updates = await self.bot.get_updates(
-acceptance-tests-app-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_extbot.py", line 672, in get_updates
-acceptance-tests-app-1  |     updates = await super().get_updates(
-acceptance-tests-app-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 4865, in get_updates
-acceptance-tests-app-1  |     await self._post(
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 704, in _post
-acceptance-tests-app-1  |     return await self._do_post(
-acceptance-tests-app-1  |            ^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/ext/_extbot.py", line 370, in _do_post
-acceptance-tests-app-1  |     return await super()._do_post(
-acceptance-tests-app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/_bot.py", line 733, in _do_post
-acceptance-tests-app-1  |     result = await request.post(
-acceptance-tests-app-1  |              ^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/request/_baserequest.py", line 198, in post
-acceptance-tests-app-1  |     result = await self._request_wrapper(
-acceptance-tests-app-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-acceptance-tests-app-1  |   File "/app/.venv/lib/python3.12/site-packages/telegram/request/_baserequest.py", line 375, in _request_wrapper
-acceptance-tests-app-1  |     raise exception
-acceptance-tests-app-1  | telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
-acceptance-tests-app-1  | INFO:     192.168.32.1:54324 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:38966 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:38968 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
-acceptance-tests-app-1  | INFO:     192.168.32.1:38976 - "GET /api/wiki/review/sessions/19a25b88 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:38990 - "POST /api/wiki/review/sessions/19a25b88/pages/0/confirm HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:38994 - "DELETE /api/wiki?path=bonsai/review-test/index.md HTTP/1.1" 200 OK
-acceptance-tests-app-1  | 2026-05-24 09:38:39,455 - mem0.memory.main - INFO - Deleted 0 memories
-acceptance-tests-app-1  | INFO:     192.168.32.1:39002 - "DELETE /api/advice/sessions/bdd-wiki-review-c4a3fcd7166848dcbaabc1d43e86f108 HTTP/1.1" 204 No Content
-acceptance-tests-app-1  | INFO:     192.168.32.1:39018 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:39024 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
-acceptance-tests-app-1  | INFO:     192.168.32.1:39036 - "GET /api/wiki/review/sessions/d3a27150 HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:39050 - "POST /api/wiki/review/sessions/d3a27150/pages/0/revert HTTP/1.1" 200 OK
-acceptance-tests-app-1  | INFO:     192.168.32.1:39052 - "GET /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
-acceptance-tests-app-1  | INFO:     192.168.32.1:39060 - "DELETE /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
-acceptance-tests-app-1  | 2026-05-24 09:38:39,541 - mem0.memory.main - INFO - Deleted 0 memories
-acceptance-tests-app-1  | INFO:     192.168.32.1:39066 - "DELETE /api/advice/sessions/bdd-wiki-review-cba819e70c424476a04b4079a22db473 HTTP/1.1" 204 No Content
+acceptance-tests-app-1  | INFO:     192.168.48.1:36628 - "GET /api/species HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36632 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36634 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-tests-app-1  | INFO:     192.168.48.1:36640 - "GET /api/wiki/review/sessions/a41dabe9 HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36646 - "POST /api/wiki/review/sessions/a41dabe9/pages/0/confirm HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36650 - "DELETE /api/wiki?path=bonsai/review-test/index.md HTTP/1.1" 200 OK
+acceptance-tests-app-1  | 2026-05-26 08:26:45,679 - mem0.memory.main - INFO - Deleted 0 memories
+acceptance-tests-app-1  | INFO:     192.168.48.1:36652 - "DELETE /api/advice/sessions/bdd-wiki-review-127e237dd43a478abe25fe9971a97a89 HTTP/1.1" 204 No Content
+acceptance-tests-app-1  | INFO:     192.168.48.1:36666 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36682 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-tests-app-1  | INFO:     192.168.48.1:36694 - "GET /api/wiki/review/sessions/c641a00b HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36702 - "POST /api/wiki/review/sessions/c641a00b/pages/0/revert HTTP/1.1" 200 OK
+acceptance-tests-app-1  | INFO:     192.168.48.1:36704 - "GET /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
+acceptance-tests-app-1  | INFO:     192.168.48.1:36710 - "DELETE /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
+acceptance-tests-app-1  | 2026-05-26 08:26:45,764 - mem0.memory.main - INFO - Deleted 0 memories
+acceptance-tests-db-1   | waiting for server to shut down....2026-05-26 08:26:16.391 UTC [49] LOG:  received fast shutdown request
+acceptance-tests-db-1   | 2026-05-26 08:26:16.393 UTC [49] LOG:  aborting any active transactions
+acceptance-tests-db-1   | 2026-05-26 08:26:16.396 UTC [49] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
+acceptance-tests-app-1  | INFO:     192.168.48.1:36714 - "DELETE /api/advice/sessions/bdd-wiki-review-2610d8ceb2de4637a0195308aa69075c HTTP/1.1" 204 No Content
+acceptance-tests-db-1   | 2026-05-26 08:26:16.396 UTC [50] LOG:  shutting down
+acceptance-tests-db-1   | 2026-05-26 08:26:16.397 UTC [50] LOG:  checkpoint starting: shutdown immediate
+acceptance-tests-db-1   | 2026-05-26 08:26:16.451 UTC [50] LOG:  checkpoint complete: wrote 918 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.019 s, sync=0.033 s, total=0.056 s; sync files=301, longest=0.007 s, average=0.001 s; distance=4222 kB, estimate=4222 kB
+acceptance-tests-db-1   | 2026-05-26 08:26:16.456 UTC [49] LOG:  database system is shut down
+acceptance-tests-db-1   |  done
+acceptance-tests-db-1   | server stopped
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | PostgreSQL init process complete; ready for start up.
+acceptance-tests-db-1   | 
+acceptance-tests-db-1   | 2026-05-26 08:26:16.513 UTC [1] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+acceptance-tests-db-1   | 2026-05-26 08:26:16.513 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-tests-db-1   | 2026-05-26 08:26:16.513 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-tests-db-1   | 2026-05-26 08:26:16.517 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-tests-db-1   | 2026-05-26 08:26:16.522 UTC [65] LOG:  database system was shut down at 2026-05-26 08:26:16 UTC
+acceptance-tests-db-1   | 2026-05-26 08:26:16.526 UTC [1] LOG:  database system is ready to accept connections

@@ -65,11 +65,12 @@ def create_test_review_session(request: Request):
         raise HTTPException(status_code=422, detail="no_uncommitted_changes")
 
     changed_files = wiki_git.get_changed_files(wiki_root, commit_hash)
+    reviewable = [path for path in changed_files if path.endswith(".md")]
     review_id = uuid.uuid4().hex[:8]
     session = WikiReviewSession(
         review_id=review_id,
         commit_hash=commit_hash,
-        pending=list(changed_files),
+        pending=reviewable,
     )
     request.app.state.wiki_review_sessions[review_id] = session
     return _serialize_session(session)

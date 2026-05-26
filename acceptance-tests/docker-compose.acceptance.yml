@@ -20,6 +20,8 @@ services:
       - TAVILY_API_KEY=stub-key
       - GOOGLE_TRANSLATE_ENABLED=false
       - TELEGRAM_BOT_TOKEN=
+      - ADMIN_TELEGRAM_BOT_TOKEN=
+      - ADMIN_TELEGRAM_CHAT_ID=
       - WIKI_PATH=/app/wiki
       - PHOTOS_PATH=/app/photos
       - OTEL_TRACES_FILE=/app/traces/traces.jsonl

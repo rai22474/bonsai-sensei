@@ -26,7 +26,7 @@ def context():
 
 @pytest.fixture(autouse=True)
 def reset_memory_watermark():
-    post("/api/wiki/transcripts/wiki-keeper/watermark/reset")
+    post("/api/wiki/transcripts/wiki-dreamer/watermark/reset")
     yield
 
 

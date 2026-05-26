@@ -54,7 +54,7 @@ def create_mem0_client(database_url: str, history_db_path: str = "/tmp/mem0_hist
         },
         "llm": {
             "provider": "gemini",
-            "config": {"model": os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")},
+            "config": {"model": os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")},
         },
         "embedder": {
             "provider": "gemini",

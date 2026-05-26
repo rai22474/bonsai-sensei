@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -7,7 +8,7 @@ from google.genai import types
 from mem0 import AsyncMemory
 
 from bonsai_sensei.knowledge_base.dreamer.agent import _APP_NAME, create_wiki_dreamer_agent
-from bonsai_sensei.knowledge_base.dreamer.memory_reader import read_new_observations, update_high_watermark
+from bonsai_sensei.knowledge_base.dreamer.memory_reader import read_high_watermark, read_new_observations, update_high_watermark
 from bonsai_sensei.knowledge_base import wiki_git
 from bonsai_sensei.knowledge_base.wiki_index.indexer import update_page_index
 from bonsai_sensei.logging_config import get_logger
@@ -15,13 +16,14 @@ from bonsai_sensei.logging_config import get_logger
 logger = get_logger(__name__)
 
 _MAX_LLM_CALLS = 100
-_BASE_PROMPT = (
-    "Ejecuta las dos fases: "
-    "1) enriquece la wiki con el conocimiento de las fichas; "
-    "2) añade wikilinks en todas las páginas existentes donde falten."
-)
 _OBSERVATIONS_HEADER = (
-    "\n\nAdemás, integra en la wiki las siguientes observaciones extraídas de conversaciones recientes con usuarios:\n"
+    "Integra en la wiki las siguientes observaciones extraídas de conversaciones recientes con usuarios:\n"
+)
+_NEW_CARDS_HEADER = (
+    "Enriquece la wiki con el conocimiento de las siguientes fichas nuevas:\n"
+)
+_WIKILINKS_PHASE = (
+    "\n\nPor último, añade wikilinks en todas las páginas existentes donde falten."
 )
 
 
@@ -54,8 +56,16 @@ def create_wiki_dreamer(
     agent = create_wiki_dreamer_agent(model, transcripts_root, wiki_root)
 
     async def run_wiki_dreamer() -> None:
-        prompt = await _build_prompt(mem0_client, wiki_root)
+        last_run = read_high_watermark(wiki_root)
+        observations = await read_new_observations(mem0_client, wiki_root) if mem0_client is not None else []
+        new_cards = _get_new_cards(transcripts_root, last_run)
 
+        if not observations and not new_cards:
+            logger.info("Wiki dreamer skipped: no new cards or observations since %s", last_run)
+            return
+
+        prompt = _build_prompt(observations, new_cards)
+        logger.info("Wiki dreamer starting: %d new cards, %d new observations", len(new_cards), len(observations))
         runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
         session_id = str(uuid.uuid4())
         await runner.session_service.create_session(app_name=_APP_NAME, user_id=_APP_NAME, session_id=session_id)
@@ -69,8 +79,7 @@ def create_wiki_dreamer(
         ):
             pass
 
-        if mem0_client is not None:
-            update_high_watermark(wiki_root)
+        update_high_watermark(wiki_root)
 
         commit_hash = wiki_git.commit_wiki_changes(wiki_root, "dreamer: update wiki pages")
         if commit_hash:
@@ -87,12 +96,24 @@ def create_wiki_dreamer(
     return run_wiki_dreamer
 
 
-async def _build_prompt(mem0_client: Optional[AsyncMemory], wiki_root: Path) -> str:
-    if mem0_client is None:
-        return _BASE_PROMPT
-    observations = await read_new_observations(mem0_client, wiki_root)
-    if not observations:
-        return _BASE_PROMPT
-    observations_text = "\n".join(f"- {observation}" for observation in observations)
-    logger.info("Wiki dreamer found %d new episodic observations to process", len(observations))
-    return _BASE_PROMPT + _OBSERVATIONS_HEADER + observations_text
+def _get_new_cards(transcripts_root: Path, since: datetime) -> list[str]:
+    cards_root = transcripts_root / "cards"
+    if not cards_root.exists():
+        return []
+    return sorted(
+        str(card.relative_to(cards_root))
+        for card in cards_root.rglob("*.md")
+        if datetime.fromtimestamp(card.stat().st_mtime, tz=timezone.utc) > since
+    )
+
+
+def _build_prompt(observations: list[str], new_cards: list[str]) -> str:
+    parts = []
+    if observations:
+        observations_text = "\n".join(f"- {observation}" for observation in observations)
+        parts.append(_OBSERVATIONS_HEADER + observations_text)
+    if new_cards:
+        cards_text = "\n".join(f"- {card}" for card in new_cards)
+        parts.append(_NEW_CARDS_HEADER + cards_text)
+    parts.append(_WIKILINKS_PHASE.strip())
+    return "\n\n".join(parts)
