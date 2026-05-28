@@ -2,10 +2,8 @@ import pytest
 from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
-from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
-    create_get_phytosanitary_by_name_tool,
-    create_list_phytosanitary_tool,
-)
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.list_phytosanitary import create_list_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.get_phytosanitary_by_name import create_get_phytosanitary_by_name_tool
 
 
 def should_list_phytosanitary(list_phytosanitary_tool):

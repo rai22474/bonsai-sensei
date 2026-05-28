@@ -13,7 +13,7 @@ async def should_call_plan_func_when_period_provided(schedule_deps):
 
 
 @pytest.mark.asyncio
-async def should_call_puntual_func_when_date_provided(schedule_deps):
+async def should_call_one_time_func_when_date_provided(schedule_deps):
     result = await schedule_work(**schedule_deps, scheduled_date="2026-07-15", period_start="", period_end="", product_extra={"fertilizer_name": "BioGrow"}, tool_context=None)
 
     assert_that(result, equal_to({"status": "success", "type": "puntual", "date": "2026-07-15", "fertilizer_name": "BioGrow"}))
@@ -61,7 +61,7 @@ async def should_return_error_when_period_text_has_no_valid_dates(schedule_deps)
 async def should_pass_product_extra_to_puntual_func(schedule_deps):
     result = await schedule_work(**schedule_deps, scheduled_date="2026-07-15", period_start="", period_end="", product_extra={"phytosanitary_name": "Neem", "amount": "2ml"}, tool_context=None)
 
-    assert_that(result["phytosanitary_name"], equal_to("Neem"), "product_extra keys should be forwarded to run_puntual_func")
+    assert_that(result["phytosanitary_name"], equal_to("Neem"), "product_extra keys should be forwarded to run_one_time_func")
 
 
 # --- fixtures ---
@@ -70,7 +70,7 @@ async def should_pass_product_extra_to_puntual_func(schedule_deps):
 def schedule_deps():
     options = ["Fertilización puntual", "Plan de fertilización"]
     return {
-        "run_puntual_func": _make_puntual_func(),
+        "run_one_time_func": _make_puntual_func(),
         "run_plan_func": _make_plan_func(),
         "ask_selection": _make_ask_selection_returning(options[0]),
         "ask_human": _make_ask_human_returning("2026-09-01 al 2026-11-30"),
@@ -82,9 +82,9 @@ def schedule_deps():
 
 
 def _make_puntual_func():
-    async def run_puntual_func(bonsai_name, scheduled_date, tool_context, **kwargs):
+    async def run_one_time_func(bonsai_name, scheduled_date, tool_context, **kwargs):
         return {"status": "success", "type": "puntual", "date": scheduled_date, **kwargs}
-    return run_puntual_func
+    return run_one_time_func
 
 
 def _make_plan_func():

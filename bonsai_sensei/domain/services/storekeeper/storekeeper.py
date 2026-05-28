@@ -8,18 +8,14 @@ from bonsai_sensei.domain.services.storekeeper.fertilizers.create_fertilizer imp
 from bonsai_sensei.domain.services.storekeeper.fertilizers.delete_fertilizer import create_delete_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.update_fertilizer import create_update_fertilizer_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.refresh_fertilizer_wiki import create_refresh_fertilizer_wiki_tool
-from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
-    create_list_fertilizers_tool,
-    create_get_fertilizer_by_name_tool,
-)
+from bonsai_sensei.domain.services.storekeeper.fertilizers.list_fertilizers import create_list_fertilizers_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.get_fertilizer_by_name import create_get_fertilizer_by_name_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.create_phytosanitary import create_create_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.delete_phytosanitary import create_delete_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.update_phytosanitary import create_update_phytosanitary_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.refresh_phytosanitary_wiki import create_refresh_phytosanitary_wiki_tool
-from bonsai_sensei.domain.services.storekeeper.phytosanitary.phytosanitary_tools import (
-    create_list_phytosanitary_tool,
-    create_get_phytosanitary_by_name_tool,
-)
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.list_phytosanitary import create_list_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.get_phytosanitary_by_name import create_get_phytosanitary_by_name_tool
 from bonsai_sensei.domain.services.tool_contract import TOOL_CONTRACT
 
 STOREKEEPER_INSTRUCTION = f"""

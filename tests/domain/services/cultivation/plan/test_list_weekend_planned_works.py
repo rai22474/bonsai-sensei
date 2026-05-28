@@ -5,9 +5,7 @@ from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.bonsai import Bonsai
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.planned_work_tools import (
-    create_list_weekend_planned_works_tool,
-)
+from bonsai_sensei.domain.services.cultivation.plan.list_weekend_planned_works import create_list_weekend_planned_works_tool
 
 
 def _next_saturday() -> date:

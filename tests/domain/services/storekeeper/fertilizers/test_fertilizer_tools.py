@@ -2,10 +2,8 @@ import pytest
 from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
-from bonsai_sensei.domain.services.storekeeper.fertilizers.fertilizer_tools import (
-    create_get_fertilizer_by_name_tool,
-    create_list_fertilizers_tool,
-)
+from bonsai_sensei.domain.services.storekeeper.fertilizers.list_fertilizers import create_list_fertilizers_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.get_fertilizer_by_name import create_get_fertilizer_by_name_tool
 
 
 def should_list_fertilizers(list_fertilizers_tool):

@@ -129,7 +129,7 @@ def create_kikaru_group(
         build_selection_question=build_fertilizer_selection_question,
     )
     schedule_fertilization_tool = create_schedule_fertilization_tool(
-        run_puntual_func=create_fertilizer_tool,
+        run_one_time_func=create_fertilizer_tool,
         run_plan_func=manage_fertilization_plan_tool,
         ask_selection=ask_selection,
         ask_human=ask_human,
@@ -146,7 +146,7 @@ def create_kikaru_group(
         build_confirmation_message=build_phytosanitary_confirmation,
     )
     schedule_phytosanitary_tool = create_schedule_phytosanitary_tool(
-        run_puntual_func=create_phytosanitary_tool,
+        run_one_time_func=create_phytosanitary_tool,
         run_plan_func=manage_phytosanitary_plan_tool,
         ask_selection=ask_selection,
         ask_human=ask_human,

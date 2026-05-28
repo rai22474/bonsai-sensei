@@ -8,7 +8,7 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
 def create_schedule_phytosanitary_tool(
-    run_puntual_func: Callable,
+    run_one_time_func: Callable,
     run_plan_func: Callable,
     ask_selection: Callable,
     ask_human: Callable,
@@ -47,7 +47,7 @@ def create_schedule_phytosanitary_tool(
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
         """
         return await schedule_work(
-            run_puntual_func=run_puntual_func,
+            run_one_time_func=run_one_time_func,
             run_plan_func=run_plan_func,
             ask_selection=ask_selection,
             ask_human=ask_human,

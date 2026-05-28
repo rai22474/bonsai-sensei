@@ -2,9 +2,7 @@ import pytest
 from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.species import Species
-from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import (
-    create_get_species_by_name_tool,
-)
+from bonsai_sensei.domain.services.cultivation.species.get_species_by_name import create_get_species_by_name_tool
 
 
 def should_return_species_by_name(get_species_tool):

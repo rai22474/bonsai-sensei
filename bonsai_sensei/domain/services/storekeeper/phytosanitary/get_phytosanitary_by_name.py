@@ -6,32 +6,6 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
-def create_list_phytosanitary_tool(
-    list_phytosanitary_func: Callable[[], list[Phytosanitary]],
-):
-    @trace_tool_call
-    @limit_tool_calls(agent_name="storekeeper")
-    def list_phytosanitary() -> dict:
-        """Return JSON with all registered phytosanitary items.
-
-        Returns:
-            A JSON-ready dictionary with the phytosanitary list.
-
-        Output JSON: {"status":"success","phytosanitary":[{"id","name"}]}.
-        """
-        items = list_phytosanitary_func()
-        results = [
-            {
-                "id": phytosanitary.id,
-                "name": phytosanitary.name.capitalize(),
-            }
-            for phytosanitary in items
-        ]
-        return {"status": "success", "phytosanitary": results}
-
-    return list_phytosanitary
-
-
 def create_get_phytosanitary_by_name_tool(
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
     wiki_root: str,

@@ -7,7 +7,7 @@ from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain.services.cultivation.pests.pest_catalog_seeder import create_pest_catalog_seeder
 from bonsai_sensei.domain.services.cultivation.pests.pest_wiki_compiler import create_pest_wiki_compiler
 from bonsai_sensei.domain.services.cultivation.species.botanist import create_botanist
-from bonsai_sensei.domain.services.cultivation.species.herbarium_tools import create_list_species_tool
+from bonsai_sensei.domain.services.cultivation.species.list_species import create_list_species_tool
 from bonsai_sensei.domain.services.cultivation.species.refresh_species_wiki import create_refresh_species_wiki_tool
 from bonsai_sensei.domain.services.cultivation.species.scientific_name import create_scientific_name_resolver
 from bonsai_sensei.domain.services.cultivation.species.scientific_name_searcher import create_trefle_searcher
