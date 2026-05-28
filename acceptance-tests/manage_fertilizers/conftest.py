@@ -23,6 +23,13 @@ def context():
 def cleanup_fertilizers(context):
     yield
     for name in context["fertilizers_created"]:
+        fertilizer = find_fertilizer_by_name(get, name)
+        wiki_path = (fertilizer or {}).get("wiki_path")
+        if wiki_path:
+            try:
+                delete(f"/api/wiki?path={wiki_path}")
+            except Exception:
+                pass
         delete_fertilizer_by_name(delete, name)
 
 

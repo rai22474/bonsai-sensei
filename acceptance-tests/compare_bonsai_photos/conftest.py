@@ -12,6 +12,7 @@ from manage_bonsai.bonsai_api import (
     delete_bonsai_by_name as delete_bonsai_by_name_api_func,
     find_bonsai_by_name as find_bonsai_by_name_api_func,
 )
+from manage_bonsai.wiki_api import delete_bonsai_wiki_pages
 from manage_species.species_api import (
     create_species,
     delete_species_by_name as delete_species_by_name_api_func,
@@ -64,6 +65,7 @@ def cleanup_records(context):
                 except aiohttp.ClientResponseError:
                     pass
             delete(f"/api/bonsai/{bonsai['id']}/photos")
+        delete_bonsai_wiki_pages(delete, name)
         delete_bonsai_by_name_api_func(get, delete, name)
     for name in context["species_created"]:
         delete_species_by_name_api_func(get, delete, name)

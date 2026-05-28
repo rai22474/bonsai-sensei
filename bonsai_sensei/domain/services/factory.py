@@ -3,7 +3,6 @@ from functools import partial
 
 from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.tools import AgentTool
-from google.adk.tools.preload_memory_tool import preload_memory_tool
 
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import bonsai_photo_store
@@ -224,7 +223,7 @@ def create_sensei_group(
 
     return create_sensei(
         model=effective_orchestrator_model,
-        tools=[*query_tools, wiki_page_diff_tool, recommend_fertilizer_callable, *phytosanitary_advice_tools, *wiki_tools, AgentTool(command_pipeline), preload_memory_tool],
+        tools=[*query_tools, wiki_page_diff_tool, recommend_fertilizer_callable, *phytosanitary_advice_tools, *wiki_tools, AgentTool(command_pipeline)],
     )
 
 

@@ -7,6 +7,7 @@ from pytest_httpserver import HTTPServer
 
 from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, create_bonsai
+from manage_bonsai.wiki_api import delete_bonsai_wiki_pages
 from manage_species.species_api import delete_species_by_name, create_species
 
 STUB_PORT = 8070
@@ -33,6 +34,7 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
+        delete_bonsai_wiki_pages(delete, name)
         delete_bonsai_by_name(get, delete, name)
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)

@@ -1,4 +1,3 @@
-import re
 import uuid
 
 import pytest
@@ -6,13 +5,9 @@ from pytest_bdd import given, parsers
 
 from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, create_bonsai
-from manage_bonsai.wiki_api import delete_wiki_page
+from manage_bonsai.wiki_api import delete_bonsai_wiki_pages
 from manage_fertilizers.fertilizer_api import create_fertilizer, delete_fertilizer_by_name
 from manage_species.species_api import delete_species_by_name, create_species
-
-
-def _wiki_slug(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
 @pytest.fixture
@@ -31,7 +26,7 @@ def context():
 def cleanup_records(context):
     yield
     for bonsai_name in context["bonsai_created"]:
-        delete_wiki_page(delete, f"bonsai/{_wiki_slug(bonsai_name)}/fertilization-plan.md")
+        delete_bonsai_wiki_pages(delete, bonsai_name)
         delete_bonsai_by_name(get, delete, bonsai_name)
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)

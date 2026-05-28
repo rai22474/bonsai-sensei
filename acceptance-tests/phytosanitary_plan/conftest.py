@@ -8,7 +8,7 @@ from pytest_httpserver import HTTPServer
 from cultivation_plan.planned_works_api import list_planned_works
 from http_client import delete, get, post
 from manage_bonsai.bonsai_api import delete_bonsai_by_name, create_bonsai
-from manage_bonsai.wiki_api import delete_wiki_page
+from manage_bonsai.wiki_api import delete_bonsai_wiki_pages, delete_wiki_page
 from manage_phytosanitary.phytosanitary_api import create_phytosanitary, delete_phytosanitary_by_name, find_phytosanitary_by_name
 from manage_species.species_api import delete_species_by_name, create_species
 from phytosanitary_plan.phytosanitary_plans_api import (
@@ -42,8 +42,7 @@ def cleanup_records(context):
             plans = list_phytosanitary_plans(get, bonsai_id)
             for plan in plans:
                 delete_wiki_page(delete, plan["wiki_path"])
-            bonsai_slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-            delete_wiki_page(delete, f"bonsai/{bonsai_slug}/phytosanitary-plans/index.md")
+        delete_bonsai_wiki_pages(delete, bonsai_name)
         delete_bonsai_by_name(get, delete, bonsai_name)
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)

@@ -1,6 +1,6 @@
-import aiohttp
+import re
 
-from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import build_bonsai_wiki_path
+import aiohttp
 
 
 def get_wiki_page(get_func, path: str) -> dict | None:
@@ -21,4 +21,12 @@ def delete_wiki_page(delete_func, path: str) -> None:
 
 
 def delete_bonsai_wiki_pages(delete_func, bonsai_name: str) -> None:
-    delete_wiki_page(delete_func, build_bonsai_wiki_path(bonsai_name))
+    slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
+    for path in [
+        f"bonsai/{slug}/index.md",
+        f"bonsai/{slug}/fertilization-plan.md",
+        f"bonsai/{slug}/phytosanitary-plan.md",
+        f"bonsai/{slug}/plans/index.md",
+        f"bonsai/{slug}/phytosanitary-plans/index.md",
+    ]:
+        delete_wiki_page(delete_func, path)

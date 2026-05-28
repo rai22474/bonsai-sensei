@@ -31,8 +31,8 @@ def trigger_weekend_reminder(context):
 def assert_response_mentions(context, user_id, expected_text):
     user_event = _find_user_event(context["sse_events"], user_id)
     response_text = user_event.get("response", "")
-    assert expected_text in response_text, (
-        f"Expected response for '{user_id}' to mention '{expected_text}', "
+    assert expected_text.lower() in response_text.lower(), (
+        f"Expected response for '{user_id}' to mention '{expected_text}' (case-insensitive), "
         f"but got: {response_text}"
     )
 

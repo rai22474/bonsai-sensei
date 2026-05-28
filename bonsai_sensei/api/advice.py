@@ -28,6 +28,64 @@ class ConfirmationRejectRequest(BaseModel):
     reason: str = ""
 
 
+class TextResponseRequest(BaseModel):
+    user_id: str
+    text: str
+
+
+class SelectionChooseRequest(BaseModel):
+    user_id: str
+    option: str
+
+
+class PlanReviewConfirmRequest(BaseModel):
+    user_id: str
+
+
+def _build_pending_interrupt(pending: dict) -> dict:
+    """Maps a pending human input state to its API interrupt fields."""
+    pending_type = pending.get("type")
+    if pending_type == "confirmation":
+        return {"pending_confirmations": [{"id": pending["confirmation_id"], "summary": pending.get("summary", "")}]}
+    if pending_type == "selection":
+        return {"pending_selections": [{"id": pending["selection_id"], "question": pending.get("question", ""), "options": pending.get("options", [])}]}
+    if pending_type in ("text", "poll"):
+        return {"pending_text_questions": [{"question": pending.get("question", pending.get("summary", ""))}]}
+    if pending_type == "plan_review":
+        return {"pending_plan_reviews": [{"id": pending["review_id"]}]}
+    return {}
+
+
+async def _wait_for_next_pending(
+    task,
+    user_id: str,
+    pending_human_responses: dict,
+    prior_pending=None,
+    deadline: float | None = None,
+) -> dict | None:
+    """Poll until task completes, a new interrupt appears, or deadline is reached.
+
+    Returns the interrupt dict if a new pending state appears, None if the task completed or deadline was reached.
+    When prior_pending is None, any pending state triggers an interrupt.
+    """
+    loop = asyncio.get_event_loop()
+    while not task.done():
+        await asyncio.sleep(0.05)
+        if deadline is not None and loop.time() > deadline:
+            return None
+        current = pending_human_responses.get(user_id)
+        if current is not None and (prior_pending is None or current is not prior_pending):
+            return _build_pending_interrupt(current)
+    return None
+
+
+def _pop_completed_task(task, active_tasks: dict, user_id: str):
+    active_tasks.pop(user_id, None)
+    if task.exception():
+        raise task.exception()
+    return dataclasses.asdict(task.result())
+
+
 @router.post("/advice")
 async def get_advice(request_body: AdviceRequest, request: Request):
     logger.info(
@@ -35,7 +93,6 @@ async def get_advice(request_body: AdviceRequest, request: Request):
         request_body.user_id,
         request_body.text,
     )
-
     user_id = request_body.user_id
     advisor = request.app.state.advisor
     pending_human_responses = getattr(request.app.state, "pending_human_responses", {})
@@ -53,53 +110,10 @@ async def get_advice(request_body: AdviceRequest, request: Request):
     task = asyncio.create_task(advisor(request_body.text, user_id=user_id))
     active_tasks[user_id] = task
 
-    while not task.done():
-        await asyncio.sleep(0.05)
-        pending = pending_human_responses.get(user_id)
-        if pending and pending.get("type") == "confirmation":
-            return {
-                "text": "",
-                "pending_confirmations": [
-                    {"id": pending["confirmation_id"], "summary": pending.get("summary", "")}
-                ],
-            }
-        if pending and pending.get("type") == "selection":
-            return {
-                "text": "",
-                "pending_selections": [
-                    {
-                        "id": pending["selection_id"],
-                        "question": pending.get("question", ""),
-                        "options": pending.get("options", []),
-                    }
-                ],
-            }
-        if pending and pending.get("type") == "text":
-            return {
-                "text": "",
-                "pending_text_questions": [
-                    {"question": pending.get("summary", "")}
-                ],
-            }
-        if pending and pending.get("type") == "plan_review":
-            return {
-                "text": "",
-                "pending_plan_reviews": [
-                    {"id": pending["review_id"]}
-                ],
-            }
-        if pending and pending.get("type") == "poll":
-            return {
-                "text": "",
-                "pending_text_questions": [
-                    {"question": pending.get("question", "")}
-                ],
-            }
-
-    active_tasks.pop(user_id, None)
-    if task.exception():
-        raise task.exception()
-    return dataclasses.asdict(task.result())
+    interrupt = await _wait_for_next_pending(task, user_id, pending_human_responses)
+    if interrupt:
+        return {"text": "", **interrupt}
+    return _pop_completed_task(task, active_tasks, user_id)
 
 
 @router.delete("/advice/sessions/{user_id}", status_code=204)
@@ -140,38 +154,11 @@ async def accept_confirmation(
             await asyncio.sleep(0.05)
         task = active_tasks.get(user_id)
         if task:
-            deadline = loop.time() + 55
-            while not task.done():
-                await asyncio.sleep(0.05)
-                if loop.time() > deadline:
-                    return {"status": "accepted"}
-                next_pending = pending_human_responses.get(user_id)
-                if next_pending is not None and next_pending is not pending:
-                    if next_pending.get("type") == "confirmation":
-                        return {
-                            "status": "accepted",
-                            "pending_confirmations": [
-                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
-                            ],
-                        }
-                    if next_pending.get("type") == "plan_review":
-                        return {
-                            "status": "accepted",
-                            "pending_plan_reviews": [
-                                {"id": next_pending["review_id"]}
-                            ],
-                        }
-                    if next_pending.get("type") == "selection":
-                        return {
-                            "status": "accepted",
-                            "pending_selections": [
-                                {
-                                    "id": next_pending["selection_id"],
-                                    "question": next_pending.get("question", ""),
-                                    "options": next_pending.get("options", []),
-                                }
-                            ],
-                        }
+            interrupt = await _wait_for_next_pending(
+                task, user_id, pending_human_responses, prior_pending=pending, deadline=loop.time() + 120
+            )
+            if not task.done():
+                return {"status": "accepted", **(interrupt or {})}
             active_tasks.pop(user_id, None)
             if task.exception():
                 raise task.exception()
@@ -204,11 +191,6 @@ async def reject_confirmation(
     raise HTTPException(status_code=404, detail="confirmation_not_found")
 
 
-class TextResponseRequest(BaseModel):
-    user_id: str
-    text: str
-
-
 @router.post("/advice/text-response")
 async def submit_text_response(request_body: TextResponseRequest, request: Request):
     user_id = request_body.user_id
@@ -221,54 +203,13 @@ async def submit_text_response(request_body: TextResponseRequest, request: Reque
         pending["event"].set()
         task = active_tasks.get(user_id)
         if task:
-            while not task.done():
-                await asyncio.sleep(0.05)
-                next_pending = pending_human_responses.get(user_id)
-                if next_pending is not None and next_pending is not pending:
-                    if next_pending.get("type") == "confirmation":
-                        return {
-                            "text": "",
-                            "pending_confirmations": [
-                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
-                            ],
-                        }
-                    if next_pending.get("type") == "selection":
-                        return {
-                            "text": "",
-                            "pending_selections": [
-                                {
-                                    "id": next_pending["selection_id"],
-                                    "question": next_pending.get("question", ""),
-                                    "options": next_pending.get("options", []),
-                                }
-                            ],
-                        }
-                    if next_pending.get("type") in ("text", "poll"):
-                        return {
-                            "text": "",
-                            "pending_text_questions": [
-                                {"question": next_pending.get("question", next_pending.get("summary", ""))}
-                            ],
-                        }
-                    if next_pending.get("type") == "plan_review":
-                        return {
-                            "text": "",
-                            "pending_plan_reviews": [
-                                {"id": next_pending["review_id"]}
-                            ],
-                        }
-            active_tasks.pop(user_id, None)
-            if task.exception():
-                raise task.exception()
-            return dataclasses.asdict(task.result())
+            interrupt = await _wait_for_next_pending(task, user_id, pending_human_responses, prior_pending=pending)
+            if interrupt:
+                return {"text": "", **interrupt}
+            return _pop_completed_task(task, active_tasks, user_id)
         return {"text": ""}
 
     raise HTTPException(status_code=404, detail="text_question_not_found")
-
-
-class SelectionChooseRequest(BaseModel):
-    user_id: str
-    option: str
 
 
 @router.post("/advice/selections/{selection_id}/choose")
@@ -286,43 +227,17 @@ async def choose_selection(
         task = active_tasks.get(user_id)
         if task:
             loop = asyncio.get_event_loop()
-            deadline = loop.time() + 8
-            while not task.done():
-                await asyncio.sleep(0.05)
-                if loop.time() > deadline:
-                    return {"status": "chosen", "option": request_body.option}
-                next_pending = pending_human_responses.get(user_id)
-                if next_pending is not None and next_pending.get("selection_id") != selection_id:
-                    if next_pending.get("type") == "confirmation":
-                        return {
-                            "status": "chosen",
-                            "option": request_body.option,
-                            "pending_confirmations": [
-                                {"id": next_pending["confirmation_id"], "summary": next_pending.get("summary", "")}
-                            ],
-                        }
-                    if next_pending.get("type") == "selection":
-                        return {
-                            "status": "chosen",
-                            "option": request_body.option,
-                            "pending_selections": [
-                                {
-                                    "id": next_pending["selection_id"],
-                                    "question": next_pending.get("question", ""),
-                                    "options": next_pending.get("options", []),
-                                }
-                            ],
-                        }
+            interrupt = await _wait_for_next_pending(
+                task, user_id, pending_human_responses, prior_pending=pending, deadline=loop.time() + 8
+            )
+            if not task.done():
+                return {"status": "chosen", "option": request_body.option, **(interrupt or {})}
             active_tasks.pop(user_id, None)
             if task.exception():
                 raise task.exception()
         return {"status": "chosen", "option": request_body.option}
 
     raise HTTPException(status_code=404, detail="selection_not_found")
-
-
-class PlanReviewConfirmRequest(BaseModel):
-    user_id: str
 
 
 @router.post("/advice/plan-reviews/{review_id}/confirm")
@@ -378,29 +293,7 @@ async def upload_photo(
     task = asyncio.create_task(advisor(message, user_id=user_id))
     active_tasks[user_id] = task
 
-    while not task.done():
-        await asyncio.sleep(0.05)
-        pending = pending_human_responses.get(user_id)
-        if pending and pending.get("type") == "confirmation":
-            return {
-                "text": "",
-                "pending_confirmations": [
-                    {"id": pending["confirmation_id"], "summary": pending.get("summary", "")}
-                ],
-            }
-        if pending and pending.get("type") == "selection":
-            return {
-                "text": "",
-                "pending_selections": [
-                    {
-                        "id": pending["selection_id"],
-                        "question": pending.get("question", ""),
-                        "options": pending.get("options", []),
-                    }
-                ],
-            }
-
-    active_tasks.pop(user_id, None)
-    if task.exception():
-        raise task.exception()
-    return dataclasses.asdict(task.result())
+    interrupt = await _wait_for_next_pending(task, user_id, pending_human_responses)
+    if interrupt:
+        return {"text": "", **interrupt}
+    return _pop_completed_task(task, active_tasks, user_id)
