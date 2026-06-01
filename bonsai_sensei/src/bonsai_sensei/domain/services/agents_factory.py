@@ -21,7 +21,7 @@ def create_sensei_agent(
     storekeeper_messages: dict,
     botanist_messages: dict,
     kb_base_url: str = "",
-    kb_mcp_url: str = "",
+    wiki_tools: list | None = None,
     ask_poll: Callable | None = None,
     searcher: Callable | None = None,
     register_background_task: Callable | None = None,
@@ -58,7 +58,7 @@ def create_sensei_agent(
         session_factory=session_factory,
         orchestrator_model=orchestrator_model,
         kb_base_url=kb_base_url,
-        kb_mcp_url=kb_mcp_url,
+        wiki_tools=wiki_tools,
         searcher=searcher,
     )
     return create_agents(

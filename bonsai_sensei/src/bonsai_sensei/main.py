@@ -1,13 +1,17 @@
 import logging
 import os
+import time
 import traceback
 from contextlib import asynccontextmanager
 from functools import partial
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
+from bonsai_sensei.metrics import MCP_REQUEST_DURATION, MCP_REQUESTS_TOTAL
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
@@ -110,6 +114,28 @@ from bonsai_sensei.api.pests import router as pests_router
 
 KB_BASE_URL = os.getenv("KB_BASE_URL", "http://knowledge_base:8080")
 KB_MCP_URL = os.getenv("KB_MCP_URL", KB_BASE_URL)
+
+
+def _instrument_mcp_tool(tool):
+    original_run_async = tool.run_async
+
+    async def instrumented_run_async(*, args, tool_context):
+        start = time.perf_counter()
+        status = "success"
+        try:
+            result = await original_run_async(args=args, tool_context=tool_context)
+            if isinstance(result, dict) and "error" in result:
+                status = "error"
+            return result
+        except Exception:
+            status = "error"
+            raise
+        finally:
+            MCP_REQUEST_DURATION.labels(tool=tool.name).observe(time.perf_counter() - start)
+            MCP_REQUESTS_TOTAL.labels(tool=tool.name, status=status).inc()
+
+    tool.run_async = instrumented_run_async
+    return tool
 
 
 async def _generic_exception_handler(request, exc):
@@ -234,6 +260,18 @@ async def lifespan(app: FastAPI):
     tavily_base_url = os.getenv("TAVILY_API_BASE")
     tavily_searcher = create_tavily_searcher(tavily_api_key, tavily_base_url) if tavily_api_key else None
 
+    wiki_tools = []
+    if KB_MCP_URL:
+        try:
+            from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+            from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
+            mcp_toolset = MCPToolset(connection_params=SseConnectionParams(url=f"{KB_MCP_URL}/mcp/sse"))
+            wiki_tools = await mcp_toolset.get_tools()
+            wiki_tools = [_instrument_mcp_tool(tool) for tool in wiki_tools]
+            logging.info("Loaded %d wiki tools from MCP", len(wiki_tools))
+        except Exception:
+            logging.warning("Could not load wiki tools from MCP at startup — wiki tools will be unavailable")
+
     sensei_agent = create_sensei_agent(
         model=model,
         session_factory=get_session_partial,
@@ -247,7 +285,7 @@ async def lifespan(app: FastAPI):
         searcher=tavily_searcher,
         register_background_task=lambda task: app.state.background_tasks.add(task),
         kb_base_url=KB_BASE_URL,
-        kb_mcp_url=KB_MCP_URL,
+        wiki_tools=wiki_tools,
         cultivation_messages={
             "build_fertilizer_selection_question": build_fertilizer_selection_question,
             "build_fertilization_type_question": build_fertilization_type_question,
@@ -400,6 +438,13 @@ configure_logging()
 app = FastAPI(lifespan=lifespan)
 FastAPIInstrumentor.instrument_app(app)
 app.add_exception_handler(Exception, _generic_exception_handler)
+
+
+@app.get("/metrics")
+def metrics_endpoint():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 app.include_router(species_router, prefix="/api", tags=["species"])
 app.include_router(bonsai_router, prefix="/api", tags=["bonsai"])
 app.include_router(fertilizers_router, prefix="/api", tags=["fertilizers"])

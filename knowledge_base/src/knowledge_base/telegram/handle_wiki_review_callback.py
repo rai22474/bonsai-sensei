@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 from knowledge_base.admin_config import save_review_sessions
 from knowledge_base import wiki_git
 from knowledge_base.logging_config import get_logger
+from knowledge_base.metrics import WIKI_REVIEW_ACTIONS_TOTAL
 
 logger = get_logger(__name__)
 
@@ -62,12 +63,14 @@ async def handle_wiki_review_callback(
 
     if action == "confirm":
         session.resolve_page(page_path, reverted=False)
+        WIKI_REVIEW_ACTIONS_TOTAL.labels(action="approve").inc()
         logger.info("Admin confirmed wiki page %s (review %s)", page_path, review_id)
 
     elif action == "revert":
         try:
             wiki_git.revert_page(Path(wiki_root), page_path, session.commit_hash)
             session.resolve_page(page_path, reverted=True)
+            WIKI_REVIEW_ACTIONS_TOTAL.labels(action="reject").inc()
             logger.info("Admin reverted wiki page %s (review %s)", page_path, review_id)
         except Exception as error:
             logger.error("Failed to revert wiki page %s: %s", page_path, error)

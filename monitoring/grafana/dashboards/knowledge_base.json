@@ -1,0 +1,184 @@
+{
+  "title": "Knowledge Base — LLM & Dreamer Metrics",
+  "uid": "knowledge-base-metrics",
+  "version": 1,
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "tags": ["knowledge-base", "llm"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total LLM Requests",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(kb_llm_requests_total)",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "LLM Success Rate %",
+      "type": "stat",
+      "gridPos": {"x": 8, "y": 0, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "100 * sum(kb_llm_requests_total{status=\"success\"}) / sum(kb_llm_requests_total)",
+          "legendFormat": "Success %",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Total Tokens Consumed",
+      "type": "stat",
+      "gridPos": {"x": 16, "y": 0, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(kb_llm_tokens_total)",
+          "legendFormat": "Total Tokens",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "LLM Request Rate by Model",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (model) (rate(kb_llm_requests_total[5m]))",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "LLM Latency (p50/p90/p99)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, model) (rate(kb_llm_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{model}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum by (le, model) (rate(kb_llm_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p90 {{model}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, model) (rate(kb_llm_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{model}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Token Consumption Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 12, "w": 24, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (model, token_type) (rate(kb_llm_tokens_total[5m]))",
+          "legendFormat": "{{model}} {{token_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Dreamer Runs",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 20, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(kb_dreamer_runs_total{outcome=\"changed\"})",
+          "legendFormat": "With changes",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(kb_dreamer_runs_total{outcome=\"no_changes\"})",
+          "legendFormat": "No changes",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Wiki Pages Changed by Dreamer",
+      "type": "stat",
+      "gridPos": {"x": 8, "y": 20, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(kb_dreamer_pages_changed_total)",
+          "legendFormat": "Pages changed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Wiki Review Decisions",
+      "type": "stat",
+      "gridPos": {"x": 16, "y": 20, "w": 8, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(kb_wiki_review_actions_total{action=\"approve\"})",
+          "legendFormat": "Approved",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(kb_wiki_review_actions_total{action=\"reject\"})",
+          "legendFormat": "Rejected",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Dreamer Run Rate & Review Actions",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 24, "w": 24, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "rate(kb_dreamer_runs_total{outcome=\"changed\"}[30m])",
+          "legendFormat": "Dreamer runs/min (with changes)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(kb_wiki_review_actions_total{action=\"approve\"}[30m])",
+          "legendFormat": "Approvals/min",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(kb_wiki_review_actions_total{action=\"reject\"}[30m])",
+          "legendFormat": "Rejections/min",
+          "refId": "C"
+        }
+      ]
+    }
+  ]
+}

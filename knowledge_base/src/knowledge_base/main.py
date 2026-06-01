@@ -6,7 +6,7 @@ from functools import partial
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from telegram.ext import CallbackQueryHandler
 
@@ -153,6 +153,17 @@ app.include_router(wiki_router, prefix="/api", tags=["wiki"])
 app.include_router(wiki_review_router, prefix="/api", tags=["wiki-review"])
 app.include_router(wiki_index_router, prefix="/api", tags=["wiki-index"])
 app.include_router(transcripts_router, prefix="/api", tags=["transcripts"])
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+@app.get("/metrics")
+def metrics_endpoint():
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 _wiki_mcp_server, _wiki_sse_transport = create_wiki_mcp_server(

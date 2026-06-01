@@ -36,7 +36,7 @@ Además, puede haber varias fotos de un mismo árbol que analizar. La tool actua
 **Objetivo:**
 - Separar la tool de visión (describe foto → persiste resultado junto a la foto) del agente de diagnóstico (agrega descripciones + historial de eventos → emite análisis de salud).
 - Persistir el resultado de la descripción visual para evitar re-analizar fotos ya procesadas.
-- El agente de diagnóstico debe recibir: historial de eventos recientes del árbol + descripciones visuales de sus fotos.
+- El agente de diagnóstico debe recibir: datos de la especie (nombre científico, requisitos de cuidado, problemas típicos) + historial de eventos recientes del árbol + descripciones visuales de sus fotos.
 
 **Relacionado:** `bonsai_sensei/domain/services/kantei/`, `bonsai_sensei/domain/services/garden/analyze_bonsai_photo.py`.
 

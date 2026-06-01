@@ -10,6 +10,7 @@ from knowledge_base.dreamer.memory_reader import read_high_watermark, read_new_o
 from knowledge_base import wiki_git
 from knowledge_base.wiki_index.indexer import update_page_index
 from knowledge_base.logging_config import get_logger
+from knowledge_base.metrics import DREAMER_RUNS_TOTAL, DREAMER_PAGES_CHANGED_TOTAL
 
 logger = get_logger(__name__)
 
@@ -59,6 +60,7 @@ def create_wiki_dreamer(
 
         if not observations and not new_cards:
             logger.info("Wiki dreamer skipped: no new cards or observations since %s", last_run)
+            DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
             return
 
         prompt = _build_prompt(observations, new_cards)
@@ -85,8 +87,13 @@ def create_wiki_dreamer(
                 for file_path in changed_files:
                     if file_path.endswith(".md"):
                         await update_page_index(file_path, wiki_root, embed)
-            if changed_files and notify_admin:
-                await notify_admin(changed_files, commit_hash)
+            if changed_files:
+                DREAMER_RUNS_TOTAL.labels(outcome="changed").inc()
+                DREAMER_PAGES_CHANGED_TOTAL.inc(len(changed_files))
+                if notify_admin:
+                    await notify_admin(changed_files, commit_hash)
+        else:
+            DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
 
         logger.info("Wiki dreamer run completed")
 

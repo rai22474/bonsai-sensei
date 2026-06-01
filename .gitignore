@@ -14,6 +14,8 @@ ollama_data/
 /wiki/
 /transcripts/
 photos/
+photos*/
+
 .monocle/
 acceptance-tests/docker-compose.logs.txt
 acceptance-tests/docker-compose.logs.txt
