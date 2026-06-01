@@ -1,0 +1,118 @@
+from typing import Callable
+from google.adk.agents.llm_agent import Agent
+
+from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.single_tool_call_callback import limit_to_single_tool_call
+from bonsai_sensei.domain.phytosanitary import Phytosanitary
+from bonsai_sensei.domain.services.storekeeper.fertilizers.create_fertilizer import create_create_fertilizer_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.delete_fertilizer import create_delete_fertilizer_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.update_fertilizer import create_update_fertilizer_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.refresh_fertilizer_wiki import create_refresh_fertilizer_wiki_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.list_fertilizers import create_list_fertilizers_tool
+from bonsai_sensei.domain.services.storekeeper.fertilizers.get_fertilizer_by_name import create_get_fertilizer_by_name_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.create_phytosanitary import create_create_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.delete_phytosanitary import create_delete_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.update_phytosanitary import create_update_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.refresh_phytosanitary_wiki import create_refresh_phytosanitary_wiki_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.list_phytosanitary import create_list_phytosanitary_tool
+from bonsai_sensei.domain.services.storekeeper.phytosanitary.get_phytosanitary_by_name import create_get_phytosanitary_by_name_tool
+from bonsai_sensei.domain.services.tool_contract import TOOL_CONTRACT
+
+STOREKEEPER_INSTRUCTION = f"""
+Eres el responsable del catálogo de insumos para bonsáis: fertilizantes, microelementos y productos fitosanitarios. Mantienes ambos catálogos actualizados: registrar nuevos productos, actualizar sus fichas técnicas y eliminar los que ya no se usen.
+
+# Comportamiento
+{TOOL_CONTRACT}
+"""
+
+
+def create_storekeeper(
+    model: object,
+    kb_base_url: str,
+    list_fertilizers_func: Callable[[], list[Fertilizer]],
+    get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
+    fertilizer_wiki_page_builder: Callable[[str], tuple[str, str]],
+    create_fertilizer_func: Callable[..., Fertilizer],
+    update_fertilizer_func: Callable[..., Fertilizer | None],
+    delete_fertilizer_func: Callable[..., bool],
+    list_phytosanitary_func: Callable[[], list[Phytosanitary]],
+    get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
+    phytosanitary_wiki_page_builder: Callable[[str], tuple[str, str]],
+    create_phytosanitary_func: Callable[..., Phytosanitary],
+    update_phytosanitary_func: Callable[..., Phytosanitary | None],
+    delete_phytosanitary_func: Callable[..., bool],
+    ask_confirmation: Callable,
+    build_create_fertilizer_confirmation: Callable,
+    build_delete_fertilizer_confirmation: Callable,
+    build_update_fertilizer_confirmation: Callable,
+    build_create_phytosanitary_confirmation: Callable,
+    build_delete_phytosanitary_confirmation: Callable,
+    build_update_phytosanitary_confirmation: Callable,
+    build_refresh_fertilizer_wiki_confirmation: Callable,
+    build_refresh_phytosanitary_wiki_confirmation: Callable,
+) -> Agent:
+    return Agent(
+        model=model,
+        name="storekeeper",
+        description="Gestiona el catálogo de fertilizantes y productos fitosanitarios para bonsáis.",
+        instruction=STOREKEEPER_INSTRUCTION,
+        after_model_callback=limit_to_single_tool_call,
+        tools=[
+            create_list_fertilizers_tool(list_fertilizers_func),
+            create_get_fertilizer_by_name_tool(get_fertilizer_by_name_func, kb_base_url),
+            create_create_fertilizer_tool(
+                create_fertilizer_func=create_fertilizer_func,
+                get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+                wiki_page_builder=fertilizer_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_create_fertilizer_confirmation,
+            ),
+            create_update_fertilizer_tool(
+                update_fertilizer_func=update_fertilizer_func,
+                get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_update_fertilizer_confirmation,
+            ),
+            create_refresh_fertilizer_wiki_tool(
+                get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+                update_fertilizer_func=update_fertilizer_func,
+                wiki_page_builder=fertilizer_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_refresh_fertilizer_wiki_confirmation,
+            ),
+            create_delete_fertilizer_tool(
+                delete_fertilizer_func=delete_fertilizer_func,
+                get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_delete_fertilizer_confirmation,
+            ),
+            create_list_phytosanitary_tool(list_phytosanitary_func),
+            create_get_phytosanitary_by_name_tool(get_phytosanitary_by_name_func, kb_base_url),
+            create_create_phytosanitary_tool(
+                create_phytosanitary_func=create_phytosanitary_func,
+                get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+                wiki_page_builder=phytosanitary_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_create_phytosanitary_confirmation,
+            ),
+            create_update_phytosanitary_tool(
+                update_phytosanitary_func=update_phytosanitary_func,
+                get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_update_phytosanitary_confirmation,
+            ),
+            create_refresh_phytosanitary_wiki_tool(
+                get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+                update_phytosanitary_func=update_phytosanitary_func,
+                wiki_page_builder=phytosanitary_wiki_page_builder,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_refresh_phytosanitary_wiki_confirmation,
+            ),
+            create_delete_phytosanitary_tool(
+                delete_phytosanitary_func=delete_phytosanitary_func,
+                get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+                ask_confirmation=ask_confirmation,
+                build_confirmation_message=build_delete_phytosanitary_confirmation,
+            ),
+        ],
+    )

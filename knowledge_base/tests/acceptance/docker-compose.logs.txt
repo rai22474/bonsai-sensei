@@ -1,0 +1,521 @@
+acceptance-kb-1  | INFO:     Started server process [1]
+acceptance-kb-1  | INFO:     Waiting for application startup.
+acceptance-kb-1  | 2026-05-29 20:16:40,219 - knowledge_base.telegram.bot - WARNING - No bot token provided. Bot will not function.
+acceptance-kb-1  | /app/.venv/lib/python3.12/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
+acceptance-kb-1  |   warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
+acceptance-kb-1  | 2026-05-29 20:16:40,259 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-kb-1  | 2026-05-29 20:16:40,259 - apscheduler.scheduler - INFO - Added job "_run_wiki_dreamer" to job store "default"
+acceptance-kb-1  | 2026-05-29 20:16:40,259 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-kb-1  | INFO:     Application startup complete.
+acceptance-kb-1  | INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+acceptance-kb-1  | INFO:     192.168.80.1:59148 - "GET /api/wiki/files HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:59164 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:59172 - "POST /api/wiki/transcripts/observations HTTP/1.1" 200 OK
+acceptance-kb-1  | 2026-05-29 20:16:59,840 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 1 new observations
+acceptance-kb-1  | /app/.venv/lib/python3.12/site-packages/google/adk/tools/function_tool.py:95: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
+acceptance-kb-1  |   build_function_declaration(
+acceptance-kb-1  | 2026-05-29 20:16:59,859 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1  | 2026-05-29 20:17:03,494 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1  | 2026-05-29 20:17:03,536 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1  | 2026-05-29 20:17:06,007 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1  | 2026-05-29 20:17:06,025 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1  | 2026-05-29 20:17:08,569 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1  | 2026-05-29 20:17:08,584 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1  | 2026-05-29 20:17:11,992 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1  | 2026-05-29 20:17:12,012 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1  | 2026-05-29 20:17:15,167 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1  | 2026-05-29 20:17:16,538 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1  | INFO:     192.168.80.1:59184 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54350 - "GET /mcp/sse HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54352 - "POST /mcp/messages/?session_id=17f702ec66e54b86a16bc2bbe5faf7af HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54352 - "POST /mcp/messages/?session_id=17f702ec66e54b86a16bc2bbe5faf7af HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54352 - "POST /mcp/messages/?session_id=17f702ec66e54b86a16bc2bbe5faf7af HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,608 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+acceptance-kb-1  | INFO:     192.168.80.1:54352 - "POST /mcp/messages/?session_id=17f702ec66e54b86a16bc2bbe5faf7af HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,612 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+acceptance-kb-1  | 2026-05-29 20:17:16,615 - root - ERROR - Unhandled exception while processing request
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | ERROR:    Exception in ASGI application
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+acceptance-kb-1  |     result = await app(  # type: ignore[func-returns-value]
+acceptance-kb-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+acceptance-kb-1  |     return await self.app(scope, receive, send)
+acceptance-kb-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+acceptance-kb-1  |     await super().__call__(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 817, in __call__
+acceptance-kb-1  |     await self.app(scope, otel_receive, otel_send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | INFO:     192.168.80.1:54360 - "DELETE /api/wiki?path=bonsai/tanaka/index.md HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54370 - "GET /mcp/sse HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54374 - "POST /mcp/messages/?session_id=28d656571e70416cb6309904ab2655ca HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54374 - "POST /mcp/messages/?session_id=28d656571e70416cb6309904ab2655ca HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54374 - "POST /mcp/messages/?session_id=28d656571e70416cb6309904ab2655ca HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,643 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+acceptance-kb-1  | INFO:     192.168.80.1:54374 - "POST /mcp/messages/?session_id=28d656571e70416cb6309904ab2655ca HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,647 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+acceptance-kb-1  | 2026-05-29 20:17:16,651 - root - ERROR - Unhandled exception while processing request
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | ERROR:    Exception in ASGI application
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+acceptance-kb-1  |     result = await app(  # type: ignore[func-returns-value]
+acceptance-kb-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+acceptance-kb-1  |     return await self.app(scope, receive, send)
+acceptance-kb-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+acceptance-kb-1  |     await super().__call__(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 817, in __call__
+acceptance-kb-1  |     await self.app(scope, otel_receive, otel_send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | INFO:     192.168.80.1:54380 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-kb-1  | INFO:     192.168.80.1:54382 - "GET /api/wiki/review/sessions/1fbb67b6 HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54392 - "POST /api/wiki/review/sessions/1fbb67b6/pages/0/confirm HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54406 - "DELETE /api/wiki?path=bonsai/review-test/index.md HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54412 - "GET /mcp/sse HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54422 - "POST /mcp/messages/?session_id=35c75661138942ecb642b5f6b5108d1d HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54422 - "POST /mcp/messages/?session_id=35c75661138942ecb642b5f6b5108d1d HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54422 - "POST /mcp/messages/?session_id=35c75661138942ecb642b5f6b5108d1d HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,725 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+acceptance-kb-1  | INFO:     192.168.80.1:54422 - "POST /mcp/messages/?session_id=35c75661138942ecb642b5f6b5108d1d HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,731 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+acceptance-kb-1  | 2026-05-29 20:17:16,735 - root - ERROR - Unhandled exception while processing request
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | ERROR:    Exception in ASGI application
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+acceptance-kb-1  |     result = await app(  # type: ignore[func-returns-value]
+acceptance-kb-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+acceptance-kb-1  |     return await self.app(scope, receive, send)
+acceptance-kb-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+acceptance-kb-1  |     await super().__call__(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 817, in __call__
+acceptance-kb-1  |     await self.app(scope, otel_receive, otel_send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | INFO:     192.168.80.1:54428 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-kb-1  | INFO:     192.168.80.1:54430 - "GET /api/wiki/review/sessions/9ed84e3d HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54444 - "POST /api/wiki/review/sessions/9ed84e3d/pages/0/revert HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54448 - "GET /mcp/sse HTTP/1.1" 200 OK
+acceptance-kb-1  | INFO:     192.168.80.1:54464 - "POST /mcp/messages/?session_id=08b756fa16ca406bad83fae8e0442b88 HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54464 - "POST /mcp/messages/?session_id=08b756fa16ca406bad83fae8e0442b88 HTTP/1.1" 202 Accepted
+acceptance-kb-1  | INFO:     192.168.80.1:54464 - "POST /mcp/messages/?session_id=08b756fa16ca406bad83fae8e0442b88 HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,791 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+acceptance-kb-1  | INFO:     192.168.80.1:54464 - "POST /mcp/messages/?session_id=08b756fa16ca406bad83fae8e0442b88 HTTP/1.1" 202 Accepted
+acceptance-kb-1  | 2026-05-29 20:17:16,796 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+acceptance-kb-1  | 2026-05-29 20:17:16,799 - root - ERROR - Unhandled exception while processing request
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | ERROR:    Exception in ASGI application
+acceptance-kb-1  | Traceback (most recent call last):
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 415, in run_asgi
+acceptance-kb-1  |     result = await app(  # type: ignore[func-returns-value]
+acceptance-kb-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+acceptance-kb-1  |     return await self.app(scope, receive, send)
+acceptance-kb-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
+acceptance-kb-1  |     await super().__call__(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 817, in __call__
+acceptance-kb-1  |     await self.app(scope, otel_receive, otel_send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 462, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+acceptance-kb-1  |     await self.app(scope, receive, _send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+acceptance-kb-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+acceptance-kb-1  |     await self.middleware_stack(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+acceptance-kb-1  |     await route.handle(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+acceptance-kb-1  |     await self.app(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 78, in app
+acceptance-kb-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+acceptance-kb-1  |     raise exc
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+acceptance-kb-1  |     await app(scope, receive, sender)
+acceptance-kb-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 76, in app
+acceptance-kb-1  |     await response(scope, receive, send)
+acceptance-kb-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+acceptance-kb-1  | TypeError: 'NoneType' object is not callable
+acceptance-kb-1  | INFO:     192.168.80.1:54472 - "DELETE /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found

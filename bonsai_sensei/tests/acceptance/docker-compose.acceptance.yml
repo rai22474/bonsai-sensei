@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  sensei:
+    build:
+      context: ../../../
+      dockerfile: bonsai_sensei/Dockerfile
+    ports:
+      - "8060:8080"
+    env_file:
+      - ../../../.env
+    environment:
+      - DATABASE_URL=postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db
+      - MODEL_PROVIDER=${MODEL_PROVIDER:-cloud}
+      - KB_BASE_URL=http://kb-stub:8080
+      - PHOTOS_PATH=/app/photos
+      - HONCHO_API_KEY=
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-stub-key}
+      - TAVILY_API_BASE=http://host.docker.internal:8070
+      - WEATHER_API_BASE=http://host.docker.internal:8070
+      - TREFLE_API_BASE=http://host.docker.internal:8070
+      - TREFLE_API_TOKEN=stub-token
+      - TELEGRAM_BOT_TOKEN=
+      - ADMIN_TELEGRAM_BOT_TOKEN=
+      - ADMIN_TELEGRAM_CHAT_ID=
+    volumes:
+      - ../../../photos:/app/photos
+    depends_on:
+      db:
+        condition: service_healthy
+      kb-stub:
+        condition: service_started
+    command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8080"
+
+  kb-stub:
+    image: python:3.12-alpine
+    ports:
+      - "8061:8080"
+    volumes:
+      - ./stub_kb_mcp.py:/app/stub_kb_mcp.py:ro
+    working_dir: /app
+    environment:
+      - PORT=8080
+    command: >
+      sh -c "pip install --quiet fastapi uvicorn mcp starlette pydantic &&
+             python stub_kb_mcp.py"
+
+  db:
+    image: pgvector/pgvector:pg15
+    restart: always
+    environment:
+      - POSTGRES_USER=bonsai_user
+      - POSTGRES_PASSWORD=bonsai_password
+      - POSTGRES_DB=bonsai_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bonsai_user -d bonsai_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - acceptance_postgres:/var/lib/postgresql/data
+
+volumes:
+  acceptance_postgres:

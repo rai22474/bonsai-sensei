@@ -1,0 +1,32 @@
+FROM python:3.12-alpine AS builder
+
+RUN apk add --no-cache \
+    gcc musl-dev libffi-dev \
+    jpeg-dev zlib-dev freetype-dev libpng-dev && \
+    pip install --no-cache-dir uv
+
+WORKDIR /app
+
+COPY bonsai_sensei/pyproject.toml pyproject.toml
+
+RUN uv venv .venv && \
+    UV_COMPILE_BYTECODE=1 uv pip install --python .venv -r pyproject.toml
+
+FROM python:3.12-alpine
+
+RUN apk add --no-cache libjpeg libpng freetype ttf-dejavu
+
+WORKDIR /app
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+COPY --from=builder /app/.venv .venv
+
+COPY bonsai_sensei/src/bonsai_sensei bonsai_sensei/
+COPY bonsai_sensei/alembic/ alembic/
+COPY bonsai_sensei/alembic.ini .
+COPY bonsai_sensei/init_db.py .
+
+EXPOSE 8080
+
+CMD ["python", "-m", "uvicorn", "bonsai_sensei.main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -1,32 +1,93 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  sensei:
+    build:
+      context: .
+      dockerfile: bonsai_sensei/Dockerfile
     ports:
-      - "8050:8000"
+      - "9050:8080"
     env_file:
       - .env
     environment:
       - DATABASE_URL=postgresql://bonsai_user:bonsai_password@db:5432/bonsai_db
       - MODEL_PROVIDER=${MODEL_PROVIDER:-cloud}
-      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:32b-instruct}
-      - WIKI_PATH=/app/wiki
+      - KB_BASE_URL=http://knowledge_base:8080
       - PHOTOS_PATH=/app/photos
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - HONCHO_API_KEY=local
+      - HONCHO_WORKSPACE_ID=${HONCHO_WORKSPACE_ID:-bonsai-sensei}
+      - HONCHO_BASE_URL=http://honcho-api:8000
+    volumes:
+      - ./photos:/app/photos
+    depends_on:
+      db:
+        condition: service_healthy
+      honcho-api:
+        condition: service_started
+    command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8080"
+
+  knowledge_base:
+    build:
+      context: .
+      dockerfile: knowledge_base/Dockerfile
+    ports:
+      - "9051:8080"
+    env_file:
+      - .env
+    environment:
+      - WIKI_PATH=/app/wiki
       - TRANSCRIPTS_PATH=/app/transcripts
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=true
+      - HONCHO_API_KEY=local
+      - HONCHO_WORKSPACE_ID=${HONCHO_WORKSPACE_ID:-bonsai-sensei}
+      - HONCHO_BASE_URL=http://honcho-api:8000
     volumes:
       - ./wiki:/app/wiki
-      - ./photos:/app/photos
       - ./transcripts:/app/transcripts
     depends_on:
       db:
         condition: service_healthy
-      jaeger:
+      honcho-api:
         condition: service_started
-    command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8000"
+
+  honcho-api:
+    build:
+      context: https://github.com/plastic-labs/honcho.git
+    command: sh docker/entrypoint.sh
+    ports:
+      - "9001:8000"
+    environment:
+      - DB_CONNECTION_URI=postgresql+psycopg://bonsai_user:bonsai_password@db:5432/honcho_db
+      - REDIS_URL=redis://redis:6379
+      - LLM_OPENAI_API_KEY=${GEMINI_API_KEY:-}
+      - LLM_OPENAI_API_BASE=https://generativelanguage.googleapis.com/v1beta/openai/
+      - AUTH_USE_AUTH=false
+      - CACHE_ENABLED=true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  honcho-deriver:
+    build:
+      context: https://github.com/plastic-labs/honcho.git
+    command: python -m src.deriver
+    environment:
+      - DB_CONNECTION_URI=postgresql+psycopg://bonsai_user:bonsai_password@db:5432/honcho_db
+      - REDIS_URL=redis://redis:6379
+      - LLM_OPENAI_API_KEY=${GEMINI_API_KEY:-}
+      - LLM_OPENAI_API_BASE=https://generativelanguage.googleapis.com/v1beta/openai/
+      - AUTH_USE_AUTH=false
+    depends_on:
+      - honcho-api
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "9379:6379"
 
   db:
     image: pgvector/pgvector:pg15
@@ -35,9 +96,8 @@ services:
       - POSTGRES_USER=bonsai_user
       - POSTGRES_PASSWORD=bonsai_password
       - POSTGRES_DB=bonsai_db
-      - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "9432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U bonsai_user -d bonsai_db"]
       interval: 5s
@@ -45,15 +105,15 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql:ro
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-      - "${JAEGER_UI_PORT:-16686}:16686"
-      - "${JAEGER_OTLP_PORT:-4317}:4317"
+      - "9686:16686"
+      - "9317:4317"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-      - COLLECTOR_OTLP_GRPC_MAX_MESSAGE_SIZE=20971520
 
 volumes:
   postgres_data:

@@ -42,6 +42,40 @@ Además, puede haber varias fotos de un mismo árbol que analizar. La tool actua
 
 ---
 
+## ISSUE-011 — honcho-api no arranca: imagen `latest` rota (sin driver PostgreSQL)
+
+**Síntoma:** El contenedor `bonsai-sensei-honcho-api-1` arranca y cae inmediatamente con `ModuleNotFoundError: No module named 'psycopg2'` (o `asyncpg` si se usa `postgresql+asyncpg://`). El dreamer falla con `Connection error: [Errno -2] Name does not resolve` porque `honcho-api` no está corriendo.
+
+**Causa raíz:** La imagen `ghcr.io/plastic-labs/honcho:latest` no tiene ningún driver de PostgreSQL instalado. Ni `psycopg2` ni `asyncpg`. La imagen `latest` está rota.
+
+**Workaround:** Ninguno activo. El dreamer cae silenciosamente (capturado por `_log_task_exception`). La memoria episódica no funciona.
+
+**Objetivo:** Pinear la imagen a un tag estable que incluya el driver de PostgreSQL, o hacer un healthcheck en el dreamer para degradar a `read_local_observations` cuando Honcho no está disponible.
+
+**Relacionado:** `docker-compose.yml` (servicios `honcho-api`, `honcho-deriver`), `knowledge_base/dreamer/runner.py`, `knowledge_base/dreamer/memory_reader.py`.
+
+---
+
+## ISSUE-010 — Honcho memory: escritura funciona, lectura nunca ocurre
+
+**Síntoma:** Las memorias episódicas se almacenan en Honcho tras cada sesión pero nunca influyen en las respuestas del agente. El sensei no recuerda información de conversaciones anteriores aunque Honcho esté configurado.
+
+**Causa raíz (dos problemas):**
+
+1. **`search_memory` ignora `query`** — `HonchoMemoryService.search_memory()` llama a `user_peer.conclusions.aio.list()` sin pasar el parámetro `query`. Honcho tiene `conclusions.aio.query(query)` para búsqueda semántica. Se devuelven todas las conclusiones indiscriminadamente.
+
+2. **`search_memory` nunca se llama** — Ningún agente del sensei tiene `load_memory_tool` ni `preload_memory_tool` en sus tools. El ADK Runner pasa el `memory_service` al `InvocationContext`, pero sin esas tools el LLM no tiene mecanismo para recuperar memorias. Las memorias se acumulan en Honcho sin ningún efecto en las respuestas.
+
+**Workaround:** Ninguno. El usuario debe re-contextualizar información relevante de sesiones anteriores manualmente.
+
+**Objetivo:**
+- Corregir `search_memory` para usar `conclusions.aio.query(query)` en lugar de `list()`.
+- Añadir `preload_memory_tool` (o `load_memory_tool`) al sensei para que las memorias se recuperen automáticamente al inicio de cada invocación.
+
+**Relacionado:** `bonsai_sensei/src/bonsai_sensei/memory/honcho_memory_service.py`, `bonsai_sensei/src/bonsai_sensei/domain/services/advisor.py`, `bonsai_sensei/src/bonsai_sensei/domain/services/factory.py`.
+
+---
+
 ## ISSUE-007 — Borrar una especie no comprueba si hay bonsáis que la usan
 
 **Síntoma:** Si el usuario elimina una especie que tiene bonsáis asociados, la operación se ejecuta sin error. Los bonsáis quedan con una referencia a una especie inexistente, corrompiendo el estado de la colección.

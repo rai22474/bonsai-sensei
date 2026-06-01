@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  kb:
+    build:
+      context: ../../../
+      dockerfile: knowledge_base/Dockerfile
+    ports:
+      - "8060:8080"
+    environment:
+      - WIKI_PATH=/app/wiki
+      - TRANSCRIPTS_PATH=/app/transcripts
+      - HONCHO_API_KEY=
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - kb_wiki:/app/wiki
+      - kb_transcripts:/app/transcripts
+
+volumes:
+  kb_wiki:
+  kb_transcripts:

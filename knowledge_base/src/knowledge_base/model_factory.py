@@ -1,0 +1,26 @@
+import os
+
+
+def get_local_model_factory():
+    def factory():
+        from google.adk.models.lite_llm import LiteLlm
+        model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:32b-instruct")
+        api_base = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
+        os.environ["OLLAMA_API_BASE"] = api_base
+        return LiteLlm(model=f"ollama_chat/{model_name}")
+
+    return factory
+
+
+def get_cloud_model_factory():
+    def factory():
+        return os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+
+    return factory
+
+
+def get_cloud_orchestrator_model_factory():
+    def factory():
+        return os.getenv("GEMINI_ORCHESTRATOR_MODEL", "gemini-3-flash-preview") or None
+
+    return factory
