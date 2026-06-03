@@ -26,18 +26,13 @@ if [ "$MODE" = "local" ]; then
     if ! curl -s http://localhost:11434/api/status >/dev/null 2>&1; then
         scripts/start_ollama.sh "$OLLAMA_MODEL"
     fi
-    docker compose up --build -d db redis
-    docker compose up --build -d --no-deps honcho-api
-    docker compose up --build -d --no-deps honcho-deriver
-    docker compose up --build -d --force-recreate --no-deps --remove-orphans knowledge_base sensei
-else
-    export MODEL_PROVIDER=cloud
-    docker compose up --build -d db redis
-    docker compose up --build -d honcho-api
-    docker compose up --build -d honcho-deriver
-    docker compose up --build -d --force-recreate --remove-orphans knowledge_base sensei
 fi
+
+docker compose up --build -d
 
 echo "Stack started in background."
 echo "App running at http://localhost:9050"
+echo "Prometheus: http://localhost:9090"
+echo "Grafana:    http://localhost:3000  (admin/admin)"
+echo "Jaeger:     http://localhost:9686"
 echo "To see logs: docker compose logs -f"

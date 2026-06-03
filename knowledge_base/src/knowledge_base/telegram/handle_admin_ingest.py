@@ -17,8 +17,9 @@ async def handle_admin_ingest(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     ingest_transcript: Callable,
+    text_override: str | None = None,
 ) -> None:
-    text = (update.message.text or "").strip()
+    text = (text_override or update.message.text or "").strip()
     parts = text.split()
     raw_url = parts[0]
     channel = parts[1] if len(parts) > 1 else _DEFAULT_CHANNEL
@@ -30,12 +31,20 @@ async def handle_admin_ingest(
         await update.message.reply_text(f"❌ No puedo extraer el video ID de: {raw_url}")
         return
 
-    await update.message.reply_text(f"⚙️ Ingesting {video_id} (canal: {channel})...")
+    await update.message.reply_text(f"⚙️ Ingestando {video_id} (canal: {channel})...")
     logger.info("Admin triggered ingestion: video_id=%s channel=%s", video_id, channel)
 
-    def _log_task_exception(task):
-        if not task.cancelled() and task.exception():
-            logger.error("Ingestion task failed for %s: %s", video_id, task.exception())
+    async def on_step(message: str) -> None:
+        try:
+            await update.message.reply_text(message)
+        except Exception:
+            pass
 
-    task = asyncio.create_task(ingest_transcript(url, channel))
-    task.add_done_callback(_log_task_exception)
+    async def run_and_catch():
+        try:
+            await ingest_transcript(url, channel, on_step=on_step)
+        except Exception:
+            logger.exception("Ingestion failed for %s", video_id)
+            await update.message.reply_text(f"❌ Error durante la ingestión de {video_id}.")
+
+    asyncio.create_task(run_and_catch())

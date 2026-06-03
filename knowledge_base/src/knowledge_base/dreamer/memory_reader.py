@@ -3,36 +3,34 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 _SYNC_FILE_NAME = "memory-sync.json"
-_PROCESSED_SESSIONS_FILE = "dreamer-processed-sessions.json"
+_PROCESSED_CONCLUSIONS_FILE = "dreamer-processed-conclusions.json"
 _LOCAL_OBSERVATIONS_FILE = "pending-observations.json"
 _DEFAULT_START = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
 async def read_new_observations(honcho_client, workspace_id: str, wiki_root: Path) -> list[str]:
-    """Read observations from Honcho sessions not yet processed by the dreamer.
+    """Read observations from Honcho peer conclusions not yet processed by the dreamer.
 
-    Lists all sessions in the workspace, skips already-processed ones,
-    extracts conclusions from new sessions, and saves their IDs.
+    Iterates all workspace peers directly (not sessions→peers, since peers are not
+    registered as session members when messages are added via add_messages()).
+    Tracks processed conclusion IDs to avoid re-reading.
     workspace_id is unused — the client already knows its workspace.
     """
-    processed_ids = _read_processed_session_ids(wiki_root)
-    sessions_page = await honcho_client.sessions()
-    new_session_ids = []
+    processed_ids = _read_processed_conclusion_ids(wiki_root)
+    new_conclusion_ids = set()
     observations = []
 
-    async for session in sessions_page:
-        if session.id in processed_ids:
-            continue
-        new_session_ids.append(session.id)
-        peers = await session.aio.peers()
-        for peer in peers:
-            conclusions_page = await peer.conclusions.aio.list(session=session)
-            async for conclusion in conclusions_page:
-                if conclusion.content:
-                    observations.append(conclusion.content)
+    peers_page = await honcho_client.peers()
+    async for peer in peers_page:
+        conclusions_page = await peer.conclusions.aio.list()
+        async for conclusion in conclusions_page:
+            if not conclusion.content or conclusion.id in processed_ids:
+                continue
+            observations.append(conclusion.content)
+            new_conclusion_ids.add(conclusion.id)
 
-    if new_session_ids:
-        _save_processed_session_ids(wiki_root, processed_ids | set(new_session_ids))
+    if new_conclusion_ids:
+        _save_processed_conclusion_ids(wiki_root, processed_ids | new_conclusion_ids)
 
     return observations
 
@@ -56,9 +54,9 @@ def append_local_observation(wiki_root: Path, text: str) -> None:
 
 
 def reset_processed_sessions(wiki_root: Path) -> None:
-    """Clear the processed sessions log. Used in acceptance tests."""
-    sessions_file = wiki_root / _PROCESSED_SESSIONS_FILE
-    sessions_file.unlink(missing_ok=True)
+    """Clear the processed conclusions log. Used in acceptance tests."""
+    conclusions_file = wiki_root / _PROCESSED_CONCLUSIONS_FILE
+    conclusions_file.unlink(missing_ok=True)
 
 
 def update_high_watermark(wiki_root: Path) -> None:
@@ -76,13 +74,13 @@ def read_high_watermark(wiki_root: Path) -> datetime:
     return datetime.fromisoformat(data["last_processed_at"])
 
 
-def _read_processed_session_ids(wiki_root: Path) -> set[str]:
-    sessions_file = wiki_root / _PROCESSED_SESSIONS_FILE
-    if not sessions_file.exists():
+def _read_processed_conclusion_ids(wiki_root: Path) -> set[str]:
+    conclusions_file = wiki_root / _PROCESSED_CONCLUSIONS_FILE
+    if not conclusions_file.exists():
         return set()
-    return set(json.loads(sessions_file.read_text()))
+    return set(json.loads(conclusions_file.read_text()))
 
 
-def _save_processed_session_ids(wiki_root: Path, session_ids: set[str]) -> None:
-    sessions_file = wiki_root / _PROCESSED_SESSIONS_FILE
-    sessions_file.write_text(json.dumps(list(session_ids)))
+def _save_processed_conclusion_ids(wiki_root: Path, conclusion_ids: set[str]) -> None:
+    conclusions_file = wiki_root / _PROCESSED_CONCLUSIONS_FILE
+    conclusions_file.write_text(json.dumps(list(conclusion_ids)))

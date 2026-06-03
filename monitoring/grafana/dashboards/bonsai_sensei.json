@@ -1,10 +1,14 @@
 {
-  "title": "Bonsai Sensei — LLM & MCP Metrics",
+  "title": "Bonsai Sensei \u2014 LLM & MCP Metrics",
   "uid": "bonsai-sensei-metrics",
   "version": 1,
   "schemaVersion": 38,
   "refresh": "30s",
-  "tags": ["bonsai-sensei", "llm", "mcp"],
+  "tags": [
+    "bonsai-sensei",
+    "llm",
+    "mcp"
+  ],
   "time": {
     "from": "now-1h",
     "to": "now"
@@ -14,8 +18,16 @@
       "id": 1,
       "title": "Total LLM Requests",
       "type": "stat",
-      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(llm_requests_total)",
@@ -28,8 +40,16 @@
       "id": 2,
       "title": "LLM Success Rate %",
       "type": "stat",
-      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "100 * sum(llm_requests_total{status=\"success\"}) / sum(llm_requests_total)",
@@ -42,8 +62,16 @@
       "id": 3,
       "title": "Total Tokens Consumed",
       "type": "stat",
-      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(llm_tokens_total)",
@@ -56,8 +84,16 @@
       "id": 4,
       "title": "Total MCP Calls",
       "type": "stat",
-      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(mcp_requests_total)",
@@ -70,8 +106,16 @@
       "id": 5,
       "title": "LLM Request Rate by Model",
       "type": "timeseries",
-      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (model) (rate(llm_requests_total[5m]))",
@@ -84,8 +128,16 @@
       "id": 6,
       "title": "LLM Latency (p50/p90/p99)",
       "type": "timeseries",
-      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum by (le, model) (rate(llm_request_duration_seconds_bucket[5m])))",
@@ -108,8 +160,16 @@
       "id": 7,
       "title": "Token Consumption Rate by Type",
       "type": "timeseries",
-      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (model, token_type) (rate(llm_tokens_total[5m]))",
@@ -122,8 +182,16 @@
       "id": 8,
       "title": "MCP Call Rate by Tool",
       "type": "timeseries",
-      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (tool) (rate(mcp_requests_total[5m]))",
@@ -136,8 +204,16 @@
       "id": 9,
       "title": "MCP Latency (p50/p90/p99)",
       "type": "timeseries",
-      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum by (le, tool) (rate(mcp_request_duration_seconds_bucket[5m])))",
@@ -155,12 +231,140 @@
       "id": 10,
       "title": "MCP Error Rate %",
       "type": "timeseries",
-      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "100 * sum by (tool) (rate(mcp_requests_total{status=\"error\"}[5m])) / sum by (tool) (rate(mcp_requests_total[5m]))",
           "legendFormat": "{{tool}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Total Wiki HTTP Calls",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(wiki_requests_total)",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Wiki Success Rate %",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 28,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "100 * sum(wiki_requests_total{status=\"success\"}) / sum(wiki_requests_total)",
+          "legendFormat": "Success %",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Wiki Call Rate by Operation",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (operation) (rate(wiki_requests_total[5m]))",
+          "legendFormat": "{{operation}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Wiki Latency (p50/p90/p99)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, operation) (rate(wiki_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{operation}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum by (le, operation) (rate(wiki_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p90 {{operation}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, operation) (rate(wiki_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{operation}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Wiki Error Rate %",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "100 * sum by (operation) (rate(wiki_requests_total{status=\"error\"}[5m])) / sum by (operation) (rate(wiki_requests_total[5m]))",
+          "legendFormat": "{{operation}}",
           "refId": "A"
         }
       ]

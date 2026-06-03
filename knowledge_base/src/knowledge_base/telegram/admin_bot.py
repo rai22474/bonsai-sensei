@@ -50,6 +50,9 @@ class AdminBotManager:
     def set_run_wiki_dreamer(self, run_wiki_dreamer: Callable) -> None:
         self._run_wiki_dreamer = run_wiki_dreamer
 
+    def set_ingest_transcript(self, ingest_transcript: Callable) -> None:
+        self._ingest_transcript = ingest_transcript
+
     @property
     def chat_id(self) -> str | None:
         return self._chat_id
@@ -77,6 +80,13 @@ class AdminBotManager:
             await update.message.reply_text("🔍 Indexando wiki...")
             count = await build_full_index(self._wiki_root, self._embed)
             await update.message.reply_text(f"✅ Índice construido: {count} páginas indexadas.")
+
+        async def ingest_command(update, context):
+            args = update.message.text.removeprefix("/ingest").strip()
+            if not args:
+                await update.message.reply_text("Uso: /ingest <youtube_url> [canal]")
+                return
+            await handle_admin_ingest(update, context, ingest_transcript=self._ingest_transcript, text_override=args)
 
         async def feedback_command(update, context):
             feedback_text = update.message.text.removeprefix("/feedback").strip()
@@ -122,6 +132,7 @@ class AdminBotManager:
             CommandHandler("start", admin_start_command),
             CommandHandler("dreamer", dreamer_command),
             CommandHandler("index", index_command),
+            CommandHandler("ingest", ingest_command),
             CommandHandler("feedback", feedback_command),
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & filters.Regex(_YOUTUBE_URL_PATTERN),

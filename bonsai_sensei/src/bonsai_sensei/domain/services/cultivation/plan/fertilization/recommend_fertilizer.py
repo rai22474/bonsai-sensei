@@ -31,6 +31,12 @@ def create_fertilizer_recommender_func(
         existing_plan_result = read_wiki_page_func(path=plan_path)
         existing_plan = existing_plan_result.get("content", "") if existing_plan_result.get("status") == "success" else ""
 
+        bonsai_wiki = ""
+        if bonsai.wiki_path:
+            bonsai_wiki_result = read_wiki_page_func(path=bonsai.wiki_path)
+            if bonsai_wiki_result.get("status") == "success":
+                bonsai_wiki = bonsai_wiki_result["content"]
+
         fertilizer_pages = {}
         for fertilizer in fertilizers:
             if fertilizer.wiki_path:
@@ -38,7 +44,7 @@ def create_fertilizer_recommender_func(
                 if page_result.get("status") == "success":
                     fertilizer_pages[fertilizer.name] = page_result["content"]
 
-        context = _build_context(bonsai_name, date.today().isoformat(), events, existing_plan, fertilizers, fertilizer_pages)
+        context = _build_context(bonsai_name, date.today().isoformat(), events, existing_plan, bonsai_wiki, fertilizers, fertilizer_pages)
         recommendation = await run_recommendation(context)
 
         write_wiki_page_func(path=plan_path, content=recommendation["wiki_content"])
@@ -97,8 +103,13 @@ def _build_plan_path(bonsai_name: str) -> str:
     return f"bonsai/{_build_slug(bonsai_name)}/fertilization-plan.md"
 
 
-def _build_context(bonsai_name: str, current_date: str, events: list, existing_plan: str, fertilizers: list, fertilizer_pages: dict) -> str:
+def _build_context(bonsai_name: str, current_date: str, events: list, existing_plan: str, bonsai_wiki: str, fertilizers: list, fertilizer_pages: dict) -> str:
     lines = [f"## Bonsái: {bonsai_name}\n", f"Fecha actual: {current_date}\n"]
+
+    if bonsai_wiki:
+        lines.append("### Ficha del bonsái")
+        lines.append(bonsai_wiki)
+        lines.append("")
 
     if events:
         lines.append("### Historial de eventos de cultivo")

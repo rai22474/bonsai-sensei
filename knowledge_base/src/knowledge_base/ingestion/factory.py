@@ -4,7 +4,6 @@ from typing import Callable
 from knowledge_base.ingestion.channel_page_writer import create_channel_page_writer
 from knowledge_base.ingestion.knowledge_card_extractor import create_card_extractor
 from knowledge_base.ingestion.transcript_cleaner import create_transcript_cleaner
-from knowledge_base.dreamer.runner import create_wiki_dreamer
 
 
 def create_ingestion_pipeline(
@@ -12,6 +11,7 @@ def create_ingestion_pipeline(
     transcripts_root: Path,
     wiki_root: Path,
     download_transcript: Callable,
+    run_wiki_dreamer: Callable,
     orchestrator_model: object = None,
 ) -> Callable[[str, str], None]:
     """Create an async pipeline that ingests a YouTube video into the wiki.
@@ -26,22 +26,32 @@ def create_ingestion_pipeline(
         transcripts_root: Root directory for raw, clean and card files.
         wiki_root: Root directory of the wiki where channel pages are written.
         download_transcript: Callable that downloads a YouTube transcript to disk.
+        run_wiki_dreamer: Dreamer instance shared with the admin bot (includes notify_admin).
         orchestrator_model: More capable model used by the wiki dreamer for synthesis.
 
     Returns:
-        Async callable: (url, channel) -> None
+        Async callable: (url, channel, on_step?) -> None
+        on_step is an optional async callable(message: str) -> None for progress notifications.
     """
-    effective_orchestrator_model = orchestrator_model or model
     clean_transcript = create_transcript_cleaner(model)
     extract_card = create_card_extractor(model)
     write_channel_page = create_channel_page_writer(model)
-    run_wiki_dreamer = create_wiki_dreamer(effective_orchestrator_model, transcripts_root, wiki_root)
 
-    async def ingest(url: str, channel: str) -> None:
+    async def ingest(url: str, channel: str, on_step: Callable | None = None) -> None:
+        async def notify(message: str) -> None:
+            if on_step:
+                await on_step(message)
+
+        await notify("⬇️ Descargando transcript...")
         raw_path = download_transcript(url, channel, transcripts_root)
+        await notify("🧹 Limpiando transcript...")
         clean_path = await clean_transcript(raw_path, transcripts_root)
+        await notify("🃏 Extrayendo ficha de conocimiento...")
         card_path = await extract_card(clean_path, transcripts_root)
+        await notify("📝 Escribiendo página wiki del canal...")
         await write_channel_page(card_path, wiki_root)
+        await notify("🌙 Actualizando wiki con el nuevo conocimiento...")
         await run_wiki_dreamer()
+        await notify("✅ Ingestión completada.")
 
     return ingest

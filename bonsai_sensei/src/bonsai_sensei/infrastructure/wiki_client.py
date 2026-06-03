@@ -1,6 +1,8 @@
+import time
 import httpx
 from typing import Callable
 
+from bonsai_sensei.metrics import WIKI_REQUEST_DURATION, WIKI_REQUESTS_TOTAL
 
 
 def create_http_search_wiki_knowledge_tool(kb_base_url: str) -> Callable:
@@ -8,10 +10,18 @@ def create_http_search_wiki_knowledge_tool(kb_base_url: str) -> Callable:
 
     async def search_wiki_knowledge(query: str) -> dict:
         """Search the wiki knowledge base semantically. Use this to find relevant pages about species, fertilizers, techniques, pests, or any bonsai topic before answering questions. Returns top 5 matching pages with their paths and abstracts."""
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{kb_base_url}/api/wiki/index/search", json={"query": query})
-            response.raise_for_status()
-            return response.json()
+        start = time.perf_counter()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"{kb_base_url}/api/wiki/index/search", json={"query": query})
+                response.raise_for_status()
+                WIKI_REQUESTS_TOTAL.labels(operation="search", status="success").inc()
+                return response.json()
+        except Exception:
+            WIKI_REQUESTS_TOTAL.labels(operation="search", status="error").inc()
+            raise
+        finally:
+            WIKI_REQUEST_DURATION.labels(operation="search").observe(time.perf_counter() - start)
 
     return search_wiki_knowledge
 
@@ -34,17 +44,27 @@ def create_http_read_wiki_page_tool(kb_base_url: str) -> Callable:
             Output JSON (success): {"status": "success", "content": "<markdown content>"}.
             Output JSON (error): {"status": "error", "message": "page_not_found" | "invalid_path"}.
         """
+        start = time.perf_counter()
         try:
             with httpx.Client() as client:
                 response = client.get(f"{kb_base_url}/api/wiki", params={"path": path})
                 if response.status_code == 404:
+                    WIKI_REQUESTS_TOTAL.labels(operation="read", status="not_found").inc()
                     return {"status": "error", "message": "page_not_found"}
                 if response.status_code == 400:
+                    WIKI_REQUESTS_TOTAL.labels(operation="read", status="error").inc()
                     return {"status": "error", "message": "invalid_path"}
                 response.raise_for_status()
+                WIKI_REQUESTS_TOTAL.labels(operation="read", status="success").inc()
                 return {"status": "success", "content": response.json()["content"]}
         except httpx.UnsupportedProtocol:
+            WIKI_REQUESTS_TOTAL.labels(operation="read", status="not_found").inc()
             return {"status": "error", "message": "page_not_found"}
+        except Exception:
+            WIKI_REQUESTS_TOTAL.labels(operation="read", status="error").inc()
+            raise
+        finally:
+            WIKI_REQUEST_DURATION.labels(operation="read").observe(time.perf_counter() - start)
 
     return read_wiki_page
 
@@ -66,12 +86,21 @@ def create_http_write_wiki_page_tool(kb_base_url: str) -> Callable:
             Output JSON (success): {"status": "success", "path": "<relative_path>"}.
             Output JSON (error): {"status": "error", "message": "invalid_path"}.
         """
-        with httpx.Client() as client:
-            response = client.put(f"{kb_base_url}/api/wiki", json={"path": path, "content": content})
-            if response.status_code == 400:
-                return {"status": "error", "message": "invalid_path"}
-            response.raise_for_status()
-            return {"status": "success", "path": path}
+        start = time.perf_counter()
+        try:
+            with httpx.Client() as client:
+                response = client.put(f"{kb_base_url}/api/wiki", json={"path": path, "content": content})
+                if response.status_code == 400:
+                    WIKI_REQUESTS_TOTAL.labels(operation="write", status="error").inc()
+                    return {"status": "error", "message": "invalid_path"}
+                response.raise_for_status()
+                WIKI_REQUESTS_TOTAL.labels(operation="write", status="success").inc()
+                return {"status": "success", "path": path}
+        except Exception:
+            WIKI_REQUESTS_TOTAL.labels(operation="write", status="error").inc()
+            raise
+        finally:
+            WIKI_REQUEST_DURATION.labels(operation="write").observe(time.perf_counter() - start)
 
     return write_wiki_page
 
@@ -89,10 +118,19 @@ def create_http_list_wiki_files_tool(kb_base_url: str) -> Callable:
         Returns:
             A sorted list of file paths relative to the wiki root.
         """
-        with httpx.Client() as client:
-            response = client.get(f"{kb_base_url}/api/wiki/files", params={"directory": directory, "pattern": pattern})
-            if response.status_code != 200:
-                return []
-            return response.json()
+        start = time.perf_counter()
+        try:
+            with httpx.Client() as client:
+                response = client.get(f"{kb_base_url}/api/wiki/files", params={"directory": directory, "pattern": pattern})
+                if response.status_code != 200:
+                    WIKI_REQUESTS_TOTAL.labels(operation="list", status="error").inc()
+                    return []
+                WIKI_REQUESTS_TOTAL.labels(operation="list", status="success").inc()
+                return response.json()
+        except Exception:
+            WIKI_REQUESTS_TOTAL.labels(operation="list", status="error").inc()
+            raise
+        finally:
+            WIKI_REQUEST_DURATION.labels(operation="list").observe(time.perf_counter() - start)
 
     return list_wiki_files

@@ -70,13 +70,6 @@ async def lifespan(app: FastAPI):
     effective_model = orchestrator_model or model
 
 
-    download_transcript = create_transcript_downloader(YouTubeTranscriptApi())
-    app.state.ingest_transcript = create_ingestion_pipeline(
-        effective_model, transcripts_root, wiki_root,
-        download_transcript=download_transcript,
-        orchestrator_model=orchestrator_model,
-    )
-
     wiki_review_handler = partial(
         handle_wiki_review_callback,
         wiki_review_sessions=app.state.wiki_review_sessions,
@@ -91,7 +84,7 @@ async def lifespan(app: FastAPI):
         wiki_root=wiki_root,
         wiki_review_sessions=app.state.wiki_review_sessions,
         run_wiki_dreamer=None,
-        ingest_transcript=app.state.ingest_transcript,
+        ingest_transcript=None,
         wiki_review_handler=wiki_review_handler,
         honcho_client=honcho_client,
         honcho_workspace_id=honcho_workspace_id,
@@ -111,6 +104,15 @@ async def lifespan(app: FastAPI):
     )
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
 
+    download_transcript = create_transcript_downloader(YouTubeTranscriptApi())
+    app.state.ingest_transcript = create_ingestion_pipeline(
+        effective_model, transcripts_root, wiki_root,
+        download_transcript=download_transcript,
+        run_wiki_dreamer=app.state.run_wiki_dreamer,
+        orchestrator_model=orchestrator_model,
+    )
+    admin_bot_manager.set_ingest_transcript(app.state.ingest_transcript)
+
     app.state.wiki_editor = create_wiki_editor(
         effective_model,
         wiki_root,
@@ -129,6 +131,7 @@ async def lifespan(app: FastAPI):
         ("start", "Registrar este chat como canal admin"),
         ("dreamer", "Lanzar el wiki dreamer manualmente"),
         ("index", "Reconstruir el índice de búsqueda de la wiki"),
+        ("ingest", "Ingerir vídeo de YouTube: /ingest <url> [canal]"),
         ("feedback", "Incorporar una corrección en la wiki"),
     ])
 

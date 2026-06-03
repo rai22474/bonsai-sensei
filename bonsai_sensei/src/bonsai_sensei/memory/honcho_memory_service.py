@@ -24,6 +24,10 @@ class HonchoMemoryService(BaseMemoryService):
                 await honcho_session.aio.add_messages([
                     MessageCreateParams(peer_id=peer_id, content=part.text)
                 ])
+        await self._client.aio.schedule_dream(
+            observer=session.user_id,
+            session=session.id,
+        )
 
     async def search_memory(self, *, app_name: str, user_id: str, query: str) -> SearchMemoryResponse:
         user_peer = await self._client.aio.peer(user_id)
