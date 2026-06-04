@@ -13,4 +13,4 @@ Debe evitarse añadir estado `active_mode` o enrutamiento complejo para flujos c
 - **Flujo de conversación diagnóstica**: el usuario describe síntomas (hojas amarillas, crecimiento anómalo) y el sistema ayuda a identificar la causa mediante un diálogo multi-turno.
 - **Generación de plan estándar por especie/diseño**: genera un calendario de cultivo adaptado a la especie, el estilo de entrenamiento y la época del año.
 
-Ambos deben seguir el patrón de agente libre (ver ADR-002 en decisions.md), no el pipeline mitori/shokunin.
+Ambos deben seguir el patrón de agente libre (ver ADR-002 en `docs/architecture/decisions.md`), no el pipeline mitori/shokunin.
