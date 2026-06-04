@@ -257,8 +257,12 @@ async def _capture_session_to_memory(runner: InMemoryRunner, user_id: str, memor
         user_id=user_id,
         session_id=str(user_id),
     )
-    if session is not None:
-        await memory_service.add_session_to_memory(session)
+    if session is None:
+        return
+    await memory_service.add_session_to_memory(session)
+    stored_session = runner.session_service.sessions.get("bonsai_sensei", {}).get(user_id, {}).get(str(user_id))
+    if stored_session:
+        stored_session.state.update({key: value for key, value in session.state.items() if key not in stored_session.state or stored_session.state[key] != value})
 
 
 def _build_response_texts(events: list) -> list[str]:

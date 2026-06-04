@@ -15,16 +15,14 @@ services:
       - KB_BASE_URL=http://knowledge_base:8080
       - PHOTOS_PATH=/app/photos
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - HONCHO_API_KEY=local
-      - HONCHO_WORKSPACE_ID=${HONCHO_WORKSPACE_ID:-bonsai-sensei}
-      - HONCHO_BASE_URL=http://honcho-api:8000
+      - EPISODIC_MEMORY_URL=http://episodic-memory:8080
     volumes:
       - ./photos:/app/photos
     depends_on:
       db:
         condition: service_healthy
-      honcho-api:
-        condition: service_started
+      episodic-memory:
+        condition: service_healthy
       knowledge_base:
         condition: service_healthy
     command: sh -c "python init_db.py && uvicorn bonsai_sensei.main:app --host 0.0.0.0 --port 8080"
@@ -41,9 +39,7 @@ services:
       - WIKI_PATH=/app/wiki
       - TRANSCRIPTS_PATH=/app/transcripts
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - HONCHO_API_KEY=local
-      - HONCHO_WORKSPACE_ID=${HONCHO_WORKSPACE_ID:-bonsai-sensei}
-      - HONCHO_BASE_URL=http://honcho-api:8000
+      - EPISODIC_MEMORY_URL=http://episodic-memory:8080
     volumes:
       - ./wiki:/app/wiki
       - ./transcripts:/app/transcripts
@@ -56,51 +52,46 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      honcho-api:
-        condition: service_started
-
-  honcho-api:
-    build:
-      context: https://github.com/plastic-labs/honcho.git
-    command: sh docker/entrypoint.sh
-    ports:
-      - "9001:8000"
-    environment:
-      - DB_CONNECTION_URI=postgresql+psycopg://bonsai_user:bonsai_password@db:5432/honcho_db
-      - REDIS_URL=redis://redis:6379
-      - LLM_OPENAI_API_KEY=${GEMINI_API_KEY:-}
-      - LLM_OPENAI_API_BASE=https://generativelanguage.googleapis.com/v1beta/openai/
-      - AUTH_USE_AUTH=false
-      - CACHE_ENABLED=true
-    depends_on:
-      db:
+      episodic-memory:
         condition: service_healthy
-      redis:
-        condition: service_started
 
-  honcho-deriver:
+  episodic-memory:
     build:
-      context: https://github.com/plastic-labs/honcho.git
-    command: python -m src.deriver
-    environment:
-      - DB_CONNECTION_URI=postgresql+psycopg://bonsai_user:bonsai_password@db:5432/honcho_db
-      - REDIS_URL=redis://redis:6379
-      - LLM_OPENAI_API_KEY=${OPENROUTER_API_KEY:-}
-      - LLM_OPENAI_BASE_URL=https://openrouter.ai/api/v1
-      - LLM_GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - DERIVER_MODEL_CONFIG__MODEL=deepseek/deepseek-chat
-      - DERIVER_MODEL_CONFIG__TRANSPORT=openai
-      - EMBEDDING_MODEL_CONFIG__MODEL=gemini-embedding-001
-      - EMBEDDING_MODEL_CONFIG__TRANSPORT=gemini
-      - AUTH_USE_AUTH=false
-    depends_on:
-      - honcho-api
-      - redis
-
-  redis:
-    image: redis:7-alpine
+      context: .
+      dockerfile: episodic_memory/Dockerfile
     ports:
-      - "9379:6379"
+      - "9052:8080"
+    env_file:
+      - .env
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      falkordb:
+        condition: service_healthy
+
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  falkordb-exporter:
+    image: oliver006/redis_exporter:latest
+    environment:
+      - REDIS_ADDR=redis://falkordb:6379
+    depends_on:
+      - falkordb
 
   db:
     image: pgvector/pgvector:pg15
@@ -118,7 +109,6 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql:ro
 
   jaeger:
     image: jaegertracing/all-in-one:latest

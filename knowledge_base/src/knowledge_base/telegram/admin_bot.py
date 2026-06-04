@@ -27,8 +27,6 @@ class AdminBotManager:
         run_wiki_dreamer: Callable,
         ingest_transcript: Callable,
         wiki_review_handler: Callable,
-        honcho_client=None,
-        honcho_workspace_id: str = "",
         wiki_editor: Optional[Callable] = None,
         embed: Optional[Callable] = None,
     ):
@@ -38,8 +36,6 @@ class AdminBotManager:
         self._run_wiki_dreamer = run_wiki_dreamer
         self._ingest_transcript = ingest_transcript
         self._wiki_review_handler = wiki_review_handler
-        self._honcho_client = honcho_client
-        self._honcho_workspace_id = honcho_workspace_id
         self._wiki_editor = wiki_editor
         self._embed = embed
         self._chat_id: str | None = None

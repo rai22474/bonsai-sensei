@@ -15,7 +15,7 @@ from bonsai_sensei.metrics import MCP_REQUEST_DURATION, MCP_REQUESTS_TOTAL
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
 from bonsai_sensei.domain.services.advisor import create_advisor
-from bonsai_sensei.memory.honcho_memory_service import HonchoMemoryService, create_honcho_client
+from bonsai_sensei.memory.episodic_memory_service import EpisodicMemoryService
 from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
 from bonsai_sensei.domain.services.data_services import create_data_services
@@ -351,11 +351,8 @@ async def lifespan(app: FastAPI):
         },
     )
 
-    honcho_api_key = os.getenv("HONCHO_API_KEY", "")
-    honcho_workspace_id = os.getenv("HONCHO_WORKSPACE_ID", "bonsai-sensei")
-    honcho_base_url = os.getenv("HONCHO_BASE_URL")
-    honcho_client = create_honcho_client(honcho_api_key, honcho_workspace_id, honcho_base_url) if honcho_api_key else None
-    memory_service = HonchoMemoryService(honcho_client) if honcho_client else None
+    episodic_memory_url = os.getenv("EPISODIC_MEMORY_URL", "")
+    memory_service = EpisodicMemoryService(episodic_memory_url) if episodic_memory_url else None
 
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,

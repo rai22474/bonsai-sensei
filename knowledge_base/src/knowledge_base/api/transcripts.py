@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel
 
-from knowledge_base.dreamer.memory_reader import append_local_observation, update_high_watermark, reset_processed_sessions
+from knowledge_base.dreamer.memory_reader import append_local_observation, update_high_watermark
 
 router = APIRouter(prefix="/wiki/transcripts", tags=["transcripts"])
 
@@ -74,7 +74,6 @@ def reset_wiki_dreamer_watermark():
     """
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
     update_high_watermark(wiki_root)
-    reset_processed_sessions(wiki_root)
     return {"status": "reset"}
 
 

@@ -243,7 +243,6 @@ dependencies = [
     { name = "deep-translator" },
     { name = "fastapi" },
     { name = "google-adk" },
-    { name = "honcho-ai" },
     { name = "httpx" },
     { name = "litellm" },
     { name = "mcp" },
@@ -284,7 +283,6 @@ requires-dist = [
     { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "fastapi" },
     { name = "google-adk", specifier = ">=2.0.0" },
-    { name = "honcho-ai", specifier = ">=2.1.2" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "litellm", specifier = ">=1.65.5" },
     { name = "mcp", specifier = ">=1.0.0" },
@@ -1019,19 +1017,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/aa/b2/703569fc881f3284487e68cda7b42179978480da3c438042a6bbbb4a671c/hf_xet-1.5.0-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:4b35549ce62601b84da4ff9b24d970032ace3d4430f52d91bcbb26c901d6c690", size = 4672414, upload-time = "2026-05-06T06:18:09.864Z" },
     { url = "https://files.pythonhosted.org/packages/af/37/1b6def445c567286b50aa3b33828158e135b1be44938dde59f11382a500c/hf_xet-1.5.0-cp37-abi3-win_amd64.whl", hash = "sha256:2806c7c17b4d23f8d88f7c4814f838c3b6150773fe339c20af23e1cfaf2797e4", size = 3977238, upload-time = "2026-05-06T06:18:23.621Z" },
     { url = "https://files.pythonhosted.org/packages/62/94/3b66b148778ee100dcfd69c2ca22b57b41b44d3063ceec934f209e9184ce/hf_xet-1.5.0-cp37-abi3-win_arm64.whl", hash = "sha256:b6c9df403040248c76d808d3e047d64db2d923bae593eb244c41e425cf6cd7be", size = 3806916, upload-time = "2026-05-06T06:18:21.7Z" },
-]
-
-[[package]]
-name = "honcho-ai"
-version = "2.1.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-    { name = "pydantic" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/eb/15/31d391c007047cd40cd05943312d807b16f7b977c168fce1f3efdc8dff27/honcho_ai-2.1.2.tar.gz", hash = "sha256:f2c01463931e1a16cc4396790e1b0387d596fb5eb8d6dc830d6ab742f8701224", size = 48699, upload-time = "2026-05-23T21:55:29.205Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/c3/e8aa785fd37092e856be70dbe53b4f289ba6500392cdc727ebb6f1cdbea4/honcho_ai-2.1.2-py3-none-any.whl", hash = "sha256:a22220f01a63f6a3c1d4625aaef0a142577b83981c42dcb61177631863fbaa4f", size = 58910, upload-time = "2026-05-23T21:55:30.3Z" },
 ]
 
 [[package]]

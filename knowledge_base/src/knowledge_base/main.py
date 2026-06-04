@@ -51,11 +51,7 @@ async def lifespan(app: FastAPI):
     embed_text = create_embed_text(os.getenv("GEMINI_API_KEY", ""))
     app.state.embed_text = embed_text
 
-    from honcho import Honcho
-    honcho_api_key = os.getenv("HONCHO_API_KEY", "")
-    honcho_workspace_id = os.getenv("HONCHO_WORKSPACE_ID", "bonsai-sensei")
-    honcho_base_url = os.getenv("HONCHO_BASE_URL")
-    honcho_client = Honcho(api_key=honcho_api_key, workspace_id=honcho_workspace_id, base_url=honcho_base_url).aio if honcho_api_key else None
+    episodic_memory_url = os.getenv("EPISODIC_MEMORY_URL", "")
 
     admin_bot_instance = TelegramBot(token=os.getenv("ADMIN_TELEGRAM_BOT_TOKEN"))
     admin_chat_id = load_admin_chat_id(wiki_root) or os.getenv("ADMIN_TELEGRAM_CHAT_ID")
@@ -86,8 +82,6 @@ async def lifespan(app: FastAPI):
         run_wiki_dreamer=None,
         ingest_transcript=None,
         wiki_review_handler=wiki_review_handler,
-        honcho_client=honcho_client,
-        honcho_workspace_id=honcho_workspace_id,
         embed=embed_text,
     )
     admin_bot_manager.set_chat_id(admin_chat_id)
@@ -99,8 +93,7 @@ async def lifespan(app: FastAPI):
         wiki_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
         embed=embed_text,
-        honcho_client=honcho_client,
-        honcho_workspace_id=honcho_workspace_id,
+        episodic_memory_url=episodic_memory_url,
     )
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
 

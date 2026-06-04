@@ -12,3 +12,13 @@ scrape_configs:
     static_configs:
       - targets: ['knowledge_base:8080']
     metrics_path: /metrics
+
+  - job_name: episodic_memory
+    static_configs:
+      - targets: ['episodic-memory:8080']
+    metrics_path: /metrics
+
+  - job_name: falkordb
+    static_configs:
+      - targets: ['falkordb-exporter:9121']
+    metrics_path: /metrics

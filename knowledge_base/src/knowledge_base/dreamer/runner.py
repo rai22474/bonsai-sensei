@@ -7,7 +7,7 @@ from typing import Callable, Optional
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 from knowledge_base.dreamer.agent import _APP_NAME, create_wiki_dreamer_agent
-from knowledge_base.dreamer.memory_reader import read_high_watermark, read_new_observations, read_local_observations, read_admin_corrections, update_high_watermark, reset_processed_sessions
+from knowledge_base.dreamer.memory_reader import read_high_watermark, read_new_observations, read_local_observations, read_admin_corrections, update_high_watermark
 from knowledge_base import wiki_git
 from knowledge_base.wiki_index.indexer import update_page_index
 from knowledge_base.logging_config import get_logger
@@ -36,8 +36,7 @@ def create_wiki_dreamer(
     wiki_root: Path,
     notify_admin: Optional[Callable[[list[str], str], None]] = None,
     embed: Optional[Callable] = None,
-    honcho_client=None,
-    honcho_workspace_id: str = "",
+    episodic_memory_url: str = "",
 ) -> Callable[[], None]:
     """Create the wiki dreamer, an autonomous agent that maintains wiki coherence.
 
@@ -60,10 +59,10 @@ def create_wiki_dreamer(
 
     async def run_wiki_dreamer() -> None:
         last_run = read_high_watermark(wiki_root)
-        honcho_observations = await read_new_observations(honcho_client, honcho_workspace_id, wiki_root) if honcho_client else []
+        episodic_observations = await read_new_observations(episodic_memory_url, wiki_root) if episodic_memory_url else []
         local_observations = read_local_observations(wiki_root)
         admin_corrections = read_admin_corrections(wiki_root)
-        observations = honcho_observations + local_observations + admin_corrections
+        observations = episodic_observations + local_observations + admin_corrections
         new_cards = _get_new_cards(transcripts_root, last_run)
         wikilinks_batch = _get_wikilinks_batch(wiki_root, _WIKILINKS_BATCH_SIZE)
 

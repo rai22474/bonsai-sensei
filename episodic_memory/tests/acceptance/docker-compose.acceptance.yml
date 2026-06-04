@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  episodic-memory:
+    build:
+      context: ../../../
+      dockerfile: episodic_memory/Dockerfile
+    ports:
+      - "8070:8080"
+    environment:
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash-lite}
+    depends_on:
+      - falkordb
+
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6380:6379"

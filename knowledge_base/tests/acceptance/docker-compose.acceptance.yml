@@ -10,7 +10,7 @@ services:
     environment:
       - WIKI_PATH=/app/wiki
       - TRANSCRIPTS_PATH=/app/transcripts
-      - HONCHO_API_KEY=
+      - EPISODIC_MEMORY_URL=
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     volumes:

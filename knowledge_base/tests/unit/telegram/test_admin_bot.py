@@ -76,20 +76,8 @@ async def should_set_chat_id_on_start(manager, tmp_path):
         assert_that(manager.chat_id, equal_to("new-chat-99"), "chat_id property should reflect set value")
 
 
-async def should_save_feedback_to_honcho(manager_with_honcho, honcho_client):
-    handlers = manager_with_honcho.build_handlers()
-    feedback_handler = next(
-        handler for handler in handlers if hasattr(handler, "callback") and handler.callback.__name__ == "feedback_command"
-    )
-
-    update = _make_update("/feedback Corregir: el abeto no es subtropical")
-    await feedback_handler.callback(update, MagicMock())
-
-    honcho_client.workspaces.sessions.messages.create.assert_awaited_once()
-
-
-async def should_reply_when_no_feedback_text(manager_with_honcho):
-    handlers = manager_with_honcho.build_handlers()
+async def should_reply_when_no_feedback_text(manager):
+    handlers = manager.build_handlers()
     feedback_handler = next(
         handler for handler in handlers if hasattr(handler, "callback") and handler.callback.__name__ == "feedback_command"
     )
@@ -101,8 +89,8 @@ async def should_reply_when_no_feedback_text(manager_with_honcho):
     assert_that(reply_text, contains_string("Uso:"), "Should include usage instructions when no text provided")
 
 
-async def should_reply_unavailable_when_wiki_editor_not_set(manager_with_honcho):
-    handlers = manager_with_honcho.build_handlers()
+async def should_reply_unavailable_when_wiki_editor_not_set(manager):
+    handlers = manager.build_handlers()
     plain_text_handler = handlers[-2]
 
     update = _make_update("hello there")
@@ -133,14 +121,6 @@ def wiki_review_sessions():
 
 
 @pytest.fixture
-def honcho_client():
-    mock_client = MagicMock()
-    mock_client.workspaces.sessions.get_or_create = AsyncMock(return_value=MagicMock(id="session-123"))
-    mock_client.workspaces.sessions.messages.create = AsyncMock()
-    return mock_client
-
-
-@pytest.fixture
 def manager(bot, tmp_path, wiki_review_sessions):
     instance = AdminBotManager(
         bot=bot,
@@ -149,22 +129,6 @@ def manager(bot, tmp_path, wiki_review_sessions):
         run_wiki_dreamer=MagicMock(),
         ingest_transcript=MagicMock(),
         wiki_review_handler=MagicMock(),
-    )
-    instance.set_chat_id("admin-chat-42")
-    return instance
-
-
-@pytest.fixture
-def manager_with_honcho(bot, tmp_path, wiki_review_sessions, honcho_client):
-    instance = AdminBotManager(
-        bot=bot,
-        wiki_root=tmp_path,
-        wiki_review_sessions=wiki_review_sessions,
-        run_wiki_dreamer=MagicMock(),
-        ingest_transcript=MagicMock(),
-        wiki_review_handler=MagicMock(),
-        honcho_client=honcho_client,
-        honcho_workspace_id="test-workspace",
     )
     instance.set_chat_id("admin-chat-42")
     return instance
