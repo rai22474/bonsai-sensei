@@ -42,6 +42,8 @@ def read_wiki_page(path: str) -> dict | None:
 def list_wiki_files(directory: str = "", pattern: str = "*.md") -> list[str]:
     """List wiki files via MCP."""
     result = call_tool("list_wiki_files", {"directory": directory, "pattern": pattern})
+    if isinstance(result, list):
+        return result
     return result.get("files", [])
 
 

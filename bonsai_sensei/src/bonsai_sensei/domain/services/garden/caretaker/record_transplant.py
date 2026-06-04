@@ -7,6 +7,43 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+async def execute_record_transplant(
+    bonsai_name: str,
+    get_bonsai_by_name_func: Callable,
+    record_bonsai_event_func: Callable,
+    ask_confirmation: Callable,
+    build_confirmation_message: Callable,
+    pot_size: str = "",
+    pot_type: str = "",
+    substrate: str = "",
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core transplant recording logic shared by the ADK tool and direct Telegram commands."""
+    bonsai = get_bonsai_by_name_func(bonsai_name)
+    if not bonsai:
+        return {"status": "error", "message": "bonsai_not_found"}
+
+    payload = {key: value for key, value in {"pot_size": pot_size, "pot_type": pot_type, "substrate": substrate}.items() if value}
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(bonsai_name, pot_size, pot_type, substrate),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if confirmed:
+        record_bonsai_event_func(
+            bonsai_event=BonsaiEvent(
+                bonsai_id=bonsai.id,
+                event_type="transplant",
+                payload=payload,
+            )
+        )
+        return {"status": "success", "message": f"Transplant recorded for '{bonsai_name}'."}
+
+    return {"status": "cancelled", "reason": confirmed.reason}
+
+
 def create_record_transplant_tool(
     get_bonsai_by_name_func: Callable,
     record_bonsai_event_func: Callable,
@@ -40,24 +77,16 @@ def create_record_transplant_tool(
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
 
-        bonsai = get_bonsai_by_name_func(bonsai_name)
-        if not bonsai:
-            return {"status": "error", "message": "bonsai_not_found"}
-
-        payload = {key: value for key, value in {"pot_size": pot_size, "pot_type": pot_type, "substrate": substrate}.items() if value}
-
-        confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, pot_size, pot_type, substrate), tool_context=tool_context)
-
-        if confirmed:
-            record_bonsai_event_func(
-                bonsai_event=BonsaiEvent(
-                    bonsai_id=bonsai.id,
-                    event_type="transplant",
-                    payload=payload,
-                )
-            )
-            return {"status": "success", "message": f"Transplant recorded for '{bonsai_name}'."}
-
-        return {"status": "cancelled", "reason": confirmed.reason}
+        return await execute_record_transplant(
+            bonsai_name=bonsai_name,
+            pot_size=pot_size,
+            pot_type=pot_type,
+            substrate=substrate,
+            get_bonsai_by_name_func=get_bonsai_by_name_func,
+            record_bonsai_event_func=record_bonsai_event_func,
+            ask_confirmation=ask_confirmation,
+            build_confirmation_message=build_confirmation_message,
+            tool_context=tool_context,
+        )
 
     return record_transplant

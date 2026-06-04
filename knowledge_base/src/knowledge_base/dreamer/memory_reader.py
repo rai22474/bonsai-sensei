@@ -4,7 +4,8 @@ from pathlib import Path
 
 _SYNC_FILE_NAME = "memory-sync.json"
 _PROCESSED_CONCLUSIONS_FILE = "dreamer-processed-conclusions.json"
-_LOCAL_OBSERVATIONS_FILE = "pending-observations.json"
+_LOCAL_OBSERVATIONS_FILE = "pending-observations.jsonl"
+_ADMIN_CORRECTIONS_FILE = "pending-corrections.jsonl"
 _DEFAULT_START = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
@@ -36,21 +37,37 @@ async def read_new_observations(honcho_client, workspace_id: str, wiki_root: Pat
 
 
 def read_local_observations(wiki_root: Path) -> list[str]:
-    """Read observations from the local pending-observations.json file and clear it."""
+    """Read and consume all observations from the local pending-observations.jsonl queue."""
     observations_file = wiki_root / _LOCAL_OBSERVATIONS_FILE
     if not observations_file.exists():
         return []
-    observations = json.loads(observations_file.read_text())
+    lines = [line.strip() for line in observations_file.read_text(encoding="utf-8").splitlines() if line.strip()]
     observations_file.unlink()
-    return observations
+    return [json.loads(line) for line in lines]
 
 
 def append_local_observation(wiki_root: Path, text: str) -> None:
-    """Append an observation to the local pending-observations.json file."""
+    """Append an observation to the local pending-observations.jsonl queue (true append, no read-modify-write)."""
     observations_file = wiki_root / _LOCAL_OBSERVATIONS_FILE
-    observations = json.loads(observations_file.read_text()) if observations_file.exists() else []
-    observations.append(text)
-    observations_file.write_text(json.dumps(observations))
+    with observations_file.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(text) + "\n")
+
+
+def read_admin_corrections(wiki_root: Path) -> list[str]:
+    """Read and consume all admin corrections from the pending-corrections.jsonl queue."""
+    corrections_file = wiki_root / _ADMIN_CORRECTIONS_FILE
+    if not corrections_file.exists():
+        return []
+    lines = [line.strip() for line in corrections_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    corrections_file.unlink()
+    return [json.loads(line) for line in lines]
+
+
+def append_admin_correction(wiki_root: Path, text: str) -> None:
+    """Append an admin correction to the pending-corrections.jsonl queue."""
+    corrections_file = wiki_root / _ADMIN_CORRECTIONS_FILE
+    with corrections_file.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(text) + "\n")
 
 
 def reset_processed_sessions(wiki_root: Path) -> None:

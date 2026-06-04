@@ -37,9 +37,14 @@ Las fichas nuevas a procesar están listadas en el mensaje. No uses list_cards �
      - Si no existe, créala
 
 ## Fase 2 — Añadir wikilinks a páginas de conocimiento general
-Aplica esta fase solo a páginas fuera de bonsai/ y channels/ — esas son registros operativos y transcripciones, no páginas de conocimiento general.
-1. Lista las páginas wiki con directory="" y excluye las que empiezan por "bonsai/" o "channels/"
-2. Para cada página resultante: léela, busca menciones de entidades que tengan su propia página en la wiki, sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada, y guárdala solo si añadiste al menos un nuevo wikilink.
+Esta fase es obligatoria si el mensaje incluye páginas para revisar wikilinks.
+Las páginas a procesar están listadas en el mensaje. No uses list_wiki_pages — procesa solo las indicadas.
+
+Para cada página indicada:
+1. Léela
+2. Busca menciones de entidades que tengan su propia página en la wiki (especies, fertilizantes, técnicas, productos, fitosanitarios, plagas)
+3. Sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada
+4. Guárdala solo si añadiste al menos un nuevo wikilink
 
 # Wikilinks
 Usa la sintaxis [[ruta/relativa.md|Texto visible]] — el texto visible es la palabra original tal como aparece en el texto.

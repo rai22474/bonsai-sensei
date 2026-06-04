@@ -93,12 +93,8 @@ class AdminBotManager:
             if not feedback_text:
                 await update.message.reply_text("Uso: /feedback <corrección a incorporar en la wiki>")
                 return
-            if self._honcho_client is None:
-                await update.message.reply_text("⚠️ La memoria no está configurada.")
-                return
-            from honcho.api_types import MessageCreateParams
-            session = await self._honcho_client.session(id=f"admin-feedback-{uuid.uuid4().hex[:8]}")
-            await session.aio.add_messages([MessageCreateParams(peer_id="admin", content=feedback_text)])
+            from knowledge_base.dreamer.memory_reader import append_admin_correction
+            append_admin_correction(self._wiki_root, feedback_text)
             await update.message.reply_text("✅ Corrección guardada. Se incorporará en la próxima pasada del dreamer.")
 
         async def wiki_editor_handler(update, telegram_context):

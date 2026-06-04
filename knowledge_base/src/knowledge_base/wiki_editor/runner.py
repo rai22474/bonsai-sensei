@@ -20,6 +20,7 @@ def create_wiki_editor(
     wiki_root: Path,
     notify_admin: Optional[Callable] = None,
     embed: Optional[Callable] = None,
+    web_searcher: Optional[Callable] = None,
 ) -> Callable:
     """Creates the wiki editor runner, a conversational agent for admin wiki management.
 
@@ -30,7 +31,7 @@ def create_wiki_editor(
         Async callable: (chat_id: str, text: str) -> str (agent response text)
     """
     wiki_git.init_wiki_repo(wiki_root)
-    agent = create_wiki_editor_agent(model, wiki_root)
+    agent = create_wiki_editor_agent(model, wiki_root, web_searcher=web_searcher)
     runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
     chat_id_to_session_id: dict[str, str] = {}
 

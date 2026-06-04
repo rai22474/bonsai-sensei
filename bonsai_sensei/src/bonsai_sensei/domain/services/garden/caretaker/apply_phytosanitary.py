@@ -8,6 +8,70 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+async def execute_apply_phytosanitary(
+    bonsai_name: str,
+    phytosanitary_name: str,
+    amount: str,
+    get_bonsai_by_name_func: Callable,
+    get_phytosanitary_by_name_func: Callable,
+    get_recent_unlinked_pest_events_func: Callable,
+    record_bonsai_event_func: Callable,
+    ask_confirmation: Callable,
+    ask_selection: Callable,
+    build_confirmation_message: Callable,
+    build_link_selection_question: Callable,
+    build_pest_event_option: Callable,
+    no_link_option: str,
+    pest_event_id: int | None = None,
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core phytosanitary application logic shared by the ADK tool and direct Telegram commands."""
+    bonsai = get_bonsai_by_name_func(bonsai_name)
+    if not bonsai:
+        return {"status": "error", "message": "bonsai_not_found"}
+
+    phytosanitary = get_phytosanitary_by_name_func(phytosanitary_name)
+    if not phytosanitary:
+        return {"status": "error", "message": "phytosanitary_not_found"}
+
+    if pest_event_id is None:
+        unlinked_events = get_recent_unlinked_pest_events_func(bonsai_id=bonsai.id)
+        if unlinked_events:
+            options = [
+                build_pest_event_option(event.payload.get("pest_name", ""), event.occurred_at)
+                for event in unlinked_events
+            ] + [no_link_option]
+            selection = await ask_selection(
+                build_link_selection_question(bonsai_name),
+                options,
+                user_id=user_id,
+                tool_context=tool_context,
+            )
+            if not isinstance(selection, SelectionNoneResult) and selection != no_link_option and selection in options:
+                pest_event_id = unlinked_events[options.index(selection)].id
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(bonsai_name, phytosanitary_name, amount),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if confirmed:
+        payload = {"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary.name, "amount": amount}
+        if pest_event_id is not None:
+            payload["pest_event_id"] = pest_event_id
+        record_bonsai_event_func(
+            bonsai_event=BonsaiEvent(
+                bonsai_id=bonsai.id,
+                event_type="phytosanitary_application",
+                payload=payload,
+            )
+        )
+        return {"status": "success", "message": f"Phytosanitary '{phytosanitary_name}' treatment recorded on '{bonsai_name}'."}
+
+    return {"status": "cancelled", "reason": confirmed.reason}
+
+
 def create_apply_phytosanitary_tool(
     get_bonsai_by_name_func: Callable,
     get_phytosanitary_by_name_func: Callable,
@@ -51,52 +115,27 @@ def create_apply_phytosanitary_tool(
         """
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
-
         if not phytosanitary_name:
             return {"status": "error", "message": "phytosanitary_name_required"}
-
         if not amount:
             return {"status": "error", "message": "amount_required"}
 
-        bonsai = get_bonsai_by_name_func(bonsai_name)
-        if not bonsai:
-            return {"status": "error", "message": "bonsai_not_found"}
-
-        phytosanitary = get_phytosanitary_by_name_func(phytosanitary_name)
-        if not phytosanitary:
-            return {"status": "error", "message": "phytosanitary_not_found"}
-
-        if pest_event_id is None:
-            unlinked_events = get_recent_unlinked_pest_events_func(bonsai_id=bonsai.id)
-            if unlinked_events:
-                options = [
-                    build_pest_event_option(event.payload.get("pest_name", ""), event.occurred_at)
-                    for event in unlinked_events
-                ] + [no_link_option]
-                selection = await ask_selection(
-                    build_link_selection_question(bonsai_name),
-                    options,
-                    tool_context=tool_context,
-                )
-                if not isinstance(selection, SelectionNoneResult) and selection != no_link_option and selection in options:
-                    selected_index = options.index(selection)
-                    pest_event_id = unlinked_events[selected_index].id
-
-        confirmed = await ask_confirmation(build_confirmation_message(bonsai_name, phytosanitary_name, amount), tool_context=tool_context)
-
-        if confirmed:
-            payload = {"phytosanitary_id": phytosanitary.id, "phytosanitary_name": phytosanitary.name, "amount": amount}
-            if pest_event_id is not None:
-                payload["pest_event_id"] = pest_event_id
-            record_bonsai_event_func(
-                bonsai_event=BonsaiEvent(
-                    bonsai_id=bonsai.id,
-                    event_type="phytosanitary_application",
-                    payload=payload,
-                )
-            )
-            return {"status": "success", "message": f"Phytosanitary '{phytosanitary_name}' treatment recorded on '{bonsai_name}'."}
-
-        return {"status": "cancelled", "reason": confirmed.reason}
+        return await execute_apply_phytosanitary(
+            bonsai_name=bonsai_name,
+            phytosanitary_name=phytosanitary_name,
+            amount=amount,
+            pest_event_id=pest_event_id,
+            get_bonsai_by_name_func=get_bonsai_by_name_func,
+            get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+            get_recent_unlinked_pest_events_func=get_recent_unlinked_pest_events_func,
+            record_bonsai_event_func=record_bonsai_event_func,
+            ask_confirmation=ask_confirmation,
+            ask_selection=ask_selection,
+            build_confirmation_message=build_confirmation_message,
+            build_link_selection_question=build_link_selection_question,
+            build_pest_event_option=build_pest_event_option,
+            no_link_option=no_link_option,
+            tool_context=tool_context,
+        )
 
     return apply_phytosanitary

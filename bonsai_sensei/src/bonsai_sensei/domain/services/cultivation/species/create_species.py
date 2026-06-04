@@ -9,6 +9,61 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 from bonsai_sensei.domain.species import Species
 
 
+async def execute_create_species(
+    common_name: str,
+    get_species_by_name_func: Callable,
+    scientific_name_resolver: Callable,
+    wiki_page_builder: Callable,
+    create_species_func: Callable,
+    ask_confirmation: Callable,
+    ask_selection: Callable,
+    build_selection_question: Callable,
+    build_confirmation_message: Callable,
+    scientific_name: str = "",
+    post_create_hook: Callable | None = None,
+    register_background_task: Callable | None = None,
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core species creation logic shared by the ADK tool and direct Telegram commands."""
+    if get_species_by_name_func(common_name):
+        return {"status": "error", "message": "species_already_exists"}
+
+    if not scientific_name:
+        resolution = scientific_name_resolver(common_name)
+        scientific_names = resolution.get("scientific_names", [])
+        if not scientific_names:
+            return {"status": "error", "message": "scientific_name_not_found"}
+        if len(scientific_names) > 1:
+            selection = await ask_selection(
+                build_selection_question(common_name),
+                scientific_names,
+                user_id=user_id,
+                tool_context=tool_context,
+            )
+            if isinstance(selection, SelectionNoneResult):
+                return {"status": "cancelled", "reason": selection.reason}
+            scientific_name = selection
+        else:
+            scientific_name = scientific_names[0]
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(common_name, scientific_name),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if confirmed:
+        wiki_path = await wiki_page_builder(common_name, scientific_name)
+        create_species_func(Species(name=common_name, scientific_name=scientific_name, wiki_path=wiki_path))
+        if post_create_hook:
+            task = asyncio.create_task(post_create_hook(common_name))
+            if register_background_task:
+                register_background_task(task)
+        return {"status": "success", "message": f"Species '{common_name}' created.", "scientific_name": scientific_name}
+
+    return {"status": "cancelled", "reason": confirmed.reason}
+
+
 def create_create_species_tool(
     create_species_func: Callable,
     get_species_by_name_func: Callable[[str], Species | None],
@@ -53,46 +108,20 @@ def create_create_species_tool(
         if not common_name:
             return {"status": "error", "message": "species_name_required"}
 
-        if get_species_by_name_func(common_name):
-            return {"status": "error", "message": "species_already_exists"}
-
-        if not scientific_name:
-            resolution = scientific_name_resolver(common_name)
-            scientific_names = resolution.get("scientific_names", [])
-            if not scientific_names:
-                return {"status": "error", "message": "scientific_name_not_found"}
-            if len(scientific_names) > 1:
-                selection = await ask_selection(
-                    build_selection_question(common_name),
-                    scientific_names,
-                    tool_context=tool_context,
-                )
-                if isinstance(selection, SelectionNoneResult):
-                    return {"status": "cancelled", "reason": selection.reason}
-                scientific_name = selection
-            else:
-                scientific_name = scientific_names[0]
-
-        confirmed = await ask_confirmation(
-            build_confirmation_message(common_name, scientific_name),
+        return await execute_create_species(
+            common_name=common_name,
+            scientific_name=scientific_name or "",
+            get_species_by_name_func=get_species_by_name_func,
+            scientific_name_resolver=scientific_name_resolver,
+            wiki_page_builder=wiki_page_builder,
+            create_species_func=create_species_func,
+            ask_confirmation=ask_confirmation,
+            ask_selection=ask_selection,
+            build_selection_question=build_selection_question,
+            build_confirmation_message=build_confirmation_message,
+            post_create_hook=post_create_hook,
+            register_background_task=register_background_task,
             tool_context=tool_context,
         )
-
-        if confirmed:
-            wiki_path = await wiki_page_builder(common_name, scientific_name)
-            create_species_func(
-                Species(
-                    name=common_name,
-                    scientific_name=scientific_name,
-                    wiki_path=wiki_path,
-                )
-            )
-            if post_create_hook:
-                task = asyncio.create_task(post_create_hook(common_name))
-                if register_background_task:
-                    register_background_task(task)
-            return {"status": "success", "message": f"Species '{common_name}' created."}
-
-        return {"status": "cancelled", "reason": confirmed.reason}
 
     return create_bonsai_species

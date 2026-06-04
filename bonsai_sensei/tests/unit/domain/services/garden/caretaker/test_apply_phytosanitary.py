@@ -142,7 +142,7 @@ async def should_return_cancelled_when_user_declines(
         "Tool should return cancelled status when user declines")
 
 
-async def ask_confirmation_cancel(question, tool_context=None):
+async def ask_confirmation_cancel(question, user_id=None, tool_context=None):
     return ConfirmationResult(accepted=False)
 
 
@@ -193,7 +193,7 @@ def tool_context():
 
 @pytest.fixture
 def ask_confirmation_confirm():
-    async def ask_confirmation(question, tool_context=None):
+    async def ask_confirmation(question, user_id=None, tool_context=None):
         return True
 
     return ask_confirmation
@@ -216,7 +216,7 @@ def get_recent_unlinked_pest_events_func():
 
 @pytest.fixture
 def ask_selection_func():
-    async def ask_selection(question, options, tool_context=None):
+    async def ask_selection(question, options, user_id=None, tool_context=None):
         return options[0] if options else None
     return ask_selection
 

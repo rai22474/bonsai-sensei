@@ -98,9 +98,18 @@ def _create_search_tool(searcher: Callable[[str], dict]) -> Callable:
 
 
 def _build_compile_prompt(common_name: str, scientific_name: str, relative_path: str, existing_content: str | None, user_instructions: str) -> str:
-    parts = [f"Investiga y escribe la ficha wiki para {common_name} ({scientific_name}). Guárdala en la ruta: {relative_path}"]
     if existing_content:
-        parts.append(f"\nContenido actual de la página:\n{existing_content}")
+        parts = [
+            f"La página wiki para {common_name} ({scientific_name}) ya existe en {relative_path}.",
+            f"\nContenido actual:\n{existing_content}",
+            "\nTarea: revisa el contenido existente y complétalo solo donde sea necesario.",
+            "- Añade secciones que falten (Riego, Luz, Suelo, Poda, Plagas, Fuentes).",
+            "- Añade wikilinks [[relative/path.md]] a enfermedades o fitosanitarios mencionados que tengan página propia.",
+            "- NO reescribas lo que ya está bien. NO hagas búsquedas web salvo que falte información esencial.",
+            "- Guarda la página solo si hiciste cambios reales.",
+        ]
+    else:
+        parts = [f"Investiga y escribe la ficha wiki completa para {common_name} ({scientific_name}). Guárdala en la ruta: {relative_path}"]
     if user_instructions:
         parts.append(f"\nInstrucciones específicas del usuario: {user_instructions}")
     return "\n".join(parts)

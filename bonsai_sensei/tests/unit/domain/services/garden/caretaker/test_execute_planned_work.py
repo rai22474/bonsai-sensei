@@ -183,11 +183,11 @@ async def _ask_selection_first(question, options, tool_context=None, **kwargs):
     return options[0]
 
 
-async def _ask_confirmation_confirm(question, tool_context=None):
+async def _ask_confirmation_confirm(question, user_id=None, tool_context=None):
     return True
 
 
-async def _ask_confirmation_cancel(question, tool_context=None):
+async def _ask_confirmation_cancel(question, user_id=None, tool_context=None):
     return ConfirmationResult(accepted=False)
 
 
@@ -234,7 +234,7 @@ def tool_context():
 
 @pytest.fixture
 def tool(existing_bonsai, existing_planned_work, captured_events, deleted_work_ids, captured_confirmations):
-    async def ask_confirmation(question, tool_context=None):
+    async def ask_confirmation(question, user_id=None, tool_context=None):
         captured_confirmations.append(question)
         return True
 

@@ -155,7 +155,7 @@ async def should_return_cancelled_when_selection_is_cancelled(tool_context, crea
         "Tool should return cancelled when user cancels species selection")
 
 
-async def ask_confirmation_cancel(question, tool_context=None):
+async def ask_confirmation_cancel(question, user_id=None, tool_context=None):
     return ConfirmationResult(accepted=False)
 
 
@@ -191,7 +191,7 @@ def tool_context():
 
 @pytest.fixture
 def ask_confirmation_confirm():
-    async def ask_confirmation(question, tool_context=None):
+    async def ask_confirmation(question, user_id=None, tool_context=None):
         return True
     return ask_confirmation
 

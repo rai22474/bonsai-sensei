@@ -45,6 +45,7 @@ def create_data_services(session_factory) -> dict:
         "bonsai_history": {
             "list_bonsai_events": partial(bonsai_history.list_bonsai_events, create_session=session_factory),
             "record_bonsai_event": partial(bonsai_history.record_bonsai_event, create_session=session_factory),
+            "get_recent_unlinked_pest_events": partial(bonsai_history.get_recent_unlinked_pest_events, create_session=session_factory),
         },
         "user_settings": {
             "save_user_settings": partial(user_settings_store.save_user_settings, create_session=session_factory),

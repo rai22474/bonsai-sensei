@@ -7,6 +7,52 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+async def execute_create_pest_event(
+    bonsai_name: str,
+    pest_name: str,
+    get_bonsai_by_name_func: Callable,
+    get_pest_by_name_func: Callable,
+    record_bonsai_event_func: Callable,
+    get_active_phytosanitary_plan_func: Callable,
+    ask_confirmation: Callable,
+    build_confirmation_message: Callable,
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core pest detection logic shared by the ADK tool and direct Telegram commands."""
+    bonsai = get_bonsai_by_name_func(bonsai_name)
+    if not bonsai:
+        return {"status": "error", "message": "bonsai_not_found"}
+
+    pest = get_pest_by_name_func(pest_name)
+    if not pest:
+        return {"status": "error", "message": "pest_not_found"}
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(bonsai_name, pest_name),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if not confirmed:
+        return {"status": "cancelled", "reason": confirmed.reason}
+
+    pest_event = record_bonsai_event_func(
+        bonsai_event=BonsaiEvent(
+            bonsai_id=bonsai.id,
+            event_type="pest_detection",
+            payload={"pest_id": pest.id, "pest_name": pest_name},
+        )
+    )
+    active_plan = get_active_phytosanitary_plan_func(bonsai_id=bonsai.id)
+
+    return {
+        "status": "success",
+        "pest_event_id": pest_event.id,
+        "active_plan": bool(active_plan),
+        "message": f"Pest detection of '{pest_name}' recorded on '{bonsai_name}'.",
+    }
+
+
 def create_create_pest_event_tool(
     get_bonsai_by_name_func: Callable,
     get_pest_by_name_func: Callable,
@@ -38,40 +84,19 @@ def create_create_pest_event_tool(
         """
         if not bonsai_name:
             return {"status": "error", "message": "bonsai_name_required"}
-
         if not pest_name:
             return {"status": "error", "message": "pest_name_required"}
 
-        bonsai = get_bonsai_by_name_func(bonsai_name)
-        if not bonsai:
-            return {"status": "error", "message": "bonsai_not_found"}
-
-        pest = get_pest_by_name_func(pest_name)
-        if not pest:
-            return {"status": "error", "message": "pest_not_found"}
-
-        confirmed = await ask_confirmation(
-            build_confirmation_message(bonsai_name, pest_name),
+        return await execute_create_pest_event(
+            bonsai_name=bonsai_name,
+            pest_name=pest_name,
+            get_bonsai_by_name_func=get_bonsai_by_name_func,
+            get_pest_by_name_func=get_pest_by_name_func,
+            record_bonsai_event_func=record_bonsai_event_func,
+            get_active_phytosanitary_plan_func=get_active_phytosanitary_plan_func,
+            ask_confirmation=ask_confirmation,
+            build_confirmation_message=build_confirmation_message,
             tool_context=tool_context,
         )
-        if not confirmed:
-            return {"status": "cancelled", "reason": confirmed.reason}
-
-        pest_event = record_bonsai_event_func(
-            bonsai_event=BonsaiEvent(
-                bonsai_id=bonsai.id,
-                event_type="pest_detection",
-                payload={"pest_id": pest.id, "pest_name": pest_name},
-            )
-        )
-
-        active_plan = get_active_phytosanitary_plan_func(bonsai_id=bonsai.id)
-
-        return {
-            "status": "success",
-            "pest_event_id": pest_event.id,
-            "active_plan": bool(active_plan),
-            "message": f"Pest detection of '{pest_name}' recorded on '{bonsai_name}'.",
-        }
 
     return create_pest_event

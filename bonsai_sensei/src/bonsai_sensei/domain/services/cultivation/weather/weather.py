@@ -66,6 +66,14 @@ async def get_weather(location: str) -> dict:
     return await create_weather_tool("https://wttr.in")(location)
 
 
+async def fetch_weather(location: str, base_url: str = "https://wttr.in") -> dict:
+    """Fetch weather data for a location without ADK tool decorators."""
+    data = await _fetch_weather_data(location, base_url)
+    if data:
+        return {"status": "success", "result": _format_weather_report(location, data)}
+    return {"status": "error", "message": f"Could not fetch weather for {location}."}
+
+
 async def _fetch_weather_data(location: str, base_url: str) -> dict | None:
     url = f"{base_url.rstrip('/')}/{location}?format=j1"
     async with httpx.AsyncClient(timeout=30.0) as client:

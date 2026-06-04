@@ -7,6 +7,39 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+async def execute_create_phytosanitary(
+    name: str,
+    get_phytosanitary_by_name_func: Callable,
+    wiki_page_builder: Callable,
+    create_phytosanitary_func: Callable,
+    ask_confirmation: Callable,
+    build_confirmation_message: Callable,
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core phytosanitary creation logic shared by the ADK tool and direct Telegram commands."""
+    if get_phytosanitary_by_name_func(name):
+        return {"status": "error", "message": "phytosanitary_already_exists"}
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(name),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if confirmed:
+        wiki_path, recommended_amount = await wiki_page_builder(name)
+        create_phytosanitary_func(
+            phytosanitary=Phytosanitary(
+                name=name,
+                wiki_path=wiki_path,
+                recommended_amount=recommended_amount,
+            )
+        )
+        return {"status": "success", "message": f"Phytosanitary product '{name}' created."}
+
+    return {"status": "cancelled", "reason": confirmed.reason}
+
+
 def create_create_phytosanitary_tool(
     create_phytosanitary_func: Callable,
     get_phytosanitary_by_name_func: Callable[[str], Phytosanitary | None],
@@ -38,22 +71,14 @@ def create_create_phytosanitary_tool(
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
-        if get_phytosanitary_by_name_func(name):
-            return {"status": "error", "message": "phytosanitary_already_exists"}
-
-        confirmed = await ask_confirmation(build_confirmation_message(name), tool_context=tool_context)
-
-        if confirmed:
-            wiki_path, recommended_amount = await wiki_page_builder(name)
-            create_phytosanitary_func(
-                phytosanitary=Phytosanitary(
-                    name=name,
-                    wiki_path=wiki_path,
-                    recommended_amount=recommended_amount,
-                )
-            )
-            return {"status": "success", "message": f"Phytosanitary product '{name}' created."}
-
-        return {"status": "cancelled", "reason": confirmed.reason}
+        return await execute_create_phytosanitary(
+            name=name,
+            get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
+            wiki_page_builder=wiki_page_builder,
+            create_phytosanitary_func=create_phytosanitary_func,
+            ask_confirmation=ask_confirmation,
+            build_confirmation_message=build_confirmation_message,
+            tool_context=tool_context,
+        )
 
     return create_phytosanitary

@@ -113,11 +113,17 @@ async def lifespan(app: FastAPI):
     )
     admin_bot_manager.set_ingest_transcript(app.state.ingest_transcript)
 
+    from knowledge_base.wiki_editor.tools.search_web import create_web_searcher
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    tavily_base_url = os.getenv("TAVILY_API_BASE")
+    web_searcher = create_web_searcher(tavily_api_key, tavily_base_url) if tavily_api_key else None
+
     app.state.wiki_editor = create_wiki_editor(
         effective_model,
         wiki_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
         embed=embed_text,
+        web_searcher=web_searcher,
     )
     admin_bot_manager._wiki_editor = app.state.wiki_editor
 
@@ -127,6 +133,9 @@ async def lifespan(app: FastAPI):
 
     app.state.admin_bot = admin_bot_instance
     await admin_bot_instance.initialize()
+    if app.state.wiki_review_sessions:
+        import asyncio
+        asyncio.create_task(admin_bot_manager.re_notify_pending_sessions())
     await admin_bot_instance.register_commands([
         ("start", "Registrar este chat como canal admin"),
         ("dreamer", "Lanzar el wiki dreamer manualmente"),

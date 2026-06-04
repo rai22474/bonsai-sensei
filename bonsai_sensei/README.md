@@ -37,6 +37,26 @@ sensei                          [orchestrator]
 | shokunin | 職人 | Deterministic executor |
 | kikaru | 木刈る | Cultivation work calendar |
 
+## Telegram commands
+
+Direct commands bypass the AI sensei — no LLM overhead, instant response.
+
+### Consultas
+| Comando | Descripción |
+|---|---|
+| `/mis_bonsais` | Lista todos los bonsáis |
+| `/plan <bonsai>` | Trabajos planificados de un bonsái |
+| `/proximos` | Próximos trabajos (14 días) |
+| `/fin_de_semana` | Trabajos del próximo sábado y domingo |
+| `/historial <bonsai>` | Últimos 20 eventos de un bonsái |
+| `/fertilizantes` | Catálogo de fertilizantes |
+| `/fitosanitarios` | Catálogo de fitosanitarios |
+| `/especies` | Catálogo de especies |
+| `/plagas` | Catálogo de plagas |
+| `/tiempo [ubicacion]` | Tiempo actual (usa ubicación guardada si se omite) |
+
+Todo lo que modifica datos (crear bonsáis, registrar eventos, aplicar fertilizantes, etc.) va por el sensei conversacional.
+
 ## Setup
 
 ```bash

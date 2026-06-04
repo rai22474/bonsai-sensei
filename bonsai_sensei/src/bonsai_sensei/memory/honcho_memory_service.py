@@ -14,20 +14,29 @@ class HonchoMemoryService(BaseMemoryService):
 
     async def add_session_to_memory(self, session: Session) -> None:
         honcho_session = await self._client.aio.session(session.id)
-        for event in session.events:
-            if not hasattr(event, "content") or not event.content:
-                continue
-            for part in event.content.parts:
-                if not part.text:
-                    continue
-                peer_id = session.user_id if event.content.role == "user" else _AGENT_PEER_ID
-                await honcho_session.aio.add_messages([
-                    MessageCreateParams(peer_id=peer_id, content=part.text)
-                ])
-        await self._client.aio.schedule_dream(
-            observer=session.user_id,
-            session=session.id,
-        )
+
+        all_parts = [
+            (session.user_id if event.content.role == "user" else _AGENT_PEER_ID, part.text)
+            for event in session.events
+            if hasattr(event, "content") and event.content
+            for part in event.content.parts
+            if part.text
+        ]
+
+        existing_page = await honcho_session.aio.messages(size=1)
+        already_synced = existing_page.total or 0
+        new_parts = all_parts[already_synced:]
+
+        for peer_id, text in new_parts:
+            await honcho_session.aio.add_messages([
+                MessageCreateParams(peer_id=peer_id, content=text)
+            ])
+
+        if new_parts:
+            await self._client.aio.schedule_dream(
+                observer=session.user_id,
+                session=session.id,
+            )
 
     async def search_memory(self, *, app_name: str, user_id: str, query: str) -> SearchMemoryResponse:
         user_peer = await self._client.aio.peer(user_id)

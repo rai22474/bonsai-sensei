@@ -97,6 +97,19 @@ from bonsai_sensei.telegram.handle_poll_answer import handle_poll_answer
 from bonsai_sensei.telegram.handle_user_message import handle_user_message
 from bonsai_sensei.telegram.handle_user_photo import handle_user_photo
 from bonsai_sensei.telegram.start import start
+from bonsai_sensei.telegram.commands import (
+    handle_mis_bonsais,
+    handle_plan,
+    handle_proximos,
+    handle_fertilizantes,
+    handle_fitosanitarios,
+    handle_especies,
+    handle_historial,
+    handle_fin_de_semana,
+    handle_plagas,
+    handle_tiempo,
+)
+from bonsai_sensei.domain.services.cultivation.weather.weather import fetch_weather
 
 from bonsai_sensei.api.species import router as species_router
 from bonsai_sensei.api.bonsai import router as bonsai_router
@@ -397,8 +410,64 @@ async def lifespan(app: FastAPI):
         send_free_text_prompt=bot_instance.send_force_reply_message,
     )
 
+    mis_bonsais_handler = partial(
+        handle_mis_bonsais,
+        list_bonsai_func=services["garden"]["list_bonsai"],
+        list_species_func=services["herbarium"]["list_species"],
+    )
+    plan_handler = partial(
+        handle_plan,
+        get_bonsai_by_name_func=services["garden"]["get_bonsai_by_name"],
+        list_planned_works_func=services["cultivation_plan"]["list_planned_works"],
+    )
+    proximos_handler = partial(
+        handle_proximos,
+        list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
+        list_bonsai_func=services["garden"]["list_bonsai"],
+    )
+    fertilizantes_handler = partial(
+        handle_fertilizantes,
+        list_fertilizers_func=services["fertilizer"]["list_fertilizers"],
+    )
+    fitosanitarios_handler = partial(
+        handle_fitosanitarios,
+        list_phytosanitary_func=services["phytosanitary"]["list_phytosanitary"],
+    )
+    especies_handler = partial(
+        handle_especies,
+        list_species_func=services["herbarium"]["list_species"],
+    )
+    historial_handler = partial(
+        handle_historial,
+        get_bonsai_by_name_func=services["garden"]["get_bonsai_by_name"],
+        list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
+    )
+    fin_de_semana_handler = partial(
+        handle_fin_de_semana,
+        list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
+        list_bonsai_func=services["garden"]["list_bonsai"],
+    )
+    plagas_handler = partial(
+        handle_plagas,
+        list_pests_func=services["pest"]["list_pests"],
+    )
+    tiempo_handler = partial(
+        handle_tiempo,
+        get_user_settings_func=services["user_settings"]["get_user_settings"],
+        get_weather_func=fetch_weather,
+    )
     user_bot_handlers = [
         CommandHandler("start", start),
+        CommandHandler("mis_bonsais", mis_bonsais_handler),
+        CommandHandler("plan", plan_handler),
+        CommandHandler("proximos", proximos_handler),
+        CommandHandler("fertilizantes", fertilizantes_handler),
+        CommandHandler("fitosanitarios", fitosanitarios_handler),
+        CommandHandler("especies", especies_handler),
+        CommandHandler("historial", historial_handler),
+        CommandHandler("fin_de_semana", fin_de_semana_handler),
+        CommandHandler("plagas", plagas_handler),
+        CommandHandler("tiempo", tiempo_handler),
         MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler),
         MessageHandler(filters.PHOTO, photo_handler),
         CallbackQueryHandler(confirmation_handler, pattern=r"^confirm:(accept|cancel):.+$"),

@@ -85,8 +85,13 @@ services:
     environment:
       - DB_CONNECTION_URI=postgresql+psycopg://bonsai_user:bonsai_password@db:5432/honcho_db
       - REDIS_URL=redis://redis:6379
-      - LLM_OPENAI_API_KEY=${GEMINI_API_KEY:-}
-      - LLM_OPENAI_API_BASE=https://generativelanguage.googleapis.com/v1beta/openai/
+      - LLM_OPENAI_API_KEY=${OPENROUTER_API_KEY:-}
+      - LLM_OPENAI_BASE_URL=https://openrouter.ai/api/v1
+      - LLM_GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DERIVER_MODEL_CONFIG__MODEL=deepseek/deepseek-chat
+      - DERIVER_MODEL_CONFIG__TRANSPORT=openai
+      - EMBEDDING_MODEL_CONFIG__MODEL=gemini-embedding-001
+      - EMBEDDING_MODEL_CONFIG__TRANSPORT=gemini
       - AUTH_USE_AUTH=false
     depends_on:
       - honcho-api

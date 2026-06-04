@@ -61,8 +61,8 @@ run_step "docker compose up" docker compose -f "$COMPOSE_FILE" up -d --no-build
 
 ready=false
 for i in {1..10}; do
-  echo "Running: readiness check attempt ${i} (GET /api/species)"
-  if curl -sf "http://localhost:${ACCEPTANCE_PORT}/api/species" >/dev/null; then
+  echo "Running: readiness check attempt ${i} (GET /health)"
+  if curl -sf "http://localhost:${ACCEPTANCE_PORT}/health" >/dev/null; then
     echo "Result: readiness check attempt ${i} succeeded."
     ready=true
     break

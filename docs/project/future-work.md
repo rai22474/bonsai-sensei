@@ -368,3 +368,25 @@ El agente conduce una conversación para entender el objetivo, el estado actual 
 
 **Vínculo con vision.md:**
 Cubre directamente el caso de uso "Generación de plan estándar por especie/diseño". Implementar después de FUTURE-002 si se quiere que el agente consulte la base de conocimiento de técnicas; puede implementarse antes si se apoya solo en el conocimiento del modelo.
+
+---
+
+## FUTURE-011 — Actualizar Honcho a versión con fix de colecciones automáticas
+
+**Contexto:**
+Honcho deriver (v3) tiene un bug en `src/dreamer/orchestrator.py` línea 379: usa `crud.get_collection()` en lugar de `crud.get_or_create_collection()` al intentar persistir conclusions. Si la colección vectorial del peer no existe previamente, el dream falla con `ResourceNotFoundException: Collection not found` y no guarda ninguna conclusion.
+
+**Workaround actual:**
+Se insertó manualmente la colección en la tabla `collections` de la DB para el peer `6358648952` (único usuario en producción por ahora). Comando ejecutado:
+```sql
+INSERT INTO collections (id, workspace_name, observer, observed, metadata, internal_metadata)
+VALUES (left(md5(random()::text || clock_timestamp()::text), 21), 'bonsai-sensei', '6358648952', '6358648952', '{}', '{}');
+```
+Este workaround no escala: cada nuevo usuario requiere inserción manual.
+
+**Fix definitivo:**
+1. Verificar si existe una versión posterior de Honcho en https://github.com/plastic-labs/honcho que corrija este bug.
+2. Si no existe, hacer fork y parchear `orchestrator.py` línea 379: cambiar `crud.get_collection(` por `crud.get_or_create_collection(`.
+3. Actualizar el `docker-compose.yml` para apuntar al commit/tag con el fix.
+
+**Impacto:** Bloqueante para onboarding de nuevos usuarios con memoria episódica activa.

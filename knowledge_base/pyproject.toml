@@ -12,6 +12,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-telegram-bot>=22.5",
     "uvicorn",
+    "tavily-python>=0.5.0",
     "youtube-transcript-api>=0.6.3",
     "opentelemetry-sdk",
     "opentelemetry-instrumentation-fastapi",

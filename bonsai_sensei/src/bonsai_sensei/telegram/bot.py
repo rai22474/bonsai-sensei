@@ -25,6 +25,18 @@ class TelegramBot:
             await self.application.initialize()
             await self.application.start()
             await self.application.updater.start_polling()
+            await self.application.bot.set_my_commands([
+                ("mis_bonsais", "Lista todos mis bonsáis"),
+                ("plan", "Plan de un bonsái: /plan <nombre>"),
+                ("proximos", "Próximos trabajos (14 días)"),
+                ("fin_de_semana", "Trabajos del próximo fin de semana"),
+                ("historial", "Historial de un bonsái: /historial <nombre>"),
+                ("fertilizantes", "Catálogo de fertilizantes"),
+                ("fitosanitarios", "Catálogo de fitosanitarios"),
+                ("especies", "Catálogo de especies"),
+                ("plagas", "Catálogo de plagas"),
+                ("tiempo", "Tiempo actual: /tiempo [ubicacion]"),
+            ])
 
     async def shutdown(self):
         if self.application:

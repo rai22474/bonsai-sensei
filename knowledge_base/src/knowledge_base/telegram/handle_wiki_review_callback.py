@@ -38,7 +38,10 @@ async def handle_wiki_review_callback(
 
     session = wiki_review_sessions.get(review_id)
     if not session:
-        await query.edit_message_text("Sesión de revisión no encontrada o expirada.")
+        await query.edit_message_text(
+            "⚠️ Esta revisión ya fue completada o el servicio se reinició.\n"
+            "Usa /dreamer para lanzar el dreamer y generar nuevas notificaciones de revisión."
+        )
         return
 
     try:

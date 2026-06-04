@@ -171,12 +171,12 @@ async def should_return_cancelled_when_user_declines(
         "Tool should return cancelled status when user declines")
 
 
-async def ask_confirmation_cancel(question, tool_context=None):
+async def ask_confirmation_cancel(question, user_id=None, tool_context=None):
     return ConfirmationResult(accepted=False)
 
 
 def ask_selection_returning(choice: str, captured_calls: list):
-    async def ask_selection(question, options, tool_context=None):
+    async def ask_selection(question, options, user_id=None, tool_context=None):
         captured_calls.append({"question": question, "options": options})
         return choice
     return ask_selection
@@ -242,14 +242,14 @@ def tool_context():
 
 @pytest.fixture
 def ask_confirmation_confirm():
-    async def ask_confirmation(question, tool_context=None):
+    async def ask_confirmation(question, user_id=None, tool_context=None):
         return ConfirmationResult(accepted=True)
     return ask_confirmation
 
 
 @pytest.fixture
 def ask_selection_fixture():
-    async def ask_selection(question, options, tool_context=None):
+    async def ask_selection(question, options, user_id=None, tool_context=None):
         return options[0]
     return ask_selection
 

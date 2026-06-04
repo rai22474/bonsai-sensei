@@ -7,6 +7,39 @@ from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
+async def execute_create_fertilizer(
+    name: str,
+    get_fertilizer_by_name_func: Callable,
+    wiki_page_builder: Callable,
+    create_fertilizer_func: Callable,
+    ask_confirmation: Callable,
+    build_confirmation_message: Callable,
+    user_id: str | None = None,
+    tool_context=None,
+) -> dict:
+    """Core fertilizer creation logic shared by the ADK tool and direct Telegram commands."""
+    if get_fertilizer_by_name_func(name):
+        return {"status": "error", "message": "fertilizer_already_exists"}
+
+    confirmed = await ask_confirmation(
+        build_confirmation_message(name),
+        user_id=user_id,
+        tool_context=tool_context,
+    )
+    if confirmed:
+        wiki_path, recommended_amount = await wiki_page_builder(name)
+        create_fertilizer_func(
+            fertilizer=Fertilizer(
+                name=name,
+                wiki_path=wiki_path,
+                recommended_amount=recommended_amount,
+            )
+        )
+        return {"status": "success", "message": f"Fertilizer '{name}' created."}
+
+    return {"status": "cancelled", "reason": confirmed.reason}
+
+
 def create_create_fertilizer_tool(
     create_fertilizer_func: Callable,
     get_fertilizer_by_name_func: Callable[[str], Fertilizer | None],
@@ -38,22 +71,14 @@ def create_create_fertilizer_tool(
         if not name:
             return {"status": "error", "message": "fertilizer_name_required"}
 
-        if get_fertilizer_by_name_func(name):
-            return {"status": "error", "message": "fertilizer_already_exists"}
-
-        confirmed = await ask_confirmation(build_confirmation_message(name), tool_context=tool_context)
-
-        if confirmed:
-            wiki_path, recommended_amount = await wiki_page_builder(name)
-            create_fertilizer_func(
-                fertilizer=Fertilizer(
-                    name=name,
-                    wiki_path=wiki_path,
-                    recommended_amount=recommended_amount,
-                )
-            )
-            return {"status": "success", "message": f"Fertilizer '{name}' created."}
-
-        return {"status": "cancelled", "reason": confirmed.reason}
+        return await execute_create_fertilizer(
+            name=name,
+            get_fertilizer_by_name_func=get_fertilizer_by_name_func,
+            wiki_page_builder=wiki_page_builder,
+            create_fertilizer_func=create_fertilizer_func,
+            ask_confirmation=ask_confirmation,
+            build_confirmation_message=build_confirmation_message,
+            tool_context=tool_context,
+        )
 
     return create_fertilizer
