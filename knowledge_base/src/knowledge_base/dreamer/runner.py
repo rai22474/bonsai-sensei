@@ -209,7 +209,7 @@ def _get_wikilinks_batch(wiki_root: Path, batch_size: int) -> list[str]:
     pending = []
     for page in wiki_root.rglob("*.md"):
         rel = str(page.relative_to(wiki_root))
-        if rel.startswith(("bonsai/", "channels/", "wiki-index/")):
+        if rel.startswith(("bonsai/", "wiki-index/")):
             continue
         mtime = page.stat().st_mtime
         if processed.get(rel) != mtime:

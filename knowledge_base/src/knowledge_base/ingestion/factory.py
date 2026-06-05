@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Callable
 
-from knowledge_base.ingestion.channel_page_writer import create_channel_page_writer
 from knowledge_base.ingestion.knowledge_card_extractor import create_card_extractor
 from knowledge_base.ingestion.transcript_cleaner import create_transcript_cleaner
 
@@ -16,18 +15,17 @@ def create_ingestion_pipeline(
 ) -> Callable[[str, str], None]:
     """Create an async pipeline that ingests a YouTube video into the wiki.
 
-    Downloads the transcript, cleans it, extracts a knowledge card, writes
-    an official wiki page under wiki/channels/{channel}/{video_id}.md, then
-    triggers the wiki dreamer to maintain coherence across all wiki pages.
+    Downloads the transcript, cleans it, extracts a knowledge card, then
+    triggers the wiki dreamer to integrate the card into the wiki.
     Each step is idempotent: if the output file already exists it is skipped.
 
     Args:
-        model: LLM model used by the cleaner, extractor and page writer agents.
+        model: LLM model used by the cleaner and extractor agents.
         transcripts_root: Root directory for raw, clean and card files.
-        wiki_root: Root directory of the wiki where channel pages are written.
+        wiki_root: Root directory of the wiki.
         download_transcript: Callable that downloads a YouTube transcript to disk.
         run_wiki_dreamer: Dreamer instance shared with the admin bot (includes notify_admin).
-        orchestrator_model: More capable model used by the wiki dreamer for synthesis.
+        orchestrator_model: Unused, kept for backwards compatibility.
 
     Returns:
         Async callable: (url, channel, on_step?) -> None
@@ -35,7 +33,6 @@ def create_ingestion_pipeline(
     """
     clean_transcript = create_transcript_cleaner(model)
     extract_card = create_card_extractor(model)
-    write_channel_page = create_channel_page_writer(model)
 
     async def ingest(url: str, channel: str, on_step: Callable | None = None) -> None:
         async def notify(message: str) -> None:
@@ -47,9 +44,7 @@ def create_ingestion_pipeline(
         await notify("🧹 Limpiando transcript...")
         clean_path = await clean_transcript(raw_path, transcripts_root)
         await notify("🃏 Extrayendo ficha de conocimiento...")
-        card_path = await extract_card(clean_path, transcripts_root)
-        await notify("📝 Escribiendo página wiki del canal...")
-        await write_channel_page(card_path, wiki_root)
+        await extract_card(clean_path, transcripts_root)
         await notify("🌙 Actualizando wiki con el nuevo conocimiento...")
         await run_wiki_dreamer()
         await notify("✅ Ingestión completada.")
