@@ -16,6 +16,9 @@ from knowledge_base.api.wiki import router as wiki_router
 from knowledge_base.api.wiki_index import router as wiki_index_router
 from knowledge_base.api.wiki_review import router as wiki_review_router
 from knowledge_base.dreamer.runner import create_wiki_dreamer
+from knowledge_base.dreamer.observations_agent import create_observations_agent
+from knowledge_base.dreamer.cards_agent import create_cards_agent
+from knowledge_base.dreamer.wikilinks_agent import create_wikilinks_agent
 from knowledge_base.dreamer.scheduler import create_wiki_dreamer_scheduler
 from knowledge_base.ingestion.factory import create_ingestion_pipeline
 from knowledge_base.ingestion.transcript_loader import create_transcript_downloader
@@ -88,9 +91,11 @@ async def lifespan(app: FastAPI):
     app.state.admin_bot_manager = admin_bot_manager
 
     app.state.run_wiki_dreamer = create_wiki_dreamer(
-        effective_model,
-        transcripts_root,
-        wiki_root,
+        observations_agent=create_observations_agent(effective_model, wiki_root),
+        cards_agent=create_cards_agent(effective_model, transcripts_root, wiki_root),
+        wikilinks_agent=create_wikilinks_agent(effective_model, wiki_root),
+        wiki_root=wiki_root,
+        transcripts_root=transcripts_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
         embed=embed_text,
         episodic_memory_url=episodic_memory_url,

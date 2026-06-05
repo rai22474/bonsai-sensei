@@ -1,13 +1,21 @@
+import functools
 import json
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Awaitable, Callable, Optional
 
+from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
-from knowledge_base.dreamer.agent import _APP_NAME, create_wiki_dreamer_agent
-from knowledge_base.dreamer.memory_reader import read_high_watermark, read_new_observations, read_local_observations, read_admin_corrections, update_high_watermark
+from jinja2 import Environment, FileSystemLoader
+from knowledge_base.dreamer.memory_reader import (
+    read_admin_corrections,
+    read_high_watermark,
+    read_local_observations,
+    read_new_observations,
+    update_high_watermark,
+)
 from knowledge_base import wiki_git
 from knowledge_base.wiki_index.indexer import update_page_index
 from knowledge_base.logging_config import get_logger
@@ -15,102 +23,167 @@ from knowledge_base.metrics import DREAMER_RUNS_TOTAL, DREAMER_PAGES_CHANGED_TOT
 
 logger = get_logger(__name__)
 
-_MAX_LLM_CALLS = 100
+_MAX_LLM_CALLS_OBSERVATIONS = 20
+_MAX_LLM_CALLS_CARDS = 60
+_MAX_LLM_CALLS_WIKILINKS = 20
 _WIKILINKS_BATCH_SIZE = 5
 _PROCESSED_WIKILINKS_FILE = "dreamer-processed-wikilinks.json"
 
-_OBSERVATIONS_HEADER = (
-    "Integra en la wiki las siguientes observaciones extraídas de conversaciones recientes con usuarios:\n"
-)
-_NEW_CARDS_HEADER = (
-    "Enriquece la wiki con el conocimiento de las siguientes fichas nuevas:\n"
-)
-_WIKILINKS_HEADER = (
-    "Añade wikilinks en las siguientes páginas donde falten (procesa solo estas, no más):\n"
+_prompt_env = Environment(
+    loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
+    trim_blocks=True,
+    lstrip_blocks=True,
 )
 
 
 def create_wiki_dreamer(
-    model: object,
-    transcripts_root: Path,
+    observations_agent: Agent,
+    cards_agent: Agent,
+    wikilinks_agent: Agent,
     wiki_root: Path,
+    transcripts_root: Path,
     notify_admin: Optional[Callable[[list[str], str], None]] = None,
     embed: Optional[Callable] = None,
     episodic_memory_url: str = "",
 ) -> Callable[[], None]:
-    """Create the wiki dreamer, an autonomous agent that maintains wiki coherence.
+    """Assemble agents and I/O dependencies into a zero-argument callable that runs the wiki dreamer.
 
-    Reads knowledge cards from transcripts/cards/ and episodic observations from
-    wiki_root/observations.jsonl, then updates or creates wiki pages autonomously.
-    Wikilinks are added gradually: _WIKILINKS_BATCH_SIZE pages per run.
-    When notify_admin is provided, sends a review notification after each run that changed pages.
+    Acts as a composition root: resolves raw config (paths, URLs) into callables and binds
+    them into run_wiki_dreamer via partial application.
 
     Args:
-        model: LLM model to use.
-        transcripts_root: Root directory for transcripts (cards are read from here).
+        observations_agent: Agent that integrates conversation observations.
+        cards_agent: Agent that enriches the wiki from knowledge cards.
+        wikilinks_agent: Agent that adds wikilinks to knowledge pages.
         wiki_root: Root directory of the wiki.
+        transcripts_root: Root directory for transcripts (cards are read from here).
         notify_admin: Optional async callable (changed_files, commit_hash) -> None.
 
     Returns:
         Async callable: () -> None
     """
     wiki_git.init_wiki_repo(wiki_root)
-    agent = create_wiki_dreamer_agent(model, transcripts_root, wiki_root)
 
-    async def run_wiki_dreamer() -> None:
-        last_run = read_high_watermark(wiki_root)
-        episodic_observations = await read_new_observations(episodic_memory_url, wiki_root) if episodic_memory_url else []
-        local_observations = read_local_observations(wiki_root)
-        admin_corrections = read_admin_corrections(wiki_root)
-        observations = episodic_observations + local_observations + admin_corrections
-        new_cards = _get_new_cards(transcripts_root, last_run)
-        wikilinks_batch = _get_wikilinks_batch(wiki_root, _WIKILINKS_BATCH_SIZE)
-
-        if not observations and not new_cards and not wikilinks_batch:
-            logger.info("Wiki dreamer skipped: no new cards, observations, or pending wikilinks since %s", last_run)
-            DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
-            return
-
-        prompt = _build_prompt(observations, new_cards, wikilinks_batch)
-        logger.info(
-            "Wiki dreamer starting: %d new cards, %d new observations, %d wikilink pages",
-            len(new_cards), len(observations), len(wikilinks_batch),
+    async def read_observations() -> list[str]:
+        return (
+            (await read_new_observations(episodic_memory_url, wiki_root) if episodic_memory_url else [])
+            + read_local_observations(wiki_root)
+            + read_admin_corrections(wiki_root)
         )
-        runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
-        session_id = str(uuid.uuid4())
-        await runner.session_service.create_session(app_name=_APP_NAME, user_id=_APP_NAME, session_id=session_id)
 
-        message = types.Content(role="user", parts=[types.Part(text=prompt)])
-        async for _ in runner.run_async(
-            user_id=_APP_NAME,
-            session_id=session_id,
-            new_message=message,
-            run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS),
-        ):
-            pass
-
+    def save_run_state(wikilinks_batch: list[str]) -> None:
         update_high_watermark(wiki_root)
         if wikilinks_batch:
             _mark_wikilinks_processed(wiki_root, wikilinks_batch)
 
-        commit_hash = wiki_git.commit_wiki_changes(wiki_root, "dreamer: update wiki pages")
-        if commit_hash:
-            changed_files = wiki_git.get_changed_files(wiki_root, commit_hash)
-            if changed_files and embed is not None:
-                for file_path in changed_files:
-                    if file_path.endswith(".md"):
-                        await update_page_index(file_path, wiki_root, embed)
-            if changed_files:
-                DREAMER_RUNS_TOTAL.labels(outcome="changed").inc()
-                DREAMER_PAGES_CHANGED_TOTAL.inc(len(changed_files))
-                if notify_admin:
-                    await notify_admin(changed_files, commit_hash)
-        else:
-            DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
+    return functools.partial(
+        run_wiki_dreamer,
+        read_observations,
+        functools.partial(_get_new_cards, transcripts_root),
+        functools.partial(_get_wikilinks_batch, wiki_root, _WIKILINKS_BATCH_SIZE),
+        functools.partial(read_high_watermark, wiki_root),
+        functools.partial(_integrate_observations, observations_agent),
+        functools.partial(_enrich_from_knowledge_cards, cards_agent),
+        functools.partial(_add_wikilinks, wikilinks_agent),
+        save_run_state,
+        functools.partial(_commit_index_and_notify, wiki_root, embed, notify_admin),
+    )
 
-        logger.info("Wiki dreamer run completed")
 
-    return run_wiki_dreamer
+async def run_wiki_dreamer(
+    read_observations: Callable[[], Awaitable[list[str]]],
+    read_new_cards: Callable[[datetime], list[str]],
+    read_wikilinks_batch: Callable[[], list[str]],
+    read_last_run: Callable[[], datetime],
+    integrate_observations: Callable[[list[str]], Awaitable[None]],
+    enrich_from_knowledge_cards: Callable[[list[str]], Awaitable[None]],
+    add_wikilinks: Callable[[list[str]], Awaitable[None]],
+    save_run_state: Callable[[list[str]], None],
+    commit_and_notify: Callable[[], Awaitable[None]],
+) -> None:
+    last_run = read_last_run()
+    observations = await read_observations()
+    new_cards = read_new_cards(last_run)
+    wikilinks_batch = read_wikilinks_batch()
+
+    if not observations and not new_cards and not wikilinks_batch:
+        logger.info("Wiki dreamer skipped: no new cards, observations, or pending wikilinks since %s", last_run)
+        DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
+        return
+
+    logger.info(
+        "Wiki dreamer starting: %d new cards, %d new observations, %d wikilink pages",
+        len(new_cards), len(observations), len(wikilinks_batch),
+    )
+
+    await integrate_observations(observations)
+    await enrich_from_knowledge_cards(new_cards)
+    await add_wikilinks(wikilinks_batch)
+
+    save_run_state(wikilinks_batch)
+    await commit_and_notify()
+    logger.info("Wiki dreamer run completed")
+
+
+async def _commit_index_and_notify(
+    wiki_root: Path,
+    embed: Optional[Callable],
+    notify_admin: Optional[Callable[[list[str], str], None]],
+) -> None:
+    commit_hash = wiki_git.commit_wiki_changes(wiki_root, "dreamer: update wiki pages")
+    if commit_hash:
+        changed_files = wiki_git.get_changed_files(wiki_root, commit_hash)
+        if changed_files and embed is not None:
+            for file_path in changed_files:
+                if file_path.endswith(".md"):
+                    await update_page_index(file_path, wiki_root, embed)
+        if changed_files:
+            DREAMER_RUNS_TOTAL.labels(outcome="changed").inc()
+            DREAMER_PAGES_CHANGED_TOTAL.inc(len(changed_files))
+            if notify_admin:
+                await notify_admin(changed_files, commit_hash)
+    else:
+        DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
+
+
+async def _integrate_observations(agent: Agent, observations: list[str]) -> None:
+    if not observations:
+        return
+    
+    prompt = _prompt_env.get_template("observations_prompt.jinja2").render(observations=observations).strip()
+    await _run_phase(agent, prompt, _MAX_LLM_CALLS_OBSERVATIONS, "integrate observations")
+
+
+async def _enrich_from_knowledge_cards(agent: Agent, new_cards: list[str]) -> None:
+    if not new_cards:
+        return
+    
+    prompt = _prompt_env.get_template("cards_prompt.jinja2").render(new_cards=new_cards).strip()
+    await _run_phase(agent, prompt, _MAX_LLM_CALLS_CARDS, "enrich from knowledge cards")
+
+
+async def _add_wikilinks(agent: Agent, wikilinks_batch: list[str]) -> None:
+    if not wikilinks_batch:
+        return
+    
+    prompt = _prompt_env.get_template("wikilinks_prompt.jinja2").render(wikilinks_batch=wikilinks_batch).strip()
+    await _run_phase(agent, prompt, _MAX_LLM_CALLS_WIKILINKS, "add wikilinks")
+
+
+async def _run_phase(agent: Agent, prompt: str, max_llm_calls: int, phase_name: str) -> None:
+    logger.info("Wiki dreamer phase starting: %s", phase_name)
+    runner = InMemoryRunner(agent=agent, app_name=agent.name)
+    session_id = str(uuid.uuid4())
+    await runner.session_service.create_session(app_name=agent.name, user_id=agent.name, session_id=session_id)
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+    async for _ in runner.run_async(
+        user_id=agent.name,
+        session_id=session_id,
+        new_message=message,
+        run_config=RunConfig(max_llm_calls=max_llm_calls),
+    ):
+        pass
+    logger.info("Wiki dreamer phase completed: %s", phase_name)
 
 
 def _get_new_cards(transcripts_root: Path, since: datetime) -> list[str]:
@@ -152,17 +225,3 @@ def _mark_wikilinks_processed(wiki_root: Path, pages: list[str]) -> None:
             processed[rel] = page.stat().st_mtime
     wikilinks_file = wiki_root / _PROCESSED_WIKILINKS_FILE
     wikilinks_file.write_text(json.dumps(processed))
-
-
-def _build_prompt(observations: list[str], new_cards: list[str], wikilinks_batch: list[str]) -> str:
-    parts = []
-    if observations:
-        observations_text = "\n".join(f"- {observation}" for observation in observations)
-        parts.append(_OBSERVATIONS_HEADER + observations_text)
-    if new_cards:
-        cards_text = "\n".join(f"- {card}" for card in new_cards)
-        parts.append(_NEW_CARDS_HEADER + cards_text)
-    if wikilinks_batch:
-        pages_text = "\n".join(f"- {page}" for page in wikilinks_batch)
-        parts.append(_WIKILINKS_HEADER + pages_text)
-    return "\n\n".join(parts)

@@ -1,0 +1,26 @@
+Eres el soñador de la wiki de bonsái. Tu tarea es añadir wikilinks a páginas de conocimiento general donde falten.
+
+Para cada página indicada:
+1. Léela
+2. Busca menciones de entidades que tengan su propia página en la wiki (especies, fertilizantes, técnicas, productos, fitosanitarios, enfermedades, plagas)
+3. Sustituye por [[ruta/relativa.md|Texto visible]] si aún no está enlazada
+4. Aplica las reglas de enlazado según el tipo de página:
+
+**Páginas en `species/`** — deben enlazar a:
+- Plagas y enfermedades frecuentes de esa especie → páginas en `diseases/`
+- Técnicas aplicables → páginas en `techniques/`
+- Fertilizantes recomendados → páginas en `fertilizers/`
+
+**Páginas en `diseases/`** — deben enlazar a:
+- Productos de tratamiento → páginas en `phytosanitaries/` o `products/`
+- Especies que afecta con frecuencia → páginas en `species/`
+
+**Páginas en `techniques/`** — deben enlazar a:
+- Especies en las que la técnica es especialmente relevante → páginas en `species/`
+- Plagas o enfermedades que la técnica previene o trata → páginas en `diseases/`
+
+5. Guárdala solo si añadiste al menos un nuevo wikilink
+
+# Wikilinks
+Usa la sintaxis [[ruta/relativa.md|Texto visible]] — el texto visible es la palabra original tal como aparece en el texto.
+Solo enlaza páginas que ya existen — no inventes rutas.
