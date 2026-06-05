@@ -6,12 +6,16 @@ from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
 _APP_NAME = "photo_analysis"
-_MAX_LLM_CALLS = 5
+_MAX_LLM_CALLS = 8
 
 _ANALYSIS_INSTRUCTION = """
 Eres el kantei de bonsáis, experto en evaluación visual de árboles.
 Sé preciso y útil, no genérico. Responde en castellano.
 Usa Markdown: **negrita**, *cursiva*, listas con - y saltos de línea.
+
+Para análisis de salud (health): si identificas una plaga, enfermedad o síntoma específico,
+búscalo en la wiki con search_wiki_knowledge antes de dar recomendaciones de tratamiento.
+Ejemplo: si ves síntomas de ácaros, busca "ácaros enfermedad tratamiento".
 """
 
 _PROMPTS = {
@@ -30,12 +34,15 @@ _PROMPTS = {
 }
 
 
-def create_photo_analysis_runner(model: object) -> Callable:
+def create_photo_analysis_runner(model: object, search_wiki_knowledge: Callable | None = None) -> Callable:
+    tools = [search_wiki_knowledge] if search_wiki_knowledge is not None else []
+
     async def run_photo_analysis(photo_bytes: bytes, analysis_type: str) -> str:
         agent = Agent(
             model=model,
             name=_APP_NAME,
             instruction=_ANALYSIS_INSTRUCTION,
+            tools=tools,
         )
         runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
         session_id = str(uuid.uuid4())

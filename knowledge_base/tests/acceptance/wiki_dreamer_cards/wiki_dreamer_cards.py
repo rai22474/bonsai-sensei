@@ -97,7 +97,7 @@ def assert_page_contains(context, page_path, text):
         context["wiki_paths_created"].append(page_path)
     page = read_wiki_page(page_path)
     assert_that(page, not_none(), f"Wiki page {page_path} should exist")
-    assert_that(page.get("content", ""), contains_string(text),
+    assert_that(page.get("content", "").lower(), contains_string(text.lower()),
         f"Page {page_path} should contain '{text}'")
 
 

@@ -19,18 +19,6 @@ LLM_TOKENS_TOTAL = Counter(
     ["model", "token_type"],
 )
 
-MCP_REQUEST_DURATION = Histogram(
-    "mcp_request_duration_seconds",
-    "MCP tool call duration in seconds",
-    ["tool"],
-    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0],
-)
-
-MCP_REQUESTS_TOTAL = Counter(
-    "mcp_requests_total",
-    "Total number of MCP tool calls",
-    ["tool", "status"],
-)
 
 WIKI_REQUEST_DURATION = Histogram(
     "wiki_request_duration_seconds",

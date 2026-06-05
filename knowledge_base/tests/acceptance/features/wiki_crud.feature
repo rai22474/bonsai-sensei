@@ -1,4 +1,4 @@
-Feature: Wiki CRUD — read, write, delete and list wiki pages via MCP
+Feature: Wiki CRUD — read, write, delete and list wiki pages via REST API
 
   Scenario: Write and read a wiki page
     Given no wiki page exists at "test-crud/hello.md"

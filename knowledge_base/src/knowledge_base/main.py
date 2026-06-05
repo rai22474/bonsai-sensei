@@ -30,7 +30,6 @@ from knowledge_base.wiki_editor.runner import create_wiki_editor
 from knowledge_base.wiki_index.embedder import create_embed_text
 from knowledge_base.wiki_index.store import initialize_schema, create_save_entry
 from knowledge_base.wiki_index.searcher import create_search_by_embedding
-from knowledge_base.mcp.wiki_server import create_wiki_mcp_server, build_mcp_starlette_app
 
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -194,8 +193,3 @@ def metrics_endpoint():
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-
-_wiki_mcp_server, _wiki_sse_transport = create_wiki_mcp_server(
-    Path(os.getenv("WIKI_PATH", "./wiki"))
-)
-app.mount("/mcp", build_mcp_starlette_app(_wiki_mcp_server, _wiki_sse_transport))

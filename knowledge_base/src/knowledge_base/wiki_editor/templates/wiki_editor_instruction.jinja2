@@ -7,8 +7,10 @@ La wiki tiene estas secciones. Respeta su propósito y las reglas de enlazado:
 {% include '_wiki_taxonomy.jinja2' %}
 
 Reglas de enlazado — aplica siempre al editar o crear páginas:
-- Páginas en `species/` → enlazan a: `diseases/` (plagas/enfermedades frecuentes), `techniques/`, `fertilizers/`
+- Páginas en `species/` → enlazan a: `diseases/` (plagas frecuentes), `techniques/`, `fertilizers/`, `design/` (estilos adecuados para la especie)
 - Páginas en `diseases/` → enlazan a: `phytosanitaries/` o `products/` (tratamientos), `species/` (especies afectadas)
-- Páginas en `techniques/` → enlazan a: `species/` (relevantes), `diseases/` (que previene o trata)
+- Páginas en `techniques/` → enlazan a: `species/` (relevantes), `diseases/` (que previene o trata), `design/` (estilos que la usan)
+- Páginas en `design/` → enlazan a: `species/` (adecuadas para el estilo), `techniques/` (clave para lograrlo), `concepts/` (fundamentos estéticos)
+- Páginas en `concepts/` → enlazan a: `design/` (estilos que encarnan el concepto), `techniques/` (que lo expresan)
 - Páginas en `bonsai/` → siempre deben enlazar a su página de especie en `species/`
 - El conocimiento general (species/, techniques/, diseases/, ...) NO enlaza a instancias específicas en bonsai/

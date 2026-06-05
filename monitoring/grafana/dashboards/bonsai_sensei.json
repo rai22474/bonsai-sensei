@@ -1,13 +1,12 @@
 {
-  "title": "Bonsai Sensei \u2014 LLM & MCP Metrics",
+  "title": "Bonsai Sensei — LLM & Wiki Metrics",
   "uid": "bonsai-sensei-metrics",
   "version": 1,
   "schemaVersion": 38,
   "refresh": "30s",
   "tags": [
     "bonsai-sensei",
-    "llm",
-    "mcp"
+    "llm"
   ],
   "time": {
     "from": "now-1h",
@@ -76,28 +75,6 @@
         {
           "expr": "sum(llm_tokens_total)",
           "legendFormat": "Total Tokens",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Total MCP Calls",
-      "type": "stat",
-      "gridPos": {
-        "x": 18,
-        "y": 0,
-        "w": 6,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "sum(mcp_requests_total)",
-          "legendFormat": "Total",
           "refId": "A"
         }
       ]
@@ -174,77 +151,6 @@
         {
           "expr": "sum by (model, token_type) (rate(llm_tokens_total[5m]))",
           "legendFormat": "{{model}} {{token_type}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "title": "MCP Call Rate by Tool",
-      "type": "timeseries",
-      "gridPos": {
-        "x": 12,
-        "y": 12,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "sum by (tool) (rate(mcp_requests_total[5m]))",
-          "legendFormat": "{{tool}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "title": "MCP Latency (p50/p90/p99)",
-      "type": "timeseries",
-      "gridPos": {
-        "x": 0,
-        "y": 20,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.50, sum by (le, tool) (rate(mcp_request_duration_seconds_bucket[5m])))",
-          "legendFormat": "p50 {{tool}}",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.90, sum by (le, tool) (rate(mcp_request_duration_seconds_bucket[5m])))",
-          "legendFormat": "p90 {{tool}}",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "title": "MCP Error Rate %",
-      "type": "timeseries",
-      "gridPos": {
-        "x": 12,
-        "y": 20,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "100 * sum by (tool) (rate(mcp_requests_total{status=\"error\"}[5m])) / sum by (tool) (rate(mcp_requests_total[5m]))",
-          "legendFormat": "{{tool}}",
           "refId": "A"
         }
       ]

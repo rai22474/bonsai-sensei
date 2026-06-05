@@ -56,7 +56,7 @@ def confirm_species_creation(context, name, scientific_name):
 def request_ambiguous_species(context, name, external_stubs_ambiguous):
     context["created"].append(name)
     response = advise(
-        text=f"Da de alta la especie de bonsái {name}.",
+        text=f'Da de alta la especie de bonsái con nombre común "{name}". Usa exactamente ese nombre.',
         user_id=context["user_id"],
     )
     context["pending_selections"] = response.get("pending_selections", [])

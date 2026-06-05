@@ -4,17 +4,31 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 
 ---
 
-## FUTURE-004 — Índice wiki en sub-agentes (kantei, storekeeper)
+## FUTURE-004 — Búsqueda semántica wiki en kantei ✅ IMPLEMENTADO (2026-06-05)
 
 **Contexto:**
-El agente sensei tiene `search_wiki_knowledge` (búsqueda semántica top-5 sobre el índice de `knowledge_base`). Los sub-agentes (kantei, storekeeper) no la tienen — operan sin acceso al conocimiento general de la wiki.
+El agente sensei tiene `search_wiki_knowledge` (búsqueda semántica top-5). Los sub-agentes que toman decisiones de conocimiento no la tienen. Análisis por agente:
 
-**Pendiente:**
-- Añadir `search_wiki_knowledge` a kantei: el diagnóstico de salud mejoraría con acceso a páginas de enfermedades y técnicas de tratamiento.
-- Añadir `search_wiki_knowledge` a storekeeper si necesita consultar protocolos de abonado o fitosanitarios.
-- El HTTP client ya existe en `bonsai_sensei/infrastructure/wiki_client.py` — solo hay que inyectarlo en los context builders de cada sub-agente.
+- **kantei**: diagnostica salud y diseño desde fotos. No tiene acceso a `diseases/` ni `phytosanitaries/`. Si detecta ácaros en una foto, no puede leer `diseases/acaros.md` para orientar el tratamiento. **Candidato claro.**
+- **storekeeper**: gestiona el catálogo y crea las wiki pages de fertilizantes/fitosanitarios. No necesita buscar lo que ya escribe.
+- **botanist**: ya tiene `read_wiki_page` y conoce las rutas exactas de especies.
+- **kikaru**: ya tiene `read_wiki_page` para planes; las rutas son conocidas.
+- **caretaker**, **nursery**, **gallery**: ejecución/gestión, sin decisiones de conocimiento.
 
-**Dependencia:** `knowledge_base` ISSUE-KB-001 (MCP devuelve vacío) no afecta — sensei usa HTTP client, no MCP.
+**Implementación:**
+- `kantei/photo_analysis_runner.py`: acepta `search_wiki_knowledge: Callable | None`; la añade como tool al agente de análisis; instrucción actualizada para que consulte la wiki al identificar plagas/enfermedades en análisis `health`
+- `kantei/factory.py`: crea `search_wiki_knowledge` via `create_http_search_wiki_knowledge_tool(kb_base_url)`; acepta `kb_base_url`; lo pasa al runner
+- `factory.py`: `create_sensei_group` pasa `kb_base_url` a `create_kantei_group`
+- MCP eliminado del sistema completo (ver abajo)
+
+**Eliminación del MCP (hecho en este mismo FUTURE):**
+El MCP server de `knowledge_base` devolvía siempre `{"results": []}` — `embed_func` y `search_index` nunca se pasaban al servidor. Sensei llevaba meses con búsqueda wiki rota.
+- `knowledge_base/mcp/` eliminado
+- `knowledge_base/main.py`: mount `/mcp` eliminado
+- `bonsai_sensei/main.py`: bloque MCP loading eliminado
+- `bonsai_sensei/domain/services/factory.py`: `wiki_tools` eliminado; sensei recibe `search_wiki_knowledge` + `read_wiki_page` via HTTP client directamente
+- `bonsai_sensei/domain/services/wiki_search.py`: eliminado (dead code)
+- `tests/acceptance/stub_kb_mcp.py`: simplificado a REST puro (sin MCP)
 
 ---
 
@@ -127,4 +141,30 @@ Agente libre con acceso a:
 El agente conduce una conversación para entender el objetivo, el estado actual del árbol y las limitaciones del usuario (tiempo disponible, nivel de experiencia), y produce el plan adaptado.
 
 **Vínculo con vision.md:**
-Cubre directamente el caso de uso "Generación de plan estándar por especie/diseño". Implementar después de FUTURE-002 si se quiere que el agente consulte la base de conocimiento de técnicas; puede implementarse antes si se apoya solo en el conocimiento del modelo.
+Cubre directamente el caso de uso "Generación de plan estándar por especie/diseño". Implementar después de FUTURE-002 si se quiere que el agente consulte la base de conocimiento de técnicas (ver `knowledge_base/docs/roadmap.md`); puede implementarse antes si se apoya solo en el conocimiento del modelo.
+
+---
+
+## FUTURE-011 — Generación de imágenes de referencia para el plan de diseño
+
+**Contexto:**
+El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y ventanas temporales. Para objetivos visuales ("afinar ápice", "dar movimiento al primer tramo") una imagen de referencia aporta información que el texto no puede transmitir. El usuario necesita ver, no solo leer.
+
+**Dos sub-opciones a evaluar:**
+
+**Opción A — Imagen de referencia estética** (recomendada como punto de partida):
+- Tool `generate_design_image(description, bonsai_id)` en el agente de plan de diseño
+- Llama a Imagen API con un prompt construido a partir del objetivo + especie + estilo
+- Guarda resultado en `gallery/design-references/`
+- El agente incrusta la referencia en el wiki plan (`design-plan.md`) como imagen inline
+- Mínimo código nuevo; máxima libertad conversacional; misma lógica que Opción B del dominio (wiki first)
+
+**Opción B — Diagrama técnico anotado sobre foto real** (segunda iteración si Opción A valida el flujo):
+- El agente recupera la foto más reciente del árbol desde galería
+- Envía foto + descripción de técnica a Gemini multimodal
+- Gemini devuelve imagen con marcas superpuestas (dirección de alambre, cortes de poda)
+- Más útil para el usuario; más complejo; requiere que el árbol tenga fotos en galería
+
+**Recomendación:** Implementar Opción A primero. Migrar a Opción B si la referencia estética resulta insuficiente o si el usuario pide anotaciones sobre su árbol real.
+
+**Dependencia:** FUTURE-010 debe estar implementado (el agente de plan de diseño es el host natural de este tool).

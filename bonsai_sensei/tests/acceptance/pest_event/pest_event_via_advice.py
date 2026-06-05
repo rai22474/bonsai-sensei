@@ -32,8 +32,11 @@ def apply_phytosanitary_via_advice(context, product_name, bonsai_name, amount):
 @when(parsers.parse('I select the pest event for "{pest_name}" to link'))
 def select_pest_event_to_link(context, pest_name):
     selections = context.get("pending_selections", [])
-    if not selections:
-        return
+    assert selections, (
+        f"Expected a pending selection to link the phytosanitary to a pest event, "
+        f"but got none. The apply_phytosanitary tool may not have been called or "
+        f"did not present a pest event selection."
+    )
     selection_id = selections[0]["id"]
     options = selections[0].get("options", [])
     matching = next((opt for opt in options if pest_name.lower() in opt.lower()), None)

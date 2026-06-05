@@ -210,6 +210,7 @@ def create_ask_selection(
         options: list[str],
         tool_context: ToolContext | None = None,
         photos: list[str] | None = None,
+        user_id: str | None = None,
     ) -> str | SelectionNoneResult:
         """Present a list of options to the user and wait for their selection.
 
@@ -229,10 +230,10 @@ def create_ask_selection(
             The selected option string, or SelectionNoneResult if the user
             indicated none of the options were appropriate.
         """
-        user_id = resolve_confirmation_user_id(tool_context)
+        resolved_user_id = user_id or resolve_confirmation_user_id(tool_context)
         selection_id = uuid.uuid4().hex
         event = asyncio.Event()
-        pending_responses[user_id] = {
+        pending_responses[resolved_user_id] = {
             "event": event,
             "response": None,
             "type": "selection",
@@ -241,14 +242,14 @@ def create_ask_selection(
             "options": options,
         }
         if send_photo_selection_func and photos and len(photos) == len(options):
-            await send_photo_selection_func(user_id, question, options, photos, selection_id)
+            await send_photo_selection_func(resolved_user_id, question, options, photos, selection_id)
         else:
-            await send_selection_func(user_id, question, options, selection_id)
+            await send_selection_func(resolved_user_id, question, options, selection_id)
         try:
             await asyncio.wait_for(event.wait(), timeout=timeout_seconds)
         except TimeoutError:
-            pending_responses.pop(user_id, None)
+            pending_responses.pop(resolved_user_id, None)
             return SelectionNoneResult(reason="timeout")
-        return pending_responses.pop(user_id)["response"]
+        return pending_responses.pop(resolved_user_id)["response"]
 
     return ask_selection
