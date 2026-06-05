@@ -40,6 +40,9 @@ services:
       - TRANSCRIPTS_PATH=/app/transcripts
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - EPISODIC_MEMORY_URL=http://episodic-memory:8080
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - WIKI_INDEX_GRAPH=wiki_index
     volumes:
       - ./wiki:/app/wiki
       - ./transcripts:/app/transcripts
@@ -53,6 +56,8 @@ services:
       db:
         condition: service_healthy
       episodic-memory:
+        condition: service_healthy
+      falkordb:
         condition: service_healthy
 
   episodic-memory:

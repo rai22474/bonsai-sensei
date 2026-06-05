@@ -20,6 +20,7 @@ def create_wiki_editor(
     wiki_root: Path,
     notify_admin: Optional[Callable] = None,
     embed: Optional[Callable] = None,
+    save_entry: Optional[Callable] = None,
     web_searcher: Optional[Callable] = None,
 ) -> Callable:
     """Creates the wiki editor runner, a conversational agent for admin wiki management.
@@ -57,7 +58,7 @@ def create_wiki_editor(
             if changed_files and embed is not None:
                 for file_path in changed_files:
                     if file_path.endswith(".md"):
-                        await update_page_index(file_path, wiki_root, embed)
+                        await update_page_index(file_path, wiki_root, embed, save_entry)
             if changed_files and notify_admin:
                 await notify_admin(changed_files, commit_hash)
 

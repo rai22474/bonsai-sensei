@@ -1,56 +1,77 @@
-import json
-from pathlib import Path
+from typing import Callable
+
+import falkordb
+from redis.exceptions import ResponseError
 
 from knowledge_base.wiki_index.entry import IndexEntry
 
-_INDEX_DIR = "wiki-index"
+
+def initialize_schema(graph: falkordb.Graph) -> None:
+    """Create WikiPage vector index. No-op if already exists."""
+    try:
+        graph.create_node_vector_index('WikiPage', 'embedding', dim=3072, similarity_function='cosine')
+    except ResponseError as error:
+        if 'already indexed' not in str(error).lower():
+            raise
 
 
-def save_entry(wiki_root: Path, entry: IndexEntry) -> None:
-    """Save an index entry to wiki-index/<page_path>.json (creates dirs as needed)."""
-    index_file = _entry_path(wiki_root, entry.page_path)
-    index_file.parent.mkdir(parents=True, exist_ok=True)
-    index_file.write_text(
-        json.dumps({
-            "page_path": entry.page_path,
-            "abstract": entry.abstract,
-            "links": entry.links,
-            "embedding": entry.embedding,
-        }),
-        encoding="utf-8",
-    )
-
-
-def load_entry(wiki_root: Path, page_path: str) -> IndexEntry | None:
-    """Load a single index entry. Returns None if not found."""
-    index_file = _entry_path(wiki_root, page_path)
-    if not index_file.exists():
-        return None
-    data = json.loads(index_file.read_text(encoding="utf-8"))
-    return IndexEntry(
-        page_path=data["page_path"],
-        abstract=data["abstract"],
-        links=data["links"],
-        embedding=data["embedding"],
-    )
-
-
-def load_all_entries(wiki_root: Path) -> list[IndexEntry]:
-    """Load all index entries from wiki-index/. Returns empty list if dir doesn't exist."""
-    index_dir = wiki_root / _INDEX_DIR
-    if not index_dir.exists():
-        return []
-    return [
-        IndexEntry(
-            page_path=data["page_path"],
-            abstract=data["abstract"],
-            links=data["links"],
-            embedding=data["embedding"],
+def create_save_entry(graph: falkordb.Graph) -> Callable[[IndexEntry], None]:
+    """Return a callable that persists an IndexEntry to FalkorDB."""
+    def save_entry(entry: IndexEntry) -> None:
+        graph.query(
+            "MERGE (node:WikiPage {page_path: $page_path}) "
+            "SET node.abstract = $abstract, node.embedding = vecf32($embedding)",
+            {'page_path': entry.page_path, 'abstract': entry.abstract, 'embedding': entry.embedding},
         )
-        for json_file in index_dir.rglob("*.json")
-        for data in [json.loads(json_file.read_text(encoding="utf-8"))]
-    ]
+        for link in entry.links:
+            graph.query(
+                "MATCH (source:WikiPage {page_path: $source_path}) "
+                "MERGE (target:WikiPage {page_path: $target_path}) "
+                "MERGE (source)-[:LINKS_TO]->(target)",
+                {'source_path': entry.page_path, 'target_path': link},
+            )
+    return save_entry
 
 
-def _entry_path(wiki_root: Path, page_path: str) -> Path:
-    return wiki_root / _INDEX_DIR / (page_path + ".json")
+def create_load_entry(graph: falkordb.Graph) -> Callable[[str], IndexEntry | None]:
+    """Return a callable that loads a single IndexEntry by page_path."""
+    def load_entry(page_path: str) -> IndexEntry | None:
+        result = graph.query(
+            "MATCH (node:WikiPage {page_path: $page_path}) RETURN node",
+            {'page_path': page_path},
+        )
+        if not result.result_set:
+            return None
+        node = result.result_set[0][0]
+        return IndexEntry(
+            page_path=node.properties['page_path'],
+            abstract=node.properties.get('abstract', ''),
+            links=_load_links(graph, page_path),
+            embedding=list(node.properties.get('embedding', [])),
+        )
+    return load_entry
+
+
+def create_load_all_entries(graph: falkordb.Graph) -> Callable[[], list[IndexEntry]]:
+    """Return a callable that loads all IndexEntry records from FalkorDB."""
+    def load_all_entries() -> list[IndexEntry]:
+        result = graph.query("MATCH (node:WikiPage) WHERE node.abstract IS NOT NULL RETURN node")
+        return [
+            IndexEntry(
+                page_path=node.properties['page_path'],
+                abstract=node.properties.get('abstract', ''),
+                links=_load_links(graph, node.properties['page_path']),
+                embedding=list(node.properties.get('embedding', [])),
+            )
+            for row in result.result_set
+            for node in [row[0]]
+        ]
+    return load_all_entries
+
+
+def _load_links(graph: falkordb.Graph, page_path: str) -> list[str]:
+    result = graph.query(
+        "MATCH (:WikiPage {page_path: $page_path})-[:LINKS_TO]->(target:WikiPage) RETURN target.page_path",
+        {'page_path': page_path},
+    )
+    return [row[0] for row in result.result_set]

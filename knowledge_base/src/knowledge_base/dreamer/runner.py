@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Awaitable, Callable, Optional
 
+from google.adk.agents.invocation_context import LlmCallsLimitExceededError
 from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
@@ -25,7 +26,7 @@ logger = get_logger(__name__)
 
 _MAX_LLM_CALLS_OBSERVATIONS = 20
 _MAX_LLM_CALLS_CARDS = 60
-_MAX_LLM_CALLS_WIKILINKS = 20
+_MAX_LLM_CALLS_WIKILINKS = 50
 _WIKILINKS_BATCH_SIZE = 5
 _PROCESSED_WIKILINKS_FILE = "dreamer-processed-wikilinks.json"
 
@@ -44,6 +45,7 @@ def create_wiki_dreamer(
     transcripts_root: Path,
     notify_admin: Optional[Callable[[list[str], str], None]] = None,
     embed: Optional[Callable] = None,
+    save_entry: Optional[Callable] = None,
     episodic_memory_url: str = "",
 ) -> Callable[[], None]:
     """Assemble agents and I/O dependencies into a zero-argument callable that runs the wiki dreamer.
@@ -86,7 +88,7 @@ def create_wiki_dreamer(
         functools.partial(_enrich_from_knowledge_cards, cards_agent),
         functools.partial(_add_wikilinks, wikilinks_agent),
         save_run_state,
-        functools.partial(_commit_index_and_notify, wiki_root, embed, notify_admin),
+        functools.partial(_commit_index_and_notify, wiki_root, embed, save_entry, notify_admin),
     )
 
 
@@ -128,6 +130,7 @@ async def run_wiki_dreamer(
 async def _commit_index_and_notify(
     wiki_root: Path,
     embed: Optional[Callable],
+    save_entry: Optional[Callable],
     notify_admin: Optional[Callable[[list[str], str], None]],
 ) -> None:
     commit_hash = wiki_git.commit_wiki_changes(wiki_root, "dreamer: update wiki pages")
@@ -136,7 +139,8 @@ async def _commit_index_and_notify(
         if changed_files and embed is not None:
             for file_path in changed_files:
                 if file_path.endswith(".md"):
-                    await update_page_index(file_path, wiki_root, embed)
+                    await update_page_index(file_path, wiki_root, embed, save_entry)
+        
         if changed_files:
             DREAMER_RUNS_TOTAL.labels(outcome="changed").inc()
             DREAMER_PAGES_CHANGED_TOTAL.inc(len(changed_files))
@@ -176,13 +180,16 @@ async def _run_phase(agent: Agent, prompt: str, max_llm_calls: int, phase_name: 
     session_id = str(uuid.uuid4())
     await runner.session_service.create_session(app_name=agent.name, user_id=agent.name, session_id=session_id)
     message = types.Content(role="user", parts=[types.Part(text=prompt)])
-    async for _ in runner.run_async(
-        user_id=agent.name,
-        session_id=session_id,
-        new_message=message,
-        run_config=RunConfig(max_llm_calls=max_llm_calls),
-    ):
-        pass
+    try:
+        async for _ in runner.run_async(
+            user_id=agent.name,
+            session_id=session_id,
+            new_message=message,
+            run_config=RunConfig(max_llm_calls=max_llm_calls),
+        ):
+            pass
+    except LlmCallsLimitExceededError:
+        logger.warning("Wiki dreamer phase hit LLM calls limit, partial progress kept: %s (limit=%d)", phase_name, max_llm_calls)
     logger.info("Wiki dreamer phase completed: %s", phase_name)
 
 

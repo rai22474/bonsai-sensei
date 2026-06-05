@@ -29,6 +29,7 @@ class AdminBotManager:
         wiki_review_handler: Callable,
         wiki_editor: Optional[Callable] = None,
         embed: Optional[Callable] = None,
+        save_entry: Optional[Callable] = None,
     ):
         self._bot = bot
         self._wiki_root = wiki_root
@@ -38,6 +39,7 @@ class AdminBotManager:
         self._wiki_review_handler = wiki_review_handler
         self._wiki_editor = wiki_editor
         self._embed = embed
+        self._save_entry = save_entry
         self._chat_id: str | None = None
 
     def set_chat_id(self, chat_id: str | None) -> None:
@@ -70,11 +72,11 @@ class AdminBotManager:
             task.add_done_callback(self._log_task_exception)
 
         async def index_command(update, context):
-            if self._embed is None:
+            if self._embed is None or self._save_entry is None:
                 await update.message.reply_text("⚠️ El indexador no está configurado.")
                 return
             await update.message.reply_text("🔍 Indexando wiki...")
-            count = await build_full_index(self._wiki_root, self._embed)
+            count = await build_full_index(self._wiki_root, self._embed, self._save_entry)
             await update.message.reply_text(f"✅ Índice construido: {count} páginas indexadas.")
 
         async def ingest_command(update, context):

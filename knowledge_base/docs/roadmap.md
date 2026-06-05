@@ -67,7 +67,88 @@ Reglas invariantes:
 
 ---
 
-## FUTURE-004 — Migrar el índice wiki a FalkorDB
+## FUTURE-005 — Mejorar la instrucción del agente de fichas (cards phase) ✅ IMPLEMENTADO (2026-06-05)
+
+**Estado:** Implementado.
+
+**Implementación:**
+- `dreamer/tools.py`: añadido `create_search_wiki_knowledge_tool(embed, search_by_embedding)` — async tool que sustituye `list_wiki_pages` en el cards agent
+- `dreamer/cards_agent.py`: factory acepta `embed` + `search_by_embedding` opcionales; si presentes usa `search_wiki_knowledge`, si no hace fallback a `list_wiki_pages`
+- `dreamer/templates/cards_instruction.jinja2`: reescrito con los 7 fixes: taxonomía completa, búsqueda semántica, secciones canónicas por tipo, reglas de slug, granularidad, formato de Fuentes, regla `bonsai/` vs conocimiento general
+- `main.py`: `create_cards_agent` recibe `embed=embed_text` y `search_by_embedding=app.state.search_by_embedding`
+
+**Orden de trabajo al retomar
+
+**Contexto:**
+La instrucción actual (`dreamer/templates/cards_instruction.jinja2`) es funcional pero tiene 7 problemas estructurales identificados. Algunos se pueden resolver ahora; el principal (búsqueda de páginas) requiere FUTURE-004 (FalkorDB).
+
+**Dependencia parcial:** FUTURE-004 para el punto 1 (búsqueda semántica). Los demás son independientes.
+
+### Problemas identificados
+
+**1. `list_wiki_pages` + matching manual → reemplazar con búsqueda semántica** *(requiere FUTURE-004)*
+
+El agente lista 100+ rutas y el LLM adivina el slug (`"Mekiri"` → `techniques/mekiri.md`). Con FalkorDB:
+- Dar al cards agent la tool `search_wiki_knowledge` (ya existe en el sensei)
+- El agente busca `search_wiki_knowledge("mekiri técnica pinos")` → encuentra `techniques/mekiri.md` por semántica
+- `list_wiki_pages` ya no necesaria para lookup de entidades; puede eliminarse del cards agent
+
+**2. Taxonomía incompleta en "entidades relevantes"**
+
+La instrucción dice `especie, fertilizante, técnica, producto`. Falta: `plaga`, `enfermedad` (ahora en `diseases/`), `fitosanitario`. El agente ignora contenido relevante sobre plagas y fitosanitarios.
+
+**3. "Añade lo que falte" es demasiado vago**
+
+Sin estructura esperada por tipo de página, cada run produce páginas inconsistentes. Añadir secciones canónicas por tipo:
+- Técnica: `## Descripción`, `## Cuándo aplicar`, `## Especies relevantes`, `## Fuentes`
+- Especie: `## Cuidados generales`, `## Plagas comunes`, `## Técnicas aplicables`, `## Fuentes`
+- Fertilizante/producto: `## Composición`, `## Aplicación`, `## Fuentes`
+
+**4. Sin resolución de nombres → slugs**
+
+No hay instrucción sobre cómo derivar slug desde nombre de entidad. Riesgo de crear `wiki/mekiri.md` en raíz o `techniques/Mekiri.md` con mayúscula. Regla a añadir: minúsculas, guiones, sin tildes ni caracteres especiales, en el directorio correcto según tipo.
+
+**5. Sin estructura de wiki visible en la instrucción**
+
+El agente no conoce los directorios (`species/`, `techniques/`, `diseases/`, `fertilizers/`, `products/`, `phytosanitaries/`). Añadir tabla de taxonomía igual que en la instrucción del wiki editor.
+
+**6. Sin reglas de granularidad**
+
+¿Una sub-técnica (`meka-nuki`) merece página propia o es sección de la técnica padre? Sin regla, cada run decide distinto. Regla propuesta: solo crear página nueva si la entidad tiene nombre propio y más de un párrafo de contenido independiente; si no, añadir como sección de la página más relacionada.
+
+**7. Formato de `## Fuentes` no especificado**
+
+Decir "mantén `## Fuentes`" sin formato produce secciones inconsistentes. Formato canónico propuesto:
+```markdown
+## Fuentes
+- [Nombre del canal](channels/slug-del-canal/video-id.md) — descripción breve del contenido
+```
+Si no hay página del canal, solo el nombre y URL de la ficha.
+
+### Orden de trabajo al retomar
+1. Aplicar mejoras 2, 3, 4, 5, 6, 7 (independientes de FalkorDB)
+2. Implementar FUTURE-004 (FalkorDB)
+3. Añadir `search_wiki_knowledge` al cards agent (`cards_agent.py`) y retirar `list_wiki_pages`
+4. Actualizar instrucción para usar búsqueda semántica en lugar de listado
+
+---
+
+## FUTURE-004 — Migrar el índice wiki a FalkorDB ✅ IMPLEMENTADO (2026-06-05)
+
+**Estado:** Implementado.
+
+**Implementación:**
+- `wiki_index/store.py` reescrito: `initialize_schema`, `create_save_entry`, `create_load_entry`, `create_load_all_entries` — todos con `falkordb.Graph` como dependencia inyectada
+- `wiki_index/searcher.py` reescrito: `create_search_by_embedding` usa KNN Cypher (`db.idx.vector.queryNodes`); convierte distancia a similitud (`1 - score`)
+- `wiki_index/indexer.py` actualizado: `save_entry: Callable` como parámetro en `update_page_index` y `build_full_index`
+- `dreamer/runner.py`, `wiki_editor/runner.py`, `telegram/admin_bot.py`, `api/wiki_index.py` actualizados para propagar `save_entry`
+- `main.py`: crea `falkordb.Graph`, llama `initialize_schema`, enlaza callables en `app.state`
+- `pyproject.toml`: `falkordb>=1.0` añadido, `numpy` eliminado
+- `docker-compose.yml`: `knowledge_base` recibe `FALKORDB_HOST`, `FALKORDB_PORT`, `WIKI_INDEX_GRAPH` y `depends_on: falkordb`
+
+**Pendiente:**
+- Reconstruir el índice: `POST /api/wiki/index/rebuild` (el índice anterior en JSON ya no existe; FalkorDB arranca vacío)
+- Traversal FUTURE-002 (ver query Cypher en sección original)
 
 **Contexto:**
 El índice wiki actual (`wiki_index/`) almacena embeddings en disco como JSON + arrays numpy. Funciona bien para <500 páginas (búsqueda plana en microsegundos), pero no soporta traversal por grafo. FalkorDB ya corre en producción (`docker-compose.yml`) para el servicio `episodic_memory`; el coste operacional es cero.

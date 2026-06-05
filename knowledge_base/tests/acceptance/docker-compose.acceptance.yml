@@ -13,9 +13,23 @@ services:
       - EPISODIC_MEMORY_URL=
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - WIKI_INDEX_GRAPH=wiki_index
     volumes:
       - kb_wiki:/app/wiki
       - kb_transcripts:/app/transcripts
+    depends_on:
+      falkordb:
+        condition: service_healthy
+
+  falkordb:
+    image: falkordb/falkordb:latest
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   kb_wiki:

@@ -1,29 +1,21 @@
 from typing import Callable
 
-import numpy as np
-
-from knowledge_base.wiki_index.entry import IndexEntry
+import falkordb
 
 
-def search_by_embedding(query_embedding: list[float], load_entries: Callable[[], list[IndexEntry]], top_k: int = 5) -> list[tuple[str, str, float]]:
-    """Return top_k (page_path, abstract, score) tuples sorted by cosine similarity descending."""
-    entries = load_entries()
-    if not entries:
-        return []
-
-    query_vector = np.array(query_embedding, dtype=np.float32)
-    query_norm = np.linalg.norm(query_vector)
-    if query_norm == 0:
-        return []
-
-    scored = []
-    for entry in entries:
-        entry_vector = np.array(entry.embedding, dtype=np.float32)
-        entry_norm = np.linalg.norm(entry_vector)
-        if entry_norm == 0:
-            continue
-        score = float(np.dot(query_vector, entry_vector) / (query_norm * entry_norm))
-        scored.append((entry.page_path, entry.abstract, score))
-
-    scored.sort(key=lambda triple: triple[2], reverse=True)
-    return scored[:top_k]
+def create_search_by_embedding(graph: falkordb.Graph) -> Callable[[list[float], int], list[tuple[str, str, float]]]:
+    """Return a callable that performs KNN vector search over WikiPage nodes."""
+    def search_by_embedding(query_embedding: list[float], top_k: int = 5) -> list[tuple[str, str, float]]:
+        """Return top_k (page_path, abstract, score) tuples sorted by cosine similarity descending."""
+        result = graph.query(
+            "CALL db.idx.vector.queryNodes('WikiPage', 'embedding', $k, vecf32($embedding)) "
+            "YIELD node, score "
+            "RETURN node.page_path, node.abstract, score",
+            {'k': top_k, 'embedding': query_embedding},
+        )
+        return [
+            (row[0], row[1], round(1.0 - row[2], 6))
+            for row in result.result_set
+            if row[0] is not None and row[1] is not None
+        ]
+    return search_by_embedding

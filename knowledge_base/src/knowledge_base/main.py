@@ -28,6 +28,8 @@ from knowledge_base.telegram.bot import TelegramBot
 from knowledge_base.telegram.handle_wiki_review_callback import handle_wiki_review_callback
 from knowledge_base.wiki_editor.runner import create_wiki_editor
 from knowledge_base.wiki_index.embedder import create_embed_text
+from knowledge_base.wiki_index.store import initialize_schema, create_save_entry
+from knowledge_base.wiki_index.searcher import create_search_by_embedding
 from knowledge_base.mcp.wiki_server import create_wiki_mcp_server, build_mcp_starlette_app
 
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -53,6 +55,16 @@ async def lifespan(app: FastAPI):
 
     embed_text = create_embed_text(os.getenv("GEMINI_API_KEY", ""))
     app.state.embed_text = embed_text
+
+    import falkordb as falkordb_lib
+    falkordb_client = falkordb_lib.FalkorDB(
+        host=os.getenv("FALKORDB_HOST", "falkordb"),
+        port=int(os.getenv("FALKORDB_PORT", "6379")),
+    )
+    wiki_graph = falkordb_client.select_graph(os.getenv("WIKI_INDEX_GRAPH", "wiki_index"))
+    initialize_schema(wiki_graph)
+    app.state.save_entry = create_save_entry(wiki_graph)
+    app.state.search_by_embedding = create_search_by_embedding(wiki_graph)
 
     episodic_memory_url = os.getenv("EPISODIC_MEMORY_URL", "")
 
@@ -86,18 +98,24 @@ async def lifespan(app: FastAPI):
         ingest_transcript=None,
         wiki_review_handler=wiki_review_handler,
         embed=embed_text,
+        save_entry=app.state.save_entry,
     )
     admin_bot_manager.set_chat_id(admin_chat_id)
     app.state.admin_bot_manager = admin_bot_manager
 
     app.state.run_wiki_dreamer = create_wiki_dreamer(
         observations_agent=create_observations_agent(effective_model, wiki_root),
-        cards_agent=create_cards_agent(effective_model, transcripts_root, wiki_root),
+        cards_agent=create_cards_agent(
+            effective_model, transcripts_root, wiki_root,
+            embed=embed_text,
+            search_by_embedding=app.state.search_by_embedding,
+        ),
         wikilinks_agent=create_wikilinks_agent(effective_model, wiki_root),
         wiki_root=wiki_root,
         transcripts_root=transcripts_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
         embed=embed_text,
+        save_entry=app.state.save_entry,
         episodic_memory_url=episodic_memory_url,
     )
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
@@ -121,6 +139,7 @@ async def lifespan(app: FastAPI):
         wiki_root,
         notify_admin=admin_bot_manager.notify_wiki_changes,
         embed=embed_text,
+        save_entry=app.state.save_entry,
         web_searcher=web_searcher,
     )
     admin_bot_manager._wiki_editor = app.state.wiki_editor

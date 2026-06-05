@@ -1,5 +1,4 @@
 import os
-from functools import partial
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -14,10 +13,11 @@ router = APIRouter(prefix="/wiki/index", tags=["wiki-index"])
 async def rebuild_wiki_index(request: Request):
     """Rebuild the full wiki semantic index. Embeds all .md pages. May take 30-60s."""
     embed = getattr(request.app.state, "embed_text", None)
-    if embed is None:
-        raise HTTPException(status_code=503, detail="embedder_not_configured")
+    save_entry = getattr(request.app.state, "save_entry", None)
+    if embed is None or save_entry is None:
+        raise HTTPException(status_code=503, detail="indexer_not_configured")
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
-    count = await build_full_index(wiki_root, embed)
+    count = await build_full_index(wiki_root, embed, save_entry)
     return {"indexed_pages": count}
 
 
@@ -30,15 +30,11 @@ class WikiSearchRequest(BaseModel):
 async def search_wiki_index(body: WikiSearchRequest, request: Request):
     """Search the wiki knowledge base semantically. Returns top matching pages with path, abstract, and score."""
     embed = getattr(request.app.state, "embed_text", None)
-    if embed is None:
-        raise HTTPException(status_code=503, detail="embedder_not_configured")
-    from knowledge_base.wiki_index.searcher import search_by_embedding
-    from knowledge_base.wiki_index.store import load_all_entries
-    wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
-    entry_loader = partial(load_all_entries, wiki_root)
-    search_index = partial(search_by_embedding, load_entries=entry_loader)
+    search_by_embedding = getattr(request.app.state, "search_by_embedding", None)
+    if embed is None or search_by_embedding is None:
+        raise HTTPException(status_code=503, detail="indexer_not_configured")
     query_embedding = await embed(body.query)
-    results = search_index(query_embedding)[:body.top_k]
+    results = search_by_embedding(query_embedding, body.top_k)
     return {
         "results": [
             {"page_path": page_path, "abstract": abstract, "score": round(score, 3)}

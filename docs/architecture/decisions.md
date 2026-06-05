@@ -348,7 +348,7 @@ La solución: el tool devuelve `active_plan: bool` como dato; el LLM lo menciona
 
 ## ADR-013 — Índice semántico de wiki con embeddings (FUTURE-002)
 
-**Estado:** Implementado (2026-05-25)
+**Estado:** Supersedido por ADR-014 (2026-06-05)
 
 **Contexto:**
 Los agentes no podían encontrar páginas wiki creadas por el dreamer porque no están registradas en la base de datos. Al mismo tiempo, cargar todas las páginas añade ruido innecesario. FUTURE-002 proponía un índice con embeddings para búsqueda semántica.
@@ -380,4 +380,47 @@ wiki-index/<page_path>.json  →  {page_path, abstract, links, embedding}
 - Páginas con abstract vacío se omiten del índice (guard en indexer).
 - El índice se puede reconstruir desde cero en cualquier momento sin pérdida de datos — es solo caché de los `.md`.
 - No hay índice global que gestionar: cada página actualiza su propio JSON.
+
+---
+
+## ADR-014 — Índice wiki migrado a FalkorDB (FUTURE-004)
+
+**Estado:** Implementado (2026-06-05). Supersede ADR-013.
+
+**Contexto:**
+ADR-013 almacenaba embeddings en `wiki-index/<page_path>.json` y calculaba similitud coseno en memoria con numpy. Funcional para <500 páginas, pero sin soporte para traversal por grafo. FalkorDB ya corre en producción para `episodic_memory` — coste operacional cero para añadir un segundo grafo.
+
+**Decisión:**
+El índice wiki se migra a FalkorDB usando un grafo separado (`WIKI_INDEX_GRAPH=wiki_index`). Un nodo `WikiPage` por página; relaciones `[:LINKS_TO]` entre páginas enlazadas. Vector index nativo sobre `embedding` (3072 dims, cosine).
+
+**Schema:**
+```cypher
+(:WikiPage {page_path, abstract, embedding: vecf32[3072]})
+(:WikiPage)-[:LINKS_TO]->(:WikiPage)
+
+CREATE VECTOR INDEX FOR (n:WikiPage) ON (n.embedding)
+  OPTIONS {dimension: 3072, similarityFunction: 'cosine'}
+```
+
+**Patrón DI:** `falkordb.Graph` se inyecta como dependencia en todas las funciones del paquete `wiki_index/` siguiendo el patrón del proyecto. Las factories `create_save_entry(graph)`, `create_search_by_embedding(graph)` etc. encapsulan el grafo y devuelven callables. El grafo se construye una vez en `lifespan` de `main.py` y se enlaza via `app.state`.
+
+**KNN:** `CALL db.idx.vector.queryNodes('WikiPage', 'embedding', $k, vecf32($embedding))` — sustituye el loop numpy. FalkorDB devuelve distancia coseno (0=idéntico); el searcher convierte a similitud (`1 - score`) para mantener el contrato público.
+
+**Traversal (FUTURE-002, pendiente):** una vez en FalkorDB, el traversal es una query Cypher de una línea:
+```cypher
+CALL db.idx.vector.queryNodes('WikiPage', 'embedding', 5, vecf32($embedding))
+YIELD node AS seed, score
+MATCH (seed)-[:LINKS_TO*1..2]->(related:WikiPage)
+WHERE NOT related.page_path IN [seed.page_path]
+RETURN DISTINCT related.page_path, related.title
+ORDER BY score DESC LIMIT 10
+```
+
+**Consecuencias:**
+- `numpy` eliminado del paquete `knowledge_base`.
+- `wiki-index/` en disco desaparece — el índice vive en FalkorDB.
+- `knowledge_base` service depende de `falkordb` en `docker-compose.yml`.
+- `initialize_schema(graph)` se llama en `lifespan`; maneja idempotencia capturando `ResponseError("already indexed")`.
+- `save_entry` y `search_by_embedding` son callables ligados al grafo, propagados via DI a dreamer, wiki_editor, admin_bot y api.
+- Los unit tests usan `MagicMock` para `falkordb.Graph` — sin dependencia de FalkorDB real en tests.
 
