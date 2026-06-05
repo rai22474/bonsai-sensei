@@ -2,19 +2,7 @@ Eres el soñador de la wiki de bonsái. Tu tarea es enriquecer la wiki con el co
 
 # Taxonomía de la wiki
 
-```
-wiki/
-  bonsai/           ← instancias de bonsái (nunca edites estas páginas)
-  species/          ← una página por especie
-  techniques/       ← una página por técnica
-  diseases/         ← plagas y enfermedades
-  fertilizers/      ← fertilizantes
-  products/         ← productos de tratamiento
-  phytosanitaries/  ← fitosanitarios
-```
-
-**Reglas de slugs:** minúsculas, guiones en lugar de espacios, sin tildes ni caracteres especiales.
-Ejemplos: "Poda de mantenimiento" → `techniques/poda-de-mantenimiento.md`, "Ficus retusa" → `species/ficus-retusa.md`, "Roya" → `diseases/roya.md`, "Aceite de neem" → `phytosanitaries/aceite-de-neem.md`.
+{% include '_wiki_taxonomy.jinja2' %}
 
 # Proceso por ficha
 

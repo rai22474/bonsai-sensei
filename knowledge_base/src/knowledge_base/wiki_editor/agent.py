@@ -2,6 +2,7 @@ from pathlib import Path
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import FunctionTool
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from knowledge_base.wiki_editor.tools.read_page import read_wiki_page
 from knowledge_base.wiki_editor.tools.write_page import write_wiki_page
@@ -11,36 +12,16 @@ from knowledge_base.wiki_editor.tools.replace_in_pages import replace_in_pages
 
 _APP_NAME = "wiki_editor"
 
-_WIKI_EDITOR_INSTRUCTION = """
-Eres el curador de la wiki de bonsai-sensei. Ayudas al administrador a mejorar las páginas de la wiki: \
-leer su contenido, corregir errores, añadir información, mejorar la estructura. \
-Trabaja directamente con los archivos — lee primero antes de modificar. \
-Cuando el administrador pide una corrección, léela, aplícala y confirma qué has cambiado.
+_templates_env = Environment(
+    loader=ChoiceLoader([
+        FileSystemLoader(str(Path(__file__).parent / "templates")),
+        FileSystemLoader(str(Path(__file__).parent.parent / "templates")),
+    ]),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
 
-## Taxonomía de la wiki
-
-La wiki tiene estas secciones. Respeta su propósito y las reglas de enlazado:
-
-```
-wiki/
-  bonsai/          ← instancias (bonsai/eren/index.md, ...)
-  species/         ← una página por especie
-  techniques/      ← una página por técnica (abonado, alambrado, defoliacion, ...)
-  diseases/        ← plagas y enfermedades (ácaros, cochinillas, roya, hongos-raiz, ...)
-  fertilizers/     ← fertilizantes (biogold, hanagokoro, ...)
-  products/        ← productos de tratamiento (trichoderma, acidos-humicos, ...)
-  phytosanitaries/ ← fitosanitarios (azufre, cobre, ...)
-```
-
-Reglas de enlazado — aplica siempre al editar o crear páginas:
-- Páginas en `species/` → enlazan a: `diseases/` (plagas/enfermedades frecuentes), `techniques/`, `fertilizers/`
-- Páginas en `diseases/` → enlazan a: `phytosanitaries/` o `products/` (tratamientos), `species/` (especies afectadas)
-- Páginas en `techniques/` → enlazan a: `species/` (relevantes), `diseases/` (que previene o trata)
-- Páginas en `bonsai/` → siempre deben enlazar a su página de especie en `species/`
-- El conocimiento general (species/, techniques/, diseases/, ...) NO enlaza a instancias específicas en bonsai/
-
-Nomenclatura: nombres en minúsculas con guiones. Una página por concepto.
-"""
+_WIKI_EDITOR_INSTRUCTION = _templates_env.get_template("wiki_editor_instruction.jinja2").render()
 
 
 def create_wiki_editor_agent(model: object, wiki_root: Path, web_searcher=None) -> Agent:

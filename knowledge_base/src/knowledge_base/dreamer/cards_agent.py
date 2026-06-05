@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from google.adk.agents.llm_agent import Agent
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from knowledge_base.wiki_page_tools import create_read_wiki_page_tool, create_write_wiki_page_tool
 from knowledge_base.dreamer.tools import (
@@ -15,7 +15,10 @@ from knowledge_base.dreamer.tools import (
 APP_NAME = "wiki_dreamer_cards"
 
 _templates_env = Environment(
-    loader=FileSystemLoader(str(Path(__file__).parent / "templates")),
+    loader=ChoiceLoader([
+        FileSystemLoader(str(Path(__file__).parent / "templates")),
+        FileSystemLoader(str(Path(__file__).parent.parent / "templates")),
+    ]),
     trim_blocks=True,
     lstrip_blocks=True,
 )
