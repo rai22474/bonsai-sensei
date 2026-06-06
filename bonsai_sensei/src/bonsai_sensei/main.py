@@ -24,8 +24,7 @@ from bonsai_sensei.domain.services.human_input import (
     create_ask_poll,
     create_ask_selection,
 )
-from bonsai_sensei.domain.services.cultivation.weather.weather_alert_scheduler import create_weather_alert_scheduler
-from bonsai_sensei.domain.services.cultivation.plan.weekend_plan_scheduler import create_weekend_plan_scheduler
+from bonsai_sensei.domain.services.cultivation.mimamori.scheduler import create_mimamori_scheduler
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.model_factory import (
@@ -122,7 +121,7 @@ from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.api.fertilization_plans import router as fertilization_plans_router
 from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_router
 from bonsai_sensei.api.development_plans import router as development_plans_router
-from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
+from bonsai_sensei.api.mimamori import router as mimamori_router
 from bonsai_sensei.api.pests import router as pests_router
 from bonsai_sensei.api.health import router as health_router
 
@@ -446,23 +445,21 @@ async def lifespan(app: FastAPI):
     app.state.bot = bot_instance
     await bot_instance.initialize()
 
-    weather_scheduler = create_weather_alert_scheduler(
+    mimamori_scheduler = create_mimamori_scheduler(
         advisor=app.state.advisor,
         list_all_user_settings_func=services["user_settings"]["list_all_user_settings"],
-        send_telegram_message_func=app.state.bot.send_message,
-    )
-    weekend_scheduler = create_weekend_plan_scheduler(
-        advisor=app.state.advisor,
-        list_all_user_settings_func=services["user_settings"]["list_all_user_settings"],
-        list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
         list_bonsai_func=services["garden"]["list_bonsai"],
+        list_species_func=services["herbarium"]["list_species"],
+        list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
+        get_active_development_plan_func=services["development_plan"]["get_active_development_plan"],
+        list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
+        fetch_weather_func=fetch_weather,
         send_telegram_message_func=app.state.bot.send_message,
     )
 
     yield
 
-    weather_scheduler.shutdown()
-    weekend_scheduler.shutdown()
+    mimamori_scheduler.shutdown()
     await bot_instance.shutdown()
 
 
@@ -485,6 +482,6 @@ app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(fertilization_plans_router, prefix="/api", tags=["fertilization_plans"])
 app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanitary_plans"])
 app.include_router(development_plans_router, prefix="/api", tags=["development_plans"])
-app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
+app.include_router(mimamori_router, prefix="/api", tags=["mimamori"])
 app.include_router(pests_router, prefix="/api", tags=["pests"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

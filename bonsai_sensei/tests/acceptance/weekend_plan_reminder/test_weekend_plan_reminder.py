@@ -7,7 +7,7 @@ TEST_USER_ID = "weekend-reminder-test-user"
 
 @scenario(
     "../features/weekend_plan_reminder.feature",
-    "User with planned works receives a weekend summary",
+    "User with planned works receives a daily reflection",
 )
 def test_user_with_planned_works():
     return None
@@ -15,15 +15,15 @@ def test_user_with_planned_works():
 
 @scenario(
     "../features/weekend_plan_reminder.feature",
-    "User with no planned works receives a positive message",
+    "User with no planned works receives a reflection",
 )
 def test_user_with_no_planned_works():
     return None
 
 
-@when("the weekend plan reminder triggers")
-def trigger_weekend_reminder(context):
-    events = post_sse("/api/cultivation/plan/weekend-reminder/trigger")
+@when("the mimamori triggers")
+def trigger_mimamori(context):
+    events = post_sse("/api/mimamori/trigger")
     context["sse_events"] = events
 
 
