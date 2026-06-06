@@ -1,0 +1,7 @@
+# Design Plans — {{ bonsai_name }}
+
+| Period | Phase | Style | Status | Link |
+|--------|-------|-------|--------|------|
+{% for plan in plans %}
+| {{ plan.period_start }} → {{ plan.period_end }} | {{ plan.current_phase }} | {{ plan.target_style }} | {{ plan.status }} | [[{{ plan.wiki_path }}]] |
+{% endfor %}

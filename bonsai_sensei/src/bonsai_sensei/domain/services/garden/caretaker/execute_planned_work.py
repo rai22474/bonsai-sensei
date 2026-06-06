@@ -19,6 +19,7 @@ async def execute_planned_work(
     build_confirmation_message: Callable,
     build_selection_question: Callable,
     build_work_option_label: Callable,
+    get_development_plan_func: Callable | None = None,
     user_id: str | None = None,
     tool_context=None,
 ) -> dict:
@@ -56,11 +57,18 @@ async def execute_planned_work(
     if not confirmed:
         return {"status": "cancelled", "reason": confirmed.reason}
 
+    event_payload = dict(work.payload or {})
+    if work.development_plan_id and get_development_plan_func:
+        plan = get_development_plan_func(plan_id=work.development_plan_id)
+        if plan:
+            event_payload["development_phase"] = plan.current_phase
+            event_payload["development_plan_id"] = plan.id
+
     record_bonsai_event_func(
         bonsai_event=BonsaiEvent(
             bonsai_id=work.bonsai_id,
             event_type=work.work_type,
-            payload=work.payload,
+            payload=event_payload,
         )
     )
     delete_planned_work_func(work_id=work.id)
@@ -77,6 +85,7 @@ def create_execute_planned_work_tool(
     build_confirmation_message: Callable,
     build_selection_question: Callable,
     build_work_option_label: Callable,
+    get_development_plan_func: Callable | None = None,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="caretaker")
@@ -110,6 +119,7 @@ def create_execute_planned_work_tool(
             build_confirmation_message=build_confirmation_message,
             build_selection_question=build_selection_question,
             build_work_option_label=build_work_option_label,
+            get_development_plan_func=get_development_plan_func,
             tool_context=tool_context,
         )
 

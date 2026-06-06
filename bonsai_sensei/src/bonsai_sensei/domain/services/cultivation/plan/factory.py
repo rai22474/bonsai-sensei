@@ -35,6 +35,7 @@ from bonsai_sensei.domain.services.cultivation.plan.fertilization.abandon_plan i
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.evaluate import (
     create_evaluate_fertilization_plan_tool,
 )
+from bonsai_sensei.domain.services.cultivation.plan.design.factory import create_design_plan_tools
 from bonsai_sensei.infrastructure.wiki_client import (
     create_http_read_wiki_page_tool,
     create_http_write_wiki_page_tool,
@@ -62,6 +63,7 @@ def create_kikaru_group(
     build_delete_confirmation: Callable,
     build_abandon_plan_confirmation: Callable,
     build_abandon_phytosanitary_plan_confirmation: Callable,
+    build_abandon_development_plan_confirmation: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
 ):
@@ -172,6 +174,20 @@ def create_kikaru_group(
         get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
         list_planned_works_func=partial(cultivation_plan.list_planned_works, create_session=session_factory),
     )
+    design_tools = create_design_plan_tools(
+        model=model,
+        session_factory=session_factory,
+        ask_confirmation=ask_confirmation,
+        ask_human=ask_human,
+        ask_plan_review=ask_plan_review,
+        build_abandon_development_plan_confirmation=build_abandon_development_plan_confirmation,
+        read_wiki_page_func=read_wiki_page_func,
+        write_wiki_page_func=write_wiki_page_func,
+        list_wiki_files_func=list_wiki_files_func,
+        orchestrator_model=effective_orchestrator_model,
+        ask_poll=ask_poll,
+    )
+
     return create_kikaru(
         model=model,
         schedule_fertilization_tool=schedule_fertilization_tool,
@@ -180,6 +196,9 @@ def create_kikaru_group(
         schedule_phytosanitary_tool=schedule_phytosanitary_tool,
         abandon_phytosanitary_plan_tool=abandon_phytosanitary_plan_tool,
         evaluate_phytosanitary_plan_tool=evaluate_phytosanitary_plan_tool,
+        manage_development_plan_tool=design_tools["manage_development_plan"],
+        abandon_development_plan_tool=design_tools["abandon_development_plan"],
+        evaluate_development_plan_tool=design_tools["evaluate_development_plan"],
         create_transplant_tool=create_transplant_tool,
         delete_planned_work_tool=delete_planned_work_tool,
         list_planned_works_tool=list_planned_works_tool,

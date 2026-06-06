@@ -1,4 +1,6 @@
+import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Request
@@ -67,13 +69,17 @@ def submit_local_observation(body: ObservationRequest):
 
 @router.post("/wiki-dreamer/watermark/reset", status_code=200)
 def reset_wiki_dreamer_watermark():
-    """Advance the episodic memory watermark to the current time.
+    """Set the watermark slightly in the past for acceptance tests.
 
-    For use in acceptance tests to ensure the next dreamer run only processes
-    observations created after this call, ignoring observations from prior test runs.
+    Sets the watermark 2 seconds before now so that cards created immediately
+    after this call are guaranteed to have mtime >= watermark, even when the
+    Docker volume filesystem has 1-second mtime granularity.
     """
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
-    update_high_watermark(wiki_root)
+    sync_file = wiki_root / "memory-sync.json"
+    past = (datetime.now(timezone.utc) - timedelta(seconds=2)).isoformat()
+    sync_file.parent.mkdir(parents=True, exist_ok=True)
+    sync_file.write_text(json.dumps({"last_processed_at": past}))
     return {"status": "reset"}
 
 

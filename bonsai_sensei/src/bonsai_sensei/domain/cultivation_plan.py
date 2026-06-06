@@ -63,6 +63,19 @@ def delete_future_planned_works_by_phytosanitary_plan(session: Session, plan_id:
 
 
 @with_session
+def delete_future_planned_works_by_development_plan(session: Session, plan_id: int, cutoff_date: date) -> int:
+    statement = (
+        select(PlannedWork)
+        .where(PlannedWork.development_plan_id == plan_id)
+        .where(PlannedWork.scheduled_date > cutoff_date)
+    )
+    works = session.exec(statement).all()
+    for work in works:
+        session.delete(work)
+    return len(works)
+
+
+@with_session
 def delete_future_planned_works_by_plan(session: Session, plan_id: int, cutoff_date: date) -> int:
     statement = (
         select(PlannedWork)

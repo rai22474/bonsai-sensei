@@ -35,8 +35,31 @@ def _load_reports(slug: str, list_wiki_files_func: Callable, read_wiki_page_func
     return reports
 
 
+_PAYLOAD_SKIP_KEYS = {"development_plan_id", "fertilizer_id", "phytosanitary_id", "wiki_path"}
+
+
 def _format_event(event: dict) -> str:
     occurred_at = event.get("occurred_at", "")
     date_str = occurred_at[:10] if occurred_at else "unknown date"
-    payload_parts = ", ".join(f"{key}: {value}" for key, value in (event.get("payload") or {}).items())
-    return f"{date_str} | {event.get('event_type', '')}" + (f" | {payload_parts}" if payload_parts else "")
+    payload = event.get("payload") or {}
+
+    phase = payload.get("development_phase") or payload.get("phase_abandoned")
+    phase_prefix = f"[fase: {phase}] " if phase else ""
+
+    result = payload.get("result")
+    result_suffix = f" → resultado: {result}" if result else ""
+
+    visible_keys = {key: value for key, value in payload.items() if key not in _PAYLOAD_SKIP_KEYS}
+    skip_in_summary = {"development_phase", "phase_abandoned", "result"}
+    summary_parts = [
+        f"{key}: {value}"
+        for key, value in visible_keys.items()
+        if key not in skip_in_summary
+    ]
+    payload_str = ", ".join(summary_parts)
+
+    line = f"{date_str} | {phase_prefix}{event.get('event_type', '')}"
+    if payload_str:
+        line += f" | {payload_str}"
+    line += result_suffix
+    return line

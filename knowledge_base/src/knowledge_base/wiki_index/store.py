@@ -3,16 +3,35 @@ from typing import Callable
 import falkordb
 from redis.exceptions import ResponseError
 
+from knowledge_base.wiki_index.embedder import EMBEDDING_DIM
 from knowledge_base.wiki_index.entry import IndexEntry
 
 
 def initialize_schema(graph: falkordb.Graph) -> None:
-    """Create WikiPage vector index. No-op if already exists."""
+    """Create WikiPage vector index, migrating data if embedding dimensions changed."""
     try:
-        graph.create_node_vector_index('WikiPage', 'embedding', dim=3072, similarity_function='cosine')
+        graph.create_node_vector_index('WikiPage', 'embedding', dim=EMBEDDING_DIM, similarity_function='cosine')
     except ResponseError as error:
         if 'already indexed' not in str(error).lower():
             raise
+        _migrate_index_if_dim_changed(graph)
+
+
+def _migrate_index_if_dim_changed(graph: falkordb.Graph) -> None:
+    result = graph.query(
+        "MATCH (n:WikiPage) WHERE n.embedding IS NOT NULL RETURN n.embedding LIMIT 1"
+    )
+    if not result.result_set:
+        return
+    existing_embedding = result.result_set[0][0]
+    if existing_embedding and len(existing_embedding) == EMBEDDING_DIM:
+        return
+    graph.query("MATCH (n:WikiPage) DETACH DELETE n")
+    try:
+        graph.query("DROP INDEX ON :WikiPage(embedding)")
+    except Exception:
+        pass
+    graph.create_node_vector_index('WikiPage', 'embedding', dim=EMBEDDING_DIM, similarity_function='cosine')
 
 
 def create_save_entry(graph: falkordb.Graph) -> Callable[[IndexEntry], None]:

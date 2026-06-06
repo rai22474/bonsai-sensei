@@ -1,383 +1,393 @@
 acceptance-falkordb-1  | INFO: No ENCRYPTION_KEY provided, generated a random one for this container session.
 acceptance-falkordb-1  | WARNING: Encrypted credentials will be lost if the container is recreated without persisting the key.
-acceptance-falkordb-1  | 1:C 05 Jun 2026 19:04:54.704 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
-acceptance-falkordb-1  | 1:C 05 Jun 2026 19:04:54.707 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
-acceptance-falkordb-1  | 1:C 05 Jun 2026 19:04:54.707 * Redis version=8.6.3, bits=64, commit=00000000, modified=1, pid=1, just started
-acceptance-falkordb-1  | 1:C 05 Jun 2026 19:04:54.707 * Configuration loaded
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.707 * monotonic clock: ARM CNTVCT @ 24 ticks/us
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.708 * Running mode=standalone, port=6379.
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.843 * <graph> GraphBLAS JIT restrict to pre-jit kernels
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.844 * <graph> Enabled role change notification
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.844 * <graph> Starting up FalkorDB version 4.18.9.
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * <graph> Thread pool created, using 8 threads.
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * <graph> Maximum number of OpenMP threads set to 8
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * <graph> Query backlog size: 1000
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * Module 'graph' loaded from /var/lib/falkordb/bin/falkordb.so
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * Server initialized
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 * Ready to accept connections tcp
-acceptance-falkordb-1  | 1:M 05 Jun 2026 19:04:54.845 # WARNING: Redis does not require authentication and is not protected by network restrictions. Redis will accept connections from any IP address on any network interface.
+acceptance-falkordb-1  | 1:C 06 Jun 2026 14:10:22.952 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+acceptance-kb-1        | onnxruntime cpuid_info warning: Unknown CPU vendor. cpuinfo_vendor value: 0
+acceptance-kb-1        | [0;93m2026-06-06 14:10:30.619198797 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under "/sys/class/drm/card0": device_discovery.cc:93 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+acceptance-kb-1        | INFO:     Started server process [1]
+acceptance-kb-1        | INFO:     Waiting for application startup.
+acceptance-kb-1        | /app/knowledge_base/wiki_index/embedder.py:12: UserWarning: The model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 now uses mean pooling instead of CLS embedding. In order to preserve the previous behaviour, consider either pinning fastembed version to 0.5.1 or using `add_custom_model` functionality.
+acceptance-kb-1        |   model = TextEmbedding(_EMBEDDING_MODEL)
+acceptance-kb-1        | 2026-06-06 14:10:31,784 - knowledge_base.telegram.bot - WARNING - No bot token provided. Bot will not function.
+acceptance-kb-1        | 2026-06-06 14:10:31,858 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-kb-1        | 2026-06-06 14:10:31,858 - apscheduler.scheduler - INFO - Added job "_run_wiki_dreamer" to job store "default"
+acceptance-kb-1        | 2026-06-06 14:10:31,858 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-kb-1        | INFO:     Application startup complete.
+acceptance-kb-1        | INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+acceptance-kb-1        | INFO:     192.168.64.1:45364 - "GET /health HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:51006 - "GET /health HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:51022 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:51028 - "POST /api/wiki/transcripts/observations HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:10:50,146 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 1 new observations, 0 wikilink pages
+acceptance-kb-1        | 2026-06-06 14:10:50,146 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: integrate observations
+acceptance-kb-1        | /app/.venv/lib/python3.12/site-packages/google/adk/tools/function_tool.py:95: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
+acceptance-kb-1        |   build_function_declaration(
+acceptance-kb-1        | 2026-06-06 14:10:50,163 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:10:53,525 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:10:53,533 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-falkordb-1  | 1:C 06 Jun 2026 14:10:22.955 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+acceptance-falkordb-1  | 1:C 06 Jun 2026 14:10:22.955 * Redis version=8.6.3, bits=64, commit=00000000, modified=1, pid=1, just started
+acceptance-falkordb-1  | 1:C 06 Jun 2026 14:10:22.955 * Configuration loaded
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:22.955 * monotonic clock: ARM CNTVCT @ 24 ticks/us
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:22.956 * Running mode=standalone, port=6379.
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.063 * <graph> GraphBLAS JIT restrict to pre-jit kernels
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.068 * <graph> Enabled role change notification
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.068 * <graph> Starting up FalkorDB version 4.18.9.
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.071 * <graph> Thread pool created, using 8 threads.
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.071 * <graph> Maximum number of OpenMP threads set to 8
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.071 * <graph> Query backlog size: 1000
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.071 * Module 'graph' loaded from /var/lib/falkordb/bin/falkordb.so
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.073 * Server initialized
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.073 * Ready to accept connections tcp
+acceptance-falkordb-1  | 1:M 06 Jun 2026 14:10:23.073 # WARNING: Redis does not require authentication and is not protected by network restrictions. Redis will accept connections from any IP address on any network interface.
 acceptance-falkordb-1  | ▲ Next.js 16.2.6
 acceptance-falkordb-1  | - Local:         http://localhost:3000
 acceptance-falkordb-1  | - Network:       http://0.0.0.0:3000
 acceptance-falkordb-1  | ✓ Ready in 0ms
-acceptance-kb-1        | INFO:     Started server process [1]
-acceptance-kb-1        | INFO:     Waiting for application startup.
-acceptance-kb-1        | 2026-06-05 19:05:04,540 - knowledge_base.telegram.bot - WARNING - No bot token provided. Bot will not function.
-acceptance-kb-1        | /app/.venv/lib/python3.12/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
-acceptance-kb-1        |   warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
-acceptance-kb-1        | 2026-06-05 19:05:04,626 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-kb-1        | 2026-06-05 19:05:04,626 - apscheduler.scheduler - INFO - Added job "_run_wiki_dreamer" to job store "default"
-acceptance-kb-1        | 2026-06-05 19:05:04,627 - apscheduler.scheduler - INFO - Scheduler started
-acceptance-kb-1        | INFO:     Application startup complete.
-acceptance-kb-1        | INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-acceptance-kb-1        | INFO:     192.168.208.1:59174 - "GET /health HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:59184 - "GET /health HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:59198 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:59212 - "POST /api/wiki/transcripts/observations HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:05:22,519 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 1 new observations, 0 wikilink pages
-acceptance-kb-1        | 2026-06-05 19:05:22,519 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: integrate observations
-acceptance-kb-1        | /app/.venv/lib/python3.12/site-packages/google/adk/tools/function_tool.py:95: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
-acceptance-kb-1        |   build_function_declaration(
-acceptance-kb-1        | 2026-06-05 19:05:22,537 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:26,135 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:26,139 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:28,230 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:28,248 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:29,624 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:29,629 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:42,564 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:42,569 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:44,134 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:44,139 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:47,806 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:47,809 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: integrate observations
-acceptance-kb-1        | 2026-06-05 19:05:49,437 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
-acceptance-kb-1        | INFO:     192.168.208.1:59220 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42356 - "GET /api/wiki?path=bonsai/tanaka/index.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42370 - "DELETE /api/wiki?path=bonsai/tanaka/index.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42380 - "DELETE /api/wiki?path=test-crud/hello.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42390 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42402 - "GET /api/wiki?path=test-crud/hello.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42408 - "DELETE /api/wiki?path=test-crud/hello.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42418 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42420 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42424 - "GET /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42428 - "GET /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42430 - "DELETE /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42436 - "DELETE /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42444 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42448 - "DELETE /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42462 - "GET /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42464 - "DELETE /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42466 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42482 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42486 - "GET /api/wiki/files?directory=test-crud/list&pattern=*.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42496 - "DELETE /api/wiki?path=test-crud/list/page-a.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42510 - "DELETE /api/wiki?path=test-crud/list/page-b.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42514 - "DELETE /api/wiki?path=test-crud/missing.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42526 - "GET /api/wiki?path=test-crud/missing.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:42534 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42546 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:42558 - "POST /api/wiki/transcripts/cards HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:05:49,602 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 1 new cards, 0 new observations, 2 wikilink pages
-acceptance-kb-1        | 2026-06-05 19:05:49,603 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: enrich from knowledge cards
-acceptance-kb-1        | 2026-06-05 19:05:49,616 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:51,633 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:51,639 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:05:54,033 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:05:55,431 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:00,183 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:00,490 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:02,296 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:02,603 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:07,642 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:07,648 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:09,998 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:10,006 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: enrich from knowledge cards
-acceptance-kb-1        | 2026-06-05 19:06:10,009 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:06:10,020 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:11,929 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:11,936 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:13,220 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:13,225 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:14,528 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:14,532 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:17,347 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:17,361 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:24,963 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:24,968 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:32,223 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:32,228 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:36,033 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:36,038 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:41,339 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:41,353 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:42,434 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:42,439 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:06:48,804 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:06:48,809 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:14,925 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:14,930 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:20,894 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:20,896 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:07:22,793 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
-acceptance-kb-1        | INFO:     192.168.208.1:42566 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46368 - "GET /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46374 - "DELETE /api/wiki/transcripts/cards?path=test-channel/species-card.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46386 - "DELETE /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46402 - "DELETE /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:46410 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46422 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:46432 - "POST /api/wiki/transcripts/cards HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:07:22,867 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 1 new cards, 0 new observations, 1 wikilink pages
-acceptance-kb-1        | 2026-06-05 19:07:22,867 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: enrich from knowledge cards
-acceptance-kb-1        | 2026-06-05 19:07:22,872 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:24,932 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:24,936 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:26,263 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:26,593 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:28,185 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:28,205 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:30,768 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:30,776 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:32,409 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:32,412 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: enrich from knowledge cards
-acceptance-kb-1        | 2026-06-05 19:07:32,412 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:07:32,420 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:34,134 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:34,138 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:35,275 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:35,278 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:38,974 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:38,978 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:40,089 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:40,100 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:41,095 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:41,099 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:44,392 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:44,396 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:45,478 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:45,483 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:46,399 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:46,404 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:47,333 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:47,350 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:48,419 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:48,424 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:52,154 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:52,159 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:55,706 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:55,711 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:56,683 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:56,690 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:07:59,202 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:07:59,206 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:05,503 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:05,504 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:08:06,861 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
-acceptance-kb-1        | INFO:     192.168.208.1:46440 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35302 - "GET /api/wiki?path=techniques/poda-de-mantenimiento.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43542 - "DELETE /api/wiki/transcripts/cards?path=test-channel/poda-card.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43544 - "DELETE /api/wiki?path=techniques/poda-de-mantenimiento.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43554 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:08:06,969 - knowledge_base.dreamer.runner - INFO - Wiki dreamer skipped: no new cards, observations, or pending wikilinks since 2026-06-05 19:08:06.963585+00:00
-acceptance-kb-1        | INFO:     192.168.208.1:43568 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43570 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43572 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43582 - "DELETE /api/wiki/transcripts/wiki-dreamer/wikilinks/pages?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:43586 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:08:06,998 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 0 new observations, 2 wikilink pages
-acceptance-kb-1        | 2026-06-05 19:08:06,998 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:08:07,002 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:09,021 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:09,026 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:10,289 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:10,310 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:12,295 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:12,302 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:22,224 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:22,229 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:23,812 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:23,813 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:08:25,663 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
-acceptance-kb-1        | INFO:     192.168.208.1:43596 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47192 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47194 - "GET /api/wiki?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47206 - "DELETE /api/wiki?path=species/test-juniperus.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47208 - "DELETE /api/wiki?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47218 - "POST /api/wiki/transcripts/wiki-dreamer/wikilinks/reset HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47224 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47234 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47240 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47242 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47250 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47264 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47272 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:47284 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:08:25,742 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 0 new observations, 5 wikilink pages
-acceptance-kb-1        | 2026-06-05 19:08:25,742 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:08:25,746 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:27,496 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:27,508 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:30,415 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:30,418 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:31,492 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:31,496 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:32,622 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:32,628 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:33,853 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:33,857 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:34,911 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:34,917 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:37,182 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:37,200 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:38,147 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:38,152 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:39,191 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:39,203 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:42,607 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:42,614 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:43,575 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:43,580 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:46,605 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:46,609 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:51,104 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:51,110 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:52,924 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:52,929 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:54,189 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:54,199 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:56,395 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:56,401 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:57,502 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:57,507 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:08:58,542 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:08:58,552 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:00,575 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:00,581 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:02,303 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:02,316 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:04,382 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:04,388 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:07,442 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:07,448 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:10,642 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:10,647 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:11,837 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:11,842 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:15,078 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:15,097 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:21,464 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:21,465 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
-acceptance-kb-1        | 2026-06-05 19:09:24,677 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
-acceptance-kb-1        | INFO:     192.168.208.1:47292 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35090 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35098 - "DELETE /api/wiki?path=techniques/test-wl-batch-0.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35114 - "DELETE /api/wiki?path=techniques/test-wl-batch-1.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35130 - "DELETE /api/wiki?path=techniques/test-wl-batch-2.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35142 - "DELETE /api/wiki?path=techniques/test-wl-batch-3.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35156 - "DELETE /api/wiki?path=techniques/test-wl-batch-4.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35158 - "DELETE /api/wiki?path=techniques/test-wl-batch-5.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35160 - "DELETE /api/wiki?path=techniques/test-wl-batch-6.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35174 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35182 - "POST /api/wiki/transcripts/wiki-dreamer/wikilinks/pages?path=techniques/test-already-done.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35194 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:09:24,760 - knowledge_base.dreamer.runner - INFO - Wiki dreamer skipped: no new cards, observations, or pending wikilinks since 2026-06-05 19:09:21.466123+00:00
-acceptance-kb-1        | INFO:     192.168.208.1:35210 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35222 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35238 - "DELETE /api/wiki?path=techniques/test-already-done.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35244 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:35248 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:09:24,787 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:26,277 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:26,284 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:27,504 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:27,510 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:28,428 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:28,442 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:29,757 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | INFO:     192.168.208.1:35258 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44766 - "GET /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44768 - "GET /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44778 - "GET /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44784 - "GET /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44788 - "DELETE /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44804 - "DELETE /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44818 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:09:31,527 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:32,419 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:32,423 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:33,341 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:33,347 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:34,358 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | INFO:     192.168.208.1:44820 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44836 - "GET /api/wiki?path=test-editor/species-note.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44850 - "DELETE /api/wiki?path=test-editor/species-note.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44856 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44864 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44878 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44880 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44882 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:44884 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:09:34,727 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:36,626 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:36,648 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:37,743 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:37,758 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:38,820 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:38,833 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:40,058 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:40,066 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:41,209 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | INFO:     192.168.208.1:44894 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52558 - "DELETE /api/wiki?path=test-editor/batch/page-0.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52566 - "DELETE /api/wiki?path=test-editor/batch/page-1.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52574 - "DELETE /api/wiki?path=test-editor/batch/page-2.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52582 - "DELETE /api/wiki?path=test-editor/batch/page-3.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52588 - "DELETE /api/wiki?path=test-editor/batch/page-4.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52590 - "DELETE /api/wiki?path=test-editor/batch/page-5.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:52600 - "DELETE /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | 2026-06-05 19:09:44,136 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:48,742 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:48,748 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:54,414 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:09:54,420 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:09:56,235 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | INFO:     192.168.208.1:52616 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33172 - "GET /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33178 - "GET /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33182 - "DELETE /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33186 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33200 - "GET /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
-acceptance-kb-1        | 2026-06-05 19:09:57,639 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:10:03,255 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | 2026-06-05 19:10:03,260 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-kb-1        | 2026-06-05 19:10:04,883 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-kb-1        | INFO:     192.168.208.1:33214 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33220 - "GET /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33236 - "DELETE /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33238 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33252 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
-acceptance-kb-1        | INFO:     192.168.208.1:33256 - "GET /api/wiki/review/sessions/9cc91530 HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33266 - "POST /api/wiki/review/sessions/9cc91530/pages/0/confirm HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33280 - "DELETE /api/wiki?path=bonsai/review-test/index.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33284 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33294 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
-acceptance-kb-1        | INFO:     192.168.208.1:33304 - "GET /api/wiki/review/sessions/2c5c938c HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33308 - "POST /api/wiki/review/sessions/2c5c938c/pages/0/revert HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33324 - "GET /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:33330 - "DELETE /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
-acceptance-kb-1        | INFO:     192.168.208.1:33344 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:33346 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40860 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40870 - "DELETE /api/wiki?path=test-search/biogold-test.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40886 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40902 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40910 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40920 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40932 - "DELETE /api/wiki?path=test-search/pino-test.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40942 - "DELETE /api/wiki?path=test-search/azalea-test.md HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40950 - "PUT /api/wiki HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40956 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40966 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
-acceptance-kb-1        | INFO:     192.168.208.1:40976 - "DELETE /api/wiki?path=test-search/score-test.md HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:10:55,809 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:10:55,813 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:10:56,759 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:10:56,764 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:03,159 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:03,165 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:11,147 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:11,161 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:13,501 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:13,510 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:16,680 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:16,683 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:18,620 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:18,621 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: integrate observations
+acceptance-kb-1        | 2026-06-06 14:11:18,664 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1        | INFO:     192.168.64.1:51030 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50782 - "GET /api/wiki?path=bonsai/tanaka/index.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50794 - "DELETE /api/wiki?path=bonsai/tanaka/index.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50796 - "DELETE /api/wiki?path=test-crud/hello.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50798 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50800 - "GET /api/wiki?path=test-crud/hello.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50812 - "DELETE /api/wiki?path=test-crud/hello.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50814 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50828 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50840 - "GET /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50850 - "GET /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50862 - "DELETE /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50866 - "DELETE /api/wiki?path=test-crud/overwrite.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50876 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50888 - "DELETE /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50890 - "GET /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50896 - "DELETE /api/wiki?path=test-crud/to-delete.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50912 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50928 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50930 - "GET /api/wiki/files?directory=test-crud/list&pattern=*.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50942 - "DELETE /api/wiki?path=test-crud/list/page-a.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50958 - "DELETE /api/wiki?path=test-crud/list/page-b.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50964 - "DELETE /api/wiki?path=test-crud/missing.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50970 - "GET /api/wiki?path=test-crud/missing.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:50986 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50994 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:50998 - "POST /api/wiki/transcripts/cards HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:11:18,806 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 1 new cards, 0 new observations, 2 wikilink pages
+acceptance-kb-1        | 2026-06-06 14:11:18,807 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: enrich from knowledge cards
+acceptance-kb-1        | 2026-06-06 14:11:18,812 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:20,112 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:20,118 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:21,440 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:21,469 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:27,122 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:27,130 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:28,927 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:28,955 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:31,429 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:31,431 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: enrich from knowledge cards
+acceptance-kb-1        | 2026-06-06 14:11:31,433 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:11:31,438 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:32,569 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:32,575 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:34,589 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:34,593 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:36,095 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:36,100 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:37,134 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:37,144 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:39,722 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:39,731 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:42,790 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:42,795 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:43,664 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:43,668 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:44,585 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:44,589 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:45,555 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:45,570 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:53,749 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:53,753 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:11:59,291 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:11:59,299 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:13,513 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:13,521 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:16,170 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:16,171 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:12:16,246 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1        | INFO:     192.168.64.1:51010 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38202 - "GET /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38208 - "DELETE /api/wiki/transcripts/cards?path=test-channel/species-card.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38212 - "DELETE /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38226 - "DELETE /api/wiki?path=species/ficus-microcarpa.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:38234 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38236 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:38246 - "POST /api/wiki/transcripts/cards HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:12:16,286 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 1 new cards, 0 new observations, 1 wikilink pages
+acceptance-kb-1        | 2026-06-06 14:12:16,286 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: enrich from knowledge cards
+acceptance-kb-1        | 2026-06-06 14:12:16,291 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:17,664 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:17,670 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:19,770 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:19,911 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:21,311 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:21,316 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:22,994 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:23,036 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:26,720 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:26,732 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:35,270 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:35,275 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:37,779 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:37,780 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: enrich from knowledge cards
+acceptance-kb-1        | 2026-06-06 14:12:37,780 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:12:37,783 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:39,276 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:39,295 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:41,411 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:41,415 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:46,389 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:46,394 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:48,220 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:48,224 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:52,930 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:52,934 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:54,258 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:54,266 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:55,577 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:55,582 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:12:58,889 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:12:58,894 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:05,489 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:05,494 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:09,420 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:09,425 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:11,370 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:11,375 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:13,509 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:13,516 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:15,112 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:15,118 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:17,178 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:17,184 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:20,650 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:20,652 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:13:20,694 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1        | INFO:     192.168.64.1:38262 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53888 - "GET /api/wiki?path=techniques/poda-de-mantenimiento.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53900 - "DELETE /api/wiki/transcripts/cards?path=test-channel/poda-card.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53916 - "DELETE /api/wiki?path=techniques/poda-de-mantenimiento.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53920 - "POST /api/wiki/transcripts/wiki-dreamer/watermark/reset HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:13:20,720 - knowledge_base.dreamer.runner - INFO - Wiki dreamer skipped: no new cards, observations, or pending wikilinks since 2026-06-06 14:13:18.715218+00:00
+acceptance-kb-1        | INFO:     192.168.64.1:53934 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53938 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53944 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53946 - "DELETE /api/wiki/transcripts/wiki-dreamer/wikilinks/pages?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:53956 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:13:20,745 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 0 new observations, 2 wikilink pages
+acceptance-kb-1        | 2026-06-06 14:13:20,745 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:13:20,749 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:21,794 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:21,799 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:22,995 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:23,003 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:24,992 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:25,003 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:30,509 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:30,513 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:33,381 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:33,383 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:13:33,425 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1        | INFO:     192.168.64.1:53968 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59316 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59320 - "GET /api/wiki?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59322 - "DELETE /api/wiki?path=species/test-juniperus.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59326 - "DELETE /api/wiki?path=techniques/test-wikilink-target.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59330 - "POST /api/wiki/transcripts/wiki-dreamer/wikilinks/reset HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59344 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59350 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59354 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59360 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59366 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59370 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59378 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59382 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:13:33,493 - knowledge_base.dreamer.runner - INFO - Wiki dreamer starting: 0 new cards, 0 new observations, 5 wikilink pages
+acceptance-kb-1        | 2026-06-06 14:13:33,493 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase starting: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:13:33,496 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:35,158 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:35,162 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:36,211 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:36,228 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:39,945 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:39,964 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:41,789 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:41,794 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:42,759 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:42,764 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:43,891 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:43,909 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:45,319 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:45,328 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:46,238 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:46,242 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:47,466 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:47,470 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:51,100 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:51,105 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:51,951 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:51,972 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:55,002 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:55,021 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:57,040 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:57,044 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:13:58,017 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:13:58,028 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:02,170 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:02,175 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:05,899 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:05,903 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:07,640 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:07,647 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:11,231 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:11,237 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:14,851 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:14,856 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:19,869 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:19,874 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:23,239 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:23,243 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:26,120 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:26,127 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:27,199 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:27,203 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:30,491 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:30,503 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:34,522 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:34,525 - knowledge_base.dreamer.runner - INFO - Wiki dreamer phase completed: add wikilinks
+acceptance-kb-1        | 2026-06-06 14:14:34,598 - knowledge_base.dreamer.runner - INFO - Wiki dreamer run completed
+acceptance-kb-1        | INFO:     192.168.64.1:59390 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59668 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59672 - "DELETE /api/wiki?path=techniques/test-wl-batch-0.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59686 - "DELETE /api/wiki?path=techniques/test-wl-batch-1.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59692 - "DELETE /api/wiki?path=techniques/test-wl-batch-2.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59694 - "DELETE /api/wiki?path=techniques/test-wl-batch-3.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59702 - "DELETE /api/wiki?path=techniques/test-wl-batch-4.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59712 - "DELETE /api/wiki?path=techniques/test-wl-batch-5.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59724 - "DELETE /api/wiki?path=techniques/test-wl-batch-6.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59726 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59738 - "POST /api/wiki/transcripts/wiki-dreamer/wikilinks/pages?path=techniques/test-already-done.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59744 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:14:34,663 - knowledge_base.dreamer.runner - INFO - Wiki dreamer skipped: no new cards, observations, or pending wikilinks since 2026-06-06 14:14:34.526239+00:00
+acceptance-kb-1        | INFO:     192.168.64.1:59750 - "POST /api/wiki/transcripts/wiki-dreamer/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59756 - "GET /api/wiki/transcripts/wiki-dreamer/wikilinks/tracker HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59762 - "DELETE /api/wiki?path=techniques/test-already-done.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59764 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59770 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:14:34,692 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:36,311 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:36,316 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:37,438 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:37,443 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:38,456 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:38,473 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:39,502 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | INFO:     192.168.64.1:59786 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59796 - "GET /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59798 - "GET /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59802 - "GET /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59814 - "GET /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59830 - "DELETE /api/wiki?path=test-editor/page-a.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59844 - "DELETE /api/wiki?path=test-editor/page-b.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:59854 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:14:39,585 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:40,921 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:40,925 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:42,046 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:42,050 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:42,865 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | INFO:     192.168.64.1:59864 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52334 - "GET /api/wiki?path=test-editor/species-note.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52344 - "DELETE /api/wiki?path=test-editor/species-note.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52354 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52364 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52370 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52378 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52386 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52398 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:14:42,935 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:44,472 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:44,478 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:45,576 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:45,583 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:46,555 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:46,568 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:47,370 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:47,377 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:48,537 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | INFO:     192.168.64.1:52410 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52412 - "DELETE /api/wiki?path=test-editor/batch/page-0.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52424 - "DELETE /api/wiki?path=test-editor/batch/page-1.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52440 - "DELETE /api/wiki?path=test-editor/batch/page-2.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52446 - "DELETE /api/wiki?path=test-editor/batch/page-3.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52460 - "DELETE /api/wiki?path=test-editor/batch/page-4.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52476 - "DELETE /api/wiki?path=test-editor/batch/page-5.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:52484 - "DELETE /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | 2026-06-06 14:14:48,656 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:14:57,309 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:14:57,325 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:15:01,101 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:15:01,106 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:15:03,760 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:15:03,764 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:15:06,192 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | INFO:     192.168.64.1:52488 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:33026 - "GET /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:33036 - "GET /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:33040 - "DELETE /api/wiki?path=test-search-web/trichoderma.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:33054 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:33066 - "GET /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
+acceptance-kb-1        | 2026-06-06 14:15:06,252 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:15:12,411 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | 2026-06-06 14:15:12,419 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-kb-1        | 2026-06-06 14:15:13,962 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-kb-1        | INFO:     192.168.64.1:33070 - "POST /api/wiki/transcripts/wiki-editor/run/sync HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39718 - "GET /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39724 - "DELETE /api/wiki?path=test-search-web/biogold.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39728 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39744 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-kb-1        | INFO:     192.168.64.1:39750 - "GET /api/wiki/review/sessions/3fc3d56e HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39760 - "POST /api/wiki/review/sessions/3fc3d56e/pages/0/confirm HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39776 - "DELETE /api/wiki?path=bonsai/review-test/index.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39784 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39792 - "POST /api/wiki/review/sessions HTTP/1.1" 201 Created
+acceptance-kb-1        | INFO:     192.168.64.1:39796 - "GET /api/wiki/review/sessions/4bd2a99b HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39804 - "POST /api/wiki/review/sessions/4bd2a99b/pages/0/revert HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39808 - "GET /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:39820 - "DELETE /api/wiki?path=bonsai/revert-test/index.md HTTP/1.1" 404 Not Found
+acceptance-kb-1        | INFO:     192.168.64.1:39822 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39826 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39832 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39846 - "DELETE /api/wiki?path=test-search/biogold-test.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39856 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39864 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39866 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39876 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39892 - "DELETE /api/wiki?path=test-search/pino-test.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39908 - "DELETE /api/wiki?path=test-search/azalea-test.md HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39912 - "PUT /api/wiki HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39924 - "POST /api/wiki/index/rebuild HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39938 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-1        | INFO:     192.168.64.1:39954 - "DELETE /api/wiki?path=test-search/score-test.md HTTP/1.1" 200 OK

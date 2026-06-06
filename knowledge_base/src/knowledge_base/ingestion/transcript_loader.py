@@ -1,5 +1,6 @@
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Callable
 
@@ -8,6 +9,41 @@ from knowledge_base.logging_config import get_logger
 logger = get_logger(__name__)
 
 _DEFAULT_LANGUAGES = ["es", "en"]
+_OEMBED_URL = "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json"
+
+
+def _slugify(text: str) -> str:
+    normalized = unicodedata.normalize("NFD", text)
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]+", "_", ascii_text.lower()).strip("_")
+
+
+def create_channel_slug_fetcher(http_client) -> Callable:
+    """Create a callable that resolves a YouTube video's channel slug via oEmbed."""
+
+    def fetch_channel_slug(video_id: str) -> str:
+        """Fetch the channel slug for a YouTube video using the oEmbed API.
+
+        Extracts the handle from author_url (e.g. @ChannelHandle → channelhandle).
+        Falls back to slugified author_name if no handle is present.
+        Falls back to 'general' if the oEmbed request fails.
+        """
+        try:
+            response = http_client.get(_OEMBED_URL.format(video_id=video_id))
+            response.raise_for_status()
+            data = response.json()
+            author_url = data.get("author_url", "")
+            handle_match = re.search(r"@([^/]+)$", author_url)
+            if handle_match:
+                return handle_match.group(1).lower()
+            author_name = data.get("author_name", "")
+            if author_name:
+                return _slugify(author_name)
+        except Exception:
+            logger.warning("oEmbed lookup failed for video_id=%s, using 'general'", video_id)
+        return "general"
+
+    return fetch_channel_slug
 
 
 def extract_video_id(url: str) -> str:

@@ -8,6 +8,7 @@ from bonsai_sensei.domain import phytosanitary_plan_store
 from bonsai_sensei.domain import pest_catalog
 from bonsai_sensei.domain import bonsai_history
 from bonsai_sensei.domain import cultivation_plan
+from bonsai_sensei.domain import development_plan_store
 from bonsai_sensei.domain.services.garden.caretaker.caretaker import create_caretaker
 from bonsai_sensei.telegram.messages.garden_messages import (
     build_link_pest_event_selection_question,
@@ -40,6 +41,8 @@ def create_caretaker_group(
     list_planned_works_func = partial(cultivation_plan.list_planned_works, create_session=session_factory)
     delete_planned_work_func = partial(cultivation_plan.delete_planned_work, create_session=session_factory)
 
+    get_development_plan_func = partial(development_plan_store.get_development_plan, create_session=session_factory)
+
     return create_caretaker(
         model=model,
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -54,6 +57,7 @@ def create_caretaker_group(
         delete_planned_work_func=delete_planned_work_func,
         ask_confirmation=ask_confirmation,
         ask_selection=ask_selection,
+        get_development_plan_func=get_development_plan_func,
         build_apply_fertilizer_confirmation=build_apply_fertilizer_confirmation,
         build_apply_phytosanitary_confirmation=build_apply_phytosanitary_confirmation,
         build_record_transplant_confirmation=build_record_transplant_confirmation,

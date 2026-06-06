@@ -1,0 +1,31 @@
+# Design Plan — {{ bonsai_name }}
+
+**Period:** {{ period_start }} → {{ period_end }}
+**Status:** {{ status }}
+**Created:** {{ created_at }}
+**Development path:** {{ development_path }}
+**Current phase:** {{ current_phase }}
+**Target style:** {{ target_style }}
+
+## Design goal
+
+{{ design_goal }}
+
+## Rationale
+
+{{ rationale }}
+
+## Work schedule
+
+| Date | Technique | Notes |
+|------|-----------|-------|
+{% for entry in entries %}
+| {{ entry.date }} | {{ entry.technique_name }} | {{ entry.notes or '' }} |
+{% endfor %}
+{% if status == 'abandoned' %}
+
+## Abandonment
+
+**Date:** {{ abandoned_at }}
+**Reason:** {{ abandonment_reason }}
+{% endif %}

@@ -29,6 +29,11 @@ Si el usuario quiere programar un tratamiento fitosanitario (puntual o plan): ll
 - Para abandonar el plan fitosanitario activo: usa la herramienta de abandono fitosanitario indicando el motivo.
 - Para evaluar si el plan fitosanitario vigente sigue siendo válido: usa la herramienta de evaluación fitosanitaria.
 
+# Plan de desarrollo artístico
+Si el usuario quiere crear o actualizar el plan de desarrollo de un bonsái (fase, estilo, objetivo de diseño, calendario de trabajos artísticos): llama directamente a la herramienta de gestión del plan de desarrollo con los parámetros que el usuario haya indicado (camino de desarrollo, fase actual, estilo objetivo, objetivo de diseño, período inicio/fin). No preguntes antes de actuar — la herramienta gestiona lo que falte.
+- Para abandonar el plan de desarrollo activo: usa la herramienta de abandono del plan de desarrollo indicando el motivo.
+- Para evaluar si el plan de desarrollo vigente sigue siendo válido: usa la herramienta de evaluación del plan de desarrollo.
+
 # Eliminar trabajo planificado
 Para eliminar un trabajo planificado: primero lista los trabajos del bonsái para obtener el ID, luego llama a la herramienta de eliminación con ese ID.
 
@@ -49,6 +54,9 @@ def create_kikaru(
     schedule_phytosanitary_tool: Callable | None = None,
     abandon_phytosanitary_plan_tool: Callable | None = None,
     evaluate_phytosanitary_plan_tool: Callable | None = None,
+    manage_development_plan_tool: Callable | None = None,
+    abandon_development_plan_tool: Callable | None = None,
+    evaluate_development_plan_tool: Callable | None = None,
     create_transplant_tool: Callable | None = None,
     delete_planned_work_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
@@ -62,6 +70,9 @@ def create_kikaru(
             schedule_phytosanitary_tool,
             abandon_phytosanitary_plan_tool,
             evaluate_phytosanitary_plan_tool,
+            manage_development_plan_tool,
+            abandon_development_plan_tool,
+            evaluate_development_plan_tool,
             create_transplant_tool,
             delete_planned_work_tool,
             list_planned_works_tool,
@@ -72,7 +83,7 @@ def create_kikaru(
     return LlmAgent(
         model=model,
         name="kikaru",
-        description="Programa fertilizaciones y tratamientos fitosanitarios (puntuales o por período), gestiona planes activos (abandono y evaluación), crea trasplantes, y elimina trabajos planificados. Decide la fecha por defecto (próximo sábado) cuando el usuario no especifica una.",
+        description="Programa fertilizaciones y tratamientos fitosanitarios (puntuales o por período), gestiona planes de desarrollo artístico del bonsái (fase, estilo, objetivo de diseño, calendario de trabajos estacionales), gestiona planes activos (abandono y evaluación), crea trasplantes, y elimina trabajos planificados. Decide la fecha por defecto (próximo sábado) cuando el usuario no especifica una.",
         instruction=KIKARU_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=tools,

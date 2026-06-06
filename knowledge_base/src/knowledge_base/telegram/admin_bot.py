@@ -27,6 +27,7 @@ class AdminBotManager:
         run_wiki_dreamer: Callable,
         ingest_transcript: Callable,
         wiki_review_handler: Callable,
+        fetch_channel_slug: Optional[Callable] = None,
         wiki_editor: Optional[Callable] = None,
         embed: Optional[Callable] = None,
         save_entry: Optional[Callable] = None,
@@ -37,6 +38,7 @@ class AdminBotManager:
         self._run_wiki_dreamer = run_wiki_dreamer
         self._ingest_transcript = ingest_transcript
         self._wiki_review_handler = wiki_review_handler
+        self._fetch_channel_slug = fetch_channel_slug
         self._wiki_editor = wiki_editor
         self._embed = embed
         self._save_entry = save_entry
@@ -51,12 +53,19 @@ class AdminBotManager:
     def set_ingest_transcript(self, ingest_transcript: Callable) -> None:
         self._ingest_transcript = ingest_transcript
 
+    def set_fetch_channel_slug(self, fetch_channel_slug: Callable) -> None:
+        self._fetch_channel_slug = fetch_channel_slug
+
     @property
     def chat_id(self) -> str | None:
         return self._chat_id
 
     def build_handlers(self) -> list:
-        admin_ingest_handler = partial(handle_admin_ingest, ingest_transcript=self._ingest_transcript)
+        admin_ingest_handler = partial(
+            handle_admin_ingest,
+            ingest_transcript=self._ingest_transcript,
+            fetch_channel_slug=self._fetch_channel_slug,
+        )
 
         async def admin_start_command(update, context):
             chat_id = str(update.effective_chat.id)
@@ -84,7 +93,12 @@ class AdminBotManager:
             if not args:
                 await update.message.reply_text("Uso: /ingest <youtube_url> [canal]")
                 return
-            await handle_admin_ingest(update, context, ingest_transcript=self._ingest_transcript, text_override=args)
+            await handle_admin_ingest(
+                update, context,
+                ingest_transcript=self._ingest_transcript,
+                fetch_channel_slug=self._fetch_channel_slug,
+                text_override=args,
+            )
 
         async def feedback_command(update, context):
             feedback_text = update.message.text.removeprefix("/feedback").strip()

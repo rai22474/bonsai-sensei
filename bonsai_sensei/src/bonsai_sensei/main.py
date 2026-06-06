@@ -68,6 +68,7 @@ from bonsai_sensei.telegram.messages.planning_messages import (
     build_delete_confirmation,
     build_abandon_plan_confirmation,
     build_abandon_phytosanitary_plan_confirmation,
+    build_abandon_development_plan_confirmation,
 )
 from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_create_fertilizer_confirmation,
@@ -120,6 +121,7 @@ from bonsai_sensei.api.user_settings import router as user_settings_router
 from bonsai_sensei.api.planned_works import router as planned_works_router
 from bonsai_sensei.api.fertilization_plans import router as fertilization_plans_router
 from bonsai_sensei.api.phytosanitary_plans import router as phytosanitary_plans_router
+from bonsai_sensei.api.development_plans import router as development_plans_router
 from bonsai_sensei.api.weekend_plan_reminder import router as weekend_plan_reminder_router
 from bonsai_sensei.api.pests import router as pests_router
 from bonsai_sensei.api.health import router as health_router
@@ -159,6 +161,7 @@ async def lifespan(app: FastAPI):
     app.state.cultivation_plan_service = services["cultivation_plan"]
     app.state.fertilization_plan_service = services["fertilization_plan"]
     app.state.phytosanitary_plan_service = services["phytosanitary_plan"]
+    app.state.development_plan_service = services["development_plan"]
     app.state.bonsai_photo_service = services["bonsai_photo"]
     app.state.pest_service = services["pest"]
     app.state.pending_human_responses = {}
@@ -276,6 +279,7 @@ async def lifespan(app: FastAPI):
             "build_delete_confirmation": build_delete_confirmation,
             "build_abandon_plan_confirmation": build_abandon_plan_confirmation,
             "build_abandon_phytosanitary_plan_confirmation": build_abandon_phytosanitary_plan_confirmation,
+            "build_abandon_development_plan_confirmation": build_abandon_development_plan_confirmation,
         },
         garden_messages={
             "build_create_bonsai_confirmation": build_create_bonsai_confirmation,
@@ -480,6 +484,7 @@ app.include_router(user_settings_router, prefix="/api", tags=["user_settings"])
 app.include_router(planned_works_router, prefix="/api", tags=["planned_works"])
 app.include_router(fertilization_plans_router, prefix="/api", tags=["fertilization_plans"])
 app.include_router(phytosanitary_plans_router, prefix="/api", tags=["phytosanitary_plans"])
+app.include_router(development_plans_router, prefix="/api", tags=["development_plans"])
 app.include_router(weekend_plan_reminder_router, prefix="/api", tags=["weekend_plan_reminder"])
 app.include_router(pests_router, prefix="/api", tags=["pests"])
 app.include_router(telegram_router, prefix="/telegram", tags=["telegram"])

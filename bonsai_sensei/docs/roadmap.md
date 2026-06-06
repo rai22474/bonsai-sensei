@@ -4,31 +4,93 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 
 ---
 
-## FUTURE-004 — Búsqueda semántica wiki en kantei ✅ IMPLEMENTADO (2026-06-05)
+
+## FUTURE-012 — Plan de desarrollo artístico del bonsai
 
 **Contexto:**
-El agente sensei tiene `search_wiki_knowledge` (búsqueda semántica top-5). Los sub-agentes que toman decisiones de conocimiento no la tienen. Análisis por agente:
+El sistema gestiona fertilización y fitosanitarios pero carece de la dimensión artística: fase de desarrollo, objetivo de diseño, estilo y calendario de trabajos técnicos estacionales (alambrado, defoliación, pinzamiento, poda de estructura...). Esta iniciativa añade el `DevelopmentPlan` como tercer tipo de plan junto a `FertilizationPlan` y `PhytosanitaryPlan`.
 
-- **kantei**: diagnostica salud y diseño desde fotos. No tiene acceso a `diseases/` ni `phytosanitaries/`. Si detecta ácaros en una foto, no puede leer `diseases/acaros.md` para orientar el tratamiento. **Candidato claro.**
-- **storekeeper**: gestiona el catálogo y crea las wiki pages de fertilizantes/fitosanitarios. No necesita buscar lo que ya escribe.
-- **botanist**: ya tiene `read_wiki_page` y conoce las rutas exactas de especies.
-- **kikaru**: ya tiene `read_wiki_page` para planes; las rutas son conocidas.
-- **caretaker**, **nursery**, **gallery**: ejecución/gestión, sin decisiones de conocimiento.
+### Entidad `DevelopmentPlan`
 
-**Implementación:**
-- `kantei/photo_analysis_runner.py`: acepta `search_wiki_knowledge: Callable | None`; la añade como tool al agente de análisis; instrucción actualizada para que consulte la wiki al identificar plagas/enfermedades en análisis `health`
-- `kantei/factory.py`: crea `search_wiki_knowledge` via `create_http_search_wiki_knowledge_tool(kb_base_url)`; acepta `kb_base_url`; lo pasa al runner
-- `factory.py`: `create_sensei_group` pasa `kb_base_url` a `create_kantei_group`
-- MCP eliminado del sistema completo (ver abajo)
+```
+DevelopmentPlan
+  id
+  bonsai_id            FK → bonsai
+  development_path     str  ("planton", "yamadori", "vivero", "nebari")
+  current_phase        str  ("engorde", "aclimatacion", "estructura", "refinamiento", ...)
+  target_style         str  slug de wiki design/ (ej. "kengai", "bunjin", "moyogi")
+  design_goal          str  texto libre ("dar movimiento al primer tramo")
+  status               str  ("active" | "abandoned")
+  wiki_path            str  bonsai/<slug>/design-plans/<periodo>.md
+  created_at
+  abandoned_at
+  abandonment_reason
+```
 
-**Eliminación del MCP (hecho en este mismo FUTURE):**
-El MCP server de `knowledge_base` devolvía siempre `{"results": []}` — `embed_func` y `search_index` nunca se pasaban al servidor. Sensei llevaba meses con búsqueda wiki rota.
-- `knowledge_base/mcp/` eliminado
-- `knowledge_base/main.py`: mount `/mcp` eliminado
-- `bonsai_sensei/main.py`: bloque MCP loading eliminado
-- `bonsai_sensei/domain/services/factory.py`: `wiki_tools` eliminado; sensei recibe `search_wiki_knowledge` + `read_wiki_page` via HTTP client directamente
-- `bonsai_sensei/domain/services/wiki_search.py`: eliminado (dead code)
-- `tests/acceptance/stub_kb_mcp.py`: simplificado a REST puro (sin MCP)
+`PlannedWork` gana FK `development_plan_id → developmentplan.id` (nullable, SET NULL on delete).
+
+### Trabajos del plan
+
+Cada trabajo es un `PlannedWork` con:
+- `work_type` = slug de técnica de wiki (ej. `"defoliacion"`, `"alambrado"`)
+- `development_plan_id` = id del plan
+- `payload` = `{"technique_name": str, "wiki_path": str, "notes": str}`
+
+Las técnicas salen de `techniques/` en la wiki (knowledge_base FUTURE-003 ya implementado). Si el LLM propone una técnica nueva, el usuario la valida y pasa a la wiki.
+
+### Flujo conversacional
+
+Kikaru gestiona tres nuevas herramientas:
+- `manage_development_plan(bonsai_name, start_date, end_date, development_path, current_phase, target_style, design_goal)` — crea o reemplaza el plan activo. Ciclo: clarificación (estado del árbol, restricciones) → propuesta de calendario estacional → confirmación → persistencia.
+- `abandon_development_plan(bonsai_name, reason)` — abandona el plan activo.
+- `evaluate_development_plan(bonsai_name)` — evalúa si el plan activo sigue siendo válido dado el estado actual del árbol.
+
+### Contexto del LLM al generar el plan
+
+El prompt de propuesta recibe:
+- Especie: wiki `species/<slug>.md` (técnicas adecuadas, ventanas estacionales)
+- Estilo objetivo: wiki `design/<target_style>.md`
+- Fase y camino: texto estructurado
+- Historial de eventos del árbol
+- Localización del usuario (para calcular fechas concretas desde ventanas estacionales)
+- Plan existente si hay (será abandonado)
+
+### Fertilización: sin cambios estructurales
+
+La dependencia es suave: el LLM leerá la wiki del DevelopmentPlan cuando genere o evalúe un plan de fertilización (vía MCP), igual que ya lee `goal` y eventos.
+
+### Archivos nuevos
+
+- `domain/development_plan.py` — entidad SQLModel
+- `domain/development_plan_store.py` — CRUD
+- `alembic/versions/*_add_development_plan.py`
+- `alembic/versions/*_add_development_plan_id_to_planned_work.py`
+- `api/development_plans.py` — REST CRUD para tests de aceptación
+- `services/cultivation/plan/design/manage.py`
+- `services/cultivation/plan/design/abandon_plan.py`
+- `services/cultivation/plan/design/evaluate.py`
+- `services/cultivation/plan/design/factory.py`
+- `services/cultivation/plan/design/templates/` (clarification, proposal, wiki page, index)
+- `telegram/messages/planning_messages.py` — extensión con mensajes de design plan
+
+### Archivos modificados
+
+- `domain/planned_work.py` — añadir `development_plan_id`
+- `domain/cultivation_plan.py` — añadir `delete_future_planned_works_by_development_plan`
+- `services/cultivation/plan/kikaru.py` — nueva sección + nuevos params de tool
+- `services/cultivation/plan/factory.py` — wiring de nuevas herramientas
+- `services/factory.py` y `agents_factory.py` — propagación de nuevos callables
+- `main.py` — registrar router de development_plans
+
+### Punto de partida al retomar
+
+1. Crear `DevelopmentPlan` + store + migraciones.
+2. Añadir FK `development_plan_id` a `PlannedWork` + migración.
+3. Crear `api/development_plans.py` con DELETE para cleanup de tests.
+4. Implementar `design/manage.py` sin reutilizar `create_manage_plan_tool` (no hay catálogo de productos; las técnicas vienen de la wiki).
+5. Añadir `abandon_plan` y `evaluate` siguiendo el patrón de fertilización.
+6. Ampliar kikaru y factory.
+7. Tests de aceptación BDD.
 
 ---
 
@@ -87,61 +149,6 @@ Ambos agentes son pure side-effect (no yieldan eventos). Para que Python los tra
 - `bonsai_sensei/domain/services/factory.py`
 - `bonsai_sensei/domain/services/agents_factory.py`
 - `bonsai_sensei/__init__.py` (mover creación de mem0_client antes de `create_sensei_agent`)
-
----
-
-## FUTURE-010 — Plan de diseño orientado a objetivo
-
-**Contexto:**
-El sistema gestiona actualmente trabajos de cultivo rutinarios (fertilización, fitosanitarios, trasplante) a través de kikaru. Pero el desarrollo artístico de un bonsái requiere un tipo diferente de planificación: el usuario tiene un objetivo de diseño concreto ("desarrollar nebari más ancha", "afinar ápice", "dar movimiento al primer tramo", "conseguir ramas secundarias definidas") y necesita que el sistema le ayude a trazar la secuencia de técnicas específicas para llegar a ese objetivo.
-
-Este caso de uso está identificado en `vision.md` como "Generación de plan estándar por especie/diseño" y debe seguir el patrón de **agente libre** (no mitori/shokunin), por ser una planificación multi-turno con decisiones adaptadas al estado actual del árbol.
-
-**¿Qué diferencia este plan de los trabajos de kikaru?**
-Kikaru programa trabajos ya decididos por el usuario: "quiero fertilizar el día X". El plan de diseño responde a "¿qué tengo que hacer para conseguir Y?". El agente razona sobre el estado del árbol, la especie, la época del año y el objetivo, y genera una secuencia de técnicas con justificación y ventana temporal.
-
-**Técnicas a contemplar:**
-- Alambrado (wiring): dirección de ramas, momento óptimo según especie (otoño/invierno para caducifolias, evitar crecimiento activo)
-- Pinzado (pinching): control de elongación, favorece ramificación fina
-- Defoliado: reducción de tamaño de hoja, apertura de luz interior — solo especies que lo toleran
-- Poda de mantenimiento / poda estructural: eliminación de ramas sacrificadas, inversas, cruzadas
-- Poda de engrosamiento / jin / shari: técnicas de deadwood
-- Trasplante con trabajo de raíces: nebari, reducción de raíces gruesas
-- Nebari: guías de raíces aéreas, exposición progresiva
-
-**Modelo de dominio (por resolver):**
-
-Dos opciones a evaluar al implementar:
-
-**Opción A — Entidad `DesignObjective` en base de datos:**
-```
-DesignObjective:
-  id, bonsai_id, objective (text), created_at, achieved_at (nullable)
-
-DesignWork (extends PlannedWork o entidad separada):
-  id, objective_id, technique, rationale, window_start, window_end, status
-```
-Ventaja: trazabilidad, progreso cuantificable, filtros por estado.
-Desventaja: más tablas, más APIs REST, mayor coste de implementación.
-
-**Opción B — Plan como página wiki del bonsái:**
-El agente escribe un plan de diseño en `wiki/bonsai/<nombre>/design-plan.md` con secciones por técnica, ventana temporal y estado. Progreso se actualiza conversacionalmente o via keeper.
-Ventaja: simplicidad, integración natural con wiki existente, el agente puede leer y actualizar en lenguaje natural.
-Desventaja: sin datos estructurados, difícil de consultar programáticamente, sin reminder scheduling.
-
-**Recomendación:** empezar con Opción B (wiki) para validar el flujo sin infraestructura adicional. Migrar a Opción A si se necesita scheduling de recordatorios (integración con kikaru) o consultas estructuradas.
-
-**Patrón de agente:**
-Agente libre con acceso a:
-- herramienta de lectura/escritura de wiki (ya existe)
-- herramienta de consulta del bonsái y su historial (ya existe)
-- herramienta de consulta de especie (herbarium, ya existe)
-- opcionalmente: búsqueda de técnicas en base de conocimiento (ver `knowledge_base/docs/future-work.md` FUTURE-002/003)
-
-El agente conduce una conversación para entender el objetivo, el estado actual del árbol y las limitaciones del usuario (tiempo disponible, nivel de experiencia), y produce el plan adaptado.
-
-**Vínculo con vision.md:**
-Cubre directamente el caso de uso "Generación de plan estándar por especie/diseño". Implementar después de FUTURE-002 si se quiere que el agente consulte la base de conocimiento de técnicas (ver `knowledge_base/docs/roadmap.md`); puede implementarse antes si se apoya solo en el conocimiento del modelo.
 
 ---
 

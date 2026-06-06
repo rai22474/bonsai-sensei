@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from functools import partial
 from pathlib import Path
 
+import httpx
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, Response
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -21,7 +23,7 @@ from knowledge_base.dreamer.cards_agent import create_cards_agent
 from knowledge_base.dreamer.wikilinks_agent import create_wikilinks_agent
 from knowledge_base.dreamer.scheduler import create_wiki_dreamer_scheduler
 from knowledge_base.ingestion.factory import create_ingestion_pipeline
-from knowledge_base.ingestion.transcript_loader import create_transcript_downloader
+from knowledge_base.ingestion.transcript_loader import create_channel_slug_fetcher, create_transcript_downloader
 from knowledge_base.logging_config import configure_logging
 from knowledge_base.telegram.admin_bot import AdminBotManager
 from knowledge_base.telegram.bot import TelegramBot
@@ -52,7 +54,7 @@ async def lifespan(app: FastAPI):
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
     transcripts_root = Path(os.getenv("TRANSCRIPTS_PATH", "./transcripts"))
 
-    embed_text = create_embed_text(os.getenv("GEMINI_API_KEY", ""))
+    embed_text = create_embed_text()
     app.state.embed_text = embed_text
 
     import falkordb as falkordb_lib
@@ -120,6 +122,7 @@ async def lifespan(app: FastAPI):
     admin_bot_manager.set_run_wiki_dreamer(app.state.run_wiki_dreamer)
 
     download_transcript = create_transcript_downloader(YouTubeTranscriptApi())
+    fetch_channel_slug = create_channel_slug_fetcher(httpx.Client())
     app.state.ingest_transcript = create_ingestion_pipeline(
         effective_model, transcripts_root, wiki_root,
         download_transcript=download_transcript,
@@ -127,6 +130,7 @@ async def lifespan(app: FastAPI):
         orchestrator_model=orchestrator_model,
     )
     admin_bot_manager.set_ingest_transcript(app.state.ingest_transcript)
+    admin_bot_manager.set_fetch_channel_slug(fetch_channel_slug)
 
     from knowledge_base.wiki_editor.tools.search_web import create_web_searcher
     tavily_api_key = os.getenv("TAVILY_API_KEY")

@@ -9,6 +9,7 @@ from bonsai_sensei.domain import user_settings_store
 from bonsai_sensei.domain import cultivation_plan
 from bonsai_sensei.domain import fertilization_plan_store
 from bonsai_sensei.domain import phytosanitary_plan_store
+from bonsai_sensei.domain import development_plan_store
 from bonsai_sensei.domain import bonsai_photo_store
 from bonsai_sensei.domain import pest_catalog
 
@@ -72,6 +73,13 @@ def create_data_services(session_factory) -> dict:
             "get_active_phytosanitary_plan": partial(phytosanitary_plan_store.get_active_phytosanitary_plan, create_session=session_factory),
             "create_phytosanitary_plan": partial(phytosanitary_plan_store.create_phytosanitary_plan, create_session=session_factory),
             "delete_phytosanitary_plan": partial(phytosanitary_plan_store.delete_phytosanitary_plan, create_session=session_factory),
+        },
+        "development_plan": {
+            "list_development_plans": partial(development_plan_store.list_development_plans, create_session=session_factory),
+            "get_development_plan": partial(development_plan_store.get_development_plan, create_session=session_factory),
+            "get_active_development_plan": partial(development_plan_store.get_active_development_plan, create_session=session_factory),
+            "create_development_plan": partial(development_plan_store.create_development_plan, create_session=session_factory),
+            "delete_development_plan": partial(development_plan_store.delete_development_plan, create_session=session_factory),
         },
         "bonsai_photo": {
             "create_bonsai_photo": partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory),

@@ -1,0 +1,22 @@
+Bonsái: {{ bonsai_name }}
+
+## Plan de desarrollo activo
+{{ plan_content or "(sin plan)" }}
+
+## Historial de eventos recientes
+{% for event in events %}
+- {{ event }}
+{% else %}
+Sin eventos registrados.
+{% endfor %}
+{% if reports %}
+
+## Informes de análisis recientes
+{% for report in reports %}
+---
+{{ report }}
+{% endfor %}
+{% endif %}
+
+## Nueva información a evaluar
+{{ new_information }}

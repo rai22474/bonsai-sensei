@@ -88,6 +88,7 @@ def create_manage_plan_tool(
                 end_date=end_date,
                 products=products,
                 events=bonsai_context["events"],
+                reports=bonsai_context["reports"],
                 bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
                 existing_plan_content=read_wiki_content(existing_plan.wiki_path, read_wiki_page_func) if existing_plan else "",
             ),

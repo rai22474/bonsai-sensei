@@ -45,6 +45,7 @@ def create_caretaker(
     build_link_pest_event_selection_question: Callable,
     build_pest_event_selection_option: Callable,
     no_link_option: str,
+    get_development_plan_func: Callable | None = None,
 ) -> Agent:
     apply_fertilizer_tool = create_apply_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
@@ -89,6 +90,7 @@ def create_caretaker(
         build_confirmation_message=build_execute_planned_work_confirmation,
         build_selection_question=build_execute_planned_work_selection_question,
         build_work_option_label=build_execute_planned_work_option_label,
+        get_development_plan_func=get_development_plan_func,
     )
     execute_planned_work_tool.__name__ = "execute_planned_work_for_bonsai"
     pest_event_tool = create_create_pest_event_tool(

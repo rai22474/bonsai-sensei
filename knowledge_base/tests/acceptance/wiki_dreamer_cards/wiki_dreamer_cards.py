@@ -12,16 +12,16 @@ _SPECIES_CARD_CONTENT = """\
 Canal: Test Channel
 
 ## Especies
-- Ficus microcarpa: especie tropical de hoja perenne, tolera poda intensa
+- Ficus microcarpa: especie tropical de hoja perenne muy popular en bonsái. Tolera poda intensa y frecuente, lo que permite reducir con rapidez el tamaño de las hojas. Es ideal para principiantes por su gran capacidad de recuperación.
 
 ## Técnicas
-- Poda de mantenimiento: eliminar ramas que rompen la silueta
+- Poda de mantenimiento: en Ficus microcarpa se aplica durante todo el año exceptuando el invierno. Se eliminan las ramas que rompen la silueta y se reduce el crecimiento apical para distribuir la energía hacia las ramas inferiores.
 
 ## Temporadas
-- Primavera: época de trasplante
+- Primavera: mejor época de trasplante y para hacer alambrado, cuando el árbol tiene plena actividad vegetativa.
 
 ## Consejos
-- Regar abundantemente en verano
+- Regar abundantemente en verano cuando el sustrato esté casi seco. En invierno reducir el riego notablemente.
 """
 
 _PODA_CARD_CONTENT = """\
@@ -31,10 +31,10 @@ _PODA_CARD_CONTENT = """\
 Canal: Test Channel
 
 ## Técnicas
-- Poda de mantenimiento: eliminar ramas cruzadas y chupones para mantener la silueta limpia del bonsái
+- Poda de mantenimiento: técnica fundamental para mantener la silueta del bonsái. Consiste en eliminar ramas cruzadas, ramas que crecen hacia el interior y chupones (brotes vigorosos que surgen del tronco o ramas principales sin respetar la estructura). Los chupones deben eliminarse en cuanto aparecen para que no consuman energía del árbol. La poda se realiza con tijeras bien afiladas y se aplica sellante en cortes mayores de 5mm.
 
 ## Consejos
-- No podar en pleno verano salvo emergencia
+- No podar en pleno verano salvo emergencia porque el árbol está bajo estrés térmico y los cortes tardan más en cicatrizar.
 """
 
 

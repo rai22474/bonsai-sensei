@@ -2,7 +2,7 @@ import re
 
 import aiohttp
 
-from http_client import delete_kb, get_kb
+from http_client import delete_kb, get_kb, put_kb
 
 
 def get_wiki_page(path: str) -> dict | None:
@@ -12,6 +12,10 @@ def get_wiki_page(path: str) -> dict | None:
         if error.status == 404:
             return None
         raise
+
+
+def write_wiki_page(path: str, content: str) -> None:
+    put_kb("/api/wiki", {"path": path, "content": content})
 
 
 def delete_wiki_page(path: str) -> None:

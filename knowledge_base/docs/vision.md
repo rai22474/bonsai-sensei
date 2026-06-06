@@ -18,4 +18,3 @@ La wiki es la fuente de verdad para conocimiento general. El keeper la mantiene 
 ## Casos de uso no implementados aún
 
 - **Revisión humana post-keeper** (FUTURE-001): canal Telegram admin donde el operador revisa y aprueba cada página antes de considerarla definitiva.
-- **Taxonomía de conocimiento general** (FUTURE-003): estructura fija de secciones (`species/`, `techniques/`, `diseases/`, `fertilization/`) con reglas de enlazado para que el keeper produzca páginas interconectadas en lugar de huérfanas.

@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import Callable
 
 from telegram import Update
@@ -10,19 +9,18 @@ from knowledge_base.logging_config import get_logger
 
 logger = get_logger(__name__)
 
-_DEFAULT_CHANNEL = os.getenv("WIKI_DEFAULT_CHANNEL", "general")
-
 
 async def handle_admin_ingest(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     ingest_transcript: Callable,
+    fetch_channel_slug: Callable,
     text_override: str | None = None,
 ) -> None:
     text = (text_override or update.message.text or "").strip()
     parts = text.split()
     raw_url = parts[0]
-    channel = parts[1] if len(parts) > 1 else _DEFAULT_CHANNEL
+    channel = parts[1] if len(parts) > 1 else None
 
     try:
         video_id = extract_video_id(raw_url)
@@ -30,6 +28,10 @@ async def handle_admin_ingest(
     except ValueError:
         await update.message.reply_text(f"❌ No puedo extraer el video ID de: {raw_url}")
         return
+
+    if channel is None:
+        channel = fetch_channel_slug(video_id)
+        logger.info("Auto-resolved channel slug: video_id=%s channel=%s", video_id, channel)
 
     await update.message.reply_text(f"⚙️ Ingestando {video_id} (canal: {channel})...")
     logger.info("Admin triggered ingestion: video_id=%s channel=%s", video_id, channel)

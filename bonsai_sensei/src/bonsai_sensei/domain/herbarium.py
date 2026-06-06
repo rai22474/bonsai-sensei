@@ -37,6 +37,11 @@ def get_species_by_name(session: Session, name: str) -> Species | None:
 
 
 @with_session
+def get_species_by_id(session: Session, species_id: int) -> Species | None:
+    return session.get(Species, species_id)
+
+
+@with_session
 def search_species_by_name(session: Session, name: str) -> List[Species]:
     if not name:
         return []

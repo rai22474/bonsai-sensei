@@ -87,6 +87,10 @@ def build_abandon_phytosanitary_plan_confirmation(bonsai_name: str, period_start
     return f"¿Abandonar el plan fitosanitario de '{display_name(bonsai_name)}' ({format_date(period_start)} → {format_date(period_end)})?\nMotivo: {reason}"
 
 
+def build_abandon_development_plan_confirmation(bonsai_name: str, period_start: str, period_end: str, reason: str) -> str:
+    return f"¿Abandonar el plan de desarrollo de '{display_name(bonsai_name)}' ({format_date(period_start)} → {format_date(period_end)})?\nMotivo: {reason}"
+
+
 def build_delete_confirmation(work) -> str:
     date_str = format_date(work.scheduled_date)
     payload = work.payload or {}

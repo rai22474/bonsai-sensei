@@ -200,7 +200,7 @@ def _get_new_cards(transcripts_root: Path, since: datetime) -> list[str]:
     return sorted(
         str(card.relative_to(cards_root))
         for card in cards_root.rglob("*.md")
-        if datetime.fromtimestamp(card.stat().st_mtime, tz=timezone.utc) > since
+        if datetime.fromtimestamp(card.stat().st_mtime, tz=timezone.utc) >= since
     )
 
 
