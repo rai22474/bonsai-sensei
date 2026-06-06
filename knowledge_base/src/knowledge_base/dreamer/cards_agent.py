@@ -5,12 +5,11 @@ from google.adk.agents.llm_agent import Agent
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from knowledge_base.wiki_page_tools import create_read_wiki_page_tool, create_write_wiki_page_tool
-from knowledge_base.dreamer.tools import (
-    create_list_cards_tool,
-    create_list_wiki_pages_tool,
-    create_read_card_tool,
-    create_search_wiki_knowledge_tool,
-)
+from knowledge_base.dreamer.find_existing_wiki_page import create_find_existing_wiki_page_tool
+from knowledge_base.dreamer.list_cards import create_list_cards_tool
+from knowledge_base.dreamer.list_wiki_pages import create_list_wiki_pages_tool
+from knowledge_base.dreamer.read_card import create_read_card_tool
+from knowledge_base.dreamer.search_wiki_knowledge import create_search_wiki_knowledge_tool
 
 APP_NAME = "wiki_dreamer_cards"
 
@@ -38,7 +37,8 @@ def create_cards_agent(
 
     if embed is not None and search_by_embedding is not None:
         search_wiki_knowledge = create_search_wiki_knowledge_tool(embed, search_by_embedding)
-        tools = [list_cards, read_card, search_wiki_knowledge, read_wiki_page, write_wiki_page]
+        find_existing_wiki_page = create_find_existing_wiki_page_tool(embed, search_by_embedding, wiki_root)
+        tools = [list_cards, read_card, find_existing_wiki_page, search_wiki_knowledge, read_wiki_page, write_wiki_page]
     else:
         list_wiki_pages = create_list_wiki_pages_tool(wiki_root)
         tools = [list_cards, read_card, list_wiki_pages, read_wiki_page, write_wiki_page]

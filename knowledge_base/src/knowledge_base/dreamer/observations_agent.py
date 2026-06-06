@@ -4,7 +4,7 @@ from google.adk.agents.llm_agent import Agent
 from jinja2 import Environment, FileSystemLoader
 
 from knowledge_base.wiki_page_tools import create_read_wiki_page_tool, create_write_wiki_page_tool
-from knowledge_base.dreamer.tools import create_list_wiki_pages_tool
+from knowledge_base.dreamer.list_wiki_pages import create_list_wiki_pages_tool
 
 APP_NAME = "wiki_dreamer_observations"
 

@@ -65,4 +65,5 @@ DESIGN RULES:
   - `when` steps: MUST use `advise()` (and `accept_confirmation()` if needed). These are the user actions under test.
   - `then` steps: MUST use REST API only. NEVER call `advise()`. Assertions must be based on deterministic data from the API, not on LLM-generated text unless that text is the explicit subject of the test.
 - Each acceptance test scenario MUST use an isolated ADK session. The `context` fixture in every test module's `conftest.py` MUST include `"user_id": f"bdd-<suite>-{uuid.uuid4().hex}"`. Never hardcode a fixed user_id string — shared sessions cause `tool_call_counters` to accumulate across scenarios, producing false failures. The global `reset_adk_session_after_test` fixture in `acceptance-tests/conftest.py` resets the session only when `context["user_id"]` is set.
+- One test file per tool function: `tests/unit/<module>/test_<tool_name>.py` (e.g. `test_find_existing_wiki_page.py`, not `test_tools.py`). This makes it easy to locate tests and avoids fixture collisions between unrelated tools.
 

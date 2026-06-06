@@ -175,3 +175,121 @@ El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y venta
 **Recomendación:** Implementar Opción A primero. Migrar a Opción B si la referencia estética resulta insuficiente o si el usuario pide anotaciones sobre su árbol real.
 
 **Dependencia:** FUTURE-010 debe estar implementado (el agente de plan de diseño es el host natural de este tool).
+
+---
+
+## FUTURE-013 — Soporte multi-usuario
+
+**Contexto:**
+El sistema asume implícitamente un único usuario: los bonsáis no tienen FK de usuario en BD, y los `wiki_path` usan `bonsai/<slug>/` sin namespace de usuario — lo que produce colisiones si dos usuarios tienen árboles con el mismo slug. Esta iniciativa establece la base de identidad de usuario que habilita tanto el aislamiento de datos como la futura multi-colección (FUTURE-014).
+
+### Cambios en BD
+
+```
+User
+  id
+  telegram_user_id    unique
+  location            str (nullable)
+  created_at
+
+Bonsai
+  user_id    FK → User    ← nuevo (nullable en migración, backfill con usuario único actual)
+```
+
+Alembic migrations:
+1. `create_user_table`
+2. `add_user_id_to_bonsai` — nullable, backfill con el ID del usuario existente, luego NOT NULL
+
+### Cambio de convención de wiki_path
+
+Todos los builders que construyen `wiki_path` para entidades de usuario deben usar el prefijo `users/{user_id}/`:
+
+```
+# Antes
+bonsai/<slug>/
+bonsai/<slug>/fertilization-plans/
+bonsai/<slug>/design-plans/
+
+# Después
+users/{user_id}/bonsai/<slug>/
+users/{user_id}/bonsai/<slug>/fertilization-plans/
+users/{user_id}/bonsai/<slug>/design-plans/
+```
+
+El conocimiento general (dreamer/keeper) sigue en `species/`, `techniques/`, `diseases/` — sin cambio.
+
+**Este cambio debe hacerse antes de que haya datos de producción reales.** Si ya existen páginas wiki de usuario, se requiere un script de migración: mover archivos en disco + actualizar strings `wiki_path` en BD.
+
+### Wiki index (FalkorDB)
+
+Añadir propiedad `user_id` (nullable) a nodos `WikiPage`. Las páginas de conocimiento general tienen `user_id=null`; las de usuario llevan su `user_id`. Las queries KNN de `search_wiki_knowledge` filtran por `user_id IS NULL OR user_id = $user_id` para devolver solo conocimiento relevante.
+
+Alternativa más limpia: dos grafos separados en FalkorDB (`wiki_index` para conocimiento general, `user_wiki_index` para contenido de usuario). Evita filtros en queries y aísla operaciones de dreamer/keeper de las del sensei.
+
+### Sesión ADK
+
+`user_id` ya existe en las sesiones ADK (usado para routing de confirmaciones). Pasar a ser el ID de la entidad `User` en BD en lugar del `telegram_user_id` crudo.
+
+### Punto de partida al retomar
+
+1. Crear `User` + migration.
+2. Añadir `user_id` a `Bonsai` + migration con backfill.
+3. Cambiar builders de `wiki_path` al nuevo prefijo.
+4. Añadir `user_id` a nodos `WikiPage` del índice (o dividir en dos grafos).
+5. Actualizar context de sesión ADK para usar `User.id`.
+6. Tests de aceptación con usuarios distintos y verificación de aislamiento.
+
+**Dependencia:** Ninguna. Puede implementarse independientemente. FUTURE-014 depende de esta.
+
+---
+
+## FUTURE-014 — Multi-colección por usuario
+
+**Contexto:**
+Con la identidad de usuario establecida (FUTURE-013), esta iniciativa añade el concepto de `Collection` como agrupación de bonsáis dentro de un usuario. Un usuario puede tener varias colecciones (jardín, taller, vivero). El sensei trabaja en el contexto de una colección activa fijada en la sesión.
+
+**Dependencia obligatoria:** FUTURE-013 implementado.
+
+### Entidad `Collection`
+
+```
+Collection
+  id
+  user_id       FK → User
+  name          str
+  description   str (nullable)
+  created_at
+
+Bonsai
+  collection_id    FK → Collection    ← reemplaza user_id directo
+```
+
+Alembic migrations:
+1. `create_collection_table`
+2. `add_collection_id_to_bonsai` — crear una colección default por usuario, backfill, luego NOT NULL, eliminar `user_id` directo de `Bonsai`.
+
+### Contexto de colección activa en sesión
+
+`active_collection_id` en session state de ADK — se fija cuando el usuario dice "hablemos de mi colección del jardín". Persiste hasta cambio explícito (mismo patrón que `user_location`).
+
+### Resolución de ambigüedad
+
+Cuando el usuario menciona un árbol sin especificar colección:
+- Si el árbol existe en exactamente una colección del usuario → resuelve sin preguntar.
+- Si existe en varias → `ask_selection` dentro del tool (ADR-011). El LLM no orquesta la resolución.
+- Si `active_collection_id` está fijado en sesión → filtra por esa colección primero.
+
+### Herramientas nuevas del sensei
+
+- `switch_collection(name)` — cambia `active_collection_id` en sesión; lista colecciones si no hay coincidencia exacta.
+- `list_collections()` — muestra las colecciones del usuario con conteo de árboles.
+- Las herramientas de gestión de bonsáis (`create_bonsai`, `list_bonsais`, etc.) reciben `collection_id` del contexto de sesión.
+
+### Punto de partida al retomar
+
+1. Crear `Collection` + migration + colección default por usuario.
+2. Migrar `Bonsai.user_id` → `Bonsai.collection_id`.
+3. Actualizar todos los tools que reciben `user_id` para recibir también `collection_id`.
+4. Añadir `switch_collection` y `list_collections` al sensei.
+5. Implementar resolución de ambigüedad vía `ask_selection` en tools que buscan bonsáis por nombre.
+6. Tests de aceptación con múltiples colecciones y verificación de aislamiento.
