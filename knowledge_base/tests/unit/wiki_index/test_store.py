@@ -27,6 +27,7 @@ def should_load_entry_returns_entry_when_found(graph):
         'page_path': 'species/ficus.md',
         'abstract': 'Ficus retusa is a tropical species.',
         'embedding': [0.1, 0.2, 0.3],
+        'user_id': None,
     })
     links_result = MagicMock()
     links_result.result_set = []

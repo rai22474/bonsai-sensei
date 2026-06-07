@@ -8,6 +8,7 @@ class IndexEntry:
     abstract: str
     links: list[str]
     embedding: list[float]
+    user_id: str | None = None
 
 
 def extract_abstract(content: str) -> str:

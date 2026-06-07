@@ -38,6 +38,26 @@ def should_return_empty_when_no_results(graph):
     assert_that(results, equal_to([]), "Should return empty list when graph returns no results")
 
 
+def should_include_user_id_filter_in_query_when_provided(graph):
+    graph.query.return_value = MagicMock(result_set=[])
+    search_by_embedding = create_search_by_embedding(graph)
+
+    search_by_embedding([0.1, 0.2], top_k=3, user_id="user123")
+
+    call_args = graph.query.call_args
+    assert_that("$user_id" in call_args[0][0], equal_to(True), "Query should contain user_id filter when user_id is provided")
+
+
+def should_restrict_to_global_pages_when_user_id_is_none(graph):
+    graph.query.return_value = MagicMock(result_set=[])
+    search_by_embedding = create_search_by_embedding(graph)
+
+    search_by_embedding([0.1, 0.2], top_k=3, user_id=None)
+
+    call_args = graph.query.call_args
+    assert_that("user_id IS NULL" in call_args[0][0], equal_to(True), "Query should restrict to global pages when user_id is None")
+
+
 @pytest.fixture
 def graph():
     mock = MagicMock()

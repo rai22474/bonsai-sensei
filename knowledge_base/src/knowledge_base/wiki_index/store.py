@@ -39,8 +39,8 @@ def create_save_entry(graph: falkordb.Graph) -> Callable[[IndexEntry], None]:
     def save_entry(entry: IndexEntry) -> None:
         graph.query(
             "MERGE (node:WikiPage {page_path: $page_path}) "
-            "SET node.abstract = $abstract, node.embedding = vecf32($embedding)",
-            {'page_path': entry.page_path, 'abstract': entry.abstract, 'embedding': entry.embedding},
+            "SET node.abstract = $abstract, node.embedding = vecf32($embedding), node.user_id = $user_id",
+            {'page_path': entry.page_path, 'abstract': entry.abstract, 'embedding': entry.embedding, 'user_id': entry.user_id},
         )
         for link in entry.links:
             graph.query(
@@ -67,6 +67,7 @@ def create_load_entry(graph: falkordb.Graph) -> Callable[[str], IndexEntry | Non
             abstract=node.properties.get('abstract', ''),
             links=_load_links(graph, page_path),
             embedding=list(node.properties.get('embedding', [])),
+            user_id=node.properties.get('user_id'),
         )
     return load_entry
 
@@ -81,6 +82,7 @@ def create_load_all_entries(graph: falkordb.Graph) -> Callable[[], list[IndexEnt
                 abstract=node.properties.get('abstract', ''),
                 links=_load_links(graph, node.properties['page_path']),
                 embedding=list(node.properties.get('embedding', [])),
+                user_id=node.properties.get('user_id'),
             )
             for row in result.result_set
             for node in [row[0]]

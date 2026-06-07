@@ -23,8 +23,16 @@ async def update_page_index(
         return
     links = extract_links(content)
     embedding = await embed(abstract)
-    entry = IndexEntry(page_path=page_path, abstract=abstract, links=links, embedding=embedding)
+    user_id = _extract_user_id_from_path(page_path)
+    entry = IndexEntry(page_path=page_path, abstract=abstract, links=links, embedding=embedding, user_id=user_id)
     save_entry(entry)
+
+
+def _extract_user_id_from_path(page_path: str) -> str | None:
+    parts = page_path.split("/")
+    if len(parts) >= 2 and parts[0] == "users":
+        return parts[1]
+    return None
 
 
 async def build_full_index(
