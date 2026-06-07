@@ -19,3 +19,19 @@ Feature: Wiki semantic search — returns relevant pages for a query
     When the wiki is searched for "hongo beneficioso raices"
     Then the search results contain a page with path "test-search/score-test.md"
     And the first search result has a relevance score above 0.5
+
+  Scenario: Search with user_id returns global pages and that user's pages
+    Given a wiki page "test-search/global-user-test.md" exists with content "# Keto\n\nSustrato orgánico tradicional japonés para bonsái de exterior."
+    And a user wiki page "users/search-user-bdd/bonsai/mi-ficus/index.md" exists with content "# Mi Ficus\n\nFicus retusa con hojas amarillas en el ápice. Sustrato keto."
+    And the wiki index is rebuilt
+    When the wiki is searched for "keto sustrato japones" with user_id "search-user-bdd"
+    Then the search results contain a page with path "test-search/global-user-test.md"
+    And the search results contain a page with path "users/search-user-bdd/bonsai/mi-ficus/index.md"
+
+  Scenario: Search without user_id returns only global pages
+    Given a wiki page "test-search/global-only-test.md" exists with content "# Nebari\n\nDesarrollo de raíces superficiales en bonsái. Técnica de exposición progresiva."
+    And a user wiki page "users/other-user-bdd/bonsai/mi-pino/index.md" exists with content "# Mi Pino\n\nPino negro con nebari en desarrollo."
+    And the wiki index is rebuilt
+    When the wiki is searched for "nebari raices bonsai"
+    Then the search results contain a page with path "test-search/global-only-test.md"
+    And the search results do not contain pages from "users/"

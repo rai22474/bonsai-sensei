@@ -21,8 +21,24 @@ def test_search_no_match():
     return None
 
 
+@scenario("../features/wiki_search.feature", "Search with user_id returns global pages and that user's pages")
+def test_search_with_user_id_returns_both_scopes():
+    return None
+
+
+@scenario("../features/wiki_search.feature", "Search without user_id returns only global pages")
+def test_search_without_user_id_returns_global_only():
+    return None
+
+
 @given(parsers.parse('a wiki page "{page_path}" exists with content "{content}"'))
 def create_wiki_page(context, page_path, content):
+    write_wiki_page(page_path, content)
+    context["wiki_paths_created"].append(page_path)
+
+
+@given(parsers.parse('a user wiki page "{page_path}" exists with content "{content}"'))
+def create_user_wiki_page(context, page_path, content):
     write_wiki_page(page_path, content)
     context["wiki_paths_created"].append(page_path)
 
@@ -40,6 +56,12 @@ def rebuild_index_when(context):
 @when(parsers.parse('the wiki is searched for "{query}"'))
 def search(context, query):
     result = post("/api/wiki/index/search", {"query": query, "top_k": 5})
+    context["search_results"] = result.get("results", []) if isinstance(result, dict) else []
+
+
+@when(parsers.parse('the wiki is searched for "{query}" with user_id "{user_id}"'))
+def search_with_user_id(context, query, user_id):
+    result = post("/api/wiki/index/search", {"query": query, "top_k": 5, "user_id": user_id})
     context["search_results"] = result.get("results", []) if isinstance(result, dict) else []
 
 
@@ -66,3 +88,11 @@ def assert_score_above_threshold(context):
     top_score = results[0].get("score", 0.0)
     assert top_score > 0.5, \
         f"Top score {top_score} should be above 0.5 for a relevant query"
+
+
+@then(parsers.parse('the search results do not contain pages from "{prefix}"'))
+def assert_no_results_from_prefix(context, prefix):
+    paths = [r.get("page_path", "") for r in context["search_results"]]
+    user_paths = [path for path in paths if path.startswith(prefix)]
+    assert not user_paths, \
+        f"Search without user_id should not return pages from {prefix}. Got: {user_paths}"

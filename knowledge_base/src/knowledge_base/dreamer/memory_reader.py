@@ -10,8 +10,11 @@ _ADMIN_CORRECTIONS_FILE = "pending-corrections.jsonl"
 _DEFAULT_START = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
-async def read_new_observations(episodic_memory_url: str, wiki_root: Path) -> list[str]:
-    """Read observations from the episodic memory service since the last dreamer run."""
+async def read_new_observations(episodic_memory_url: str, wiki_root: Path) -> list[dict]:
+    """Read observations from the episodic memory service since the last dreamer run.
+
+    Returns list of {"user_id": str, "content": str} dicts.
+    """
     last_run = read_high_watermark(wiki_root)
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -23,21 +26,31 @@ async def read_new_observations(episodic_memory_url: str, wiki_root: Path) -> li
     return response.json().get("observations", [])
 
 
-def read_local_observations(wiki_root: Path) -> list[str]:
-    """Read and consume all observations from the local pending-observations.jsonl queue."""
+def read_local_observations(wiki_root: Path) -> list[dict]:
+    """Read and consume all observations from the local pending-observations.jsonl queue.
+
+    Supports both legacy string format and new {"user_id", "content"} dict format.
+    """
     observations_file = wiki_root / _LOCAL_OBSERVATIONS_FILE
     if not observations_file.exists():
         return []
     lines = [line.strip() for line in observations_file.read_text(encoding="utf-8").splitlines() if line.strip()]
     observations_file.unlink()
-    return [json.loads(line) for line in lines]
+    observations = []
+    for line in lines:
+        parsed = json.loads(line)
+        if isinstance(parsed, str):
+            observations.append({"user_id": None, "content": parsed})
+        else:
+            observations.append(parsed)
+    return observations
 
 
-def append_local_observation(wiki_root: Path, text: str) -> None:
+def append_local_observation(wiki_root: Path, text: str, user_id: str | None = None) -> None:
     """Append an observation to the local pending-observations.jsonl queue (true append, no read-modify-write)."""
     observations_file = wiki_root / _LOCAL_OBSERVATIONS_FILE
     with observations_file.open("a", encoding="utf-8") as file:
-        file.write(json.dumps(text) + "\n")
+        file.write(json.dumps({"user_id": user_id, "content": text}) + "\n")
 
 
 def read_admin_corrections(wiki_root: Path) -> list[str]:

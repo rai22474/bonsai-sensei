@@ -66,8 +66,8 @@ class GraphitiStore:
         finally:
             SEARCH_REQUESTS_TOTAL.labels(status=status).inc()
 
-    async def get_new_episodes(self, since: datetime) -> list[str]:
-        """Return episode content for all users with valid_at > since."""
+    async def get_new_episodes(self, since: datetime) -> list[dict]:
+        """Return episode content with user_id for all users with valid_at > since."""
         episodes = await self._graphiti.retrieve_episodes(
             reference_time=datetime.now(timezone.utc),
             last_n=500,
@@ -80,7 +80,7 @@ class GraphitiStore:
             logger.debug("episode uuid=%s valid_at=%s content_len=%d", episode.uuid, valid_at, len(episode.content or ""))
         since_aware = since if since.tzinfo is not None else since.replace(tzinfo=timezone.utc)
         observations = [
-            episode.content
+            {"user_id": episode.group_id, "content": episode.content}
             for episode in episodes
             if episode.content and (episode.valid_at.replace(tzinfo=timezone.utc) if episode.valid_at.tzinfo is None else episode.valid_at) > since_aware
         ]

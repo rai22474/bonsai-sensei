@@ -43,14 +43,17 @@ async def should_get_new_episodes_filters_by_valid_at():
 
     old_episode = MagicMock()
     old_episode.content = "old content"
+    old_episode.group_id = "user-old"
     old_episode.valid_at = datetime(2024, 5, 1, tzinfo=timezone.utc)
 
     new_episode = MagicMock()
     new_episode.content = "new content"
+    new_episode.group_id = "user-1"
     new_episode.valid_at = datetime(2024, 7, 1, tzinfo=timezone.utc)
 
     empty_episode = MagicMock()
     empty_episode.content = ""
+    empty_episode.group_id = "user-2"
     empty_episode.valid_at = datetime(2024, 7, 2, tzinfo=timezone.utc)
 
     graphiti.retrieve_episodes = AsyncMock(return_value=[old_episode, new_episode, empty_episode])
@@ -58,7 +61,7 @@ async def should_get_new_episodes_filters_by_valid_at():
 
     observations = await store.get_new_episodes(since)
 
-    assert_that(observations, equal_to(["new content"]), "Should include only new non-empty episodes")
+    assert_that(observations, equal_to([{"user_id": "user-1", "content": "new content"}]), "Should include only new non-empty episodes with user_id")
 
 
 @pytest.fixture

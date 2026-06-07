@@ -1,0 +1,17 @@
+Clasifica la siguiente observación sobre bonsái y devuelve ÚNICAMENTE un objeto JSON válido. Sin markdown, sin explicación.
+
+Formato de respuesta:
+{"type": "<tipo>", "entity_name": "<nombre>"}
+
+Tipos válidos:
+- "bonsai": observación sobre un árbol concreto (menciona el árbol por nombre)
+- "species": observación sobre una especie (comportamiento, cuidados, características)
+- "techniques": observación sobre una técnica de cultivo o estilismo
+- "diseases": observación sobre una enfermedad
+- "pests": observación sobre una plaga
+- "profile": preferencias, sustratos, estrategia de abonado, calendario personal
+- "ignore": no clasificable o irrelevante
+
+El campo "entity_name" es el nombre de la entidad (árbol, especie, técnica, enfermedad o plaga).
+Para tipo "profile", usa "preferences" como entity_name.
+Para tipo "ignore", usa "" como entity_name.

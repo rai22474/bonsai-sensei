@@ -52,7 +52,7 @@ async def should_request_top_5_results(embed, search_by_embedding):
 
     await search("query")
 
-    search_by_embedding.assert_called_once_with(embed.return_value, top_k=5)
+    search_by_embedding.assert_called_once_with(embed.return_value, top_k=5, user_id=None)
 
 
 @pytest.fixture

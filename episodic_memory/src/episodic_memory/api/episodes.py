@@ -20,8 +20,13 @@ class MemorySearchResponse(BaseModel):
     memories: list[str]
 
 
+class ObservationItem(BaseModel):
+    user_id: str
+    content: str
+
+
 class ObservationsResponse(BaseModel):
-    observations: list[str]
+    observations: list[ObservationItem]
 
 
 @router.post("/episodes", status_code=202)

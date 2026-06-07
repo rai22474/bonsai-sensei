@@ -30,6 +30,11 @@ def cleanup_records(context):
             pass
 
 
-@given(parsers.parse('the episodic memory has an observation "{text}"'))
-def submit_observation(context, text):
-    post("/api/wiki/transcripts/observations", {"text": text})
+@given(parsers.parse('the episodic memory has an observation from user "{user_id}" about "{text}"'))
+def submit_user_observation(context, user_id, text):
+    post("/api/wiki/transcripts/observations", {"text": text, "user_id": user_id})
+
+
+@given(parsers.parse('the episodic memory has a global observation about "{text}"'))
+def submit_global_observation(context, text):
+    post("/api/wiki/transcripts/observations", {"text": text, "user_id": None})

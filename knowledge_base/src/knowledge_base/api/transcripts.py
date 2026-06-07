@@ -54,6 +54,7 @@ async def run_wiki_dreamer_sync(request: Request):
 
 class ObservationRequest(BaseModel):
     text: str
+    user_id: str | None = None
 
 
 @router.post("/observations", status_code=200)
@@ -61,9 +62,10 @@ def submit_local_observation(body: ObservationRequest):
     """Submit a local observation for the dreamer to process on its next run.
 
     Used in acceptance tests to inject observations without a Honcho connection.
+    Pass user_id to route to user wiki zone; omit for global wiki corrections.
     """
     wiki_root = Path(os.getenv("WIKI_PATH", "./wiki"))
-    append_local_observation(wiki_root, body.text)
+    append_local_observation(wiki_root, body.text, user_id=body.user_id)
     return {"status": "queued", "text": body.text}
 
 

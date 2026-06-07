@@ -17,6 +17,7 @@ from knowledge_base.dreamer.memory_reader import (
     read_new_observations,
     update_high_watermark,
 )
+from knowledge_base.dreamer.observations import execute_integrate_observations
 from knowledge_base import wiki_git
 from knowledge_base.wiki_index.indexer import update_page_index
 from knowledge_base.logging_config import get_logger
@@ -38,7 +39,7 @@ _prompt_env = Environment(
 
 
 def create_wiki_dreamer(
-    observations_agent: Agent,
+    observations_runner: Callable,
     cards_agent: Agent,
     wikilinks_agent: Agent,
     wiki_root: Path,
@@ -54,7 +55,7 @@ def create_wiki_dreamer(
     them into run_wiki_dreamer via partial application.
 
     Args:
-        observations_agent: Agent that integrates conversation observations.
+        observations_runner: Deterministic callable that integrates conversation observations.
         cards_agent: Agent that enriches the wiki from knowledge cards.
         wikilinks_agent: Agent that adds wikilinks to knowledge pages.
         wiki_root: Root directory of the wiki.
@@ -66,12 +67,11 @@ def create_wiki_dreamer(
     """
     wiki_git.init_wiki_repo(wiki_root)
 
-    async def read_observations() -> list[str]:
-        return (
-            (await read_new_observations(episodic_memory_url, wiki_root) if episodic_memory_url else [])
-            + read_local_observations(wiki_root)
-            + read_admin_corrections(wiki_root)
-        )
+    async def read_observations() -> list[dict]:
+        remote = await read_new_observations(episodic_memory_url, wiki_root) if episodic_memory_url else []
+        local = read_local_observations(wiki_root)
+        admin = [{"user_id": None, "content": text} for text in read_admin_corrections(wiki_root)]
+        return remote + local + admin
 
     def save_run_state(wikilinks_batch: list[str]) -> None:
         update_high_watermark(wiki_root)
@@ -84,7 +84,7 @@ def create_wiki_dreamer(
         functools.partial(_get_new_cards, transcripts_root),
         functools.partial(_get_wikilinks_batch, wiki_root, _WIKILINKS_BATCH_SIZE),
         functools.partial(read_high_watermark, wiki_root),
-        functools.partial(_integrate_observations, observations_agent),
+        functools.partial(_integrate_observations, observations_runner),
         functools.partial(_enrich_from_knowledge_cards, cards_agent),
         functools.partial(_add_wikilinks, wikilinks_agent),
         save_run_state,
@@ -150,12 +150,12 @@ async def _commit_index_and_notify(
         DREAMER_RUNS_TOTAL.labels(outcome="no_changes").inc()
 
 
-async def _integrate_observations(agent: Agent, observations: list[str]) -> None:
+async def _integrate_observations(run_observations: Callable, observations: list[dict]) -> None:
     if not observations:
         return
-    
-    prompt = _prompt_env.get_template("observations_prompt.jinja2").render(observations=observations).strip()
-    await _run_phase(agent, prompt, _MAX_LLM_CALLS_OBSERVATIONS, "integrate observations")
+    logger.info("Wiki dreamer phase starting: integrate observations")
+    await run_observations(observations)
+    logger.info("Wiki dreamer phase completed: integrate observations")
 
 
 async def _enrich_from_knowledge_cards(agent: Agent, new_cards: list[str]) -> None:
@@ -209,7 +209,7 @@ def _get_wikilinks_batch(wiki_root: Path, batch_size: int) -> list[str]:
     pending = []
     for page in wiki_root.rglob("*.md"):
         rel = str(page.relative_to(wiki_root))
-        if rel.startswith(("bonsai/", "wiki-index/")):
+        if rel.startswith(("bonsai/", "wiki-index/", "users/")):
             continue
         mtime = page.stat().st_mtime
         if processed.get(rel) != mtime:

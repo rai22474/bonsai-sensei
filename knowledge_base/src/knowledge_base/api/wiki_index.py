@@ -24,17 +24,22 @@ async def rebuild_wiki_index(request: Request):
 class WikiSearchRequest(BaseModel):
     query: str
     top_k: int = 5
+    user_id: str | None = None
 
 
 @router.post("/search", status_code=200)
 async def search_wiki_index(body: WikiSearchRequest, request: Request):
-    """Search the wiki knowledge base semantically. Returns top matching pages with path, abstract, and score."""
+    """Search the wiki knowledge base semantically. Returns top matching pages with path, abstract, and score.
+
+    When user_id is provided, returns global pages plus that user's pages.
+    When user_id is omitted, returns global pages only.
+    """
     embed = getattr(request.app.state, "embed_text", None)
     search_by_embedding = getattr(request.app.state, "search_by_embedding", None)
     if embed is None or search_by_embedding is None:
         raise HTTPException(status_code=503, detail="indexer_not_configured")
     query_embedding = await embed(body.query)
-    results = search_by_embedding(query_embedding, body.top_k)
+    results = search_by_embedding(query_embedding, body.top_k, user_id=body.user_id)
     return {
         "results": [
             {"page_path": page_path, "abstract": abstract, "score": round(score, 3)}
