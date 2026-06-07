@@ -40,8 +40,8 @@ def cleanup_records(context):
             for plan in plans:
                 delete_development_plan(delete, plan["id"])
                 delete_wiki_page(plan["wiki_path"])
-        delete_bonsai_wiki_pages(bonsai_name)
-        delete_bonsai_by_name(get, delete, bonsai_name)
+        delete_bonsai_wiki_pages(bonsai_name, user_id=context["user_id"])
+        delete_bonsai_by_name(get, delete, bonsai_name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
 
@@ -56,7 +56,7 @@ def ensure_species_exists(context, name, scientific_name):
 @given(parsers.parse('a bonsai named "{bonsai_name}" exists for species "{species_name}"'))
 def ensure_bonsai_exists(context, bonsai_name, species_name):
     species_id = context["species_ids"][species_name]
-    bonsai = create_bonsai(post, bonsai_name, species_id)
+    bonsai = create_bonsai(post, bonsai_name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(bonsai_name)
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
 
@@ -65,7 +65,7 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
 def create_analysis_report(context, bonsai_name):
     import re
     slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-    wiki_path = f"bonsai/{slug}/reports/test-analysis.md"
+    wiki_path = f"users/{context['user_id']}/bonsai/{slug}/reports/test-analysis.md"
     write_wiki_page(
         wiki_path,
         f"# Analysis — {bonsai_name}\n\nVigor: high. No visible pests or diseases. Trunk developing well. "
@@ -80,7 +80,7 @@ def create_old_analysis_report(context, bonsai_name):
     from datetime import date
     slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
     previous_year = date.today().year - 1
-    wiki_path = f"bonsai/{slug}/reports/{previous_year}-06-15-analysis.md"
+    wiki_path = f"users/{context['user_id']}/bonsai/{slug}/reports/{previous_year}-06-15-analysis.md"
     write_wiki_page(
         wiki_path,
         f"# Analysis — {bonsai_name}\n\nVigor: high. No visible pests. Trunk developing well. "

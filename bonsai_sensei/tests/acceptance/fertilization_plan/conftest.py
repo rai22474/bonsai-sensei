@@ -42,12 +42,12 @@ def cleanup_records(context):
             plans = list_fertilization_plans(get, bonsai_id)
             for plan in plans:
                 delete_wiki_page(plan["wiki_path"])
-        delete_bonsai_wiki_pages(bonsai_name)
-        delete_bonsai_by_name(get, delete, bonsai_name)
+        delete_bonsai_wiki_pages(bonsai_name, user_id=context["user_id"])
+        delete_bonsai_by_name(get, delete, bonsai_name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
     for name in context["fertilizers_registered"]:
-        delete_fertilizer_by_name(delete, name)
+        delete_fertilizer_by_name(delete, name, user_id=context["user_id"])
 
 
 @pytest.fixture(autouse=True)
@@ -74,14 +74,14 @@ def ensure_species_exists(context, name, scientific_name):
 @given(parsers.parse('a bonsai named "{bonsai_name}" exists for species "{species_name}"'))
 def ensure_bonsai_exists(context, bonsai_name, species_name):
     species_id = context["species_ids"][species_name]
-    bonsai = create_bonsai(post, bonsai_name, species_id)
+    bonsai = create_bonsai(post, bonsai_name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(bonsai_name)
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
 
 
 @given(parsers.parse('fertilizer "{name}" is registered'))
 def ensure_fertilizer_registered(context, name):
-    create_fertilizer(post, name)
+    create_fertilizer(post, name, user_id=context["user_id"])
     context["fertilizers_registered"].append(name)
 
 
@@ -89,7 +89,7 @@ def ensure_fertilizer_registered(context, name):
 def create_active_plan_with_future_work(context, bonsai_name, future_date):
     bonsai_id = context["bonsai_ids"][bonsai_name]
     fertilizer_name = context["fertilizers_registered"][0]
-    fertilizer = find_fertilizer_by_name(get, fertilizer_name)
+    fertilizer = find_fertilizer_by_name(get, fertilizer_name, user_id=context["user_id"])
 
     plan = create_fertilization_plan(post, bonsai_id, "2026-06-01", "2099-12-31")
     plan_id = plan.get("id")

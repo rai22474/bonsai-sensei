@@ -4,6 +4,7 @@ from sqlmodel import Field, SQLModel
 
 class Fertilizer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True, unique=True)
+    name: str = Field(index=True)
     recommended_amount: str = Field(default="")
     wiki_path: Optional[str] = Field(default=None)
+    user_id: Optional[str] = Field(default=None, foreign_key="user_settings.user_id", index=True)

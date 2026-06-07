@@ -21,7 +21,7 @@ async def should_return_error_when_no_fertilizers_available(get_bonsai_by_name_f
     tool = create_recommend_fertilizer_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=lambda bonsai_id: [],
-        list_fertilizers_func=lambda: [],
+        list_fertilizers_func=lambda user_id=None: [],
         read_wiki_page_func=lambda path: {"status": "error", "message": "page_not_found"},
         write_wiki_page_func=lambda path, content: {"status": "success"},
         run_recommendation=stub_run_recommendation,
@@ -52,9 +52,9 @@ async def should_write_wiki_page_after_recommendation(get_bonsai_by_name_func, l
 
     await tool(bonsai_name="Shikamaru")
 
-    assert_that("bonsai/shikamaru/fertilization-plan.md" in written_pages, equal_to(True),
-        "Wiki page should be written at bonsai/<slug>/fertilization-plan.md")
-    assert_that(written_pages["bonsai/shikamaru/fertilization-plan.md"],
+    assert_that("users/default/bonsai/shikamaru/fertilization-plan.md" in written_pages, equal_to(True),
+        "Wiki page should be written at users/<user_id>/bonsai/<slug>/fertilization-plan.md")
+    assert_that(written_pages["users/default/bonsai/shikamaru/fertilization-plan.md"],
         contains_string("Plan activo"), "Written wiki content should contain the plan")
 
 
@@ -127,7 +127,7 @@ async def should_include_existing_wiki_plan_in_context(get_bonsai_by_name_func, 
         return {"fertilizer_name": "Biogold", "reasoning": "ok", "wiki_content": "# Plan\n"}
 
     def read_wiki_page(path):
-        if path == "bonsai/shikamaru/fertilization-plan.md":
+        if path == "users/default/bonsai/shikamaru/fertilization-plan.md":
             return {"status": "success", "content": "# Plan anterior\n## Plan activo\nBiogold"}
         return {"status": "error", "message": "page_not_found"}
 
@@ -166,14 +166,14 @@ def existing_fertilizer():
 
 @pytest.fixture
 def get_bonsai_by_name_func(existing_bonsai):
-    def get_bonsai_by_name(name: str) -> Bonsai | None:
+    def get_bonsai_by_name(name: str, user_id=None) -> Bonsai | None:
         return existing_bonsai if name == existing_bonsai.name else None
     return get_bonsai_by_name
 
 
 @pytest.fixture
 def list_fertilizers_func(existing_fertilizer):
-    return lambda: [existing_fertilizer]
+    return lambda user_id=None: [existing_fertilizer]
 
 
 @pytest.fixture

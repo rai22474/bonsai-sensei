@@ -56,8 +56,8 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
-        delete_bonsai_wiki_pages(name)
-        delete_bonsai_by_name_api_func(get, delete, name)
+        delete_bonsai_wiki_pages(name, user_id=context["user_id"])
+        delete_bonsai_by_name_api_func(get, delete, name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name_api_func(get, delete, name)
 
@@ -74,18 +74,18 @@ def get_species_record_id(context: dict, name: str) -> int:
 
 
 def create_bonsai_record(context: dict, name: str, species_id: int) -> dict:
-    bonsai = create_bonsai(post, name, species_id)
+    bonsai = create_bonsai(post, name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(name)
     context["bonsai_ids"][name] = bonsai.get("id")
     return bonsai
 
 
-def find_bonsai_by_name_api(name: str) -> dict | None:
-    return find_bonsai_by_name_api_func(get, name)
+def find_bonsai_by_name_api(name: str, user_id: str | None = None) -> dict | None:
+    return find_bonsai_by_name_api_func(get, name, user_id=user_id)
 
 
-def delete_bonsai_by_name(name: str) -> None:
-    delete_bonsai_by_name_api_func(get, delete, name)
+def delete_bonsai_by_name(name: str, user_id: str | None = None) -> None:
+    delete_bonsai_by_name_api_func(get, delete, name, user_id=user_id)
 
 
 def update_bonsai_record(bonsai_id: int, payload: dict) -> dict:

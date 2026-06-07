@@ -5,6 +5,7 @@ from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import build_bonsai_index_page, build_bonsai_wiki_path
 from bonsai_sensei.domain.services.human_input import SelectionNoneResult
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -49,10 +50,11 @@ async def execute_create_bonsai(
     )
 
     if confirmed:
-        wiki_path = build_bonsai_wiki_path(name)
-        index_content = build_bonsai_index_page(name, species.name, species.wiki_path)
+        effective_user_id = user_id or "default"
+        wiki_path = build_bonsai_wiki_path(name, effective_user_id)
+        index_content = build_bonsai_index_page(name, species.name, species.wiki_path, effective_user_id)
         write_wiki_page_func(path=wiki_path, content=index_content)
-        create_bonsai_func(bonsai=Bonsai(name=name, species_id=species.id, wiki_path=wiki_path))
+        create_bonsai_func(bonsai=Bonsai(name=name, species_id=species.id, wiki_path=wiki_path, user_id=user_id))
         return {"status": "success", "message": f"Bonsai '{name}' created.", "species_name": species.name}
 
     return {"status": "cancelled", "reason": confirmed.reason}
@@ -91,9 +93,11 @@ def create_create_bonsai_tool(
         if not name:
             return {"status": "error", "message": "bonsai_name_required"}
 
+        user_id = resolve_confirmation_user_id(tool_context)
         return await execute_create_bonsai(
             name=name,
             species_name=species_name,
+            user_id=user_id,
             get_species_by_name_func=get_species_by_name_func,
             ask_confirmation=ask_confirmation,
             create_bonsai_func=create_bonsai_func,

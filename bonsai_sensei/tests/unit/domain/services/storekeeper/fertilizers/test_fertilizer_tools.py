@@ -48,7 +48,7 @@ def fertilizer_a():
 
 @pytest.fixture
 def list_fertilizers_func(fertilizer_a):
-    def list_fertilizers() -> list[Fertilizer]:
+    def list_fertilizers(user_id=None) -> list[Fertilizer]:
         return [fertilizer_a]
 
     return list_fertilizers

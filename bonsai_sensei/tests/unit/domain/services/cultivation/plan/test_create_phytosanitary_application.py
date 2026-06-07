@@ -149,7 +149,7 @@ def existing_phytosanitary():
 
 @pytest.fixture
 def get_bonsai_by_name_func(existing_bonsai):
-    def get_bonsai_by_name(name: str) -> Bonsai | None:
+    def get_bonsai_by_name(name: str, user_id=None) -> Bonsai | None:
         return existing_bonsai if name == existing_bonsai.name else None
 
     return get_bonsai_by_name
@@ -157,7 +157,7 @@ def get_bonsai_by_name_func(existing_bonsai):
 
 @pytest.fixture
 def get_phytosanitary_by_name_func(existing_phytosanitary):
-    def get_phytosanitary_by_name(name: str):
+    def get_phytosanitary_by_name(name: str, user_id=None):
         return existing_phytosanitary if name == existing_phytosanitary.name else None
 
     return get_phytosanitary_by_name

@@ -52,11 +52,11 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
-        bonsai = find_bonsai_by_name_api_func(get, name)
+        bonsai = find_bonsai_by_name_api_func(get, name, user_id=context["user_id"])
         if bonsai:
             delete(f"/api/bonsai/{bonsai['id']}/photos")
-        delete_bonsai_wiki_pages(name)
-        delete_bonsai_by_name_api_func(get, delete, name)
+        delete_bonsai_wiki_pages(name, user_id=context["user_id"])
+        delete_bonsai_by_name_api_func(get, delete, name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name_api_func(get, delete, name)
 
@@ -71,12 +71,12 @@ def ensure_species_exists(context, name, scientific_name):
 @given(parsers.parse('a bonsai named "{bonsai_name}" exists for species "{species_name}"'))
 def ensure_bonsai_exists(context, bonsai_name, species_name):
     species_id = get_species_id(get, context, species_name)
-    bonsai = create_bonsai(post, bonsai_name, species_id)
+    bonsai = create_bonsai(post, bonsai_name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(bonsai_name)
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
 
 
 @given(parsers.parse('bonsai "{bonsai_name}" has a photo taken on "{taken_on}"'))
 def ensure_bonsai_has_photo_on_date(context, bonsai_name, taken_on):
-    bonsai = find_bonsai_by_name_api_func(get, bonsai_name)
+    bonsai = find_bonsai_by_name_api_func(get, bonsai_name, user_id=context["user_id"])
     post_bonsai_photo(bonsai["id"], MINIMAL_PNG, taken_on=taken_on)

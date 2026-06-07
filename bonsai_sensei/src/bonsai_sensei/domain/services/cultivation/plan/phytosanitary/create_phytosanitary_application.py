@@ -4,6 +4,7 @@ from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_creation import execute_planned_work_creation
 from bonsai_sensei.domain.services.cultivation.plan.planned_work_payload_builders import build_phytosanitary_payload
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -53,7 +54,8 @@ def create_create_phytosanitary_application_tool(
         if not phytosanitary_name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
-        phytosanitary = get_phytosanitary_by_name_func(phytosanitary_name)
+        user_id = resolve_confirmation_user_id(tool_context)
+        phytosanitary = get_phytosanitary_by_name_func(phytosanitary_name, user_id=user_id)
         if not phytosanitary:
             return {"status": "error", "message": "phytosanitary_not_found"}
 

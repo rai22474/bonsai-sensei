@@ -48,7 +48,7 @@ def phytosanitary_a():
 
 @pytest.fixture
 def list_phytosanitary_func(phytosanitary_a):
-    def list_phytosanitary() -> list[Phytosanitary]:
+    def list_phytosanitary(user_id=None) -> list[Phytosanitary]:
         return [phytosanitary_a]
 
     return list_phytosanitary

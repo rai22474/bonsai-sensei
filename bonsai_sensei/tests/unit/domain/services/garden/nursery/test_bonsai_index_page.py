@@ -7,48 +7,48 @@ from bonsai_sensei.domain.services.garden.nursery.bonsai_index_page import (
 
 
 def should_build_path_for_simple_name():
-    result = build_bonsai_wiki_path("Olmo")
+    result = build_bonsai_wiki_path("Olmo", "user-123")
 
-    assert_that(result, equal_to("bonsai/olmo/index.md"), "Simple name should produce lowercase slug path")
+    assert_that(result, equal_to("users/user-123/bonsai/olmo/index.md"), "Simple name should produce user-scoped lowercase slug path")
 
 
 def should_slugify_name_with_spaces():
-    result = build_bonsai_wiki_path("Olmo chino")
+    result = build_bonsai_wiki_path("Olmo chino", "user-123")
 
-    assert_that(result, equal_to("bonsai/olmo-chino/index.md"), "Spaces should be replaced with hyphens")
+    assert_that(result, equal_to("users/user-123/bonsai/olmo-chino/index.md"), "Spaces should be replaced with hyphens")
 
 
 def should_slugify_name_with_special_chars():
-    result = build_bonsai_wiki_path("Árbol #1")
+    result = build_bonsai_wiki_path("Árbol #1", "user-123")
 
-    assert_that(result, equal_to("bonsai/rbol-1/index.md"), "Non-alphanumeric characters should be stripped")
+    assert_that(result, equal_to("users/user-123/bonsai/rbol-1/index.md"), "Non-alphanumeric characters should be stripped")
 
 
 def should_include_bonsai_name_in_heading():
-    result = build_bonsai_index_page("Olmo", "Olmo", None)
+    result = build_bonsai_index_page("Olmo", "Olmo", None, "user-123")
 
     assert_that(result, contains_string("# Olmo"), "Page should include bonsai name as heading")
 
 
 def should_include_species_as_wiki_link_when_path_provided():
-    result = build_bonsai_index_page("Olmo", "Olmo", "species/path")
+    result = build_bonsai_index_page("Olmo", "Olmo", "species/path", "user-123")
 
     assert_that(result, contains_string("[[species/path|Olmo]]"), "Species should be a wiki link when path is provided")
 
 
 def should_include_species_as_plain_text_when_no_path():
-    result = build_bonsai_index_page("Olmo", "Olmo", None)
+    result = build_bonsai_index_page("Olmo", "Olmo", None, "user-123")
 
     assert_that(result, not_(contains_string("[[species/")), "Species should be plain text when no path is provided")
 
 
 def should_include_plans_link_in_page():
-    result = build_bonsai_index_page("Olmo", "Olmo", None)
+    result = build_bonsai_index_page("Olmo", "Olmo", None, "user-123")
 
     assert_that(result, contains_string("plans/index.md"), "Page should include a link to plans")
 
 
 def should_include_reports_link_in_page():
-    result = build_bonsai_index_page("Olmo", "Olmo", None)
+    result = build_bonsai_index_page("Olmo", "Olmo", None, "user-123")
 
     assert_that(result, contains_string("reports/index.md"), "Page should include a link to reports")

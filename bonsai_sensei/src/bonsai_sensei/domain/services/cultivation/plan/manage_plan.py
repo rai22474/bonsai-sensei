@@ -67,7 +67,8 @@ def create_manage_plan_tool(
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 
-        products = list_products_func()
+        bonsai_user_id = bonsai.user_id or "default"
+        products = list_products_func(user_id=bonsai_user_id)
         if not products:
             return {"status": "error", "message": no_products_error}
 
@@ -124,7 +125,7 @@ def create_manage_plan_tool(
         if existing_plan:
             _abandon_existing_plan(existing_plan, delete_future_planned_works_func, update_plan_func, read_wiki_page_func, write_wiki_page_func)
 
-        wiki_path = f"bonsai/{slug}/{wiki_path_prefix}/{start_date[:7]}_to_{end_date[:7]}.md"
+        wiki_path = f"users/{bonsai_user_id}/bonsai/{slug}/{wiki_path_prefix}/{start_date[:7]}_to_{end_date[:7]}.md"
 
         plan = create_plan_func(
             plan_class(
@@ -160,7 +161,7 @@ def create_manage_plan_tool(
                 entries=entries,
             ),
         )
-        _update_plans_index(bonsai_name, slug, plan, start_date, end_date, wiki_path_prefix, plans_index_wiki_template, write_wiki_page_func)
+        _update_plans_index(bonsai_name, slug, bonsai_user_id, plan, start_date, end_date, wiki_path_prefix, plans_index_wiki_template, write_wiki_page_func)
 
         return {
             "status": "success",
@@ -239,6 +240,7 @@ def _create_planned_works(
 def _update_plans_index(
     bonsai_name: str,
     slug: str,
+    user_id: str,
     new_plan,
     period_start: str,
     period_end: str,
@@ -247,7 +249,7 @@ def _update_plans_index(
     write_wiki_page_func: Callable,
 ) -> None:
     write_wiki_page_func(
-        path=f"bonsai/{slug}/{wiki_path_prefix}/index.md",
+        path=f"users/{user_id}/bonsai/{slug}/{wiki_path_prefix}/index.md",
         content=plans_index_wiki_template.render(
             bonsai_name=bonsai_name,
             plans=[{"period_start": period_start, "period_end": period_end, "status": "active", "wiki_path": new_plan.wiki_path}],

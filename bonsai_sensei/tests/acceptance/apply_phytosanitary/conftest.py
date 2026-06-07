@@ -31,12 +31,12 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
-        delete_bonsai_wiki_pages(name)
-        delete_bonsai_by_name(get, delete, name)
+        delete_bonsai_wiki_pages(name, user_id=context["user_id"])
+        delete_bonsai_by_name(get, delete, name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
     for name in context["phytosanitaries_registered"]:
-        delete_phytosanitary_by_name(delete, name)
+        delete_phytosanitary_by_name(delete, name, user_id=context["user_id"])
 
 
 @pytest.fixture(autouse=True)
@@ -62,13 +62,13 @@ def ensure_species_exists(context, name, scientific_name):
 def ensure_bonsai_exists(context, bonsai_name, species_name):
     from manage_bonsai.bonsai_api import create_bonsai
     species_id = context["species_ids"][species_name]
-    bonsai = create_bonsai(post, bonsai_name, species_id)
+    bonsai = create_bonsai(post, bonsai_name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(bonsai_name)
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
 
 
 @given(parsers.parse('phytosanitary product "{name}" is registered'))
 def ensure_phytosanitary_registered(context, name):
-    phytosanitary = create_phytosanitary(post, name)
+    phytosanitary = create_phytosanitary(post, name, user_id=context["user_id"])
     context["phytosanitaries_registered"].append(name)
     context["phytosanitary_ids"][name] = phytosanitary.get("id")

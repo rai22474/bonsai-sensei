@@ -23,14 +23,14 @@ def context():
 def cleanup_fertilizers(context):
     yield
     for name in context["fertilizers_created"]:
-        fertilizer = find_fertilizer_by_name(get, name)
+        fertilizer = find_fertilizer_by_name(get, name, user_id=context["user_id"])
         wiki_path = (fertilizer or {}).get("wiki_path")
         if wiki_path:
             try:
                 delete_kb(f"/api/wiki?path={wiki_path}")
             except Exception:
                 pass
-        delete_fertilizer_by_name(delete, name)
+        delete_fertilizer_by_name(delete, name, user_id=context["user_id"])
 
 
 @pytest.fixture
@@ -56,13 +56,13 @@ def external_stubs():
 
 @given(parsers.parse('fertilizer "{name}" exists'))
 def ensure_fertilizer_exists(context, name):
-    create_fertilizer(post, name)
+    create_fertilizer(post, name, user_id=context["user_id"])
     context["fertilizers_created"].append(name)
 
 
 @then(parsers.parse('fertilizer "{name}" should have a wiki page'))
-def assert_fertilizer_has_wiki_page(name):
-    fertilizer = find_fertilizer_by_name(get, name)
+def assert_fertilizer_has_wiki_page(context, name):
+    fertilizer = find_fertilizer_by_name(get, name, user_id=context["user_id"])
     wiki_path = (fertilizer or {}).get("wiki_path")
     assert wiki_path, f"Expected fertilizer '{name}' to have a wiki_path, got: {fertilizer}"
     content = get_kb(f"/api/wiki?path={wiki_path}").get("content", "")

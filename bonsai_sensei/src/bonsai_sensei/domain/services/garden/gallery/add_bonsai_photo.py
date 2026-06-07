@@ -49,7 +49,7 @@ def create_add_bonsai_photo_tool(
             return {"status": "error", "message": "no_pending_photo"}
 
         if not bonsai_name:
-            all_bonsai = list_bonsai_func()
+            all_bonsai = list_bonsai_func(user_id=user_id)
             if not all_bonsai:
                 return {"status": "error", "message": "no_bonsai_available"}
             bonsai_names = [bonsai.name for bonsai in all_bonsai]
@@ -63,7 +63,7 @@ def create_add_bonsai_photo_tool(
                 return {"status": "cancelled", "reason": selection.reason}
             bonsai_name = selection
 
-        bonsai = get_bonsai_by_name_func(bonsai_name)
+        bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 

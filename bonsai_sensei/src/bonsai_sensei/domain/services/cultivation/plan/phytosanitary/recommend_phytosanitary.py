@@ -2,6 +2,9 @@ import re
 from datetime import date
 from typing import Callable
 
+from google.adk.tools.tool_context import ToolContext
+
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
@@ -16,6 +19,7 @@ def create_recommend_phytosanitary_tool(
     @trace_tool_call
     async def recommend_phytosanitary(
         bonsai_name: str,
+        tool_context: ToolContext | None = None,
     ) -> dict:
         """Recommend a complete phytosanitary protection plan for a bonsai based on its history, existing plan, and available products. Saves the plan and rationale in the bonsai's wiki.
 
@@ -27,17 +31,19 @@ def create_recommend_phytosanitary_tool(
             Output JSON (success): {"status": "success", "treatments": [{"phytosanitary_name": "...", "purpose": "..."}], "reasoning": "..."}.
             Output JSON (error): {"status": "error", "message": "bonsai_not_found" | "no_products_available"}.
         """
-        bonsai = get_bonsai_by_name_func(bonsai_name)
+        user_id = resolve_confirmation_user_id(tool_context)
+        bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 
-        products = list_phytosanitary_func()
+        bonsai_user_id = bonsai.user_id or "default"
+        products = list_phytosanitary_func(user_id=bonsai_user_id)
         if not products:
             return {"status": "error", "message": "no_products_available"}
 
         events = list_bonsai_events_func(bonsai.id) or []
 
-        plan_path = _build_plan_path(bonsai_name)
+        plan_path = _build_plan_path(bonsai_name, bonsai_user_id)
         existing_plan_result = read_wiki_page_func(path=plan_path)
         existing_plan = existing_plan_result.get("content", "") if existing_plan_result.get("status") == "success" else ""
 
@@ -66,8 +72,8 @@ def _build_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
-def _build_plan_path(bonsai_name: str) -> str:
-    return f"bonsai/{_build_slug(bonsai_name)}/phytosanitary-plan.md"
+def _build_plan_path(bonsai_name: str, user_id: str = "default") -> str:
+    return f"users/{user_id}/bonsai/{_build_slug(bonsai_name)}/phytosanitary-plan.md"
 
 
 def _build_context(bonsai_name: str, current_date: str, events: list, existing_plan: str, products: list, product_pages: dict) -> str:

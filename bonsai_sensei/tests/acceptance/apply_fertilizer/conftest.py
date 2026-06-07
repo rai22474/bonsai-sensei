@@ -31,12 +31,12 @@ def context():
 def cleanup_records(context):
     yield
     for name in context["bonsai_created"]:
-        delete_bonsai_wiki_pages(name)
-        delete_bonsai_by_name(get, delete, name)
+        delete_bonsai_wiki_pages(name, user_id=context["user_id"])
+        delete_bonsai_by_name(get, delete, name, user_id=context["user_id"])
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
     for name in context["fertilizers_registered"]:
-        delete_fertilizer_by_name(delete, name)
+        delete_fertilizer_by_name(delete, name, user_id=context["user_id"])
 
 
 @pytest.fixture(autouse=True)
@@ -65,13 +65,13 @@ def ensure_species_exists(context, name, scientific_name):
 def ensure_bonsai_exists(context, bonsai_name, species_name):
     from manage_bonsai.bonsai_api import create_bonsai
     species_id = context["species_ids"][species_name]
-    bonsai = create_bonsai(post, bonsai_name, species_id)
+    bonsai = create_bonsai(post, bonsai_name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(bonsai_name)
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
 
 
 @given(parsers.parse('fertilizer "{name}" is registered'))
 def ensure_fertilizer_registered(context, name):
-    fertilizer = create_fertilizer(post, name)
+    fertilizer = create_fertilizer(post, name, user_id=context["user_id"])
     context["fertilizers_registered"].append(name)
     context["fertilizer_ids"][name] = fertilizer.get("id")

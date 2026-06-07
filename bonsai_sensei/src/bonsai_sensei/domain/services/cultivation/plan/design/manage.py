@@ -101,6 +101,7 @@ def create_manage_development_plan_tool(
 
         recent_reports = _filter_current_year_reports(
             bonsai_name=bonsai_name,
+            bonsai_user_id=bonsai.user_id or "default",
             all_reports=bonsai_context["reports"],
             list_wiki_files_func=list_wiki_files_func,
         )
@@ -158,7 +159,8 @@ def create_manage_development_plan_tool(
         if existing_plan:
             _abandon_existing_plan(existing_plan, delete_future_planned_works_func, update_development_plan_func, read_wiki_page_func, write_wiki_page_func)
 
-        wiki_path = f"bonsai/{slug}/design-plans/{start_date[:7]}_to_{end_date[:7]}.md"
+        bonsai_user_id = bonsai.user_id or "default"
+        wiki_path = f"users/{bonsai_user_id}/bonsai/{slug}/design-plans/{start_date[:7]}_to_{end_date[:7]}.md"
 
         plan = create_development_plan_func(
             DevelopmentPlan(
@@ -196,7 +198,7 @@ def create_manage_development_plan_tool(
                 entries=entries,
             ),
         )
-        _update_plans_index(bonsai_name, slug, plan, start_date, end_date, plans_index_wiki_template, write_wiki_page_func)
+        _update_plans_index(bonsai_name, slug, bonsai_user_id, plan, start_date, end_date, plans_index_wiki_template, write_wiki_page_func)
 
         return {
             "status": "success",
@@ -290,12 +292,12 @@ def _create_planned_works(
 _YEAR_PREFIX_RE = re.compile(r"^(\d{4})-")
 
 
-def _filter_current_year_reports(bonsai_name: str, all_reports: list[str], list_wiki_files_func: Callable) -> list[str]:
+def _filter_current_year_reports(bonsai_name: str, bonsai_user_id: str, all_reports: list[str], list_wiki_files_func: Callable) -> list[str]:
     """Returns only reports whose filename starts with the current year, or undated reports.
     Reports from previous years are excluded — the tree's state may have changed significantly."""
     current_year = str(date.today().year)
     slug = bonsai_slug(bonsai_name)
-    paths = list_wiki_files_func(f"bonsai/{slug}/reports")
+    paths = list_wiki_files_func(f"users/{bonsai_user_id}/bonsai/{slug}/reports")
 
     recent_paths = set()
     for path in paths:
@@ -315,6 +317,7 @@ def _filter_current_year_reports(bonsai_name: str, all_reports: list[str], list_
 def _update_plans_index(
     bonsai_name: str,
     slug: str,
+    user_id: str,
     plan: DevelopmentPlan,
     period_start: str,
     period_end: str,
@@ -322,7 +325,7 @@ def _update_plans_index(
     write_wiki_page_func: Callable,
 ) -> None:
     write_wiki_page_func(
-        path=f"bonsai/{slug}/design-plans/index.md",
+        path=f"users/{user_id}/bonsai/{slug}/design-plans/index.md",
         content=plans_index_wiki_template.render(
             bonsai_name=bonsai_name,
             plans=[{

@@ -58,8 +58,11 @@ def get_delete_bonsai_photos_svc(request: Request) -> Callable:
 
 
 @router.get("/bonsai", response_model=List[Bonsai])
-def get_bonsai_list(list_bonsai: Callable = Depends(get_list_bonsai_svc)):
-    return list_bonsai()
+def get_bonsai_list(
+    user_id: Optional[str] = Query(default=None),
+    list_bonsai: Callable = Depends(get_list_bonsai_svc),
+):
+    return list_bonsai(user_id=user_id)
 
 
 @router.post("/bonsai", response_model=Bonsai)

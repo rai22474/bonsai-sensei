@@ -76,7 +76,7 @@ async def should_build_confirmation_message_with_correct_args(tool_context, get_
         return "confirmation text"
 
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda user_id=None: [], create_planned_work_func,
         ask_confirmation_confirm, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
@@ -104,7 +104,7 @@ async def should_return_success_when_user_confirms(fertilizer_tool, tool_context
 @pytest.mark.asyncio
 async def should_not_create_when_user_cancels(tool_context, captured_planned_works, get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func, build_confirmation_message):
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda user_id=None: [], create_planned_work_func,
         ask_confirmation_cancel, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
@@ -116,7 +116,7 @@ async def should_not_create_when_user_cancels(tool_context, captured_planned_wor
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, get_fertilizer_by_name_func, create_planned_work_func, build_confirmation_message):
     tool = create_create_fertilizer_application_tool(
-        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda: [], create_planned_work_func,
+        get_bonsai_by_name_func, get_fertilizer_by_name_func, lambda user_id=None: [], create_planned_work_func,
         ask_confirmation_cancel, lambda q, options, tool_context=None: None, build_confirmation_message, lambda n: "",
     )
     result = await tool(bonsai_name="Kaze", scheduled_date="2026-03-15", fertilizer_name="BioGrow", amount="5 ml", tool_context=tool_context)
@@ -155,7 +155,7 @@ def existing_fertilizer():
 
 @pytest.fixture
 def get_bonsai_by_name_func(existing_bonsai):
-    def get_bonsai_by_name(name: str) -> Bonsai | None:
+    def get_bonsai_by_name(name: str, user_id=None) -> Bonsai | None:
         return existing_bonsai if name == existing_bonsai.name else None
 
     return get_bonsai_by_name
@@ -163,7 +163,7 @@ def get_bonsai_by_name_func(existing_bonsai):
 
 @pytest.fixture
 def get_fertilizer_by_name_func(existing_fertilizer):
-    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+    def get_fertilizer_by_name(name: str, user_id=None) -> Fertilizer | None:
         return existing_fertilizer if name == existing_fertilizer.name else None
 
     return get_fertilizer_by_name
@@ -192,7 +192,7 @@ def build_confirmation_message():
 
 @pytest.fixture
 def list_fertilizers_func():
-    return lambda: []
+    return lambda user_id=None: []
 
 
 @pytest.fixture

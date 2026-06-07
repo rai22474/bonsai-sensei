@@ -30,7 +30,8 @@ async def handle_mis_bonsais(
     list_bonsai_func=None,
     list_species_func=None,
 ):
-    bonsais = list_bonsai_func()
+    user_id = str(update.effective_user.id)
+    bonsais = list_bonsai_func(user_id=user_id)
     species_list = list_species_func()
     species_id_to_name = {species.id: species.name for species in species_list}
     text = build_bonsai_list(bonsais, species_id_to_name)
@@ -46,8 +47,9 @@ async def handle_plan(
     if not context.args:
         await update.message.reply_text("Uso: /plan <nombre_bonsai>")
         return
+    user_id = str(update.effective_user.id)
     bonsai_name = " ".join(context.args)
-    bonsai = get_bonsai_by_name_func(bonsai_name)
+    bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
     if not bonsai:
         await update.message.reply_text(f"No encontré ningún bonsái llamado '{bonsai_name}'.")
         return
@@ -62,9 +64,10 @@ async def handle_proximos(
     list_planned_works_in_date_range_func=None,
     list_bonsai_func=None,
 ):
+    user_id = str(update.effective_user.id)
     today = date.today()
     works = list_planned_works_in_date_range_func(today, today + timedelta(days=_UPCOMING_DAYS))
-    bonsais = list_bonsai_func()
+    bonsais = list_bonsai_func(user_id=user_id)
     bonsai_id_to_name = {bonsai.id: bonsai.name for bonsai in bonsais}
     text = build_upcoming_works_list(works, bonsai_id_to_name)
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
@@ -75,7 +78,8 @@ async def handle_fertilizantes(
     context: ContextTypes.DEFAULT_TYPE,
     list_fertilizers_func=None,
 ):
-    fertilizers = list_fertilizers_func()
+    user_id = str(update.effective_user.id)
+    fertilizers = list_fertilizers_func(user_id=user_id)
     text = build_fertilizer_list(fertilizers)
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
@@ -85,7 +89,8 @@ async def handle_fitosanitarios(
     context: ContextTypes.DEFAULT_TYPE,
     list_phytosanitary_func=None,
 ):
-    phytosanitaries = list_phytosanitary_func()
+    user_id = str(update.effective_user.id)
+    phytosanitaries = list_phytosanitary_func(user_id=user_id)
     text = build_phytosanitary_list(phytosanitaries)
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
@@ -109,8 +114,9 @@ async def handle_historial(
     if not context.args:
         await update.message.reply_text("Uso: /historial <nombre_bonsai>")
         return
+    user_id = str(update.effective_user.id)
     bonsai_name = " ".join(context.args)
-    bonsai = get_bonsai_by_name_func(bonsai_name)
+    bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
     if not bonsai:
         await update.message.reply_text(f"No encontré ningún bonsái llamado '{bonsai_name}'.")
         return
@@ -125,12 +131,13 @@ async def handle_fin_de_semana(
     list_planned_works_in_date_range_func=None,
     list_bonsai_func=None,
 ):
+    user_id = str(update.effective_user.id)
     today = date.today()
     days_until_saturday = (5 - today.weekday()) % 7 or 7
     saturday = today + timedelta(days=days_until_saturday)
     sunday = saturday + timedelta(days=1)
     works = list_planned_works_in_date_range_func(saturday, sunday)
-    bonsais = list_bonsai_func()
+    bonsais = list_bonsai_func(user_id=user_id)
     bonsai_id_to_name = {bonsai.id: bonsai.name for bonsai in bonsais}
     text = build_weekend_works_list(saturday, sunday, works, bonsai_id_to_name)
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)

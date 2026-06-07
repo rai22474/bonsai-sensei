@@ -26,13 +26,26 @@ def delete_wiki_page(path: str) -> None:
             raise
 
 
-def delete_bonsai_wiki_pages(bonsai_name: str) -> None:
+def delete_bonsai_wiki_pages(bonsai_name: str, user_id: str | None = None) -> None:
     slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-    for path in [
+    old_paths = [
         f"bonsai/{slug}/index.md",
         f"bonsai/{slug}/fertilization-plan.md",
         f"bonsai/{slug}/phytosanitary-plan.md",
         f"bonsai/{slug}/plans/index.md",
         f"bonsai/{slug}/phytosanitary-plans/index.md",
-    ]:
+    ]
+    for path in old_paths:
         delete_wiki_page(path)
+    if user_id:
+        new_paths = [
+            f"users/{user_id}/bonsai/{slug}/index.md",
+            f"users/{user_id}/bonsai/{slug}/fertilization-plan.md",
+            f"users/{user_id}/bonsai/{slug}/phytosanitary-plan.md",
+            f"users/{user_id}/bonsai/{slug}/plans/index.md",
+            f"users/{user_id}/bonsai/{slug}/phytosanitary-plans/index.md",
+            f"users/{user_id}/bonsai/{slug}/design-plans/index.md",
+            f"users/{user_id}/bonsai/{slug}/reports/index.md",
+        ]
+        for path in new_paths:
+            delete_wiki_page(path)

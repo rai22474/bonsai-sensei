@@ -84,10 +84,11 @@ def create_compare_bonsai_photos_tool(
             tool_context.state["photos_for_analysis_taken_on"] = analyzed
 
         slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-        report_path = f"bonsai/{slug}/reports/{newer_photo.taken_on}-comparison.md"
+        bonsai_user_id = bonsai.user_id or "default"
+        report_path = f"users/{bonsai_user_id}/bonsai/{slug}/reports/{newer_photo.taken_on}-comparison.md"
         report_content = f"[[{older_photo.file_path}|Foto anterior]] · [[{newer_photo.file_path}|Foto reciente]]\n\n{comparison}"
         write_wiki_page_func(path=report_path, content=report_content)
-        await update_reports_index_func(bonsai_name)
+        await update_reports_index_func(bonsai_name, user_id=bonsai_user_id)
 
         return {
             "status": "comparison_complete",

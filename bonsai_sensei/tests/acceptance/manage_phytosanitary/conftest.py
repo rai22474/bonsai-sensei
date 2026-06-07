@@ -23,14 +23,14 @@ def context():
 def cleanup_phytosanitaries(context):
     yield
     for name in context["phytosanitaries_created"]:
-        phytosanitary = find_phytosanitary_by_name(get, name)
+        phytosanitary = find_phytosanitary_by_name(get, name, user_id=context["user_id"])
         wiki_path = (phytosanitary or {}).get("wiki_path")
         if wiki_path:
             try:
                 delete_kb(f"/api/wiki?path={wiki_path}")
             except Exception:
                 pass
-        delete_phytosanitary_by_name(delete, name)
+        delete_phytosanitary_by_name(delete, name, user_id=context["user_id"])
 
 
 @pytest.fixture
@@ -56,13 +56,13 @@ def external_stubs():
 
 @given(parsers.parse('phytosanitary product "{name}" exists'))
 def ensure_phytosanitary_exists(context, name):
-    create_phytosanitary(post, name)
+    create_phytosanitary(post, name, user_id=context["user_id"])
     context["phytosanitaries_created"].append(name)
 
 
 @then(parsers.parse('phytosanitary product "{name}" should have a wiki page'))
-def assert_phytosanitary_has_wiki_page(name):
-    phytosanitary = find_phytosanitary_by_name(get, name)
+def assert_phytosanitary_has_wiki_page(context, name):
+    phytosanitary = find_phytosanitary_by_name(get, name, user_id=context["user_id"])
     wiki_path = (phytosanitary or {}).get("wiki_path")
     assert wiki_path, f"Expected phytosanitary '{name}' to have a wiki_path, got: {phytosanitary}"
     content = get_kb(f"/api/wiki?path={wiki_path}").get("content", "")

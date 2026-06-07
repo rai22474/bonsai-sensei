@@ -7,16 +7,20 @@ from bonsai_sensei.database.session_wrapper import with_session
 
 
 @with_session
-def list_bonsai(session: Session) -> List[Bonsai]:
+def list_bonsai(session: Session, user_id: str | None = None) -> List[Bonsai]:
     statement = select(Bonsai)
+    if user_id is not None:
+        statement = statement.where(Bonsai.user_id == user_id)
     return session.exec(statement).all()
 
 
 @with_session
-def get_bonsai_by_name(session: Session, name: str) -> Bonsai | None:
+def get_bonsai_by_name(session: Session, name: str, user_id: str | None = None) -> Bonsai | None:
     if not name:
         return None
     statement = select(Bonsai).where(func.lower(Bonsai.name) == name.lower())
+    if user_id is not None:
+        statement = statement.where(Bonsai.user_id == user_id)
     return session.exec(statement).first()
 
 

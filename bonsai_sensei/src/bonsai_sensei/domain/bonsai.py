@@ -8,4 +8,5 @@ class Bonsai(SQLModel, table=True):
     name: str = Field(index=True)
     species_id: int = Field(foreign_key="species.id")
     wiki_path: Optional[str] = Field(default=None)
+    user_id: Optional[str] = Field(default=None, foreign_key="user_settings.user_id", index=True)
     species: Species | None = Relationship(back_populates="bonsais")

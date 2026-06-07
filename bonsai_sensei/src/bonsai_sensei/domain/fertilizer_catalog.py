@@ -6,16 +6,18 @@ from bonsai_sensei.database.session_wrapper import with_session
 
 
 @with_session
-def list_fertilizers(session: Session) -> List[Fertilizer]:
+def list_fertilizers(session: Session, user_id: str | None = None) -> List[Fertilizer]:
     statement = select(Fertilizer)
+    if user_id is not None:
+        statement = statement.where(Fertilizer.user_id == user_id)
     return session.exec(statement).all()
 
 
 @with_session
-def get_fertilizer_by_name(session: Session, name: str) -> Fertilizer | None:
+def get_fertilizer_by_name(session: Session, name: str, user_id: str | None = None) -> Fertilizer | None:
     if not name:
         return None
-    return _find_fertilizer_by_name(session, name)
+    return _find_fertilizer_by_name(session, name, user_id)
 
 
 @with_session
@@ -44,10 +46,10 @@ def update_fertilizer(
 
 
 @with_session
-def delete_fertilizer(session: Session, name: str) -> bool:
+def delete_fertilizer(session: Session, name: str, user_id: str | None = None) -> bool:
     if not name:
         return False
-    fertilizer = _find_fertilizer_by_name(session, name)
+    fertilizer = _find_fertilizer_by_name(session, name, user_id)
     if not fertilizer:
         return False
     session.delete(fertilizer)
@@ -57,6 +59,9 @@ def delete_fertilizer(session: Session, name: str) -> bool:
 def _find_fertilizer_by_name(
     session: Session,
     name: str,
+    user_id: str | None = None,
 ) -> Fertilizer | None:
     statement = select(Fertilizer).where(func.lower(Fertilizer.name) == name.lower())
+    if user_id is not None:
+        statement = statement.where(Fertilizer.user_id == user_id)
     return session.exec(statement).first()

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
-from typing import List, Callable
+from fastapi import APIRouter, Request, HTTPException, Depends, Query
+from typing import List, Callable, Optional
 from bonsai_sensei.domain.fertilizer import Fertilizer
 
 router = APIRouter()
@@ -22,8 +22,11 @@ def get_delete_fertilizer_svc(request: Request) -> Callable:
 
 
 @router.get("/fertilizers", response_model=List[Fertilizer])
-def get_fertilizers_list(list_fertilizers: Callable = Depends(get_list_fertilizers_svc)):
-    return list_fertilizers()
+def get_fertilizers_list(
+    user_id: Optional[str] = Query(default=None),
+    list_fertilizers: Callable = Depends(get_list_fertilizers_svc),
+):
+    return list_fertilizers(user_id=user_id)
 
 
 @router.post("/fertilizers", response_model=Fertilizer)
@@ -38,9 +41,10 @@ def create_new_fertilizer(
 @router.get("/fertilizers/{fertilizer_name}", response_model=Fertilizer)
 def get_fertilizer_by_name(
     fertilizer_name: str,
+    user_id: Optional[str] = Query(default=None),
     get_fertilizer_func: Callable = Depends(get_get_fertilizer_by_name_svc),
 ):
-    fertilizer = get_fertilizer_func(name=fertilizer_name)
+    fertilizer = get_fertilizer_func(name=fertilizer_name, user_id=user_id)
     if not fertilizer:
         raise HTTPException(status_code=404, detail="Fertilizer not found")
     return fertilizer
@@ -49,9 +53,10 @@ def get_fertilizer_by_name(
 @router.delete("/fertilizers/{fertilizer_name}")
 def delete_existing_fertilizer(
     fertilizer_name: str,
+    user_id: Optional[str] = Query(default=None),
     delete_fertilizer_func: Callable = Depends(get_delete_fertilizer_svc),
 ):
-    success = delete_fertilizer_func(name=fertilizer_name)
+    success = delete_fertilizer_func(name=fertilizer_name, user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="Fertilizer not found")
     return {"status": "success", "message": f"Fertilizer {fertilizer_name} deleted"}

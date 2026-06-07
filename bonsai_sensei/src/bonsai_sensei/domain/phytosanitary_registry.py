@@ -6,16 +6,18 @@ from bonsai_sensei.database.session_wrapper import with_session
 
 
 @with_session
-def list_phytosanitary(session: Session) -> List[Phytosanitary]:
+def list_phytosanitary(session: Session, user_id: str | None = None) -> List[Phytosanitary]:
     statement = select(Phytosanitary)
+    if user_id is not None:
+        statement = statement.where(Phytosanitary.user_id == user_id)
     return session.exec(statement).all()
 
 
 @with_session
-def get_phytosanitary_by_name(session: Session, name: str) -> Phytosanitary | None:
+def get_phytosanitary_by_name(session: Session, name: str, user_id: str | None = None) -> Phytosanitary | None:
     if not name:
         return None
-    return _find_phytosanitary_by_name(session, name)
+    return _find_phytosanitary_by_name(session, name, user_id)
 
 
 @with_session
@@ -47,10 +49,10 @@ def update_phytosanitary(
 
 
 @with_session
-def delete_phytosanitary(session: Session, name: str) -> bool:
+def delete_phytosanitary(session: Session, name: str, user_id: str | None = None) -> bool:
     if not name:
         return False
-    phytosanitary = _find_phytosanitary_by_name(session, name)
+    phytosanitary = _find_phytosanitary_by_name(session, name, user_id)
     if not phytosanitary:
         return False
     session.delete(phytosanitary)
@@ -60,6 +62,9 @@ def delete_phytosanitary(session: Session, name: str) -> bool:
 def _find_phytosanitary_by_name(
     session: Session,
     name: str,
+    user_id: str | None = None,
 ) -> Phytosanitary | None:
     statement = select(Phytosanitary).where(func.lower(Phytosanitary.name) == name.lower())
+    if user_id is not None:
+        statement = statement.where(Phytosanitary.user_id == user_id)
     return session.exec(statement).first()

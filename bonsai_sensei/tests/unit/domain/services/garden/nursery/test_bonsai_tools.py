@@ -50,7 +50,7 @@ def list_bonsai_tool():
     bonsai_items = [Bonsai(id=1, name="Olmo 1", species_id=1)]
     species_items = [Species(id=1, name="Olmo", scientific_name="Ulmus", care_guide={})]
 
-    def list_bonsai():
+    def list_bonsai(user_id=None):
         return bonsai_items
 
     def list_species():

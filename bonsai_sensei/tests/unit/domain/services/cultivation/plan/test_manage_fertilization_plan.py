@@ -31,7 +31,7 @@ async def should_return_error_when_no_fertilizers_available(get_bonsai_by_name_f
     tool = create_manage_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=lambda bonsai_id: [],
-        list_fertilizers_func=lambda: [],
+        list_fertilizers_func=lambda user_id=None: [],
         get_fertilizer_by_name_func=lambda name: None,
         get_active_fertilization_plan_func=lambda bonsai_id: None,
         create_fertilization_plan_func=lambda plan: plan,
@@ -263,14 +263,14 @@ def existing_fertilizer():
 
 @pytest.fixture
 def get_bonsai_by_name_func(existing_bonsai):
-    def get_bonsai_by_name(name: str) -> Bonsai | None:
+    def get_bonsai_by_name(name: str, user_id=None) -> Bonsai | None:
         return existing_bonsai if name == existing_bonsai.name else None
     return get_bonsai_by_name
 
 
 @pytest.fixture
 def list_fertilizers_func(existing_fertilizer):
-    return lambda: [existing_fertilizer]
+    return lambda user_id=None: [existing_fertilizer]
 
 
 @pytest.fixture

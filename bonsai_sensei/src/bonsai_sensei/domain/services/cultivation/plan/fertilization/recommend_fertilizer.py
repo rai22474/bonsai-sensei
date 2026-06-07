@@ -4,6 +4,7 @@ from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
 
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
 
@@ -16,18 +17,19 @@ def create_fertilizer_recommender_func(
     run_recommendation: Callable,
 ) -> Callable:
     """Create a callable that selects the best fertilizer for a bonsai without ADK tool decorators."""
-    async def recommend(bonsai_name: str) -> dict:
-        bonsai = get_bonsai_by_name_func(bonsai_name)
+    async def recommend(bonsai_name: str, user_id: str | None = None) -> dict:
+        bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 
-        fertilizers = list_fertilizers_func()
+        bonsai_user_id = bonsai.user_id or "default"
+        fertilizers = list_fertilizers_func(user_id=bonsai_user_id)
         if not fertilizers:
             return {"status": "error", "message": "no_fertilizers_available"}
 
         events = list_bonsai_events_func(bonsai.id) or []
 
-        plan_path = _build_plan_path(bonsai_name)
+        plan_path = _build_plan_path(bonsai_name, bonsai_user_id)
         existing_plan_result = read_wiki_page_func(path=plan_path)
         existing_plan = existing_plan_result.get("content", "") if existing_plan_result.get("status") == "success" else ""
 
@@ -56,6 +58,7 @@ def create_fertilizer_recommender_func(
         }
 
     return recommend
+
 
 
 def create_recommend_fertilizer_tool(
@@ -90,7 +93,8 @@ def create_recommend_fertilizer_tool(
             Output JSON (success): {"status": "success", "fertilizer_name": "...", "reasoning": "..."}.
             Output JSON (error): {"status": "error", "message": "bonsai_not_found" | "no_fertilizers_available"}.
         """
-        return await recommend(bonsai_name)
+        user_id = resolve_confirmation_user_id(tool_context)
+        return await recommend(bonsai_name, user_id=user_id)
 
     return recommend_fertilizer
 
@@ -99,8 +103,8 @@ def _build_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
-def _build_plan_path(bonsai_name: str) -> str:
-    return f"bonsai/{_build_slug(bonsai_name)}/fertilization-plan.md"
+def _build_plan_path(bonsai_name: str, user_id: str = "default") -> str:
+    return f"users/{user_id}/bonsai/{_build_slug(bonsai_name)}/fertilization-plan.md"
 
 
 def _build_context(bonsai_name: str, current_date: str, events: list, existing_plan: str, bonsai_wiki: str, fertilizers: list, fertilizer_pages: dict) -> str:

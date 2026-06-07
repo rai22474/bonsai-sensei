@@ -26,8 +26,8 @@ async def should_return_error_when_no_pending_photo(add_photo_tool_no_pending, t
 @pytest.mark.asyncio
 async def should_return_error_when_no_bonsai_available(tool_context):
     tool = create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: None,
-        list_bonsai_func=lambda: [],
+        get_bonsai_by_name_func=lambda name, user_id=None: None,
+        list_bonsai_func=lambda user_id=None: [],
         create_bonsai_photo_func=lambda bonsai_photo: bonsai_photo,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,
@@ -58,8 +58,8 @@ async def should_return_cancelled_when_selection_is_cancelled(tool_context, exis
         return SelectionNoneResult(reason="changed mind")
 
     tool = create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: bonsai_photo,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_cancel,
@@ -94,8 +94,8 @@ async def should_return_success_when_confirmed(add_photo_tool, tool_context):
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines_confirmation(tool_context, existing_bonsai, captured_photos):
     tool = create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: captured_photos.append(bonsai_photo),
         ask_confirmation=ask_confirmation_cancel,
         ask_selection=ask_selection_confirm,
@@ -117,8 +117,8 @@ async def should_clear_pending_photo_after_confirmation(tool_context, existing_b
     cleared_for = []
 
     tool = create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: None,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,
@@ -139,8 +139,8 @@ async def should_clear_pending_photo_after_cancellation(tool_context, existing_b
     cleared_for = []
 
     tool = create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: None,
         ask_confirmation=ask_confirmation_cancel,
         ask_selection=ask_selection_confirm,
@@ -186,8 +186,8 @@ def tool_context():
 @pytest.fixture
 def add_photo_tool(existing_bonsai, captured_photos):
     return create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: captured_photos.append(bonsai_photo),
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,
@@ -202,8 +202,8 @@ def add_photo_tool(existing_bonsai, captured_photos):
 @pytest.fixture
 def add_photo_tool_no_pending(existing_bonsai):
     return create_add_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_func=lambda: [existing_bonsai],
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_func=lambda user_id=None: [existing_bonsai],
         create_bonsai_photo_func=lambda bonsai_photo: None,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,

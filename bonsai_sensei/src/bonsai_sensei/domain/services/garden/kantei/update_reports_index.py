@@ -19,17 +19,18 @@ def create_update_bonsai_reports_index_tool(
     write_wiki_page_func: Callable,
 ) -> Callable:
     @trace_tool_call
-    async def update_bonsai_reports_index(bonsai_name: str) -> dict:
+    async def update_bonsai_reports_index(bonsai_name: str, user_id: str = "default") -> dict:
         """Regenerate the reports index page for a bonsai. Call this after writing any new report.
 
         Args:
             bonsai_name: Name of the bonsai whose reports index should be updated.
+            user_id: Owner of the bonsai. Defaults to "default" for backward compatibility.
 
         Returns:
             {"status": "success"} always.
         """
         slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-        paths = list_wiki_files_func(f"bonsai/{slug}/reports")
+        paths = list_wiki_files_func(f"users/{user_id}/bonsai/{slug}/reports")
         report_files = [path for path in paths if not path.endswith("index.md")]
         reports = sorted(
             filter(None, (_parse_report(path) for path in report_files)),
@@ -37,7 +38,7 @@ def create_update_bonsai_reports_index_tool(
             reverse=True,
         )
         write_wiki_page_func(
-            path=f"bonsai/{slug}/reports/index.md",
+            path=f"users/{user_id}/bonsai/{slug}/reports/index.md",
             content=REPORTS_INDEX_WIKI.render(bonsai_name=bonsai_name, reports=reports),
         )
         return {"status": "success"}

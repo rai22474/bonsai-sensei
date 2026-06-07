@@ -21,7 +21,7 @@ async def should_return_error_when_no_products_available(get_bonsai_by_name_func
     tool = create_recommend_phytosanitary_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=lambda bonsai_id: [],
-        list_phytosanitary_func=lambda: [],
+        list_phytosanitary_func=lambda user_id=None: [],
         read_wiki_page_func=lambda path: {"status": "error", "message": "page_not_found"},
         write_wiki_page_func=lambda path, content: {"status": "success"},
         run_recommendation=stub_run_recommendation,
@@ -52,9 +52,9 @@ async def should_write_wiki_page_after_recommendation(get_bonsai_by_name_func, l
 
     await tool(bonsai_name="Shikamaru")
 
-    assert_that("bonsai/shikamaru/phytosanitary-plan.md" in written_pages, equal_to(True),
-        "Wiki page should be written at bonsai/<slug>/phytosanitary-plan.md")
-    assert_that(written_pages["bonsai/shikamaru/phytosanitary-plan.md"],
+    assert_that("users/default/bonsai/shikamaru/phytosanitary-plan.md" in written_pages, equal_to(True),
+        "Wiki page should be written at users/<user_id>/bonsai/<slug>/phytosanitary-plan.md")
+    assert_that(written_pages["users/default/bonsai/shikamaru/phytosanitary-plan.md"],
         contains_string("Plan activo"), "Written wiki content should contain the plan")
 
 
@@ -138,14 +138,14 @@ def existing_product():
 
 @pytest.fixture
 def get_bonsai_by_name_func(existing_bonsai):
-    def get_bonsai_by_name(name: str) -> Bonsai | None:
+    def get_bonsai_by_name(name: str, user_id=None) -> Bonsai | None:
         return existing_bonsai if name == existing_bonsai.name else None
     return get_bonsai_by_name
 
 
 @pytest.fixture
 def list_phytosanitary_func(existing_product):
-    return lambda: [existing_product]
+    return lambda user_id=None: [existing_product]
 
 
 @pytest.fixture

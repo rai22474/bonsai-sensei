@@ -49,11 +49,11 @@ async def should_return_error_when_older_photo_file_not_found(tool_context, exis
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     tool = create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=load_photo_bytes_first_missing,
         run_photo_comparison=run_photo_comparison,
@@ -78,11 +78,11 @@ async def should_return_error_when_newer_photo_file_not_found(tool_context, exis
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     tool = create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=load_photo_bytes_second_missing,
         run_photo_comparison=run_photo_comparison,
@@ -134,14 +134,14 @@ async def should_record_both_taken_on_in_tool_context_state(compare_tool, tool_c
 async def should_save_wiki_report_with_wikilinks_after_comparison(tool_context, existing_bonsai, two_photos):
     written_pages = {}
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
     tool = create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
@@ -151,7 +151,7 @@ async def should_save_wiki_report_with_wikilinks_after_comparison(tool_context, 
 
     await tool("Olmo", tool_context=tool_context)
 
-    report_content = written_pages.get("bonsai/olmo/reports/2025-06-20-comparison.md", "")
+    report_content = written_pages.get("users/default/bonsai/olmo/reports/2025-06-20-comparison.md", "")
     assert_that(report_content, contains_string("[[photo_jan.jpg|Foto anterior]] · [[photo_jun.jpg|Foto reciente]]"),
         "Comparison report should contain wikilinks for both photos")
 
@@ -160,14 +160,14 @@ async def should_save_wiki_report_with_wikilinks_after_comparison(tool_context, 
 async def should_update_reports_index_after_comparison(tool_context, existing_bonsai, two_photos):
     index_calls = []
 
-    async def track_update_index(bonsai_name):
+    async def track_update_index(bonsai_name, user_id=None):
         index_calls.append(bonsai_name)
 
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "comparison result"
 
     tool = create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
@@ -204,11 +204,11 @@ def compare_tool(existing_bonsai, two_photos):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     return create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: two_photos if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
@@ -222,11 +222,11 @@ def compare_tool_no_photos(existing_bonsai):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     return create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,
@@ -242,11 +242,11 @@ def compare_tool_one_photo(existing_bonsai):
     async def run_photo_comparison(older_bytes, newer_bytes, intent):
         return "visual comparison result"
 
-    async def noop_update_index(bonsai_name):
+    async def noop_update_index(bonsai_name, user_id=None):
         pass
 
     return create_compare_bonsai_photos_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
+        get_bonsai_by_name_func=lambda name, user_id=None: existing_bonsai if name == existing_bonsai.name else None,
         list_bonsai_photos_func=lambda bonsai_id: [single_photo] if bonsai_id == existing_bonsai.id else [],
         load_photo_bytes=lambda path: b"photo_bytes",
         run_photo_comparison=run_photo_comparison,

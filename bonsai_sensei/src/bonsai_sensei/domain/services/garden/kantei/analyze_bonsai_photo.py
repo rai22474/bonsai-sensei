@@ -81,10 +81,11 @@ def create_analyze_bonsai_photo_tool(
             tool_context.state["photos_for_analysis_taken_on"] = analyzed
 
         slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-        report_path = f"bonsai/{slug}/reports/{photo.taken_on}-{analysis_type}.md"
+        bonsai_user_id = bonsai.user_id or "default"
+        report_path = f"users/{bonsai_user_id}/bonsai/{slug}/reports/{photo.taken_on}-{analysis_type}.md"
         report_content = f"[[{photo.file_path}|Ver foto]]\n\n{analysis}"
         write_wiki_page_func(path=report_path, content=report_content)
-        await update_reports_index_func(bonsai_name)
+        await update_reports_index_func(bonsai_name, user_id=bonsai_user_id)
 
         return {
             "status": "analysis_complete",

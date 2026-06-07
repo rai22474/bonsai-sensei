@@ -14,9 +14,10 @@ def load_bonsai_plan_context(
     """Load shared context variables used by plan creation and evaluation prompts."""
     slug = bonsai_slug(bonsai_name)
     events = list_bonsai_events_func(bonsai.id) or []
+    user_id = bonsai.user_id or "default"
     return {
         "events": [_format_event(event) for event in events],
-        "reports": _load_reports(slug, list_wiki_files_func, read_wiki_page_func),
+        "reports": _load_reports(slug, user_id, list_wiki_files_func, read_wiki_page_func),
         "bonsai_wiki_content": read_wiki_content(bonsai.wiki_path, read_wiki_page_func) if bonsai.wiki_path else "",
     }
 
@@ -25,8 +26,8 @@ def bonsai_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
-def _load_reports(slug: str, list_wiki_files_func: Callable, read_wiki_page_func: Callable) -> list[str]:
-    paths = list_wiki_files_func(f"bonsai/{slug}/reports")
+def _load_reports(slug: str, user_id: str, list_wiki_files_func: Callable, read_wiki_page_func: Callable) -> list[str]:
+    paths = list_wiki_files_func(f"users/{user_id}/bonsai/{slug}/reports")
     reports = []
     for path in paths[-5:]:
         page = read_wiki_page_func(path=path)
