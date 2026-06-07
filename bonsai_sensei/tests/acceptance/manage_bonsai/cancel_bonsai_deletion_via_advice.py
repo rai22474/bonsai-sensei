@@ -41,6 +41,6 @@ def cancel_deletion_with_reason(context, reason):
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should still exist'))
-def assert_bonsai_still_exists(bonsai_name):
-    bonsai = find_bonsai_by_name_api(bonsai_name)
+def assert_bonsai_still_exists(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name, user_id=context["user_id"])
     assert bonsai is not None, f"Expected bonsai '{bonsai_name}' to still exist after cancellation."

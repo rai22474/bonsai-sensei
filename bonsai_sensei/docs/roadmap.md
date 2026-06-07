@@ -178,7 +178,9 @@ El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y venta
 
 ---
 
-## FUTURE-013 — Soporte multi-usuario
+## FUTURE-013 — Soporte multi-usuario ✅ Implementado (2026-06-07)
+
+**Nota de implementación:** Se reutilizó `user_settings` (PK = `telegram_user_id`) como identidad de usuario en lugar de crear una entidad `User` separada. El `user_id` en sesión ADK es el `telegram_user_id` raw, que coincide con el PK de `user_settings`. FUTURE-014 debe tener en cuenta que no hay UUID interno — la referencia de colección será `user_settings.user_id`.
 
 **Contexto:**
 El sistema asume implícitamente un único usuario: los bonsáis no tienen FK de usuario en BD, y los `wiki_path` usan `bonsai/<slug>/` sin namespace de usuario — lo que produce colisiones si dos usuarios tienen árboles con el mismo slug. Esta iniciativa establece la base de identidad de usuario que habilita tanto el aislamiento de datos como la futura multi-colección (FUTURE-014).

@@ -35,10 +35,11 @@ def update_phytosanitary(
     session: Session,
     name: str,
     phytosanitary_data: dict,
+    user_id: str | None = None,
 ) -> Phytosanitary | None:
     if not name:
         return None
-    phytosanitary = _find_phytosanitary_by_name(session, name)
+    phytosanitary = _find_phytosanitary_by_name(session, name, user_id)
     if not phytosanitary:
         return None
     for key, value in phytosanitary_data.items():

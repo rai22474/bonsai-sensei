@@ -41,14 +41,14 @@ def confirm_bonsai_creation(context, bonsai_name):
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should exist'))
-def assert_bonsai_exists(bonsai_name):
-    bonsai = find_bonsai_by_name_api(bonsai_name)
+def assert_bonsai_exists(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name, user_id=context["user_id"])
     assert bonsai is not None, f"Expected bonsai '{bonsai_name}' to exist after creation."
 
 
 @then(parsers.parse('the wiki index page for bonsai "{bonsai_name}" should exist with species "{species_name}"'))
-def assert_wiki_index_exists(bonsai_name, species_name):
-    wiki_path = build_bonsai_wiki_path(bonsai_name)
+def assert_wiki_index_exists(context, bonsai_name, species_name):
+    wiki_path = build_bonsai_wiki_path(bonsai_name, context["user_id"])
     page = get_wiki_page(wiki_path)
     assert_that(page, not_none(), f"Expected wiki index page at {wiki_path} to exist")
     assert_that(page["content"], contains_string(bonsai_name), "Wiki index should contain the bonsai name")

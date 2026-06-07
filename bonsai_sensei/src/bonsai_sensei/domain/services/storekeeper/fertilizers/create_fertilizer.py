@@ -3,6 +3,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -18,7 +19,7 @@ async def execute_create_fertilizer(
     tool_context=None,
 ) -> dict:
     """Core fertilizer creation logic shared by the ADK tool and direct Telegram commands."""
-    if get_fertilizer_by_name_func(name):
+    if get_fertilizer_by_name_func(name, user_id=user_id):
         return {"status": "error", "message": "fertilizer_already_exists"}
 
     confirmed = await ask_confirmation(
@@ -33,6 +34,7 @@ async def execute_create_fertilizer(
                 name=name,
                 wiki_path=wiki_path,
                 recommended_amount=recommended_amount,
+                user_id=user_id,
             )
         )
         return {"status": "success", "message": f"Fertilizer '{name}' created."}
@@ -71,6 +73,7 @@ def create_create_fertilizer_tool(
         if not name:
             return {"status": "error", "message": "fertilizer_name_required"}
 
+        user_id = resolve_confirmation_user_id(tool_context)
         return await execute_create_fertilizer(
             name=name,
             get_fertilizer_by_name_func=get_fertilizer_by_name_func,
@@ -78,6 +81,7 @@ def create_create_fertilizer_tool(
             create_fertilizer_func=create_fertilizer_func,
             ask_confirmation=ask_confirmation,
             build_confirmation_message=build_confirmation_message,
+            user_id=user_id,
             tool_context=tool_context,
         )
 

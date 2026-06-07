@@ -38,7 +38,7 @@ def assert_response_contains_recommendation(context):
 
 @then(parsers.parse('the fertilization plan wiki page for "{bonsai_name}" should exist'))
 def assert_fertilization_plan_wiki_page_exists(context, bonsai_name):
-    wiki_path = f"bonsai/{_wiki_slug(bonsai_name)}/fertilization-plan.md"
+    wiki_path = f"users/{context['user_id']}/bonsai/{_wiki_slug(bonsai_name)}/fertilization-plan.md"
     page = get_wiki_page(wiki_path)
     assert page is not None, (
         f"Expected fertilization plan wiki page at '{wiki_path}' to exist after recommendation, but it was not found"

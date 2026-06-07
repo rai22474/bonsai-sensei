@@ -73,7 +73,7 @@ def create_species_record(context: dict, name: str, scientific_name: str) -> dic
 
 
 def create_bonsai_record(context: dict, name: str, species_id: int) -> dict:
-    bonsai = create_bonsai(post, name, species_id)
+    bonsai = create_bonsai(post, name, species_id, user_id=context["user_id"])
     context["bonsai_created"].append(name)
     context["bonsai_ids"][name] = bonsai.get("id")
     return bonsai

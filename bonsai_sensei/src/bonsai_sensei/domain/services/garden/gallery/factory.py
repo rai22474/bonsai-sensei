@@ -31,13 +31,13 @@ def create_gallery_group(
     photos_root = Path(os.getenv("PHOTOS_PATH", "./photos"))
     _pending_photos = pending_photos if pending_photos is not None else {}
 
-    def save_photo_file(bonsai_name: str, photo_bytes: bytes) -> str:
+    def save_photo_file(bonsai_name: str, photo_bytes: bytes, user_id: str = "default") -> str:
         safe_name = re.sub(r"[^\w\-]", "_", bonsai_name.lower())
-        bonsai_dir = photos_root / safe_name
+        bonsai_dir = photos_root / user_id / safe_name
         bonsai_dir.mkdir(parents=True, exist_ok=True)
         file_name = f"{date.today().isoformat()}_{uuid.uuid4().hex[:8]}.webp"
         (bonsai_dir / file_name).write_bytes(photo_bytes)
-        return f"{safe_name}/{file_name}"
+        return f"{user_id}/{safe_name}/{file_name}"
 
     def get_pending_photo_bytes(user_id: str) -> bytes | None:
         return _pending_photos.get(user_id)

@@ -3,6 +3,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.fertilizer import Fertilizer
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -39,7 +40,8 @@ def create_update_fertilizer_tool(
         if not recommended_amount:
             return {"status": "error", "message": "recommended_amount_required"}
 
-        if not get_fertilizer_by_name_func(name):
+        user_id = resolve_confirmation_user_id(tool_context)
+        if not get_fertilizer_by_name_func(name, user_id=user_id):
             return {"status": "error", "message": "fertilizer_not_found"}
 
         confirmed = await ask_confirmation(build_confirmation_message(name, recommended_amount), tool_context=tool_context)
@@ -48,6 +50,7 @@ def create_update_fertilizer_tool(
             update_fertilizer_func(
                 name=name,
                 fertilizer_data={"recommended_amount": recommended_amount},
+                user_id=user_id,
             )
             return {"status": "success", "message": f"Fertilizer '{name}' updated."}
 

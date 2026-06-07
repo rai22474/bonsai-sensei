@@ -5,6 +5,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.human_input import SelectionNoneResult
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -43,7 +44,8 @@ def create_delete_bonsai_photo_tool(
             Output JSON (error): {"status": "error", "message": "<reason>"}.
             Error reasons: "bonsai_not_found", "no_photos_available".
         """
-        bonsai = get_bonsai_by_name_func(bonsai_name)
+        user_id = resolve_confirmation_user_id(tool_context)
+        bonsai = get_bonsai_by_name_func(bonsai_name, user_id=user_id)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 

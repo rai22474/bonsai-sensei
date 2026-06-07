@@ -3,6 +3,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -38,7 +39,8 @@ def create_refresh_phytosanitary_wiki_tool(
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
-        if not get_phytosanitary_by_name_func(name):
+        user_id = resolve_confirmation_user_id(tool_context)
+        if not get_phytosanitary_by_name_func(name, user_id=user_id):
             return {"status": "error", "message": "phytosanitary_not_found"}
 
         confirmed = await ask_confirmation(build_confirmation_message(name), tool_context=tool_context)
@@ -46,7 +48,7 @@ def create_refresh_phytosanitary_wiki_tool(
             return {"status": "cancelled", "reason": confirmed.reason}
 
         wiki_path, recommended_amount = await wiki_page_builder(name, instructions)
-        update_phytosanitary_func(name=name, phytosanitary_data={"wiki_path": wiki_path, "recommended_amount": recommended_amount})
+        update_phytosanitary_func(name=name, phytosanitary_data={"wiki_path": wiki_path, "recommended_amount": recommended_amount}, user_id=user_id)
         return {"status": "success", "message": f"Wiki page for '{name}' has been refreshed."}
 
     return refresh_phytosanitary_wiki

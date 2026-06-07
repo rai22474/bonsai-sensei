@@ -32,10 +32,11 @@ def update_fertilizer(
     session: Session,
     name: str,
     fertilizer_data: dict,
+    user_id: str | None = None,
 ) -> Fertilizer | None:
     if not name:
         return None
-    fertilizer = _find_fertilizer_by_name(session, name)
+    fertilizer = _find_fertilizer_by_name(session, name, user_id)
     if not fertilizer:
         return None
     for key, value in fertilizer_data.items():

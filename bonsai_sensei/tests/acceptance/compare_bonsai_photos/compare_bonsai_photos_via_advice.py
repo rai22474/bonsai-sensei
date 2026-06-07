@@ -48,7 +48,8 @@ def assert_changes_described(context):
     photos = get(f"/api/bonsai/{bonsai_id}/photos") or []
     newest_taken_on = max(photo["taken_on"] for photo in photos)
     slug = re.sub(r"[^a-z0-9]+", "-", bonsai_name.lower()).strip("-")
-    report_path = f"bonsai/{slug}/reports/{newest_taken_on}-comparison.md"
+    user_id = context["user_id"]
+    report_path = f"users/{user_id}/bonsai/{slug}/reports/{newest_taken_on}-comparison.md"
     wiki_response = get_kb(f"/api/wiki?path={report_path}")
     assert_that(wiki_response, not_none(), "Expected a comparison wiki report to have been created")
 

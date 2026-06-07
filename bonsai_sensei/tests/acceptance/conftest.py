@@ -1,6 +1,6 @@
 import pytest
 
-from http_client import get, reset_session
+from http_client import delete, get, put, reset_session
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -14,8 +14,16 @@ def assert_service_healthy():
 
 
 @pytest.fixture(autouse=True)
+def setup_user_settings(context):
+    user_id = context.get("user_id")
+    if user_id:
+        put(f"/api/users/{user_id}/settings", {})
+
+
+@pytest.fixture(autouse=True)
 def reset_adk_session_after_test(context):
     yield
     user_id = context.get("user_id")
     if user_id:
         reset_session(user_id)
+        delete(f"/api/users/{user_id}/settings")

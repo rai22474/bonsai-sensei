@@ -41,6 +41,6 @@ def confirm_bonsai_delete(context, bonsai_name):
 
 
 @then(parsers.parse('bonsai "{bonsai_name}" should not exist'))
-def assert_bonsai_missing(bonsai_name):
-    bonsai = find_bonsai_by_name_api(bonsai_name)
+def assert_bonsai_missing(context, bonsai_name):
+    bonsai = find_bonsai_by_name_api(bonsai_name, user_id=context["user_id"])
     assert bonsai is None, f"Expected bonsai '{bonsai_name}' to be deleted."

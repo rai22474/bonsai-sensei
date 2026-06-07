@@ -72,7 +72,7 @@ def create_add_bonsai_photo_tool(
         )
 
         if confirmed:
-            file_path = save_photo_file(bonsai_name, photo_bytes)
+            file_path = save_photo_file(bonsai_name, photo_bytes, user_id)
             create_bonsai_photo_func(
                 bonsai_photo=BonsaiPhoto(bonsai_id=bonsai.id, file_path=file_path)
             )

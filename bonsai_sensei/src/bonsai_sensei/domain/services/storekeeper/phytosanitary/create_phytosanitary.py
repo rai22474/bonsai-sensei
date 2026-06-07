@@ -3,6 +3,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.phytosanitary import Phytosanitary
+from bonsai_sensei.domain.services.resolve_user_id import resolve_confirmation_user_id
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -18,7 +19,7 @@ async def execute_create_phytosanitary(
     tool_context=None,
 ) -> dict:
     """Core phytosanitary creation logic shared by the ADK tool and direct Telegram commands."""
-    if get_phytosanitary_by_name_func(name):
+    if get_phytosanitary_by_name_func(name, user_id=user_id):
         return {"status": "error", "message": "phytosanitary_already_exists"}
 
     confirmed = await ask_confirmation(
@@ -33,6 +34,7 @@ async def execute_create_phytosanitary(
                 name=name,
                 wiki_path=wiki_path,
                 recommended_amount=recommended_amount,
+                user_id=user_id,
             )
         )
         return {"status": "success", "message": f"Phytosanitary product '{name}' created."}
@@ -71,6 +73,7 @@ def create_create_phytosanitary_tool(
         if not name:
             return {"status": "error", "message": "phytosanitary_name_required"}
 
+        user_id = resolve_confirmation_user_id(tool_context)
         return await execute_create_phytosanitary(
             name=name,
             get_phytosanitary_by_name_func=get_phytosanitary_by_name_func,
@@ -78,6 +81,7 @@ def create_create_phytosanitary_tool(
             create_phytosanitary_func=create_phytosanitary_func,
             ask_confirmation=ask_confirmation,
             build_confirmation_message=build_confirmation_message,
+            user_id=user_id,
             tool_context=tool_context,
         )
 

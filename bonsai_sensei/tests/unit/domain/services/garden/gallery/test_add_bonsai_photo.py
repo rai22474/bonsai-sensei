@@ -34,7 +34,7 @@ async def should_return_error_when_no_bonsai_available(tool_context):
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: None,
     )
 
@@ -66,7 +66,7 @@ async def should_return_cancelled_when_selection_is_cancelled(tool_context, exis
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: None,
     )
 
@@ -102,7 +102,7 @@ async def should_return_cancelled_when_user_declines_confirmation(tool_context, 
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: None,
     )
 
@@ -125,7 +125,7 @@ async def should_clear_pending_photo_after_confirmation(tool_context, existing_b
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: cleared_for.append(user_id),
     )
 
@@ -147,7 +147,7 @@ async def should_clear_pending_photo_after_cancellation(tool_context, existing_b
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: cleared_for.append(user_id),
     )
 
@@ -194,7 +194,7 @@ def add_photo_tool(existing_bonsai, captured_photos):
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: b"photo_data",
-        save_photo_file=lambda name, data: "bonsai/olmo/photo.jpg",
+        save_photo_file=lambda name, data, user_id="default": "bonsai/olmo/photo.jpg",
         clear_pending_photo=lambda user_id: None,
     )
 
@@ -210,6 +210,6 @@ def add_photo_tool_no_pending(existing_bonsai):
         build_selection_question=lambda: "Select bonsai",
         build_confirmation_message=lambda name: f"Confirm photo for '{name}'",
         get_pending_photo_bytes=lambda user_id: None,
-        save_photo_file=lambda name, data: "some/path.jpg",
+        save_photo_file=lambda name, data, user_id="default": "some/path.jpg",
         clear_pending_photo=lambda user_id: None,
     )
