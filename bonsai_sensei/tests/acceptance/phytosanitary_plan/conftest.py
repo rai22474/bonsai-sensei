@@ -17,7 +17,7 @@ from phytosanitary_plan.phytosanitary_plans_api import (
     list_phytosanitary_plans,
 )
 
-STUB_PORT = 8075
+STUB_PORT = 8070
 
 
 @pytest.fixture

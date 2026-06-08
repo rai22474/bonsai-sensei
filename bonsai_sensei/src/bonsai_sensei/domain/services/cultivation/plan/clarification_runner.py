@@ -1,3 +1,5 @@
+import json
+import re
 import uuid
 from dataclasses import dataclass
 from typing import Callable, Literal
@@ -132,27 +134,34 @@ async def _ask_clarifier_llm(model: object, prompt_with_history: str) -> Clarifi
             name="clarifier_inner",
             model=model,
             instruction=prompt_with_history,
-            output_schema=ClarificationAction,
-            output_key="_action",
         ),
         app_name="clarifier_inner",
     )
     sid = str(uuid.uuid4())
     await inner.session_service.create_session(app_name="clarifier_inner", user_id="c", session_id=sid)
-    async for _ in inner.run_async(
+    text_response = ""
+    async for event in inner.run_async(
         user_id="c",
         session_id=sid,
         new_message=types.Content(role="user", parts=[types.Part(text="Procede.")]),
         run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS_PER_TURN),
     ):
-        pass
-    session = await inner.session_service.get_session(app_name="clarifier_inner", user_id="c", session_id=sid)
-    raw = session.state.get("_action") if session else None
-    if isinstance(raw, dict):
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    text_response = part.text
+    return _parse_clarification_action(text_response)
+
+
+def _parse_clarification_action(text: str) -> ClarificationAction:
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return ClarificationAction(action="cancel")
+    try:
+        raw = json.loads(match.group())
         return ClarificationAction.model_validate(raw)
-    if isinstance(raw, ClarificationAction):
-        return raw
-    return ClarificationAction(action="cancel")
+    except (json.JSONDecodeError, Exception):
+        return ClarificationAction(action="cancel")
 
 
 def _store_clarification_result(ctx, action: ClarificationAction) -> None:

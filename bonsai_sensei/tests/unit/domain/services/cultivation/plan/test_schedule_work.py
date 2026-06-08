@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from bonsai_sensei.domain.services.cultivation.plan.schedule_work import schedule_work
+from bonsai_sensei.domain.services.cultivation.plan.works.schedule_work import schedule_work
 from bonsai_sensei.domain.services.human_input import SelectionNoneResult
 
 

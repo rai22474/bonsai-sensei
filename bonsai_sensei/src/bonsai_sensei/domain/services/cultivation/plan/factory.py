@@ -23,9 +23,9 @@ from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.schedule_phyto
 from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.create_phytosanitary_application import (
     create_create_phytosanitary_application_tool,
 )
-from bonsai_sensei.domain.services.cultivation.plan.create_transplant import create_create_transplant_tool
-from bonsai_sensei.domain.services.cultivation.plan.delete_planned_work import create_delete_planned_work_tool
-from bonsai_sensei.domain.services.cultivation.plan.list_planned_works import create_list_planned_works_tool
+from bonsai_sensei.domain.services.cultivation.plan.works.create_transplant import create_create_transplant_tool
+from bonsai_sensei.domain.services.cultivation.plan.works.delete_planned_work import create_delete_planned_work_tool
+from bonsai_sensei.domain.services.cultivation.plan.works.list_planned_works import create_list_planned_works_tool
 from bonsai_sensei.domain.services.cultivation.plan.fertilization.manage import (
     create_manage_fertilization_plan_tool,
 )

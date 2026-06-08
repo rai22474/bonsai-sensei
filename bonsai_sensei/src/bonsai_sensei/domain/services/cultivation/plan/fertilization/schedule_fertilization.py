@@ -2,7 +2,7 @@ from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
 
-from bonsai_sensei.domain.services.cultivation.plan.schedule_work import schedule_work
+from bonsai_sensei.domain.services.cultivation.plan.works.schedule_work import schedule_work
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 

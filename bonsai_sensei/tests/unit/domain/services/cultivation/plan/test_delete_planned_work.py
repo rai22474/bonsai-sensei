@@ -3,7 +3,7 @@ from hamcrest import assert_that, equal_to
 
 from bonsai_sensei.domain.services.human_input import ConfirmationResult
 from bonsai_sensei.domain.planned_work import PlannedWork
-from bonsai_sensei.domain.services.cultivation.plan.delete_planned_work import (
+from bonsai_sensei.domain.services.cultivation.plan.works.delete_planned_work import (
     create_delete_planned_work_tool,
 )
 

@@ -14,8 +14,8 @@ from bonsai_sensei.domain import herbarium
 from bonsai_sensei.domain import pest_catalog
 from bonsai_sensei.domain import phytosanitary_registry
 from bonsai_sensei.domain import user_settings_store
-from bonsai_sensei.domain.services.cultivation.plan.list_planned_works import create_list_planned_works_tool
-from bonsai_sensei.domain.services.cultivation.plan.list_weekend_planned_works import create_list_weekend_planned_works_tool
+from bonsai_sensei.domain.services.cultivation.plan.works.list_planned_works import create_list_planned_works_tool
+from bonsai_sensei.domain.services.cultivation.plan.works.list_weekend_planned_works import create_list_weekend_planned_works_tool
 from bonsai_sensei.domain.services.cultivation.plan.phytosanitary.recommend_phytosanitary import (
     create_recommend_phytosanitary_tool,
 )

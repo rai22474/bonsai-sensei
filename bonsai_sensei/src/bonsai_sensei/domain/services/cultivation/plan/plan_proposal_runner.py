@@ -1,3 +1,5 @@
+import json
+import re
 import uuid
 from dataclasses import dataclass
 from typing import Callable, Literal
@@ -96,7 +98,7 @@ def create_plan_proposal_runner(
                     break
 
                 user_response = await _review_proposal(request_details)
-                outer_tool_context.state.pop(_DRAFT_STATE_KEY, None)
+                outer_tool_context.state[_DRAFT_STATE_KEY] = None
                 cur_msg = types.Content(
                     role="user",
                     parts=[create_request_input_response(request_details.interrupt_id, {"result": user_response})],
@@ -151,27 +153,34 @@ async def _ask_planner_llm(model: object, prompt_with_history: str) -> ProposalA
             name="planner_inner",
             model=model,
             instruction=prompt_with_history,
-            output_schema=ProposalAction,
-            output_key="_action",
         ),
         app_name="planner_inner",
     )
     sid = str(uuid.uuid4())
     await inner.session_service.create_session(app_name="planner_inner", user_id="p", session_id=sid)
-    async for _ in inner.run_async(
+    text_response = ""
+    async for event in inner.run_async(
         user_id="p",
         session_id=sid,
         new_message=types.Content(role="user", parts=[types.Part(text="Genera el plan.")]),
         run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS_PER_TURN),
     ):
-        pass
-    session = await inner.session_service.get_session(app_name="planner_inner", user_id="p", session_id=sid)
-    raw = session.state.get("_action") if session else None
-    if isinstance(raw, dict):
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    text_response = part.text
+    return _parse_proposal_action(text_response)
+
+
+def _parse_proposal_action(text: str) -> ProposalAction:
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return ProposalAction(action="cancel")
+    try:
+        raw = json.loads(match.group())
         return ProposalAction.model_validate(raw)
-    if isinstance(raw, ProposalAction):
-        return raw
-    return ProposalAction(action="cancel")
+    except (json.JSONDecodeError, Exception):
+        return ProposalAction(action="cancel")
 
 
 def _extract_proposal_request(event) -> _ProposalRequestDetails | None:

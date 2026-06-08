@@ -41,7 +41,61 @@ Los runners de propuesta de planes (`plan_proposal_runner.py`, `clarification_ru
 ---
 
 
-## FUTURE-012 — Plan de desarrollo artístico del bonsai
+## FUTURE-016 — Refinación de trabajos planificados
+
+**Contexto:**
+Algunos trabajos planificados requieren una sesión de análisis previo a su ejecución. Ejemplos: estudio de madera muerta en un pino (fotos desde múltiples ángulos para decidir dónde y cómo trabajarla), mekiri (el asistente ayuda a decidir qué brotes cortar). El sistema actual no tiene mecanismo para anclar una sesión conversacional diagnóstica a un `PlannedWork` concreto ni para persistir su resultado.
+
+**Dependencia:** FUTURE-012 (`DevelopmentPlan`) debe estar implementado — el agente de refinación querrá leer el wiki del plan de desarrollo del árbol junto a la wiki de especie.
+
+### Entidad `WorkRefinement`
+
+```
+WorkRefinement
+  id
+  planned_work_id   FK → planned_work  (CASCADE on delete)
+  user_id           str
+  status            str  ("in_progress" | "completed" | "abandoned")
+  wiki_path         str  (users/{user_id}/bonsai/{slug}/refinements/{work_id}-{date}.md)
+  created_at
+  completed_at
+```
+
+### Flujo conversacional
+
+El `refinement_advisor` es un agente libre en `InMemoryRunner` efímero (evita acumulación de eventos en la sesión principal). Recibe el `PlannedWork` como contexto inicial y opera con:
+
+- Tool de lectura de wiki del trabajo planificado y del plan de desarrollo asociado
+- Tool de análisis de foto (`analyze_photo`) — multimodal, resultados acumulados en estado de sesión
+- `RequestInput` (patrón ADR-015, `rerun_on_resume=True`) para el loop multi-turno: pedir foto → analizar → pedir otra foto o hacer preguntas → siguiente turno
+- `finalize_refinement` — tool determinístico (patrón ADR-009): ensambla todo el contexto (fotos analizadas + diálogo + wiki de especie + plan) → LLM runner genera contenido wiki → escribe página → actualiza `WorkRefinement.status = "completed"`. Garantiza la escritura.
+
+El outer sensei delega al `refinement_advisor` vía tool call y recibe resultado cuando termina. La sesión del `refinement_advisor` nunca escala al outer agent — la compaction (ADR-004/ventana deslizante) ya cubre conversaciones largas, pero la separación en `InMemoryRunner` propio sigue siendo el diseño correcto por aislamiento de estado.
+
+### Output
+
+Wiki page en `users/{user_id}/bonsai/{slug}/refinements/{work_id}-{date}.md`. La página del `PlannedWork` puede linkear a ella. FalkorDB la indexa automáticamente vía el hook existente en `write_wiki_page` — `search_wiki_knowledge` la encontrará en conversaciones futuras sin acoplamiento adicional.
+
+### Archivos nuevos
+
+- `domain/work_refinement.py` — entidad SQLModel
+- `domain/work_refinement_store.py` — CRUD
+- `alembic/versions/*_add_work_refinement.py`
+- `api/work_refinements.py` — REST CRUD para cleanup en tests de aceptación
+- `services/cultivation/refinement/` — agente + tools + templates
+
+### Punto de partida al retomar
+
+1. Crear `WorkRefinement` + store + migración.
+2. Crear `api/work_refinements.py` con DELETE para cleanup de tests.
+3. Implementar `finalize_refinement` tool (ADR-009 pattern) con su template Jinja2.
+4. Implementar el `refinement_advisor` como agente libre con `RequestInput` HITL.
+5. Wiring en `factory.py` y `main.py`.
+6. Tests de aceptación BDD (escenario: usuario sube foto → asistente analiza → usuario confirma → wiki escrita).
+
+---
+
+## FUTURE-012 — Plan de desarrollo artístico del bonsai ✅ Implementado
 
 **Contexto:**
 El sistema gestiona fertilización y fitosanitarios pero carece de la dimensión artística: fase de desarrollo, objetivo de diseño, estilo y calendario de trabajos técnicos estacionales (alambrado, defoliación, pinzamiento, poda de estructura...). Esta iniciativa añade el `DevelopmentPlan` como tercer tipo de plan junto a `FertilizationPlan` y `PhytosanitaryPlan`.

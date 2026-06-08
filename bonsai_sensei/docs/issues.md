@@ -1,14 +1,12 @@
 # Issues Conocidos
 
-## ISSUE-002 — El contexto de conversación se pierde demasiado rápido
+## ~~ISSUE-002~~ — RESUELTO: contexto de conversación
 
-**Síntoma:** Tras una conversación corta (unos pocos intercambios con llamadas a tools), el sistema pierde el contexto de lo que se estaba discutiendo. El siguiente mensaje se trata como si la conversación acabara de empezar.
+**Resuelto en:** migración a ADK `EventsCompactionConfig` (ventana deslizante).
 
-**Causa raíz:** La sesión se resetea cuando `len(session.events) > MAX_SESSION_EVENTS` (actualmente 50). Un único turno de agente con tool calls puede generar 5–10 eventos (mensaje de usuario, respuesta del modelo, tool call, respuesta del tool, respuesta final del modelo). Una conversación de 5–6 pasos puede alcanzar el límite. Al resetear, la sesión se recrea solo con `current_date`, `next_saturday` y `user_location` — no se lleva ningún resumen de conversación hacia adelante.
+**Solución:** El advisor usa `EventsCompactionConfig(compaction_interval=5, overlap_size=2)` — ADK compacta automáticamente el historial de eventos cada 5 turnos manteniendo 2 de solapamiento. No hay reset duro ni pérdida de contexto.
 
-**Workaround:** Ninguno. Los usuarios deben re-contextualizar tras un reset.
-
-**Relacionado:** `bonsai_sensei/domain/services/advisor.py` (`MAX_SESSION_EVENTS`, `_sync_session`), ADR-004.
+**Relacionado:** `bonsai_sensei/domain/services/advisor.py` (`_COMPACTION_INTERVAL`, `_COMPACTION_OVERLAP`), ADR-004.
 
 ---
 

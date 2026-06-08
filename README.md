@@ -55,6 +55,10 @@ docker compose up
 
 Requires a `.env` file at project root. See each service README for required variables.
 
+## Docs
+
+- [Planning workflow](planning-workflow.md) — multi-step ADK HITL workflow for cultivation plans (fertilization, phytosanitary, design)
+
 ## Repository structure
 
 ```
