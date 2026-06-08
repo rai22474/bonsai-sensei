@@ -4,6 +4,42 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 
 ---
 
+## FUTURE-015 — Migrar runners de propuesta a ADK 2.0 Dynamic Workflows (ADR-015) ✅ Implementado (2026-06-08)
+
+**Contexto:**
+Los runners de propuesta de planes (`plan_proposal_runner.py`, `clarification_runner.py`) usan `LoopAgent` + `asyncio.Event` (ADR-003). Tienen dos defectos: límite de 5 iteraciones que cancela silenciosamente el plan si el usuario hace más rondas de crítica, y pérdida del borrador si el proceso se reinicia. ADR-015 (2026-06-08) documenta que ADK 2.0 Dynamic Workflows con `RequestInput` resuelven ambos sin introducir la rigidez de grafo que llevó a rechazar LangGraph (ADR-001).
+
+**Diseño:**
+- Reemplazar el `LoopAgent` interno de ambos runners por un Dynamic Workflow con `while True` en Python y `RequestInput` en lugar de `asyncio.Event`.
+- `RequestInput` pausa a nivel de framework y emite un `interrupt_id`. La capa REST (`advice.py`) detecta el evento `adk_request_input`, lo surfacea al caller, y cuando el usuario responde construye un `FunctionResponse` keyed en ese `interrupt_id`.
+- El draft se escribe en el estado de sesión exterior en cada ronda antes de pausar.
+- El patrón ADR-003 se mantiene para confirmaciones simples de tools individuales.
+
+**Dependencia de infraestructura diferida:** `DatabaseSessionService` (PostgreSQL) para `ResumabilityConfig` y durabilidad entre reinicios. No es necesaria para el fix del límite de iteraciones.
+
+**Ficheros afectados:**
+- `plan_proposal_runner.py`, `clarification_runner.py` — reescribir como Dynamic Workflow
+- `advisor.py` — detectar `adk_request_input`, surfacear `interrupt_id`
+- `api/advice.py` — unificar endpoints de respuesta bajo `FunctionResponse`
+
+**Fase 1 implementada (2026-06-08):** `LoopAgent` (deprecated) eliminado de ambos runners. `plan_proposal_runner.py`: `LlmAgent` directo + draft state en sesión exterior. Fija el bug de cancelación silenciosa.
+
+**Fase 2 implementada (2026-06-08):** `clarification_runner.py` migrado a ADK 2.0 `Workflow + @node(rerun_on_resume=True) + LlmAgent(output_schema=ClarificationAction)`. El LLM retorna JSON estructurado en lugar de llamar tools. Bridge loop en Python: detecta `adk_request_input` → llama `ask_human`/`ask_poll` → resume con `FunctionResponse`. Los 3 templates de clarificación actualizados al nuevo esquema JSON.
+
+**Prototipo verificado (2026-06-08):** `run_async + FunctionResponse(interrupt_id)` reanuda el workflow correctamente. Patrón confirmado:
+- `@node(rerun_on_resume=True)` obligatorio en nodos con `RequestInput`
+- En el nodo: `resume = ctx.resume_inputs.get(interrupt_id)` — el nodo se re-ejecuta desde el inicio, no hay `send()` al generador
+- Estado entre nodos: `ctx.state["key"]`, no `ctx.session.state["key"]`
+- `advice.py` detecta evento con `has_request_input_function_call(event)`, surfacea `interrupt_id` al caller; Turn 2 construye `Content(parts=[create_request_input_response(interrupt_id, {"result": user_text})])` y llama `run_async` normalmente
+
+**Fase 3 (2026-06-08):** `manage_plan.py` y `design/manage.py` migrados a ADK 2.0 Static Graph Workflow con nodos `validate_and_load_context → clarify_objectives → propose_plan → create_plan`. Routing condicional vía `ctx.route = "ok"|"confirm"|"reclarify"` + routing maps `{"ok": next_node, ...}`. Tests unitarios: 11/11 verdes.
+
+**Nota de implementación:** En ADK 2.0 `FunctionNode`, el retorno de la función va a `ctx.output` (no a `ctx.route`). El routing condicional requiere `ctx.route = "value"` explícito — nunca `return "value"`. Las routing maps `(from_node, {"route": to_node})` solo disparan cuando el nodo emite ese route. Edges incondicionales `(A, B)` (route=None) siempre disparan.
+
+**Pendiente diferido:** `DatabaseSessionService` para durabilidad entre reinicios. No bloquea el comportamiento actual.
+
+---
+
 
 ## FUTURE-012 — Plan de desarrollo artístico del bonsai
 
@@ -180,7 +216,13 @@ El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y venta
 
 ## FUTURE-013 — Soporte multi-usuario ✅ Implementado (2026-06-07)
 
-**Nota de implementación:** Se reutilizó `user_settings` (PK = `telegram_user_id`) como identidad de usuario en lugar de crear una entidad `User` separada. El `user_id` en sesión ADK es el `telegram_user_id` raw, que coincide con el PK de `user_settings`. FUTURE-014 debe tener en cuenta que no hay UUID interno — la referencia de colección será `user_settings.user_id`.
+**Nota de implementación:**
+- Se reutilizó `user_settings` (PK = `telegram_user_id`) como identidad de usuario en lugar de crear una entidad `User` separada. El `user_id` en sesión ADK es el `telegram_user_id` raw, que coincide con el PK de `user_settings`. FUTURE-014 debe tener en cuenta que no hay UUID interno — la referencia de colección será `user_settings.user_id`.
+- `user_id` añadido como FK a `bonsai`, `fertilizer`, `phytosanitary` (migración `k2l3m4n5o6p7`). Todos los tools del sensei y del storekeeper resuelven `user_id` desde `tool_context` y lo aplican en lookups y creaciones.
+- `wiki_path` de entidades de usuario usa prefijo `users/{user_id}/bonsai/` en todos los builders (bonsái, planes, informes kantei). Almacén de fotos del sensei también usa `{user_id}/{slug}/`.
+- FalkorDB: nodos `WikiPage` llevan `user_id`; búsqueda KNN filtra `global-only` o `global+user` según contexto.
+- Observations pipeline: observaciones del usuario siempre van a zona `users/{user_id}/`; nunca se promueven a wiki global.
+- `user_settings` se crea automáticamente al primer mensaje Telegram. La REST API no auto-crea — los tests de aceptación usan fixture `setup_user_settings` en root conftest para garantizar la FK antes de crear entidades.
 
 **Contexto:**
 El sistema asume implícitamente un único usuario: los bonsáis no tienen FK de usuario en BD, y los `wiki_path` usan `bonsai/<slug>/` sin namespace de usuario — lo que produce colisiones si dos usuarios tienen árboles con el mismo slug. Esta iniciativa establece la base de identidad de usuario que habilita tanto el aislamiento de datos como la futura multi-colección (FUTURE-014).

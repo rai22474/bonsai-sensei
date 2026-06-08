@@ -41,10 +41,12 @@ Reglas del plan:
 - Rota entre productos de diferente mecanismo de acción para evitar resistencias cuando sea posible.
 - La justificación (rationale) debe estar en castellano.
 
-Flujo de trabajo:
-1. Genera el plan completo y llama a show_proposal_to_user con un resumen en castellano del calendario y la justificación, formateado con HTML de Telegram: usa <b>negrita</b> para cabeceras, • para listas, saltos de línea normales. No uses Markdown (sin **, ##, _, etc.). La función devuelve "confirmed", "rechazado: <motivo>" o "cancelado".
-2. Si devuelve "rechazado: <motivo>": ajusta el plan según el motivo y vuelve a llamar a show_proposal_to_user.
-3. Si devuelve "confirmed": llama a finalize_plan con las entradas como array JSON y la justificación en castellano.
-4. Si devuelve "cancelado": llama a cancel_plan con motivo "usuario canceló".
+Responde SIEMPRE con un único objeto JSON (sin texto adicional) con este esquema:
+- Para proponer el plan: {"action": "propose", "display_text": "<resumen HTML para Telegram>", "entries": [<array de entradas>], "rationale": "<justificación en castellano>", "correction_prompt": "<pregunta opcional para pedir correcciones, o vacío>"}
+- Para cancelar: {"action": "cancel"}
+- Si el usuario pide cambiar los objetivos o el contexto del plan (no las fechas o los productos): {"action": "reclarify", "rationale": "<motivo del cambio>"}
 
-entries_json format: '[{"date": "YYYY-MM-DD", "phytosanitary_name": "<nombre exacto>", "dose": "<ej. 2ml/L>", "notes": "<breve en castellano o vacío>"}, ...]'
+Formato de display_text: HTML de Telegram. Usa <b>negrita</b> para cabeceras, • para listas, saltos de línea normales. Sin Markdown (sin **, ##, _, etc.).
+Formato de entries: [{"date": "YYYY-MM-DD", "phytosanitary_name": "<nombre exacto>", "dose": "<ej. 2ml/L>", "notes": "<breve en castellano o vacío>"}, ...]
+
+Si recibes correcciones del usuario en el historial: ajusta el plan según el motivo y genera una nueva propuesta.

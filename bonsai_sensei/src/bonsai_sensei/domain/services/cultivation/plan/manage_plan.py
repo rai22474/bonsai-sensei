@@ -1,8 +1,12 @@
+import uuid
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable
 
 from google.adk.tools.tool_context import ToolContext
+from google.adk.workflow import START, Workflow, node
+from google.adk.runners import InMemoryRunner
+from google.genai import types
 from jinja2 import Environment, FileSystemLoader
 
 from bonsai_sensei.domain.planned_work import PlannedWork
@@ -57,33 +61,51 @@ def create_manage_plan_tool(
         end_date: str,
         tool_context: ToolContext | None = None,
     ) -> dict:
-        try:
-            date.fromisoformat(start_date)
-            date.fromisoformat(end_date)
-        except ValueError:
-            return {"status": "error", "message": "invalid_date_format"}
+        outer_tool_context = tool_context
 
-        bonsai = get_bonsai_by_name_func(bonsai_name)
-        if not bonsai:
-            return {"status": "error", "message": "bonsai_not_found"}
+        @node
+        async def validate_and_load_context(ctx):
+            try:
+                date.fromisoformat(start_date)
+                date.fromisoformat(end_date)
+            except ValueError:
+                ctx.state["error"] = "invalid_date_format"
+                return "error"
 
-        bonsai_user_id = bonsai.user_id or "default"
-        products = list_products_func(user_id=bonsai_user_id)
-        if not products:
-            return {"status": "error", "message": no_products_error}
+            bonsai = get_bonsai_by_name_func(bonsai_name)
+            if not bonsai:
+                ctx.state["error"] = "bonsai_not_found"
+                return "error"
 
-        existing_plan = get_active_plan_func(bonsai_id=bonsai.id)
-        slug = bonsai_slug(bonsai_name)
-        bonsai_context = load_bonsai_plan_context(
-            bonsai=bonsai,
-            bonsai_name=bonsai_name,
-            list_bonsai_events_func=list_bonsai_events_func,
-            list_wiki_files_func=list_wiki_files_func,
-            read_wiki_page_func=read_wiki_page_func,
-        )
+            bonsai_user_id = bonsai.user_id or "default"
+            products = list_products_func(user_id=bonsai_user_id)
+            if not products:
+                ctx.state["error"] = no_products_error
+                return "error"
 
-        clarification = await run_clarification_loop(
-            rendered_prompt=clarification_prompt_template.render(
+            existing_plan = get_active_plan_func(bonsai_id=bonsai.id)
+            bonsai_context = load_bonsai_plan_context(
+                bonsai=bonsai,
+                bonsai_name=bonsai_name,
+                list_bonsai_events_func=list_bonsai_events_func,
+                list_wiki_files_func=list_wiki_files_func,
+                read_wiki_page_func=read_wiki_page_func,
+            )
+            ctx.state["bonsai"] = bonsai
+            ctx.state["bonsai_user_id"] = bonsai_user_id
+            ctx.state["products"] = products
+            ctx.state["bonsai_context"] = bonsai_context
+            ctx.state["existing_plan"] = existing_plan
+            ctx.state["existing_plan_wiki"] = read_wiki_content(existing_plan.wiki_path, read_wiki_page_func) if existing_plan else ""
+            ctx.route = "ok"
+
+        @node
+        async def clarify_objectives(ctx):
+            products = ctx.state["products"]
+            bonsai_context = ctx.state["bonsai_context"]
+            reclarify_reason = ctx.state.get("reclarify_reason", "")
+
+            rendered_prompt = clarification_prompt_template.render(
                 bonsai_name=bonsai_name,
                 start_date=start_date,
                 end_date=end_date,
@@ -91,16 +113,27 @@ def create_manage_plan_tool(
                 events=bonsai_context["events"],
                 reports=bonsai_context["reports"],
                 bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
-                existing_plan_content=read_wiki_content(existing_plan.wiki_path, read_wiki_page_func) if existing_plan else "",
-            ),
-            outer_tool_context=tool_context,
-        )
+                existing_plan_content=ctx.state.get("existing_plan_wiki", ""),
+                reclarify_reason=reclarify_reason,
+            )
+            clarification = await run_clarification_loop(rendered_prompt, outer_tool_context)
 
-        if clarification.get("cancelled"):
-            return {"status": "cancelled", "reason": "user_cancelled_during_clarification"}
+            if clarification.get("cancelled"):
+                ctx.state["cancelled"] = True
+                ctx.state["cancel_reason"] = "user_cancelled_during_clarification"
+                return
 
-        proposal = await run_plan_proposal(
-            rendered_prompt=plan_proposal_prompt_template.render(
+            ctx.state["clarification"] = clarification
+            ctx.state["reclarify_reason"] = ""
+            ctx.route = "ok"
+
+        @node
+        async def propose_plan(ctx):
+            products = ctx.state["products"]
+            bonsai_context = ctx.state["bonsai_context"]
+            clarification = ctx.state["clarification"]
+
+            rendered_prompt = plan_proposal_prompt_template.render(
                 bonsai_name=bonsai_name,
                 start_date=start_date,
                 end_date=end_date,
@@ -113,70 +146,121 @@ def create_manage_plan_tool(
                 product_pages=_load_product_wiki_pages(products, read_wiki_page_func),
                 reports=bonsai_context["reports"],
                 bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
-            ),
-            outer_tool_context=tool_context,
-        )
-        if proposal.get("cancelled"):
-            return {"status": "cancelled", "reason": proposal.get("reason", "")}
-
-        entries = proposal["entries"]
-        rationale = proposal["rationale"]
-
-        if existing_plan:
-            _abandon_existing_plan(existing_plan, delete_future_planned_works_func, update_plan_func, read_wiki_page_func, write_wiki_page_func)
-
-        wiki_path = f"users/{bonsai_user_id}/bonsai/{slug}/{wiki_path_prefix}/{start_date[:7]}_to_{end_date[:7]}.md"
-
-        plan = create_plan_func(
-            plan_class(
-                bonsai_id=bonsai.id,
-                period_start=date.fromisoformat(start_date),
-                period_end=date.fromisoformat(end_date),
-                status="active",
-                goal=clarification["objectives"],
-                wiki_path=wiki_path,
             )
-        )
-        _create_planned_works(
-            bonsai_id=bonsai.id,
-            plan_id=plan.id,
-            entries=entries,
-            plan_id_kwarg=plan_id_kwarg,
-            work_type=work_type,
-            product_id_key=product_id_key,
-            product_name_key=product_name_key,
-            get_product_by_name_func=get_product_by_name_func,
-            create_planned_work_func=create_planned_work_func,
-        )
+            proposal = await run_plan_proposal(rendered_prompt, outer_tool_context)
 
-        write_wiki_page_func(
-            path=wiki_path,
-            content=plan_wiki_page_template.render(
-                bonsai_name=bonsai_name,
-                period_start=start_date,
-                period_end=end_date,
-                status="active",
-                created_at=date.today().isoformat(),
-                rationale=rationale,
+            if proposal.get("cancelled"):
+                ctx.state["cancelled"] = True
+                ctx.state["cancel_reason"] = proposal.get("reason", "")
+                return
+
+            if proposal.get("reclarify"):
+                ctx.state["reclarify_reason"] = proposal.get("reason", "")
+                ctx.route = "reclarify"
+                return
+
+            ctx.state["proposal"] = proposal
+            ctx.route = "confirm"
+
+        @node
+        async def create_plan(ctx):
+            proposal = ctx.state["proposal"]
+            clarification = ctx.state["clarification"]
+            bonsai = ctx.state["bonsai"]
+            bonsai_user_id = ctx.state["bonsai_user_id"]
+            existing_plan = ctx.state.get("existing_plan")
+            entries = proposal["entries"]
+            rationale = proposal["rationale"]
+            slug = bonsai_slug(bonsai_name)
+
+            if existing_plan:
+                _abandon_existing_plan(existing_plan, delete_future_planned_works_func, update_plan_func, read_wiki_page_func, write_wiki_page_func)
+
+            wiki_path = f"users/{bonsai_user_id}/bonsai/{slug}/{wiki_path_prefix}/{start_date[:7]}_to_{end_date[:7]}.md"
+            plan = create_plan_func(
+                plan_class(
+                    bonsai_id=bonsai.id,
+                    period_start=date.fromisoformat(start_date),
+                    period_end=date.fromisoformat(end_date),
+                    status="active",
+                    goal=clarification["objectives"],
+                    wiki_path=wiki_path,
+                )
+            )
+            _create_planned_works(
+                bonsai_id=bonsai.id,
+                plan_id=plan.id,
                 entries=entries,
-            ),
-        )
-        _update_plans_index(bonsai_name, slug, bonsai_user_id, plan, start_date, end_date, wiki_path_prefix, plans_index_wiki_template, write_wiki_page_func)
+                plan_id_kwarg=plan_id_kwarg,
+                work_type=work_type,
+                product_id_key=product_id_key,
+                product_name_key=product_name_key,
+                get_product_by_name_func=get_product_by_name_func,
+                create_planned_work_func=create_planned_work_func,
+            )
+            write_wiki_page_func(
+                path=wiki_path,
+                content=plan_wiki_page_template.render(
+                    bonsai_name=bonsai_name,
+                    period_start=start_date,
+                    period_end=end_date,
+                    status="active",
+                    created_at=date.today().isoformat(),
+                    rationale=rationale,
+                    entries=entries,
+                ),
+            )
+            _update_plans_index(bonsai_name, slug, bonsai_user_id, plan, start_date, end_date, wiki_path_prefix, plans_index_wiki_template, write_wiki_page_func)
 
-        return {
-            "status": "success",
-            "plan_id": plan.id,
-            "wiki_path": wiki_path,
-            "period": f"{start_date} → {end_date}",
-            "applications": [
-                {
-                    "date": entry["date"],
-                    product_response_label: entry[product_name_key],
-                    "dose": entry.get("dose", ""),
-                }
-                for entry in entries
+            ctx.state["plan_result"] = {
+                "status": "success",
+                "plan_id": plan.id,
+                "wiki_path": wiki_path,
+                "period": f"{start_date} → {end_date}",
+                "applications": [
+                    {
+                        "date": entry["date"],
+                        product_response_label: entry[product_name_key],
+                        "dose": entry.get("dose", ""),
+                    }
+                    for entry in entries
+                ],
+            }
+
+        wf = Workflow(
+            name=f"{tool_name}_wf",
+            edges=[
+                (START, validate_and_load_context),
+                (validate_and_load_context, {"ok": clarify_objectives}),
+                (clarify_objectives, {"ok": propose_plan}),
+                (propose_plan, {"confirm": create_plan, "reclarify": clarify_objectives}),
             ],
-        }
+        )
+        runner = InMemoryRunner(node=wf)
+        session_id = str(uuid.uuid4())
+        await runner.session_service.create_session(
+            app_name=runner.app_name,
+            user_id=runner.app_name,
+            session_id=session_id,
+        )
+        async for _ in runner.run_async(
+            user_id=runner.app_name,
+            session_id=session_id,
+            new_message=types.Content(role="user", parts=[types.Part(text="begin")]),
+        ):
+            pass
+
+        session = await runner.session_service.get_session(
+            app_name=runner.app_name,
+            user_id=runner.app_name,
+            session_id=session_id,
+        )
+        state = session.state if session else {}
+        if state.get("error"):
+            return {"status": "error", "message": state["error"]}
+        if state.get("cancelled"):
+            return {"status": "cancelled", "reason": state.get("cancel_reason", "")}
+        return state.get("plan_result", {"status": "error", "message": "plan_creation_failed"})
 
     manage_plan.__name__ = tool_name
     manage_plan.__doc__ = tool_docstring

@@ -2,7 +2,7 @@
 
 ## ADR-001 — Continuar con ADK; migración a LangGraph descartada
 
-**Estado:** Decidido
+**Estado:** Decidido. Enmendado por ADR-015 (2026-06-08): la afirmación "ADK no soporta HITL de forma nativa" ya no es válida en ADK 2.0.
 
 **Contexto:**
 El sistema se construyó originalmente con Google ADK. Se consideró migrar a LangGraph para usar su mecanismo `interrupt`, que permite pausar la ejecución de un grafo en mitad de un nodo y reanudarla exactamente donde se detuvo tras recibir input del usuario. Esto habría habilitado un human-in-the-loop real dentro de la ejecución de un plan, algo que ADK no soporta de forma nativa.
@@ -424,3 +424,52 @@ ORDER BY score DESC LIMIT 10
 - `save_entry` y `search_by_embedding` son callables ligados al grafo, propagados via DI a dreamer, wiki_editor, admin_bot y api.
 - Los unit tests usan `MagicMock` para `falkordb.Graph` — sin dependencia de FalkorDB real en tests.
 
+---
+
+## ADR-015 — Migración a ADK 2.0: Dynamic Workflows y RequestInput para HITL iterativo
+
+**Estado:** Decidido (2026-06-08). Enmienda ADR-001.
+
+**Contexto:**
+ADR-001 rechazó LangGraph's `interrupt()` porque imponía graph wiring estricto. La solución alternativa fue la suspensión async de tools (ADR-003), que funciona para confirmaciones simples pero tiene dos defectos en flujos de propuesta iterativos (crear plan → criticar → refinar → repetir hasta confirmar):
+
+1. `_MAX_ITERATIONS = 5` en el `LoopAgent` impone un techo artificial — si el usuario necesita más de 5 rondas de crítica, el plan se cancela silenciosamente.
+2. El draft vive únicamente en el `InMemoryRunner` privado del runner de propuesta. Un crash entre iteraciones pierde el borrador sin posibilidad de recuperación.
+
+Al migrar a ADK 2.0, se descubrió que los **Dynamic Workflows** (nuevo en 2.0) resuelven exactamente estos dos problemas sin introducir la rigidez de grafo que llevó a rechazar LangGraph.
+
+**Decisión:**
+Migrar los runners de propuesta y clarificación (`plan_proposal_runner.py`, `clarification_runner.py`) a ADK 2.0 Dynamic Workflows con `RequestInput`. El patrón `LoopAgent` + `asyncio.Event` (ADR-003) se mantiene para confirmaciones simples de tools individuales (`delete_bonsai`, `create_fertilizer`, etc.) — esos tools son interacción única y no se benefician de checkpointing.
+
+**Por qué Dynamic Workflows y no static Graph Workflows:**
+Los static Graph Workflows requieren enumerar todas las transiciones como `edges` explícitas. Los Dynamic Workflows usan control de flujo Python ordinario (`while`, `if/else`, `await`): el ciclo propuesta→`RequestInput`→confirmar/refinar es un `while True` en Python. No hay rigidez de aristas. El criterio de rechazo de ADR-001 (graph wiring estricto) no aplica a Dynamic Workflows.
+
+**Mecanismo de `RequestInput`:**
+`RequestInput` pausa el workflow a nivel de framework, no via `asyncio.Event`. El runner emite un evento `adk_request_input` con un `interrupt_id`. Para reanudar, el caller envía un nuevo turn cuyo `new_message` contiene un `FunctionResponse` con ese `interrupt_id`. Un mensaje de texto plano inicia una nueva invocación — no reanuda el workflow suspendido.
+
+**Impacto en la capa de integración Telegram/REST:**
+
+Ficheros que cambian:
+- `advisor.py` — `_generate_advise` debe detectar el evento `adk_request_input` y surfacear el `interrupt_id` al caller en lugar de seguir el loop normal.
+- `api/advice.py` — los endpoints de interrupción actuales (`/confirmations/{id}/accept`, `/text-response`, etc.) se reemplazan por un único endpoint que construye el `types.Content` con `FunctionResponse` keyed en el `interrupt_id` y llama `advisor(...)` con él.
+
+Ficheros que NO cambian:
+- El patrón de llamada `runner.run_async(user_id, session_id, new_message)` — igual que ahora.
+- Gestión de sesión, detección de sesión obsoleta, flujo de upload de fotos.
+- El handler de Telegram — sigue enviando mensajes y recibiendo respuestas.
+
+**ResumabilityConfig y durabilidad entre reinicios:**
+ADK 2.0 ofrece `ResumabilityConfig` para replay de sub-agentes completados tras un crash. Requiere `DatabaseSessionService` (PostgreSQL). El proyecto usa `InMemorySessionService` hoy — esta mejora queda diferida. La migración a Dynamic Workflows mejora ya el problema de las 5 iteraciones y la transparencia del draft sin necesitar `DatabaseSessionService`.
+
+**Consecuencias:**
+- El techo de 5 iteraciones desaparece — el loop de crítica puede ser tan largo como el usuario necesite.
+- El draft se puede escribir en el estado de sesión exterior en cada ronda de `RequestInput`, dando visibilidad y base para recuperación futura.
+- El patrón ADR-003 (`asyncio.Event`) queda como mecanismo para confirmaciones simples únicamente. No se elimina — se limita a su caso de uso correcto.
+- ADR-001 queda enmendado: la afirmación "ADK no soporta HITL de forma nativa" ya no es válida en ADK 2.0.
+- Trabajo futuro: cuando se añada `DatabaseSessionService`, combinar con `ResumabilityConfig` para durabilidad completa entre reinicios de proceso.
+
+**Referencia de implementación:**
+- `bonsai_sensei/src/bonsai_sensei/domain/services/cultivation/plan/plan_proposal_runner.py` — reescribir como Dynamic Workflow
+- `bonsai_sensei/src/bonsai_sensei/domain/services/cultivation/plan/clarification_runner.py` — ídem
+- `bonsai_sensei/src/bonsai_sensei/domain/services/advisor.py` — detectar `adk_request_input`
+- `bonsai_sensei/src/bonsai_sensei/api/advice.py` — unificar endpoints de respuesta bajo `FunctionResponse`
