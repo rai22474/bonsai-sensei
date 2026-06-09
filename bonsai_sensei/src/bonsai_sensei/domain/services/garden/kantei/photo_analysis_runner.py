@@ -1,11 +1,9 @@
-import uuid
 from typing import Callable
 
-from google.adk.agents.llm_agent import Agent
-from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
 from bonsai_sensei.domain.services.extract_text_from_events import extract_text_from_events
+from bonsai_sensei.domain.services.llm_runner import create_single_turn_llm_runner
 
 _APP_NAME = "photo_analysis"
 _MAX_LLM_CALLS = 8
@@ -38,21 +36,15 @@ _PROMPTS = {
 
 def create_photo_analysis_runner(model: object, search_wiki_knowledge: Callable | None = None) -> Callable:
     tools = [search_wiki_knowledge] if search_wiki_knowledge is not None else []
+    run_llm = create_single_turn_llm_runner(
+        model=model,
+        app_name=_APP_NAME,
+        instruction=_ANALYSIS_INSTRUCTION,
+        tools=tools,
+        max_llm_calls=_MAX_LLM_CALLS,
+    )
 
     async def run_photo_analysis(photo_bytes: bytes, analysis_type: str) -> str:
-        agent = Agent(
-            model=model,
-            name=_APP_NAME,
-            instruction=_ANALYSIS_INSTRUCTION,
-            tools=tools,
-        )
-        runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
-        session_id = str(uuid.uuid4())
-        await runner.session_service.create_session(
-            app_name=_APP_NAME,
-            user_id=_APP_NAME,
-            session_id=session_id,
-        )
         message = types.Content(
             role="user",
             parts=[
@@ -60,11 +52,6 @@ def create_photo_analysis_runner(model: object, search_wiki_knowledge: Callable 
                 types.Part(text=_PROMPTS[analysis_type]),
             ],
         )
-        return await extract_text_from_events(runner.run_async(
-            user_id=_APP_NAME,
-            session_id=session_id,
-            new_message=message,
-            run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS),
-        ))
+        return await extract_text_from_events(run_llm(message))
 
     return run_photo_analysis

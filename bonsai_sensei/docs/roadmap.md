@@ -180,7 +180,7 @@ Mimamori genera reflexiones independientes cada día. Si el usuario mencionó ay
 
 ---
 
-## FUTURE-020 — Extraer boilerplate de InMemoryRunner a factory compartida
+## ~~FUTURE-020~~ — Extraer boilerplate de InMemoryRunner a factory compartida ✅
 
 **Contexto:**
 El patrón `Agent → InMemoryRunner → create_session → run_async` está copiado en ~12 ficheros:
@@ -221,11 +221,14 @@ Encaja con el patrón CLAUDE.md: factory como composition root, `run` como closu
 - `advisor.py` + `mimamori_agent_runner.py` — usan `Runner` real con `memory_service` (variante distinta)
 - `clarification_runner.py` — marcado para reescritura por ADR-015
 
-### Punto de partida al retomar
+### Implementado
 
-1. Crear `domain/services/llm_runner.py` con `create_single_turn_llm_runner`.
-2. Migrar los ~12 runners uno a uno, verificando tests unitarios y de aceptación tras cada migración.
-3. No tocar `advisor.py`, `mimamori_agent_runner.py`, ni `clarification_runner.py`.
+`domain/services/llm_runner.py` creado con `create_single_turn_llm_runner` (async generator pattern).
+
+Migrados 7 runners: `fertilizer_recommendation_runner.py`, `phytosanitary_recommendation_runner.py`, `plan_evaluation_runner.py`, `photo_comparison_runner.py`, `photo_analysis_runner.py`, `pest_wiki_compiler.py`, `species_wiki_compiler.py`.
+
+No migrados por per-call tool state: `fertilizer_wiki_compiler.py`, `phytosanitary_wiki_compiler.py`, `pest_catalog_seeder.py`.
+No tocados por diseño: `advisor.py`, `mimamori_agent_runner.py`, `clarification_runner.py`, `manage_plan.py`, `design/manage.py`, `plan_proposal_runner.py` (Workflow runners o ADR-015).
 
 ---
 
@@ -287,31 +290,107 @@ Ambos agentes son pure side-effect (no yieldan eventos). Para que Python los tra
 
 ---
 
-## FUTURE-011 — Generación de imágenes de referencia para el plan de diseño
+## FUTURE-011 — DesignVision: visión artística evolutiva del bonsái
 
 **Contexto:**
-El agente de plan de diseño produce un texto con técnicas y ventanas temporales. Para objetivos visuales ("afinar ápice", "dar movimiento al primer tramo") una imagen de referencia aporta información que el texto no puede transmitir. El usuario necesita ver, no solo leer.
+El agente de plan de diseño produce un calendario de trabajos técnicos, pero carece de ancla visual. El usuario necesita ver cómo evolucionará el árbol como obra artística antes de planificar. Esta iniciativa introduce `DesignVision` como entidad que captura esa visión mediante un diálogo abierto y una cadena de sketches generados por IA. El `DevelopmentPlan` se crea *a partir* de la visión, no al revés.
 
-**Dos sub-opciones a evaluar:**
+---
 
-**Opción A — Imagen de referencia estética** (recomendada como punto de partida):
-- Tool `generate_design_image(description, bonsai_id)` en el agente de plan de diseño
-- Llama a Imagen API con un prompt construido a partir del objetivo + especie + estilo
-- Guarda resultado en `gallery/design-references/`
-- El agente incrusta la referencia en el wiki plan (`design-plan.md`) como imagen inline
-- Mínimo código nuevo; máxima libertad conversacional; misma lógica que Opción B del dominio (wiki first)
+### Entidad `DesignVision`
 
-**Opción B — Diagrama técnico anotado sobre foto real** (segunda iteración si Opción A valida el flujo):
-- El agente recupera la foto más reciente del árbol desde galería
-- Envía foto + descripción de técnica a Gemini multimodal
-- Gemini devuelve imagen con marcas superpuestas (dirección de alambre, cortes de poda)
-- Más útil para el usuario; más complejo; requiere que el árbol tenga fotos en galería
+```
+DesignVision
+  id
+  bonsai_id       FK → bonsai
+  status          "active" | "archived"
+  created_at
+  archived_at     nullable
+  wiki_path       ruta al directorio de sketches dentro del plan (design-plans/{periodo}/)
 
-**Recomendación:** Implementar Opción A primero. Migrar a Opción B si la referencia estética resulta insuficiente o si el usuario pide anotaciones sobre su árbol real.
+DesignVisionPhase
+  id
+  design_vision_id  FK → design_vision
+  phase_order       int (0 = estado actual, 1..N = fases intermedias, -1 = visión final)
+  label             str  (ej. "temporada 1", "temporada 2", "visión final")
+  description       str  (descripción textual del objetivo de esta fase)
+  sketch_path       ruta al archivo de imagen generado
+```
 
-**Prompts:** Los prompts de generación están versionados en [`docs/image_prompts.md`](image_prompts.md). `sketch-from-photo-v2` (activo) — transforma foto en sketch de tinta b/n con fidelidad estructural estricta al tronco real. v1 supersedido: idealizaba el tronco.
+Un árbol tiene como máximo una `DesignVision` con `status = "active"`. Cuando se sustituye, la anterior pasa a `archived`.
 
-**Dependencia:** FUTURE-012 implementado ✅ (el agente de plan de diseño es el host natural de este tool).
+---
+
+### Cadena de sketches
+
+Cada fase se materializa como un sketch de tinta generado por Imagen API:
+
+- **Fase 0 (estado actual):** foto real más reciente de galería → Imagen API con prompt `sketch-from-photo-v2` → sketch inicial fiel al árbol real.
+- **Fases intermedias y final:** sketch de la fase anterior → Imagen API con prompt que incorpora descripción textual del objetivo + principios de diseño de la especie + reglas de estilo desde wiki → sketch evolucionado.
+
+Los sketches no se regeneran desde foto real; se encadenan desde el sketch anterior. Esto mantiene la coherencia estructural a lo largo de la secuencia.
+
+**Riesgo técnico:** la cadena requiere que Imagen API soporte image-to-image editing (imagen entrada + instrucción textual). Verificar disponibilidad en `google.genai` antes de implementar. Alternativa si no disponible: texto → imagen pura para fases intermedias, aceptando menos fidelidad estructural.
+
+---
+
+### Flujo de creación
+
+Se invoca como parte del tool "crear plan de diseño". Si el árbol ya tiene una `DesignVision` activa, se salta la sesión y se usa directamente para crear el `DevelopmentPlan`.
+
+1. **Check:** ¿existe `DesignVision` activa para el árbol?
+   - Sí → ir directamente a creación del `DevelopmentPlan` con la visión existente.
+   - No → ejecutar sesión de diseño visual.
+
+2. **Sesión de diseño visual** (diálogo abierto, sin preguntas rígidas):
+   - El sistema genera el sketch inicial (fase 0) a partir de la foto más reciente.
+   - El sistema sugiere posibilidades de diseño basadas en wiki de especie + estilo objetivo + técnicas disponibles.
+   - Diálogo libre: el usuario describe qué quiere que sea el árbol como obra artística. El sistema hace preguntas solo si necesita clarificación.
+   - El sistema propone un número de fases con descripción textual de cada una.
+   - Para cada fase acordada: genera el sketch correspondiente encadenando desde el anterior.
+   - El usuario aprueba o pide ajustes en la descripción textual (no en la imagen directamente — texto primero, imagen al final de cada fase).
+
+3. **Persistencia:** se crea `DesignVision` + `DesignVisionPhase` por cada fase. Los sketches se guardan en `users/{user_id}/bonsai/{slug}/design-plans/{periodo}/sketches/`.
+
+4. **Creación del `DevelopmentPlan`:** el LLM recibe el sketch de la fase 0 + sketch de la fase objetivo (la siguiente en la secuencia) en paralelo (comparación multimodal) → infiere la brecha visual → genera el calendario de trabajos técnicos para cerrar esa brecha.
+
+---
+
+### Comparación multimodal para generar trabajos
+
+El LLM recibe ambas imágenes (estado actual + objetivo de fase) vía `types.Part(inline_data=...)` más el contexto textual de la fase. Razona visualmente sobre la brecha (dirección de ramas, densidad de follaje, proporción tronco/copa, etc.) y produce la lista de técnicas necesarias para la temporada.
+
+---
+
+### Relación con el plan de fertilización
+
+El `DevelopmentPlan` generado incluye los trabajos técnicos. El plan de fertilización se crea por separado a partir de ese plan, de forma explícita por el usuario, respetando ADR-011 (sin encadenamiento implícito).
+
+---
+
+### Wiki structure
+
+```
+users/{user_id}/bonsai/{slug}/design-plans/{periodo}/
+  design-plan.md          ← wiki del DevelopmentPlan (existente)
+  sketches/
+    00-estado-actual.png
+    01-temporada-1.png
+    02-temporada-2.png
+    final.png
+```
+
+---
+
+### Prompts
+
+Los prompts de generación están versionados en [`docs/image_prompts.md`](image_prompts.md):
+- `sketch-from-photo-v2` (activo) — foto real → sketch inicial fiel al tronco real.
+- Pendiente: prompt para evolución de sketch (fase anterior → fase siguiente). Diseñar cuando se confirme soporte image-to-image en Imagen API.
+
+---
+
+**Dependencia:** FUTURE-012 implementado ✅. Verificar soporte image-to-image en `google.genai` Imagen API antes de comenzar la implementación de la cadena de sketches.
 
 ---
 

@@ -1,11 +1,9 @@
 import re
-import uuid
 from typing import Callable
 
-from google.adk.agents.llm_agent import Agent
-from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
+from bonsai_sensei.domain.services.llm_runner import create_single_turn_llm_runner
 from bonsai_sensei.infrastructure.wiki_client import create_http_read_wiki_page_tool, create_http_write_wiki_page_tool
 
 _APP_NAME = "wiki_compiler"
@@ -46,12 +44,12 @@ def create_species_wiki_compiler(
     read_wiki_page = create_http_read_wiki_page_tool(kb_base_url)
     write_wiki_page = create_http_write_wiki_page_tool(kb_base_url)
     search_tool = _create_search_tool(searcher)
-
-    compiler_agent = Agent(
+    run_llm = create_single_turn_llm_runner(
         model=model,
-        name="wiki_compiler",
+        app_name=_APP_NAME,
         instruction=_COMPILER_INSTRUCTION,
         tools=[search_tool, write_wiki_page],
+        max_llm_calls=_MAX_LLM_CALLS,
     )
 
     async def compile_species_page(common_name: str, scientific_name: str, user_instructions: str = "") -> str:
@@ -59,27 +57,13 @@ def create_species_wiki_compiler(
         relative_path = f"species/{slug}.md"
         existing_content_result = read_wiki_page(path=relative_path)
         existing_content = existing_content_result.get("content") if existing_content_result.get("status") == "success" else None
-        runner = InMemoryRunner(agent=compiler_agent, app_name=_APP_NAME)
-        session_id = str(uuid.uuid4())
-        await runner.session_service.create_session(
-            app_name=_APP_NAME,
-            user_id=_APP_NAME,
-            session_id=session_id,
-        )
         prompt = _build_compile_prompt(common_name, scientific_name, relative_path, existing_content, user_instructions)
         message = types.Content(role="user", parts=[types.Part(text=prompt)])
-        run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)
-        async for _ in runner.run_async(
-            user_id=_APP_NAME,
-            session_id=session_id,
-            new_message=message,
-            run_config=run_config,
-        ):
+        async for _ in run_llm(message):
             pass
         return relative_path
 
     return compile_species_page
-
 
 
 def _create_search_tool(searcher: Callable[[str], dict]) -> Callable:

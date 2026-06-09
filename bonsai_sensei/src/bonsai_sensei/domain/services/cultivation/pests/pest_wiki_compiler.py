@@ -1,11 +1,9 @@
 import re
-import uuid
 from typing import Callable
 
-from google.adk.agents.llm_agent import Agent
-from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
+from bonsai_sensei.domain.services.llm_runner import create_single_turn_llm_runner
 from bonsai_sensei.infrastructure.wiki_client import create_http_read_wiki_page_tool, create_http_write_wiki_page_tool
 
 _APP_NAME = "pest_wiki_compiler"
@@ -45,35 +43,22 @@ def create_pest_wiki_compiler(
     read_wiki_page = create_http_read_wiki_page_tool(kb_base_url)
     write_wiki_page = create_http_write_wiki_page_tool(kb_base_url)
     search_tool = _create_search_tool(searcher)
+    run_llm = create_single_turn_llm_runner(
+        model=model,
+        app_name=_APP_NAME,
+        instruction=_COMPILER_INSTRUCTION,
+        tools=[search_tool, write_wiki_page],
+        max_llm_calls=_MAX_LLM_CALLS,
+    )
 
     async def compile_pest_page(name: str, user_instructions: str = "") -> str:
         slug = _slugify(name)
         relative_path = f"pests/{slug}.md"
         existing_content_result = read_wiki_page(path=relative_path)
         existing_content = existing_content_result.get("content") if existing_content_result.get("status") == "success" else None
-
-        agent = Agent(
-            model=model,
-            name=_APP_NAME,
-            instruction=_COMPILER_INSTRUCTION,
-            tools=[search_tool, write_wiki_page],
-        )
-        runner = InMemoryRunner(agent=agent, app_name=_APP_NAME)
-        session_id = str(uuid.uuid4())
-        await runner.session_service.create_session(
-            app_name=_APP_NAME,
-            user_id=_APP_NAME,
-            session_id=session_id,
-        )
         prompt = _build_compile_prompt(name, relative_path, existing_content, user_instructions)
         message = types.Content(role="user", parts=[types.Part(text=prompt)])
-        run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)
-        async for _ in runner.run_async(
-            user_id=_APP_NAME,
-            session_id=session_id,
-            new_message=message,
-            run_config=run_config,
-        ):
+        async for _ in run_llm(message):
             pass
         return relative_path
 
