@@ -57,3 +57,21 @@ Además, puede haber varias fotos de un mismo árbol que analizar. La tool actua
 - El agente de diagnóstico debe recibir: datos de la especie (nombre científico, requisitos de cuidado, problemas típicos) + historial de eventos recientes del árbol + descripciones visuales de sus fotos.
 
 **Relacionado:** `bonsai_sensei/domain/services/kantei/`, `bonsai_sensei/domain/services/garden/analyze_bonsai_photo.py`.
+
+---
+
+## ISSUE-010 — Sin feedback tras responder una encuesta (poll)
+
+**Síntoma:** Cuando el usuario selecciona una opción en una encuesta de Telegram, la interfaz queda en silencio hasta que el sistema termina de procesar y devuelve la respuesta. No hay ningún mensaje de "procesando..." ni indicador de actividad. La experiencia es confusa: el usuario no sabe si su selección fue registrada.
+
+**Causa raíz:** `handle_poll_answer` ([handle_poll_answer.py](../src/bonsai_sensei/telegram/handle_poll_answer.py)) al recibir la respuesta solo llama `pending["event"].set()` sin enviar ningún mensaje ni activar el indicador de escritura (`send_chat_action`). El flujo de mensajes de texto, en cambio, sí muestra feedback inmediato.
+
+**Workaround:** Ninguno. El usuario debe esperar en silencio.
+
+**Objetivo:** En `handle_poll_answer`, justo antes de `pending["event"].set()`, enviar feedback al usuario. Dos opciones:
+1. `bot.send_chat_action(chat_id, action="typing")` — indicador nativo de Telegram, no requiere texto adicional.
+2. Enviar un mensaje breve ("Recibido, procesando...") — más explícito pero añade ruido visual.
+
+La opción 1 es preferible: el indicador de escritura desaparece solo cuando llega la respuesta real, sin ruido. Para implementarla, `handle_poll_answer` necesita acceso al `chat_id` del usuario — añadir un `user_id_to_chat_id: dict` (ya debe existir o es trivial derivarlo de `poll_id_to_user_id`) y `send_typing_action: Callable` como dependencias inyectadas.
+
+**Relacionado:** `bonsai_sensei/telegram/handle_poll_answer.py`, `bonsai_sensei/telegram/bot.py`.

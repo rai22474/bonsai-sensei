@@ -1,59 +1,3 @@
-acceptance-db-1  | The files belonging to this database system will be owned by user "postgres".
-acceptance-db-1  | This user must also own the server process.
-acceptance-db-1  | 
-acceptance-db-1  | The database cluster will be initialized with locale "en_US.utf8".
-acceptance-db-1  | The default database encoding has accordingly been set to "UTF8".
-acceptance-db-1  | The default text search configuration will be set to "english".
-acceptance-db-1  | 
-acceptance-db-1  | Data page checksums are disabled.
-acceptance-db-1  | 
-acceptance-db-1  | fixing permissions on existing directory /var/lib/postgresql/data ... ok
-acceptance-db-1  | creating subdirectories ... ok
-acceptance-db-1  | selecting dynamic shared memory implementation ... posix
-acceptance-db-1  | selecting default max_connections ... 100
-acceptance-db-1  | selecting default shared_buffers ... 128MB
-acceptance-db-1  | selecting default time zone ... Etc/UTC
-acceptance-db-1  | creating configuration files ... ok
-acceptance-db-1  | running bootstrap script ... ok
-acceptance-db-1  | performing post-bootstrap initialization ... ok
-acceptance-db-1  | syncing data to disk ... ok
-acceptance-db-1  | 
-acceptance-db-1  | 
-acceptance-db-1  | Success. You can now start the database server using:
-acceptance-db-1  | 
-acceptance-db-1  |     pg_ctl -D /var/lib/postgresql/data -l logfile start
-acceptance-db-1  | 
-acceptance-db-1  | initdb: warning: enabling "trust" authentication for local connections
-acceptance-db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
-acceptance-db-1  | waiting for server to start....2026-06-08 14:21:17.283 UTC [56] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
-acceptance-db-1  | 2026-06-08 14:21:17.288 UTC [56] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-db-1  | 2026-06-08 14:21:17.317 UTC [59] LOG:  database system was shut down at 2026-06-08 14:21:14 UTC
-acceptance-db-1  | 2026-06-08 14:21:17.369 UTC [56] LOG:  database system is ready to accept connections
-acceptance-db-1  |  done
-acceptance-db-1  | server started
-acceptance-db-1  | CREATE DATABASE
-acceptance-db-1  | 
-acceptance-db-1  | 
-acceptance-db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-acceptance-db-1  | 
-acceptance-db-1  | waiting for server to shut down....2026-06-08 14:21:17.682 UTC [56] LOG:  received fast shutdown request
-acceptance-db-1  | 2026-06-08 14:21:17.686 UTC [56] LOG:  aborting any active transactions
-acceptance-db-1  | 2026-06-08 14:21:17.693 UTC [56] LOG:  background worker "logical replication launcher" (PID 62) exited with exit code 1
-acceptance-db-1  | 2026-06-08 14:21:17.695 UTC [57] LOG:  shutting down
-acceptance-db-1  | 2026-06-08 14:21:17.698 UTC [57] LOG:  checkpoint starting: shutdown immediate
-acceptance-db-1  | 2026-06-08 14:21:17.892 UTC [57] LOG:  checkpoint complete: wrote 918 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.056 s, sync=0.123 s, total=0.197 s; sync files=301, longest=0.012 s, average=0.001 s; distance=4222 kB, estimate=4222 kB
-acceptance-db-1  | 2026-06-08 14:21:18.015 UTC [56] LOG:  database system is shut down
-acceptance-db-1  |  done
-acceptance-db-1  | server stopped
-acceptance-db-1  | 
-acceptance-db-1  | PostgreSQL init process complete; ready for start up.
-acceptance-db-1  | 
-acceptance-db-1  | 2026-06-08 14:21:18.176 UTC [1] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
-acceptance-db-1  | 2026-06-08 14:21:18.176 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-acceptance-db-1  | 2026-06-08 14:21:18.176 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-acceptance-db-1  | 2026-06-08 14:21:18.187 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-acceptance-db-1  | 2026-06-08 14:21:18.206 UTC [72] LOG:  database system was shut down at 2026-06-08 14:21:17 UTC
-acceptance-db-1  | 2026-06-08 14:21:18.221 UTC [1] LOG:  database system is ready to accept connections
 acceptance-kb-stub-1  | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
 acceptance-kb-stub-1  | 
 acceptance-kb-stub-1  | [notice] A new release of pip is available: 25.0.1 -> 26.1.2
@@ -62,8 +6,20 @@ acceptance-kb-stub-1  | INFO:     Started server process [1]
 acceptance-kb-stub-1  | INFO:     Waiting for application startup.
 acceptance-kb-stub-1  | INFO:     Application startup complete.
 acceptance-kb-stub-1  | INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-acceptance-kb-stub-1  | INFO:     192.168.48.4:48444 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
-acceptance-kb-stub-1  | INFO:     192.168.48.4:53858 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:59350 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:59352 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:59358 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:59370 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:44180 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:44194 - "GET /api/wiki?path=species%2Fficus-retusa.md HTTP/1.1" 404 Not Found
+acceptance-kb-stub-1  | INFO:     192.168.144.4:44198 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:44200 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:44208 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:36112 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:36128 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
+acceptance-kb-stub-1  | INFO:     192.168.144.4:36130 - "GET /api/wiki?path=species%2Fficus-retusa.md HTTP/1.1" 404 Not Found
+acceptance-kb-stub-1  | INFO:     192.168.144.4:36134 - "GET /api/wiki?path=species%2Fficus.md HTTP/1.1" 404 Not Found
+acceptance-kb-stub-1  | INFO:     192.168.144.4:36144 - "POST /api/wiki/index/search HTTP/1.1" 200 OK
 acceptance-sensei-1   | INFO:__main__:Running database migrations...
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Will assume transactional DDL.
@@ -78,58 +34,195 @@ acceptance-sensei-1   | INFO  [alembic.runtime.migration] Running upgrade f1a2b3
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Running upgrade g1h2i3j4k5l6 -> h1i2j3k4l5m6, add_category_to_species
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Running upgrade h1i2j3k4l5m6 -> i1j2k3l4m5n6, add_pest
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Running upgrade i1j2k3l4m5n6 -> j1k2l3m4n5o6, add_development_plan
+acceptance-db-1       | The files belonging to this database system will be owned by user "postgres".
+acceptance-db-1       | This user must also own the server process.
+acceptance-db-1       | 
+acceptance-db-1       | The database cluster will be initialized with locale "en_US.utf8".
+acceptance-db-1       | The default database encoding has accordingly been set to "UTF8".
+acceptance-db-1       | The default text search configuration will be set to "english".
+acceptance-db-1       | 
+acceptance-db-1       | Data page checksums are disabled.
+acceptance-db-1       | 
+acceptance-db-1       | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+acceptance-db-1       | creating subdirectories ... ok
+acceptance-db-1       | selecting dynamic shared memory implementation ... posix
+acceptance-db-1       | selecting default max_connections ... 100
+acceptance-db-1       | selecting default shared_buffers ... 128MB
+acceptance-db-1       | selecting default time zone ... Etc/UTC
+acceptance-db-1       | creating configuration files ... ok
+acceptance-db-1       | running bootstrap script ... ok
+acceptance-db-1       | performing post-bootstrap initialization ... ok
 acceptance-sensei-1   | INFO  [alembic.runtime.migration] Running upgrade j1k2l3m4n5o6 -> k2l3m4n5o6p7, add_user_id_to_entities
 acceptance-sensei-1   | INFO:     Started server process [1]
 acceptance-sensei-1   | INFO:     Waiting for application startup.
-acceptance-sensei-1   | 2026-06-08 14:21:36,355 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=http://jaeger:4317
-acceptance-sensei-1   | 2026-06-08 14:21:36,355 - bonsai_sensei.telegram.bot - WARNING - No bot token provided. Bot will not function.
-acceptance-sensei-1   | /app/bonsai_sensei/domain/services/advisor.py:64: UserWarning: [EXPERIMENTAL] EventsCompactionConfig: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
+acceptance-sensei-1   | 2026-06-09 14:58:02,495 - bonsai_sensei.observability - INFO - OpenTelemetry initialized: service=bonsai-sensei env=production destination=http://jaeger:4317
+acceptance-sensei-1   | 2026-06-09 14:58:02,495 - bonsai_sensei.telegram.bot - WARNING - No bot token provided. Bot will not function.
+acceptance-sensei-1   | /app/bonsai_sensei/domain/services/sensei/advisor.py:64: UserWarning: [EXPERIMENTAL] EventsCompactionConfig: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
 acceptance-sensei-1   |   events_compaction_config=EventsCompactionConfig(
+acceptance-db-1       | syncing data to disk ... ok
+acceptance-db-1       | 
+acceptance-db-1       | 
+acceptance-db-1       | Success. You can now start the database server using:
 acceptance-sensei-1   | /app/.venv/lib/python3.12/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
 acceptance-sensei-1   |   warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
-acceptance-sensei-1   | 2026-06-08 14:21:36,475 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-acceptance-sensei-1   | 2026-06-08 14:21:36,475 - apscheduler.scheduler - INFO - Added job "_dispatch_mimamori" to job store "default"
-acceptance-sensei-1   | 2026-06-08 14:21:36,475 - apscheduler.scheduler - INFO - Scheduler started
+acceptance-sensei-1   | 2026-06-09 14:58:02,593 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+acceptance-sensei-1   | 2026-06-09 14:58:02,594 - apscheduler.scheduler - INFO - Added job "_dispatch_mimamori" to job store "default"
+acceptance-db-1       | 
+acceptance-db-1       |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+acceptance-db-1       | 
+acceptance-db-1       | initdb: warning: enabling "trust" authentication for local connections
+acceptance-db-1       | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+acceptance-sensei-1   | 2026-06-09 14:58:02,594 - apscheduler.scheduler - INFO - Scheduler started
 acceptance-sensei-1   | INFO:     Application startup complete.
+acceptance-db-1       | waiting for server to start....2026-06-09 14:57:51.037 UTC [48] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+acceptance-db-1       | 2026-06-09 14:57:51.043 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-db-1       | 2026-06-09 14:57:51.055 UTC [51] LOG:  database system was shut down at 2026-06-09 14:57:50 UTC
+acceptance-db-1       | 2026-06-09 14:57:51.063 UTC [48] LOG:  database system is ready to accept connections
+acceptance-db-1       |  done
+acceptance-db-1       | server started
+acceptance-db-1       | CREATE DATABASE
+acceptance-db-1       | 
+acceptance-db-1       | 
 acceptance-sensei-1   | INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-acceptance-sensei-1   | INFO:     192.168.48.1:34920 - "GET /health HTTP/1.1" 200 OK
-acceptance-sensei-1   | 2026-06-08 14:21:46,445 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.16s.
-acceptance-sensei-1   | INFO:     192.168.48.1:50240 - "GET /health HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:50252 - "PUT /api/users/bdd-protect-885eb095e8a049f89235f789ca4f551a/settings HTTP/1.1" 200 OK
-acceptance-sensei-1   | 2026-06-08 14:21:53,262 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
-acceptance-sensei-1   | INFO:     192.168.48.1:50254 - "POST /api/species HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:50266 - "POST /api/bonsai HTTP/1.1" 200 OK
-acceptance-sensei-1   | 2026-06-08 14:21:56,491 - bonsai_sensei.api.advice - INFO - *** Advice request received: user_id=bdd-protect-885eb095e8a049f89235f789ca4f551a text=Dime si mis bonsais deben estar protegidos esta noche en Madrid ***
+acceptance-sensei-1   | INFO:     192.168.144.1:60840 - "GET /health HTTP/1.1" 200 OK
+acceptance-db-1       | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+acceptance-db-1       | 
+acceptance-sensei-1   | 2026-06-09 14:58:17,676 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.15s.
+acceptance-sensei-1   | 2026-06-09 14:58:20,703 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 3.22s.
+acceptance-sensei-1   | INFO:     192.168.144.1:40620 - "GET /health HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40622 - "PUT /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40634 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40650 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40656 - "POST /api/bonsai/1/planned-works HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40664 - "POST /api/mimamori/trigger HTTP/1.1" 200 OK
+acceptance-sensei-1   | 2026-06-09 14:58:22,834 - bonsai_sensei.domain.services.mimamori.runner - INFO - Running mimamori for user_id=weekend-reminder-test-user
 acceptance-sensei-1   | /app/.venv/lib/python3.12/site-packages/google/adk/tools/function_tool.py:95: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
 acceptance-sensei-1   |   build_function_declaration(
-acceptance-sensei-1   | 2026-06-08 14:21:56,550 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:21:58,271 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 0.85s.
-acceptance-sensei-1   | 2026-06-08 14:21:58,476 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | 2026-06-08 14:21:58,478 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:21:58,478 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-acceptance-sensei-1   | 2026-06-08 14:22:01,137 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | 2026-06-08 14:22:01,152 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 3.94s.
-acceptance-sensei-1   | 2026-06-08 14:22:02,165 - bonsai_sensei.domain.services.cultivation.weather.weather - INFO - Weather result: Weather in Madrid: Current: Clear, 8°C. Min/Max: 6°C/12°C. Max Frost Chance: 0%. Hourly: 00:00h: 7°C; 03:00h: 6°C; 06:00h: 8°C
-acceptance-sensei-1   | 2026-06-08 14:22:02,166 - google_adk.google.adk.runners - INFO - Closing runner...
-acceptance-sensei-1   | 2026-06-08 14:22:02,166 - google_adk.google.adk.runners - INFO - Runner closed.
-acceptance-sensei-1   | 2026-06-08 14:22:02,180 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:22:04,048 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | 2026-06-08 14:22:04,068 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:22:05,092 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
-acceptance-sensei-1   | 2026-06-08 14:22:06,546 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | 2026-06-08 14:22:06,641 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:22:09,314 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | 2026-06-08 14:22:09,336 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
-acceptance-sensei-1   | 2026-06-08 14:22:10,103 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.11s.
-acceptance-sensei-1   | 2026-06-08 14:22:12,768 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
-acceptance-sensei-1   | INFO:     192.168.48.1:50268 - "POST /api/advice HTTP/1.1" 200 OK
-acceptance-sensei-1   | 2026-06-08 14:22:17,944 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
-acceptance-sensei-1   | 2026-06-08 14:22:25,226 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.00s.
-acceptance-sensei-1   | 2026-06-08 14:22:32,438 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
-acceptance-sensei-1   | INFO:     192.168.48.1:52680 - "GET /api/bonsai HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:52690 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:41028 - "GET /api/species HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:41030 - "DELETE /api/species/1 HTTP/1.1" 200 OK
-acceptance-sensei-1   | INFO:     192.168.48.1:41042 - "DELETE /api/advice/sessions/bdd-protect-885eb095e8a049f89235f789ca4f551a HTTP/1.1" 204 No Content
-acceptance-sensei-1   | INFO:     192.168.48.1:41052 - "DELETE /api/users/bdd-protect-885eb095e8a049f89235f789ca4f551a/settings HTTP/1.1" 200 OK
-acceptance-sensei-1   | 2026-06-08 14:24:52,142 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 0.89s.
+acceptance-sensei-1   | 2026-06-09 14:58:22,898 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-db-1       | waiting for server to shut down....2026-06-09 14:57:51.322 UTC [48] LOG:  received fast shutdown request
+acceptance-db-1       | 2026-06-09 14:57:51.326 UTC [48] LOG:  aborting any active transactions
+acceptance-db-1       | 2026-06-09 14:57:51.334 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+acceptance-db-1       | 2026-06-09 14:57:51.336 UTC [49] LOG:  shutting down
+acceptance-db-1       | 2026-06-09 14:57:51.340 UTC [49] LOG:  checkpoint starting: shutdown immediate
+acceptance-sensei-1   | 2026-06-09 14:58:23,924 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-sensei-1   | 2026-06-09 14:58:28,933 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 0.99s.
+acceptance-sensei-1   | 2026-06-09 14:58:29,833 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:29,835 - bonsai_sensei.telegram.bot - ERROR - Cannot send message: Bot not configured
+acceptance-sensei-1   | INFO:     192.168.144.1:40672 - "GET /api/bonsai/1/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40674 - "GET /api/bonsai/1/development-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40682 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40692 - "DELETE /api/bonsai/1 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40704 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-db-1       | 2026-06-09 14:57:52.019 UTC [49] LOG:  checkpoint complete: wrote 918 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.100 s, sync=0.561 s, total=0.683 s; sync files=301, longest=0.154 s, average=0.002 s; distance=4222 kB, estimate=4222 kB
+acceptance-db-1       | 2026-06-09 14:57:52.035 UTC [48] LOG:  database system is shut down
+acceptance-db-1       |  done
+acceptance-sensei-1   | INFO:     192.168.144.1:40710 - "DELETE /api/species/1 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40724 - "DELETE /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40736 - "PUT /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40752 - "POST /api/mimamori/trigger HTTP/1.1" 200 OK
+acceptance-sensei-1   | 2026-06-09 14:58:29,951 - bonsai_sensei.domain.services.mimamori.runner - INFO - Running mimamori for user_id=weekend-reminder-test-user
+acceptance-sensei-1   | 2026-06-09 14:58:29,957 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:36,540 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-db-1       | server stopped
+acceptance-db-1       | 
+acceptance-db-1       | PostgreSQL init process complete; ready for start up.
+acceptance-db-1       | 
+acceptance-db-1       | 2026-06-09 14:57:52.106 UTC [1] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+acceptance-db-1       | 2026-06-09 14:57:52.106 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+acceptance-db-1       | 2026-06-09 14:57:52.106 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+acceptance-db-1       | 2026-06-09 14:57:52.113 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+acceptance-db-1       | 2026-06-09 14:57:52.122 UTC [64] LOG:  database system was shut down at 2026-06-09 14:57:52 UTC
+acceptance-db-1       | 2026-06-09 14:57:52.131 UTC [1] LOG:  database system is ready to accept connections
+acceptance-sensei-1   | 2026-06-09 14:58:38,600 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:38,601 - bonsai_sensei.telegram.bot - ERROR - Cannot send message: Bot not configured
+acceptance-sensei-1   | INFO:     192.168.144.1:42132 - "DELETE /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42148 - "PUT /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42164 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42176 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42186 - "POST /api/bonsai/2/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42190 - "POST /api/bonsai/2/development-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:42192 - "POST /api/mimamori/trigger HTTP/1.1" 200 OK
+acceptance-sensei-1   | 2026-06-09 14:58:38,842 - bonsai_sensei.domain.services.mimamori.runner - INFO - Running mimamori for user_id=weekend-reminder-test-user
+acceptance-sensei-1   | 2026-06-09 14:58:38,847 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:41,566 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.15s.
+acceptance-sensei-1   | 2026-06-09 14:58:42,165 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:42,189 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:43,681 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:43,706 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:45,505 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:45,523 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:47,904 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:47,926 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:49,415 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-sensei-1   | 2026-06-09 14:58:50,196 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:50,222 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:58:54,429 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 1.17s.
+acceptance-sensei-1   | 2026-06-09 14:58:57,324 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:58:57,326 - bonsai_sensei.telegram.bot - ERROR - Cannot send message: Bot not configured
+acceptance-sensei-1   | INFO:     192.168.144.1:34882 - "GET /api/bonsai/2/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34888 - "DELETE /api/fertilization-plans/1 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34898 - "GET /api/bonsai/2/development-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34912 - "DELETE /api/development-plans/1 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34914 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34928 - "DELETE /api/bonsai/2 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34930 - "GET /api/species/search?name=Pinus+Sylvestris HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34940 - "DELETE /api/species/2 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34942 - "DELETE /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34946 - "PUT /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34954 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34956 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34972 - "POST /api/bonsai/3/events HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34978 - "POST /api/bonsai/3/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:34994 - "POST /api/mimamori/trigger HTTP/1.1" 200 OK
+acceptance-sensei-1   | 2026-06-09 14:58:57,536 - bonsai_sensei.domain.services.mimamori.runner - INFO - Running mimamori for user_id=weekend-reminder-test-user
+acceptance-sensei-1   | 2026-06-09 14:58:57,541 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:00,754 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:00,786 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:02,238 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:02,275 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:02,469 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-sensei-1   | 2026-06-09 14:59:04,012 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:04,062 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:07,593 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 0.98s.
+acceptance-sensei-1   | 2026-06-09 14:59:10,354 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:10,356 - bonsai_sensei.telegram.bot - ERROR - Cannot send message: Bot not configured
+acceptance-sensei-1   | INFO:     192.168.144.1:40278 - "GET /api/bonsai/3/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40286 - "DELETE /api/fertilization-plans/2 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40298 - "GET /api/bonsai/3/development-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40314 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40322 - "DELETE /api/bonsai/3 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40324 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40332 - "DELETE /api/species/3 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40346 - "DELETE /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40352 - "PUT /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40354 - "POST /api/species HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40362 - "POST /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40370 - "POST /api/bonsai/4/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:40378 - "POST /api/mimamori/trigger HTTP/1.1" 200 OK
+acceptance-sensei-1   | 2026-06-09 14:59:10,538 - bonsai_sensei.domain.services.mimamori.runner - INFO - Running mimamori for user_id=weekend-reminder-test-user
+acceptance-sensei-1   | 2026-06-09 14:59:10,543 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:13,530 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:13,548 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:14,913 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:14,940 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:15,124 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-sensei-1   | 2026-06-09 14:59:16,954 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:16,974 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:17,948 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:17,972 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:18,744 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:18,762 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:19,772 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:19,784 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-3-flash-preview, backend: GoogleLLMVariant.GEMINI_API, stream: False
+acceptance-sensei-1   | 2026-06-09 14:59:20,167 - opentelemetry.exporter.otlp.proto.grpc.exporter - WARNING - Transient error StatusCode.UNAVAILABLE encountered while exporting traces to jaeger:4317, retrying in 0.82s.
+acceptance-sensei-1   | 2026-06-09 14:59:26,621 - opentelemetry.exporter.otlp.proto.grpc.exporter - ERROR - Failed to export traces to jaeger:4317, error code: StatusCode.UNAVAILABLE
+acceptance-sensei-1   | 2026-06-09 14:59:27,295 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+acceptance-sensei-1   | 2026-06-09 14:59:27,296 - bonsai_sensei.telegram.bot - ERROR - Cannot send message: Bot not configured
+acceptance-sensei-1   | INFO:     192.168.144.1:59168 - "GET /api/bonsai/4/fertilization-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59182 - "DELETE /api/fertilization-plans/3 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59198 - "GET /api/bonsai/4/development-plans HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59212 - "GET /api/bonsai HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59218 - "DELETE /api/bonsai/4 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59234 - "GET /api/species/search?name=Ficus+Retusa HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59240 - "DELETE /api/species/4 HTTP/1.1" 200 OK
+acceptance-sensei-1   | INFO:     192.168.144.1:59250 - "DELETE /api/users/weekend-reminder-test-user/settings HTTP/1.1" 200 OK
