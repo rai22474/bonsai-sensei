@@ -8,7 +8,7 @@ __pycache__/
 .venv
 .vscode
 *.log
-acceptance-tests/docker-compose.logs.txt
+bonsai_sensei/tests/acceptance/docker-compose.logs.txt
 postgres_data/
 ollama_data/
 /wiki/
@@ -17,5 +17,3 @@ photos/
 photos*/
 
 .monocle/
-acceptance-tests/docker-compose.logs.txt
-acceptance-tests/docker-compose.logs.txt
