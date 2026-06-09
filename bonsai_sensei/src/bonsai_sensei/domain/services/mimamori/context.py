@@ -24,6 +24,9 @@ def build_bonsai_snapshots(
     list_bonsai_events_func: Callable,
     get_active_development_plan_func: Callable,
     get_active_fertilization_plan_func: Callable,
+    get_recent_unlinked_pest_events_func: Callable,
+    get_recently_abandoned_fertilization_plans_func: Callable,
+    get_recently_abandoned_development_plans_func: Callable,
 ) -> list[dict]:
     snapshots = []
     for bonsai in bonsais:
@@ -36,6 +39,13 @@ def build_bonsai_snapshots(
             and fert_plan is not None
             and dev_plan.created_at > fert_plan.created_at
         )
+        unlinked_pests = get_recent_unlinked_pest_events_func(bonsai_id=bonsai.id, hours=720)
+        abandoned_fert = get_recently_abandoned_fertilization_plans_func(bonsai_id=bonsai.id)
+        abandoned_dev = get_recently_abandoned_development_plans_func(bonsai_id=bonsai.id)
+        plans_pending_recreation = (
+            (["fertilization"] if abandoned_fert else [])
+            + (["design"] if abandoned_dev else [])
+        )
         snapshots.append({
             "name": bonsai.name,
             "species_name": species_map.get(bonsai.species_id, "Especie desconocida"),
@@ -46,6 +56,10 @@ def build_bonsai_snapshots(
             "fertilization_outdated": fertilization_outdated,
             "fertilization_plan_goal": fert_plan.goal if fert_plan and fertilization_outdated else None,
             "current_design_goal": dev_plan.design_goal if dev_plan and fertilization_outdated else None,
+            "unlinked_pest_names": [event.payload.get("pest_name") for event in unlinked_pests],
+            "fertilization_at_risk": bool(unlinked_pests) and fert_plan is not None,
+            "design_at_risk": bool(unlinked_pests) and dev_plan is not None,
+            "plans_pending_recreation": plans_pending_recreation,
         })
     return snapshots
 

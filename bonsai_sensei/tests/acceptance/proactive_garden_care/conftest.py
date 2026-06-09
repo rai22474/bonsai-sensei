@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from pytest_bdd import given, parsers
@@ -7,6 +7,7 @@ from design_plan.development_plans_api import delete_development_plan, list_deve
 from fertilization_plan.fertilization_plans_api import delete_fertilization_plan, list_fertilization_plans
 from http_client import delete, get, post, put
 from manage_bonsai.bonsai_api import create_bonsai, delete_bonsai_by_name
+from manage_bonsai.bonsai_events_api import record_bonsai_event
 from manage_species.species_api import create_species, delete_species_by_name
 
 TEST_USER_ID = "weekend-reminder-test-user"
@@ -96,6 +97,43 @@ def create_newer_design_plan(context, bonsai_name):
         "period_end": (date.today() + timedelta(days=365)).isoformat(),
         "status": "active",
         "wiki_path": f"bonsai/test/design-plans/{bonsai_id}-newer.md",
+    })
+
+
+@given(parsers.parse('"{bonsai_name}" has a recent unlinked pest detection for "{pest_name}"'))
+def create_unlinked_pest_detection(context, bonsai_name, pest_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    record_bonsai_event(
+        post_func=post,
+        bonsai_id=bonsai_id,
+        event_type="pest_detection",
+        payload={"pest_name": pest_name},
+    )
+
+
+@given(parsers.parse('"{bonsai_name}" has an active fertilization plan'))
+def create_active_fertilization_plan(context, bonsai_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    post(f"/api/bonsai/{bonsai_id}/fertilization-plans", {
+        "bonsai_id": bonsai_id,
+        "period_start": date.today().isoformat(),
+        "period_end": (date.today() + timedelta(days=120)).isoformat(),
+        "status": "active",
+        "wiki_path": f"bonsai/test/plans/{bonsai_id}-active.md",
+    })
+
+
+@given(parsers.parse('"{bonsai_name}" has a recently abandoned fertilization plan due to disease'))
+def create_abandoned_fertilization_plan_due_to_disease(context, bonsai_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    post(f"/api/bonsai/{bonsai_id}/fertilization-plans", {
+        "bonsai_id": bonsai_id,
+        "period_start": (date.today() - timedelta(days=30)).isoformat(),
+        "period_end": (date.today() + timedelta(days=90)).isoformat(),
+        "status": "abandoned",
+        "abandonment_reason": "disease_pause: araña roja",
+        "abandoned_at": datetime.now(timezone.utc).isoformat(),
+        "wiki_path": f"bonsai/test/plans/{bonsai_id}-abandoned.md",
     })
 
 

@@ -7,6 +7,25 @@ Hoy es {{ current_date }}, {{ day_of_week }}. Temporada: {{ season }}.
 - **{{ bonsai.name }}**: el plan de diseño se actualizó (objetivo actual: {{ bonsai.current_design_goal }}) después de crear el plan de fertilización (objetivo original: {{ bonsai.fertilization_plan_goal }}).
 {% endfor %}
 {% endif %}
+{% set pests_at_risk = bonsais | selectattr("unlinked_pest_names") | list %}
+{% if pests_at_risk %}
+
+## ⚠️ Plagas activas sin tratar — planes en riesgo
+{% for bonsai in pests_at_risk %}
+{% if bonsai.fertilization_at_risk or bonsai.design_at_risk %}
+- **{{ bonsai.name }}**: plaga{{ 's' if bonsai.unlinked_pest_names | length > 1 else '' }} sin tratar ({{ bonsai.unlinked_pest_names | join(', ') }}).{% if bonsai.fertilization_at_risk %} Plan de fertilización activo puede agravar el estrés.{% endif %}{% if bonsai.design_at_risk %} Trabajos de diseño pendientes pueden agravar el estrés.{% endif %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% set recovering = bonsais | selectattr("plans_pending_recreation") | list %}
+{% if recovering %}
+
+## 🌱 Recuperación pendiente — recrear planes
+{% for bonsai in recovering %}
+- **{{ bonsai.name }}**: sin plagas activas. Planes abandonados por enfermedad pendientes de recrear: {{ bonsai.plans_pending_recreation | join(', ') }}.
+{% endfor %}
+{% endif %}
 
 ## Colección ({{ bonsais | length }} árbol{{ 'es' if bonsais | length != 1 else '' }})
 {% for bonsai in bonsais %}

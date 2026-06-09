@@ -467,6 +467,9 @@ async def lifespan(app: FastAPI):
         list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
         get_active_development_plan_func=services["development_plan"]["get_active_development_plan"],
         get_active_fertilization_plan_func=services["fertilization_plan"]["get_active_fertilization_plan"],
+        get_recent_unlinked_pest_events_func=services["bonsai_history"]["get_recent_unlinked_pest_events"],
+        get_recently_abandoned_fertilization_plans_func=services["fertilization_plan"]["get_recently_abandoned_fertilization_plans"],
+        get_recently_abandoned_development_plans_func=services["development_plan"]["get_recently_abandoned_development_plans"],
     )
     app.state.mimamori_build_reflection_context = partial(
         build_reflection_context,

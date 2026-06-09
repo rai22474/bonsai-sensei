@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from sqlmodel import Session, select
@@ -49,6 +50,24 @@ def update_development_plan(session: Session, plan: DevelopmentPlan) -> Developm
     db_plan.current_phase = plan.current_phase
     session.add(db_plan)
     return db_plan
+
+
+@with_session
+def get_recently_abandoned_development_plans(
+    session: Session,
+    bonsai_id: int,
+    days: int = 90,
+    reason_contains: str = "disease_pause",
+) -> List[DevelopmentPlan]:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    statement = (
+        select(DevelopmentPlan)
+        .where(DevelopmentPlan.bonsai_id == bonsai_id)
+        .where(DevelopmentPlan.status == "abandoned")
+        .where(DevelopmentPlan.abandoned_at >= cutoff)
+        .where(DevelopmentPlan.abandonment_reason.like(f"%{reason_contains}%"))
+    )
+    return session.exec(statement).all()
 
 
 @with_session

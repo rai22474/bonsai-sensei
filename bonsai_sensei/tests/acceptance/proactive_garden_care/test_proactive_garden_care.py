@@ -6,7 +6,7 @@ TEST_USER_ID = "weekend-reminder-test-user"
 
 
 @scenario(
-    "../features/weekend_plan_reminder.feature",
+    "../features/proactive_garden_care.feature",
     "User with planned works receives a daily reflection",
 )
 def test_user_with_planned_works():
@@ -14,7 +14,7 @@ def test_user_with_planned_works():
 
 
 @scenario(
-    "../features/weekend_plan_reminder.feature",
+    "../features/proactive_garden_care.feature",
     "User with no planned works receives a reflection",
 )
 def test_user_with_no_planned_works():
@@ -22,10 +22,26 @@ def test_user_with_no_planned_works():
 
 
 @scenario(
-    "../features/weekend_plan_reminder.feature",
+    "../features/proactive_garden_care.feature",
     "Mimamori alerts about fertilization plan misaligned with design plan",
 )
 def test_mimamori_alerts_fertilization_outdated():
+    return None
+
+
+@scenario(
+    "../features/proactive_garden_care.feature",
+    "Mimamori alerts when bonsai has untreated pest and active plans at risk",
+)
+def test_mimamori_alerts_pest_at_risk():
+    return None
+
+
+@scenario(
+    "../features/proactive_garden_care.feature",
+    "Mimamori suggests recreating plans after pest recovery",
+)
+def test_mimamori_suggests_plan_recreation_after_recovery():
     return None
 
 

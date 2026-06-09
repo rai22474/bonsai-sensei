@@ -66,6 +66,7 @@ def create_data_services(session_factory) -> dict:
             "get_active_fertilization_plan": partial(fertilization_plan_store.get_active_fertilization_plan, create_session=session_factory),
             "create_fertilization_plan": partial(fertilization_plan_store.create_fertilization_plan, create_session=session_factory),
             "delete_fertilization_plan": partial(fertilization_plan_store.delete_fertilization_plan, create_session=session_factory),
+            "get_recently_abandoned_fertilization_plans": partial(fertilization_plan_store.get_recently_abandoned_fertilization_plans, create_session=session_factory),
         },
         "phytosanitary_plan": {
             "list_phytosanitary_plans": partial(phytosanitary_plan_store.list_phytosanitary_plans, create_session=session_factory),
@@ -80,6 +81,7 @@ def create_data_services(session_factory) -> dict:
             "get_active_development_plan": partial(development_plan_store.get_active_development_plan, create_session=session_factory),
             "create_development_plan": partial(development_plan_store.create_development_plan, create_session=session_factory),
             "delete_development_plan": partial(development_plan_store.delete_development_plan, create_session=session_factory),
+            "get_recently_abandoned_development_plans": partial(development_plan_store.get_recently_abandoned_development_plans, create_session=session_factory),
         },
         "bonsai_photo": {
             "create_bonsai_photo": partial(bonsai_photo_store.create_bonsai_photo, create_session=session_factory),

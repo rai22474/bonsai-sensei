@@ -58,7 +58,7 @@ Wiki page en `users/{user_id}/bonsai/{slug}/refinements/{work_id}-{date}.md`. La
 
 ---
 
-## FUTURE-019 — Gestión de planes activos ante enfermedades y plagas
+## ~~FUTURE-019~~ — Gestión de planes activos ante enfermedades y plagas ✅
 
 **Contexto:**
 Cuando se detecta una enfermedad o plaga en un bonsái que tiene planes activos de fertilización y/o diseño, los planes pueden quedar desalineados con la realidad: un árbol enfermo no debe recibir fertilización intensa, y los trabajos de diseño (poda, alambrado) pueden agravar el estrés. Actualmente el sistema no tiene ningún mecanismo para alertar ni gestionar este escenario.
