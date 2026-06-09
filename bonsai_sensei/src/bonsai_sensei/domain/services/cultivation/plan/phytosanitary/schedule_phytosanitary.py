@@ -3,6 +3,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.cultivation.plan.works.schedule_work import schedule_work
+from bonsai_sensei.domain.services.human_input import resolve_bonsai_name
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -12,6 +13,7 @@ def create_schedule_phytosanitary_tool(
     run_plan_func: Callable,
     ask_selection: Callable,
     ask_human: Callable,
+    build_bonsai_name_question: Callable,
     build_type_question: Callable,
     build_type_options: Callable,
     build_period_question: Callable,
@@ -20,7 +22,7 @@ def create_schedule_phytosanitary_tool(
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
     async def schedule_phytosanitary(
-        bonsai_name: str,
+        bonsai_name: str | None = None,
         scheduled_date: str = "",
         period_start: str = "",
         period_end: str = "",
@@ -46,6 +48,8 @@ def create_schedule_phytosanitary_tool(
         Returns:
             A JSON-ready dictionary with status 'success', 'cancelled', or 'error'.
         """
+        bonsai_name = await resolve_bonsai_name(bonsai_name, ask_human, build_bonsai_name_question, tool_context)
+
         return await schedule_work(
             run_one_time_func=run_one_time_func,
             run_plan_func=run_plan_func,

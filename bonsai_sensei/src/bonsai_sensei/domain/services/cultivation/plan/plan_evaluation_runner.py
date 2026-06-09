@@ -6,6 +6,8 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
+from bonsai_sensei.domain.services.extract_text_from_events import extract_text_from_events
+
 _APP_NAME = "plan_evaluator"
 _MAX_LLM_CALLS = 3
 
@@ -19,17 +21,12 @@ def create_plan_evaluation_runner(model: object, instruction: str) -> Callable:
             app_name=_APP_NAME, user_id=_APP_NAME, session_id=session_id
         )
         message = types.Content(role="user", parts=[types.Part(text=context)])
-        response_parts = []
-        async for event in runner.run_async(
+        raw = await extract_text_from_events(runner.run_async(
             user_id=_APP_NAME,
             session_id=session_id,
             new_message=message,
             run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS),
-        ):
-            if event.content and hasattr(event.content, "parts"):
-                for part in event.content.parts:
-                    if hasattr(part, "text") and part.text:
-                        response_parts.append(part.text)
-        return json.loads("\n".join(response_parts))
+        ))
+        return json.loads(raw)
 
     return run_plan_evaluation

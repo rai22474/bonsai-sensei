@@ -98,3 +98,7 @@ def build_delete_confirmation(work) -> str:
     if builder:
         return builder(payload).format(date_str=date_str)
     return f"¿Eliminar trabajo '{work.work_type}' del {date_str}?"
+
+
+def build_bonsai_name_question() -> str:
+    return "¿Para qué bonsái?"

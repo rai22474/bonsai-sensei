@@ -4,7 +4,7 @@ from typing import Callable
 from bonsai_sensei.domain.services.cultivation.factory import create_cultivation_group
 from bonsai_sensei.domain.services.garden.factory import create_gardener_group
 from bonsai_sensei.domain.services.storekeeper.factory import create_storekeeper_group
-from bonsai_sensei.domain.services.factory import create_agents, create_sensei_group
+from bonsai_sensei.domain.services.sensei.factory import create_agents, create_sensei_group
 
 
 def create_sensei_agent(

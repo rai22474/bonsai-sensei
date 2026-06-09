@@ -12,9 +12,9 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
-from bonsai_sensei.domain.services.advisor import create_advisor
+from bonsai_sensei.domain.services.sensei.advisor import create_advisor
 from bonsai_sensei.memory.episodic_memory_service import EpisodicMemoryService
-from bonsai_sensei.domain.services.agents_factory import create_sensei_agent
+from bonsai_sensei.domain.services.sensei.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
 from bonsai_sensei.domain.services.data_services import create_data_services
 from bonsai_sensei.domain.services.human_input import (
@@ -24,7 +24,11 @@ from bonsai_sensei.domain.services.human_input import (
     create_ask_poll,
     create_ask_selection,
 )
-from bonsai_sensei.domain.services.cultivation.mimamori.scheduler import create_mimamori_scheduler
+from bonsai_sensei.domain.services.mimamori.scheduler import create_mimamori_scheduler
+from bonsai_sensei.domain.services.mimamori.mimamori_agent_runner import create_mimamori_agent_runner
+from bonsai_sensei.domain.services.mimamori.context import build_bonsai_snapshots, build_reflection_context
+from bonsai_sensei.domain.services.garden.caretaker.bonsai_events_tool import create_list_bonsai_events_tool
+from bonsai_sensei.infrastructure.wiki_client import create_http_search_wiki_knowledge_tool, create_http_read_wiki_page_tool
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import configure_logging
 from bonsai_sensei.model_factory import (
@@ -68,6 +72,7 @@ from bonsai_sensei.telegram.messages.planning_messages import (
     build_abandon_plan_confirmation,
     build_abandon_phytosanitary_plan_confirmation,
     build_abandon_development_plan_confirmation,
+    build_bonsai_name_question,
 )
 from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_create_fertilizer_confirmation,
@@ -279,6 +284,7 @@ async def lifespan(app: FastAPI):
             "build_abandon_plan_confirmation": build_abandon_plan_confirmation,
             "build_abandon_phytosanitary_plan_confirmation": build_abandon_phytosanitary_plan_confirmation,
             "build_abandon_development_plan_confirmation": build_abandon_development_plan_confirmation,
+            "build_bonsai_name_question": build_bonsai_name_question,
         },
         garden_messages={
             "build_create_bonsai_confirmation": build_create_bonsai_confirmation,
@@ -445,15 +451,36 @@ async def lifespan(app: FastAPI):
     app.state.bot = bot_instance
     await bot_instance.initialize()
 
+    list_bonsai_events_tool = create_list_bonsai_events_tool(
+        get_bonsai_by_name_func=services["garden"]["get_bonsai_by_name"],
+        list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
+    )
+    app.state.mimamori_runner = create_mimamori_agent_runner(
+        model=orchestrator_model or model,
+        search_wiki_knowledge=create_http_search_wiki_knowledge_tool(KB_BASE_URL) if KB_BASE_URL else None,
+        read_wiki_page=create_http_read_wiki_page_tool(KB_BASE_URL) if KB_BASE_URL else None,
+        list_bonsai_events=list_bonsai_events_tool,
+        memory_service=memory_service,
+    )
+    app.state.mimamori_build_bonsai_snapshots = partial(
+        build_bonsai_snapshots,
+        list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
+        get_active_development_plan_func=services["development_plan"]["get_active_development_plan"],
+        get_active_fertilization_plan_func=services["fertilization_plan"]["get_active_fertilization_plan"],
+    )
+    app.state.mimamori_build_reflection_context = partial(
+        build_reflection_context,
+        fetch_weather_func=fetch_weather,
+    )
+
     mimamori_scheduler = create_mimamori_scheduler(
-        advisor=app.state.advisor,
+        run_mimamori_reflection=app.state.mimamori_runner,
+        build_bonsai_snapshots_func=app.state.mimamori_build_bonsai_snapshots,
+        build_reflection_context_func=app.state.mimamori_build_reflection_context,
         list_all_user_settings_func=services["user_settings"]["list_all_user_settings"],
         list_bonsai_func=services["garden"]["list_bonsai"],
         list_species_func=services["herbarium"]["list_species"],
-        list_bonsai_events_func=services["bonsai_history"]["list_bonsai_events"],
-        get_active_development_plan_func=services["development_plan"]["get_active_development_plan"],
         list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
-        fetch_weather_func=fetch_weather,
         send_telegram_message_func=app.state.bot.send_message,
     )
 

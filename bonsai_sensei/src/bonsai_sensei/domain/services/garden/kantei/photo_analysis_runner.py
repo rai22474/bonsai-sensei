@@ -5,6 +5,8 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.runners import InMemoryRunner, RunConfig
 from google.genai import types
 
+from bonsai_sensei.domain.services.extract_text_from_events import extract_text_from_events
+
 _APP_NAME = "photo_analysis"
 _MAX_LLM_CALLS = 8
 
@@ -58,18 +60,11 @@ def create_photo_analysis_runner(model: object, search_wiki_knowledge: Callable 
                 types.Part(text=_PROMPTS[analysis_type]),
             ],
         )
-        run_config = RunConfig(max_llm_calls=_MAX_LLM_CALLS)
-        response_parts = []
-        async for event in runner.run_async(
+        return await extract_text_from_events(runner.run_async(
             user_id=_APP_NAME,
             session_id=session_id,
             new_message=message,
-            run_config=run_config,
-        ):
-            if event.content and hasattr(event.content, "parts"):
-                for part in event.content.parts:
-                    if hasattr(part, "text") and part.text:
-                        response_parts.append(part.text)
-        return "\n".join(response_parts)
+            run_config=RunConfig(max_llm_calls=_MAX_LLM_CALLS),
+        ))
 
     return run_photo_analysis

@@ -139,9 +139,6 @@ async def reset_session(user_id: str, request: Request):
             pass
     background_tasks.clear()
     await request.app.state.reset_session(user_id)
-    mem0_client = getattr(request.app.state, "mem0_client", None)
-    if mem0_client is not None:
-        await mem0_client.delete_all(user_id=user_id)
 
 
 @router.post("/advice/confirmations/{confirmation_id}/accept")

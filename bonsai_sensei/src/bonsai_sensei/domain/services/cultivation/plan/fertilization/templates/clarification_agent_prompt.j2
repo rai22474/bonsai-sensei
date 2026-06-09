@@ -27,6 +27,11 @@ Historial de eventos recientes:
 {% else %}
 Sin eventos registrados.
 {% endfor %}
+{% if active_design_plan_content %}
+
+Plan de diseño activo del bonsái (usa esto como punto de partida para proponer el objetivo de fertilización):
+{{ active_design_plan_content }}
+{% endif %}
 {% if existing_plan_content %}
 
 Plan activo existente (será abandonado si el usuario confirma uno nuevo):
@@ -44,7 +49,7 @@ Tu objetivo: recopilar información para entender:
 3. Cualquier contexto relevante que no esté ya en el perfil del bonsái (trasplante reciente, episodio de estrés, cambio de sustrato, etc.)
 
 Reglas:
-- DEBES preguntar al usuario sobre su objetivo para este período. Esto es siempre obligatorio.
+- DEBES preguntar al usuario sobre su objetivo para este período. Si hay un plan de diseño activo, preséntalo como contexto y propón un objetivo coherente con la fase de diseño; el usuario puede confirmar, ajustar o ignorarlo.
 - NO preguntes por información que ya esté en los informes recientes, en el perfil del bonsái o en el historial de eventos.
 - Haz una pregunta clara a la vez.
 - Si el usuario indica que no quiere continuar o cancelar, responde con action=cancel.

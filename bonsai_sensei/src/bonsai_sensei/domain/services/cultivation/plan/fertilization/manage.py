@@ -37,6 +37,8 @@ def create_manage_fertilization_plan_tool(
     list_wiki_files_func: Callable,
     run_clarification_loop: Callable,
     run_plan_proposal: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
 ) -> Callable:
     return create_manage_plan_tool(
         tool_name="manage_fertilization_plan",
@@ -64,4 +66,6 @@ def create_manage_fertilization_plan_tool(
         list_wiki_files_func=list_wiki_files_func,
         run_clarification_loop=run_clarification_loop,
         run_plan_proposal=run_plan_proposal,
+        ask_human=ask_human,
+        build_bonsai_name_question=build_bonsai_name_question,
     )

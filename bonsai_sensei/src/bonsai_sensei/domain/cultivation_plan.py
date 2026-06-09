@@ -18,7 +18,7 @@ def list_planned_works(session: Session, bonsai_id: int) -> List[PlannedWork]:
 
 @with_session
 def list_planned_works_in_date_range(
-    session: Session, start_date: date, end_date: date
+    session: Session, start_date: date, end_date: date, bonsai_id: int | None = None
 ) -> List[PlannedWork]:
     statement = (
         select(PlannedWork)
@@ -26,6 +26,8 @@ def list_planned_works_in_date_range(
         .where(PlannedWork.scheduled_date <= end_date)
         .order_by(PlannedWork.scheduled_date)
     )
+    if bonsai_id is not None:
+        statement = statement.where(PlannedWork.bonsai_id == bonsai_id)
     return session.exec(statement).all()
 
 

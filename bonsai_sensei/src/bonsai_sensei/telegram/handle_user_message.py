@@ -9,7 +9,7 @@ from telegram.constants import ParseMode
 from telegram.error import BadRequest, TimedOut
 from telegram.ext import ContextTypes
 
-from bonsai_sensei.domain.services.advisor import AdvisorResponse
+from bonsai_sensei.domain.services.sensei.advisor import AdvisorResponse
 from bonsai_sensei.domain.services.human_input import ConfirmationResult, SelectionNoneResult
 from bonsai_sensei.domain.user_settings import UserSettings
 from bonsai_sensei.logging_config import get_logger

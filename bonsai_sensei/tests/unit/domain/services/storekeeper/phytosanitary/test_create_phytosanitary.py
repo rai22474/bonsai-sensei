@@ -123,7 +123,7 @@ def wiki_page_builder():
 
 @pytest.fixture
 def get_phytosanitary_by_name_func():
-    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+    def get_phytosanitary_by_name(name: str, user_id=None) -> Phytosanitary | None:
         return None
 
     return get_phytosanitary_by_name
@@ -131,7 +131,7 @@ def get_phytosanitary_by_name_func():
 
 @pytest.fixture
 def existing_phytosanitary_func():
-    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+    def get_phytosanitary_by_name(name: str, user_id=None) -> Phytosanitary | None:
         return Phytosanitary(name=name, recommended_amount="5 ml/L")
 
     return get_phytosanitary_by_name

@@ -7,6 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 from bonsai_sensei.domain.services.cultivation.plan.plan_context import load_bonsai_plan_context
 from bonsai_sensei.domain.services.cultivation.plan.plan_evaluation_runner import create_plan_evaluation_runner
 from bonsai_sensei.domain.services.cultivation.plan.wiki_utils import read_wiki_content
+from bonsai_sensei.domain.services.human_input import resolve_bonsai_name
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -22,6 +23,8 @@ def create_evaluate_plan_tool(
     list_bonsai_events_func: Callable,
     read_wiki_page_func: Callable,
     list_wiki_files_func: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
 ) -> Callable:
     env = Environment(
         loader=FileSystemLoader(str(template_dir)),
@@ -34,10 +37,12 @@ def create_evaluate_plan_tool(
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
     async def evaluate_plan(
-        bonsai_name: str,
-        new_information: str,
+        bonsai_name: str | None = None,
+        new_information: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
+        bonsai_name = await resolve_bonsai_name(bonsai_name, ask_human, build_bonsai_name_question, tool_context)
+
         bonsai = get_bonsai_by_name_func(bonsai_name)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}

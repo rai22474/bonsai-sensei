@@ -9,6 +9,11 @@ Fecha de hoy: {{ current_date }}
 Objetivos declarados por el usuario: {{ objectives }}
 Preferencias de fertilizante: {{ preferences }}
 Contexto adicional: {{ context }}
+{% if active_design_plan_content %}
+
+Plan de diseño activo (úsalo para que la propuesta de fertilizantes sea coherente con la fase de desarrollo):
+{{ active_design_plan_content }}
+{% endif %}
 
 Historial de eventos recientes:
 {% for event in events %}

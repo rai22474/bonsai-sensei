@@ -14,6 +14,11 @@ def test_propose_and_confirm_fertilization_plan():
     return None
 
 
+@scenario("../features/fertilization_plan.feature", "Fertilization plan uses active design plan as context")
+def test_fertilization_plan_uses_active_design_plan():
+    return None
+
+
 @scenario("../features/fertilization_plan.feature", "Abandon an active fertilization plan")
 def test_abandon_fertilization_plan():
     return None

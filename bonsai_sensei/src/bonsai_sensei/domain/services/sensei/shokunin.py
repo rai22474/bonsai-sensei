@@ -8,7 +8,7 @@ from google.adk.events.event_actions import EventActions
 from google.adk.tools import AgentTool
 from google.adk.tools.tool_context import ToolContext
 from google.genai import types
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 _TERMINAL_STATUSES = ("cancelled", "error")
 
@@ -20,6 +20,7 @@ class Shokunin(BaseAgent):
 
     agent_tools: dict[str, AgentTool]
     callable_tools: dict[str, Callable] = {}
+    create_tool_context: Callable = Field(default=ToolContext)
 
     async def execute(self, ctx: InvocationContext) -> list[Event]:
         plan = _parse_plan(ctx.session.state.get("action_plan"))
@@ -29,7 +30,7 @@ class Shokunin(BaseAgent):
             return [_text_event(self.name, plan)]
 
         event_actions = EventActions()
-        tool_ctx = ToolContext(invocation_context=ctx, event_actions=event_actions)
+        tool_ctx = self.create_tool_context(invocation_context=ctx, event_actions=event_actions)
         results = await self._execute_plan(plan, tool_ctx)
 
         execution_result = _serialize_execution(plan.get("goal", ""), results)

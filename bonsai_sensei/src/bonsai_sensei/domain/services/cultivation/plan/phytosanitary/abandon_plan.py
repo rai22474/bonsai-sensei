@@ -23,6 +23,8 @@ def create_abandon_phytosanitary_plan_tool(
     delete_future_planned_works_func: Callable,
     read_wiki_page_func: Callable,
     write_wiki_page_func: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
 ) -> Callable:
@@ -35,6 +37,8 @@ def create_abandon_phytosanitary_plan_tool(
         delete_future_planned_works_func=delete_future_planned_works_func,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
+        ask_human=ask_human,
+        build_bonsai_name_question=build_bonsai_name_question,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_confirmation_message,
     )

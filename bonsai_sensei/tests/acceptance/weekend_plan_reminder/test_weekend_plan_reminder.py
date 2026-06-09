@@ -21,6 +21,14 @@ def test_user_with_no_planned_works():
     return None
 
 
+@scenario(
+    "../features/weekend_plan_reminder.feature",
+    "Mimamori alerts about fertilization plan misaligned with design plan",
+)
+def test_mimamori_alerts_fertilization_outdated():
+    return None
+
+
 @when("the mimamori triggers")
 def trigger_mimamori(context):
     events = post_sse("/api/mimamori/trigger")

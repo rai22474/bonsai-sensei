@@ -253,3 +253,22 @@ def create_ask_selection(
         return pending_responses.pop(resolved_user_id)["response"]
 
     return ask_selection
+
+
+_SESSION_BONSAI_NAME_KEY = "active_bonsai_name"
+
+
+async def resolve_bonsai_name(
+    bonsai_name: str | None,
+    ask_human: Callable,
+    build_question: Callable,
+    tool_context: ToolContext | None,
+) -> str:
+    if bonsai_name:
+        return bonsai_name
+    if tool_context and tool_context.state.get(_SESSION_BONSAI_NAME_KEY):
+        return tool_context.state[_SESSION_BONSAI_NAME_KEY]
+    resolved = await ask_human(build_question(), tool_context=tool_context)
+    if tool_context:
+        tool_context.state[_SESSION_BONSAI_NAME_KEY] = resolved
+    return resolved

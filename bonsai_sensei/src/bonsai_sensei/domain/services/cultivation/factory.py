@@ -25,6 +25,7 @@ def create_cultivation_group(
     build_abandon_plan_confirmation: Callable,
     build_abandon_phytosanitary_plan_confirmation: Callable,
     build_abandon_development_plan_confirmation: Callable,
+    build_bonsai_name_question: Callable,
     build_create_species_selection_question: Callable,
     build_create_species_confirmation: Callable,
     build_delete_species_confirmation: Callable,
@@ -72,6 +73,7 @@ def create_cultivation_group(
         build_abandon_plan_confirmation=build_abandon_plan_confirmation,
         build_abandon_phytosanitary_plan_confirmation=build_abandon_phytosanitary_plan_confirmation,
         build_abandon_development_plan_confirmation=build_abandon_development_plan_confirmation,
+        build_bonsai_name_question=build_bonsai_name_question,
         orchestrator_model=orchestrator_model,
         ask_poll=ask_poll,
     )

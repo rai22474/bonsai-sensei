@@ -27,7 +27,7 @@ async def should_return_error_when_bonsai_not_found(tool):
 
 
 @pytest.mark.asyncio
-async def should_return_error_when_no_fertilizers_available(get_bonsai_by_name_func, tool_context):
+async def should_return_error_when_no_fertilizers_available(get_bonsai_by_name_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     tool = create_manage_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=lambda bonsai_id: [],
@@ -43,6 +43,8 @@ async def should_return_error_when_no_fertilizers_available(get_bonsai_by_name_f
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     result = await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -68,7 +70,7 @@ async def should_return_error_when_end_date_invalid(tool, tool_context):
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(get_bonsai_by_name_func, list_fertilizers_func, tool_context):
+async def should_return_cancelled_when_user_declines(get_bonsai_by_name_func, list_fertilizers_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     tool = create_manage_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         list_bonsai_events_func=lambda bonsai_id: [],
@@ -84,6 +86,8 @@ async def should_return_cancelled_when_user_declines(get_bonsai_by_name_func, li
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal_cancelled,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     result = await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -92,7 +96,7 @@ async def should_return_cancelled_when_user_declines(get_bonsai_by_name_func, li
 
 
 @pytest.mark.asyncio
-async def should_not_create_records_when_user_cancels(get_bonsai_by_name_func, list_fertilizers_func, tool_context):
+async def should_not_create_records_when_user_cancels(get_bonsai_by_name_func, list_fertilizers_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     created_plans = []
     created_works = []
 
@@ -111,6 +115,8 @@ async def should_not_create_records_when_user_cancels(get_bonsai_by_name_func, l
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal_cancelled,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -135,7 +141,7 @@ async def should_link_planned_works_to_plan(tool, tool_context, created_plans, c
 
 
 @pytest.mark.asyncio
-async def should_write_wiki_page_on_confirm(get_bonsai_by_name_func, list_fertilizers_func, tool_context):
+async def should_write_wiki_page_on_confirm(get_bonsai_by_name_func, list_fertilizers_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     written_pages = {}
 
     tool = create_manage_fertilization_plan_tool(
@@ -153,6 +159,8 @@ async def should_write_wiki_page_on_confirm(get_bonsai_by_name_func, list_fertil
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -161,7 +169,7 @@ async def should_write_wiki_page_on_confirm(get_bonsai_by_name_func, list_fertil
 
 
 @pytest.mark.asyncio
-async def should_abandon_existing_plan_when_creating_new_one(get_bonsai_by_name_func, list_fertilizers_func, tool_context):
+async def should_abandon_existing_plan_when_creating_new_one(get_bonsai_by_name_func, list_fertilizers_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     deleted_future_works_calls = []
     updated_plans = []
     existing_plan = FertilizationPlan(
@@ -185,6 +193,8 @@ async def should_abandon_existing_plan_when_creating_new_one(get_bonsai_by_name_
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -194,7 +204,7 @@ async def should_abandon_existing_plan_when_creating_new_one(get_bonsai_by_name_
 
 
 @pytest.mark.asyncio
-async def should_pass_bonsai_name_and_period_to_clarification_prompt(get_bonsai_by_name_func, list_fertilizers_func, tool_context):
+async def should_pass_bonsai_name_and_period_to_clarification_prompt(get_bonsai_by_name_func, list_fertilizers_func, tool_context, ask_human_func, build_bonsai_name_question_func):
     received_prompts = []
 
     async def capturing_clarification(rendered_prompt: str, outer_tool_context=None) -> dict:
@@ -216,6 +226,8 @@ async def should_pass_bonsai_name_and_period_to_clarification_prompt(get_bonsai_
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=capturing_clarification,
         run_plan_proposal=stub_run_plan_proposal,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )
 
     await tool(bonsai_name="Shikamaru", start_date="2026-03-01", end_date="2026-07-31", tool_context=tool_context)
@@ -284,7 +296,19 @@ def created_works():
 
 
 @pytest.fixture
-def tool(get_bonsai_by_name_func, list_fertilizers_func, created_plans, created_works):
+def ask_human_func():
+    async def ask_human(question, tool_context=None):
+        return "Shikamaru"
+    return ask_human
+
+
+@pytest.fixture
+def build_bonsai_name_question_func():
+    return lambda: "¿Para qué bonsái?"
+
+
+@pytest.fixture
+def tool(get_bonsai_by_name_func, list_fertilizers_func, created_plans, created_works, ask_human_func, build_bonsai_name_question_func):
     def create_fertilization_plan(plan):
         plan.id = 42
         created_plans.append(plan)
@@ -309,4 +333,6 @@ def tool(get_bonsai_by_name_func, list_fertilizers_func, created_plans, created_
         list_wiki_files_func=lambda directory, pattern="*.md": [],
         run_clarification_loop=stub_run_clarification_loop,
         run_plan_proposal=stub_run_plan_proposal,
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
     )

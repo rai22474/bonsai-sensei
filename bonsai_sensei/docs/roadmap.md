@@ -4,49 +4,12 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 
 ---
 
-## FUTURE-015 — Migrar runners de propuesta a ADK 2.0 Dynamic Workflows (ADR-015) ✅ Implementado (2026-06-08)
-
-**Contexto:**
-Los runners de propuesta de planes (`plan_proposal_runner.py`, `clarification_runner.py`) usan `LoopAgent` + `asyncio.Event` (ADR-003). Tienen dos defectos: límite de 5 iteraciones que cancela silenciosamente el plan si el usuario hace más rondas de crítica, y pérdida del borrador si el proceso se reinicia. ADR-015 (2026-06-08) documenta que ADK 2.0 Dynamic Workflows con `RequestInput` resuelven ambos sin introducir la rigidez de grafo que llevó a rechazar LangGraph (ADR-001).
-
-**Diseño:**
-- Reemplazar el `LoopAgent` interno de ambos runners por un Dynamic Workflow con `while True` en Python y `RequestInput` en lugar de `asyncio.Event`.
-- `RequestInput` pausa a nivel de framework y emite un `interrupt_id`. La capa REST (`advice.py`) detecta el evento `adk_request_input`, lo surfacea al caller, y cuando el usuario responde construye un `FunctionResponse` keyed en ese `interrupt_id`.
-- El draft se escribe en el estado de sesión exterior en cada ronda antes de pausar.
-- El patrón ADR-003 se mantiene para confirmaciones simples de tools individuales.
-
-**Dependencia de infraestructura diferida:** `DatabaseSessionService` (PostgreSQL) para `ResumabilityConfig` y durabilidad entre reinicios. No es necesaria para el fix del límite de iteraciones.
-
-**Ficheros afectados:**
-- `plan_proposal_runner.py`, `clarification_runner.py` — reescribir como Dynamic Workflow
-- `advisor.py` — detectar `adk_request_input`, surfacear `interrupt_id`
-- `api/advice.py` — unificar endpoints de respuesta bajo `FunctionResponse`
-
-**Fase 1 implementada (2026-06-08):** `LoopAgent` (deprecated) eliminado de ambos runners. `plan_proposal_runner.py`: `LlmAgent` directo + draft state en sesión exterior. Fija el bug de cancelación silenciosa.
-
-**Fase 2 implementada (2026-06-08):** `clarification_runner.py` migrado a ADK 2.0 `Workflow + @node(rerun_on_resume=True) + LlmAgent(output_schema=ClarificationAction)`. El LLM retorna JSON estructurado en lugar de llamar tools. Bridge loop en Python: detecta `adk_request_input` → llama `ask_human`/`ask_poll` → resume con `FunctionResponse`. Los 3 templates de clarificación actualizados al nuevo esquema JSON.
-
-**Prototipo verificado (2026-06-08):** `run_async + FunctionResponse(interrupt_id)` reanuda el workflow correctamente. Patrón confirmado:
-- `@node(rerun_on_resume=True)` obligatorio en nodos con `RequestInput`
-- En el nodo: `resume = ctx.resume_inputs.get(interrupt_id)` — el nodo se re-ejecuta desde el inicio, no hay `send()` al generador
-- Estado entre nodos: `ctx.state["key"]`, no `ctx.session.state["key"]`
-- `advice.py` detecta evento con `has_request_input_function_call(event)`, surfacea `interrupt_id` al caller; Turn 2 construye `Content(parts=[create_request_input_response(interrupt_id, {"result": user_text})])` y llama `run_async` normalmente
-
-**Fase 3 (2026-06-08):** `manage_plan.py` y `design/manage.py` migrados a ADK 2.0 Static Graph Workflow con nodos `validate_and_load_context → clarify_objectives → propose_plan → create_plan`. Routing condicional vía `ctx.route = "ok"|"confirm"|"reclarify"` + routing maps `{"ok": next_node, ...}`. Tests unitarios: 11/11 verdes.
-
-**Nota de implementación:** En ADK 2.0 `FunctionNode`, el retorno de la función va a `ctx.output` (no a `ctx.route`). El routing condicional requiere `ctx.route = "value"` explícito — nunca `return "value"`. Las routing maps `(from_node, {"route": to_node})` solo disparan cuando el nodo emite ese route. Edges incondicionales `(A, B)` (route=None) siempre disparan.
-
-**Pendiente diferido:** `DatabaseSessionService` para durabilidad entre reinicios. No bloquea el comportamiento actual.
-
----
-
-
 ## FUTURE-016 — Refinación de trabajos planificados
 
 **Contexto:**
 Algunos trabajos planificados requieren una sesión de análisis previo a su ejecución. Ejemplos: estudio de madera muerta en un pino (fotos desde múltiples ángulos para decidir dónde y cómo trabajarla), mekiri (el asistente ayuda a decidir qué brotes cortar). El sistema actual no tiene mecanismo para anclar una sesión conversacional diagnóstica a un `PlannedWork` concreto ni para persistir su resultado.
 
-**Dependencia:** FUTURE-012 (`DevelopmentPlan`) debe estar implementado — el agente de refinación querrá leer el wiki del plan de desarrollo del árbol junto a la wiki de especie.
+**Dependencia:** FUTURE-012 (`DevelopmentPlan`) implementado ✅.
 
 ### Entidad `WorkRefinement`
 
@@ -95,92 +58,211 @@ Wiki page en `users/{user_id}/bonsai/{slug}/refinements/{work_id}-{date}.md`. La
 
 ---
 
-## FUTURE-012 — Plan de desarrollo artístico del bonsai ✅ Implementado
+## FUTURE-017 — Plan de diseño como entrada del plan de fertilización ✅
 
 **Contexto:**
-El sistema gestiona fertilización y fitosanitarios pero carece de la dimensión artística: fase de desarrollo, objetivo de diseño, estilo y calendario de trabajos técnicos estacionales (alambrado, defoliación, pinzamiento, poda de estructura...). Esta iniciativa añade el `DevelopmentPlan` como tercer tipo de plan junto a `FertilizationPlan` y `PhytosanitaryPlan`.
+El plan de fertilización se genera sin conocer el plan de diseño activo del bonsái. Sin embargo, los objetivos de fertilización dependen directamente de la fase de desarrollo: engrosamiento de tronco → nitrógeno alto durante la temporada; refinamiento de ramaje → equilibrio NPK o reducción de N; reposo forzado → fertilización mínima o nula. El agente de fertilización actualmente pregunta el objetivo al usuario desde cero, sin aprovechar la información ya definida en el plan de diseño.
 
-### Entidad `DevelopmentPlan`
+**Objetivo:** inyectar el contenido del plan de diseño activo en el contexto de fertilización para que el agente pueda proponer objetivos coherentes y el usuario solo necesite confirmar o ajustar, en lugar de repetir lo que ya está planificado.
 
-```
-DevelopmentPlan
-  id
-  bonsai_id            FK → bonsai
-  development_path     str  ("planton", "yamadori", "vivero", "nebari")
-  current_phase        str  ("engorde", "aclimatacion", "estructura", "refinamiento", ...)
-  target_style         str  slug de wiki design/ (ej. "kengai", "bunjin", "moyogi")
-  design_goal          str  texto libre ("dar movimiento al primer tramo")
-  status               str  ("active" | "abandoned")
-  wiki_path            str  bonsai/<slug>/design-plans/<periodo>.md
-  created_at
-  abandoned_at
-  abandonment_reason
-```
+**Diseño:**
 
-`PlannedWork` gana FK `development_plan_id → developmentplan.id` (nullable, SET NULL on delete).
+1. `load_bonsai_plan_context` ([plan_context.py](../src/bonsai_sensei/domain/services/cultivation/plan/plan_context.py)) debe leer el wiki del plan de diseño activo (`users/{user_id}/bonsai/{slug}/design-plans/`) y añadirlo al dict de contexto como `active_design_plan_content`.
 
-### Trabajos del plan
+2. `create_manage_fertilization_plan_tool` ([manage.py](../src/bonsai_sensei/domain/services/cultivation/plan/fertilization/manage.py)) debe pasar `get_active_development_plan_func` a `create_manage_plan_tool` como dependencia inyectada, o leer el wiki directamente vía `list_wiki_files_func` + `read_wiki_page_func`.
 
-Cada trabajo es un `PlannedWork` con:
-- `work_type` = slug de técnica de wiki (ej. `"defoliacion"`, `"alambrado"`)
-- `development_plan_id` = id del plan
-- `payload` = `{"technique_name": str, "wiki_path": str, "notes": str}`
+3. Los templates `clarification_agent_prompt.j2` y `plan_proposal_prompt.j2` deben incluir una sección condicional con el plan de diseño activo, indicando al LLM que lo use como punto de partida para proponer objetivos.
 
-Las técnicas salen de `techniques/` en la wiki (knowledge_base FUTURE-003 ya implementado). Si el LLM propone una técnica nueva, el usuario la valida y pasa a la wiki.
+**Comportamiento esperado:**
+- Si existe plan de diseño activo → el agente de clarificación lo presenta al usuario como contexto y sugiere objetivos alineados con la fase de diseño. El usuario puede confirmar, ajustar o ignorar.
+- Si no existe plan de diseño → el flujo actual se mantiene sin cambios.
 
-### Flujo conversacional
-
-Kikaru gestiona tres nuevas herramientas:
-- `manage_development_plan(bonsai_name, start_date, end_date, development_path, current_phase, target_style, design_goal)` — crea o reemplaza el plan activo. Ciclo: clarificación (estado del árbol, restricciones) → propuesta de calendario estacional → confirmación → persistencia.
-- `abandon_development_plan(bonsai_name, reason)` — abandona el plan activo.
-- `evaluate_development_plan(bonsai_name)` — evalúa si el plan activo sigue siendo válido dado el estado actual del árbol.
-
-### Contexto del LLM al generar el plan
-
-El prompt de propuesta recibe:
-- Especie: wiki `species/<slug>.md` (técnicas adecuadas, ventanas estacionales)
-- Estilo objetivo: wiki `design/<target_style>.md`
-- Fase y camino: texto estructurado
-- Historial de eventos del árbol
-- Localización del usuario (para calcular fechas concretas desde ventanas estacionales)
-- Plan existente si hay (será abandonado)
-
-### Fertilización: sin cambios estructurales
-
-La dependencia es suave: el LLM leerá la wiki del DevelopmentPlan cuando genere o evalúe un plan de fertilización (vía MCP), igual que ya lee `goal` y eventos.
-
-### Archivos nuevos
-
-- `domain/development_plan.py` — entidad SQLModel
-- `domain/development_plan_store.py` — CRUD
-- `alembic/versions/*_add_development_plan.py`
-- `alembic/versions/*_add_development_plan_id_to_planned_work.py`
-- `api/development_plans.py` — REST CRUD para tests de aceptación
-- `services/cultivation/plan/design/manage.py`
-- `services/cultivation/plan/design/abandon_plan.py`
-- `services/cultivation/plan/design/evaluate.py`
-- `services/cultivation/plan/design/factory.py`
-- `services/cultivation/plan/design/templates/` (clarification, proposal, wiki page, index)
-- `telegram/messages/planning_messages.py` — extensión con mensajes de design plan
-
-### Archivos modificados
-
-- `domain/planned_work.py` — añadir `development_plan_id`
-- `domain/cultivation_plan.py` — añadir `delete_future_planned_works_by_development_plan`
-- `services/cultivation/plan/kikaru.py` — nueva sección + nuevos params de tool
-- `services/cultivation/plan/factory.py` — wiring de nuevas herramientas
-- `services/factory.py` y `agents_factory.py` — propagación de nuevos callables
-- `main.py` — registrar router de development_plans
+**Dependencia:** FUTURE-012 (`DevelopmentPlan`) implementado ✅.
 
 ### Punto de partida al retomar
 
-1. Crear `DevelopmentPlan` + store + migraciones.
-2. Añadir FK `development_plan_id` a `PlannedWork` + migración.
-3. Crear `api/development_plans.py` con DELETE para cleanup de tests.
-4. Implementar `design/manage.py` sin reutilizar `create_manage_plan_tool` (no hay catálogo de productos; las técnicas vienen de la wiki).
-5. Añadir `abandon_plan` y `evaluate` siguiendo el patrón de fertilización.
-6. Ampliar kikaru y factory.
-7. Tests de aceptación BDD.
+1. Añadir `active_design_plan_content` en `load_bonsai_plan_context`: buscar el wiki más reciente en `users/{user_id}/bonsai/{slug}/design-plans/` (excluir `index.md`).
+2. Propagar el valor por `bonsai_context` hasta los templates de fertilización.
+3. Actualizar `clarification_agent_prompt.j2`: añadir sección condicional `{% if active_design_plan_content %}` que muestre el plan y guíe al agente a usarlo como base para preguntar el objetivo.
+4. Actualizar `plan_proposal_prompt.j2`: incluir el plan de diseño en la sección de contexto para que la propuesta de fertilizantes sea coherente con la fase.
+5. Test de aceptación: bonsái con plan de diseño activo → crear plan de fertilización → verificar que el objetivo propuesto refleja la fase de diseño.
+
+---
+
+## FUTURE-018 — Mimamori detecta plan de fertilización desalineado con el diseño ✅
+
+**Contexto:**
+Es posible tener un plan de fertilización activo creado bajo un objetivo de diseño anterior, y luego reemplazar el plan de diseño (nueva fase, nuevo objetivo) sin recordar ajustar la fertilización. Mimamori debe detectar este desalineamiento y alertar al cultivador en su reflexión matinal.
+
+**Detección determinista:**
+Ambas entidades tienen `created_at`. Cuando un plan de diseño se reemplaza, se abandona el anterior y se crea uno nuevo — el `created_at` del nuevo `DevelopmentPlan` supera al `created_at` del `FertilizationPlan` activo. Esto es condición necesaria y suficiente para detectar el desalineamiento. No se requiere campo nuevo ni migración.
+
+```
+dev_plan.created_at > fert_plan.created_at
+→ diseño actualizado después de crear la fertilización
+→ fertilización potencialmente desalineada
+```
+
+**Diseño:**
+
+1. `run_mimamori` ([runner.py](../src/bonsai_sensei/domain/services/cultivation/mimamori/runner.py)) recibe `get_active_fertilization_plan_func` como nueva dependencia inyectada (mismo patrón que `get_active_development_plan_func`).
+
+2. `_build_bonsai_snapshots` computa el flag por bonsái:
+   ```python
+   fert_plan = get_active_fertilization_plan_func(bonsai_id=bonsai.id)
+   fertilization_outdated = (
+       dev_plan is not None
+       and fert_plan is not None
+       and dev_plan.created_at > fert_plan.created_at
+   )
+   ```
+   El snapshot añade `fertilization_outdated: bool` y, si aplica, `fertilization_plan_goal: str` (el goal con el que se creó el plan) y `current_design_goal: str`.
+
+3. `reflection_prompt.j2` añade una sección condicional al inicio:
+   ```
+   {% set outdated = bonsais | selectattr("fertilization_outdated") | list %}
+   {% if outdated %}
+   ## ⚠️ Planes de fertilización desalineados
+   {% for b in outdated %}
+   - **{{ b.name }}**: el plan de diseño se actualizó (objetivo actual: {{ b.current_design_goal }}) después de crear el plan de fertilización (objetivo original: {{ b.fertilization_plan_goal }}).
+   {% endfor %}
+   {% endif %}
+   ```
+   Mimamori recibe los datos; su LLM redacta el aviso con tono de maestro.
+
+4. Propagar `get_active_fertilization_plan_func` en `scheduler.py` (`_dispatch_mimamori` + `create_mimamori_scheduler`) y en el factory que construye mimamori.
+
+**Dependencia:** FUTURE-012 (`DevelopmentPlan`) implementado ✅. Compatible con FUTURE-017 (pueden implementarse en cualquier orden).
+
+### Punto de partida al retomar
+
+1. Añadir `get_active_fertilization_plan_func` a la firma de `run_mimamori` y a `_dispatch_mimamori` / `create_mimamori_scheduler`.
+2. Añadir cálculo de `fertilization_outdated` en `_build_bonsai_snapshots`.
+3. Actualizar `reflection_prompt.j2` con la sección de desalineamientos.
+4. Propagar la nueva dependencia en el factory que instancia mimamori.
+5. Test de aceptación: crear plan de fertilización → crear nuevo plan de diseño → ejecutar mimamori → verificar que el mensaje menciona el desalineamiento.
+
+---
+
+## FUTURE-019 — Gestión de planes activos ante enfermedades y plagas
+
+**Contexto:**
+Cuando se detecta una enfermedad o plaga en un bonsái que tiene planes activos de fertilización y/o diseño, los planes pueden quedar desalineados con la realidad: un árbol enfermo no debe recibir fertilización intensa, y los trabajos de diseño (poda, alambrado) pueden agravar el estrés. Actualmente el sistema no tiene ningún mecanismo para alertar ni gestionar este escenario.
+
+**Decisión de diseño — sin status "paused":**
+Añadir un estado intermedio `paused` no aporta valor real. Si un plan de fertilización junio-septiembre se pausa en julio por enfermedad y el árbol se recupera en agosto, las fechas de junio ya son pasado — el plan necesita recrearse de todas formas. La estrategia correcta es **abandon + recrear con nuevo contexto**, mismo patrón ya establecido. El `abandonment_reason` captura el motivo (`"disease_pause: <nombre_plaga>"`).
+
+### Componente 1 — `create_pest_event` enriquece la respuesta
+
+`execute_create_pest_event` ([create_pest_event.py](../src/bonsai_sensei/domain/services/garden/caretaker/create_pest_event.py)) ya acepta `get_active_phytosanitary_plan_func`. Añadir dos dependencias más: `get_active_fertilization_plan_func` y `get_active_development_plan_func`.
+
+Respuesta enriquecida:
+```python
+{
+  "status": "success",
+  "pest_event_id": ...,
+  "active_phytosanitary_plan": bool,
+  "active_fertilization_plan": bool,   # nuevo
+  "active_design_plan": bool,          # nuevo
+}
+```
+
+El LLM (caretaker → sensei) recibe este contexto y puede proactivamente ofrecer abandonar los planes afectados y explicar por qué.
+
+### Componente 2 — Mimamori detecta desalineamiento activo
+
+`get_recent_unlinked_pest_events` ([bonsai_history.py](../src/bonsai_sensei/domain/bonsai_history.py)) ya existe — devuelve eventos `pest_detection` sin `phytosanitary_application` vinculada en los últimos N días. Úsalo en `_build_bonsai_snapshots` ([runner.py](../src/bonsai_sensei/domain/services/cultivation/mimamori/runner.py)):
+
+```python
+unlinked_pests = get_recent_unlinked_pest_events_func(bonsai_id=bonsai.id, hours=720)
+snapshot["unlinked_pest_names"] = [e.payload.get("pest_name") for e in unlinked_pests]
+snapshot["fertilization_at_risk"] = bool(unlinked_pests) and fert_plan is not None
+snapshot["design_at_risk"] = bool(unlinked_pests) and dev_plan is not None
+```
+
+`reflection_prompt.j2` recibe estos flags y mimamori redacta el aviso con tono de maestro.
+
+### Componente 3 — Mimamori detecta recuperación (planes para recrear)
+
+Cuando el árbol se recupera (plaga resuelta = no hay `unlinked_pest_events` recientes) pero hay planes abandonados con `abandonment_reason` que contiene `"disease_pause"` en los últimos 90 días → mimamori sugiere recrear los planes.
+
+Requiere nueva función en store: `get_recently_abandoned_plans(bonsai_id, days=90, reason_contains="disease_pause")`.
+Snapshot añade `plans_pending_recreation: list[str]` (nombres de los tipos de plan: fertilization, design).
+
+**Dependencia:** FUTURE-012 (`DevelopmentPlan`) implementado ✅. Compatible con FUTURE-017 y FUTURE-018 (implementar en cualquier orden).
+
+### Archivos afectados
+
+- `domain/services/garden/caretaker/create_pest_event.py` — añadir 2 dependencias + enriquecer respuesta
+- `domain/services/garden/caretaker/factory.py` — propagar nuevas dependencias
+- `domain/bonsai_history.py` — añadir `get_recently_abandoned_plans`
+- `domain/services/cultivation/mimamori/runner.py` — añadir detección en `_build_bonsai_snapshots`, nueva dependencia `get_recent_unlinked_pest_events_func` + `get_recently_abandoned_plans_func`
+- `domain/services/cultivation/mimamori/scheduler.py` — propagar nuevas dependencias
+- `domain/services/cultivation/mimamori/templates/reflection_prompt.j2` — secciones condicionales para riesgo activo y recuperación pendiente
+
+### Punto de partida al retomar
+
+1. Enriquecer `execute_create_pest_event` con `active_fertilization_plan` y `active_design_plan` en la respuesta.
+2. Añadir `get_recently_abandoned_plans` en `bonsai_history.py`.
+3. Añadir detección de riesgo y recuperación en `_build_bonsai_snapshots` de mimamori.
+4. Actualizar `reflection_prompt.j2` con las dos secciones condicionales.
+5. Propagar dependencias por factory y scheduler.
+6. Test de aceptación: registrar plaga con plan activo → verificar respuesta enriquecida. Registrar tratamiento fitosanitario → verificar que mimamori detecta recuperación.
+
+---
+
+## FUTURE-020 — Activar lectura de memoria episódica en el sensei y agentes de plan
+
+**Contexto:**
+La memoria episódica está **escribiendo** correctamente: tras cada turno de conversación, `_capture_session_to_memory` llama a `EpisodicMemoryService.add_session_to_memory` ([advisor.py](../src/bonsai_sensei/domain/services/advisor.py)), que indexa los mensajes en Graphiti. Pero la **lectura nunca ocurre**:
+
+- ADK inyecta un tool `load_memory` automáticamente cuando el `Runner` recibe `memory_service`.
+- `SENSEI_INSTRUCTION` ([sensei.py](../src/bonsai_sensei/domain/services/sensei.py)) no menciona `load_memory` → el sensei no sabe que existe ni cuándo usarlo.
+- Los agentes de clarificación de planes y mimamori tampoco tienen acceso a ella.
+
+**Objetivo:** Activar la lectura en los tres puntos donde aporta valor real.
+
+### Punto 1 — Sensei: preguntas cross-sesión (mayor valor)
+
+Preguntas como "¿qué le hice al Naruto el mes pasado?", "¿he notado algún problema con el Eren este año?", "¿cuándo fue la última vez que hablamos de alambrar?" no pueden responderse con la wiki ni con los eventos estructurados — necesitan el historial conversacional.
+
+**Fix:** Añadir a `SENSEI_INSTRUCTION` una sección que indique al sensei que cuando el usuario pregunte por conversaciones anteriores, historial reciente o preferencias expresadas anteriormente, debe llamar a `load_memory` con una query semántica relevante antes de responder.
+
+```
+# Memoria episódica
+Cuando el usuario pregunte por conversaciones anteriores, historial reciente o algo que "dijiste" o "hablamos", usa load_memory con una query semántica antes de responder.
+```
+
+### Punto 2 — Agentes de clarificación: preferencias persistidas
+
+Durante la clarificación de planes (fertilización, diseño), el agente pregunta objetivos y preferencias desde cero cada vez. Si el usuario ya expresó preferencias en conversaciones pasadas ("prefiero fertilizantes orgánicos", "quiero un estilo informal upright"), recuperar esa información evita preguntas repetidas.
+
+**Problema:** Los agentes de clarificación corren en `InMemoryRunner` efímero (no tienen acceso a `memory_service`). Alternativa: antes de lanzar el clarification loop, el tool orquestador puede llamar a `search_memory` directamente (vía HTTP a `EPISODIC_MEMORY_URL`) con una query como `"preferencias fertilización {bonsai_name}"` e inyectar el resultado en el template `clarification_agent_prompt.j2` como `{% if recalled_preferences %}` (análogo a `{% if bonsai_wiki_content %}`).
+
+### Punto 3 — Mimamori: continuidad entre días
+
+Mimamori genera reflexiones independientes cada día. Si el usuario mencionó ayer que observó hojas amarillas o que iba a hacer un trasplante el fin de semana, mimamori no lo sabe.
+
+**Fix:** En `run_mimamori` ([runner.py](../src/bonsai_sensei/domain/services/cultivation/mimamori/runner.py)), antes de renderizar el prompt, llamar a `search_memory` (HTTP) con query `"conversaciones recientes bonsáis últimos 7 días"` e incluir los hechos recuperados en `reflection_prompt.j2` como sección `{% if recent_memory_facts %}`.
+
+**Dependencia:** `EPISODIC_MEMORY_URL` configurado y servicio corriendo. Independiente de FUTURE-017/018/019.
+
+### Archivos afectados
+
+- `domain/services/sensei.py` — añadir sección de memoria en `SENSEI_INSTRUCTION`
+- `domain/services/cultivation/plan/manage_plan.py` — llamar a `search_memory` antes del clarification loop; propagar `episodic_memory_url` por factory
+- `domain/services/cultivation/plan/fertilization/templates/clarification_agent_prompt.j2` — sección `recalled_preferences`
+- `domain/services/cultivation/plan/design/templates/clarification_agent_prompt.j2` — idem
+- `domain/services/cultivation/mimamori/runner.py` — llamar a `search_memory`; propagar resultado al template
+- `domain/services/cultivation/mimamori/templates/reflection_prompt.j2` — sección `recent_memory_facts`
+
+### Punto de partida al retomar
+
+1. Verificar que `load_memory` aparece en las tools del sensei cuando `memory_service` está activo (loguear tools disponibles al arrancar).
+2. Añadir sección de memoria en `SENSEI_INSTRUCTION` y probar con pregunta cross-sesión.
+3. Implementar llamada HTTP a `search_memory` en `manage_plan.py` antes del clarification loop; inyectar en template como `recalled_preferences`.
+4. Implementar llamada en `run_mimamori`; inyectar en template como `recent_memory_facts`.
+5. Tests de integración: mock del endpoint HTTP de `episodic_memory` para verificar que se llama con las queries correctas en los tres puntos.
 
 ---
 
@@ -245,7 +327,7 @@ Ambos agentes son pure side-effect (no yieldan eventos). Para que Python los tra
 ## FUTURE-011 — Generación de imágenes de referencia para el plan de diseño
 
 **Contexto:**
-El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y ventanas temporales. Para objetivos visuales ("afinar ápice", "dar movimiento al primer tramo") una imagen de referencia aporta información que el texto no puede transmitir. El usuario necesita ver, no solo leer.
+El agente de plan de diseño produce un texto con técnicas y ventanas temporales. Para objetivos visuales ("afinar ápice", "dar movimiento al primer tramo") una imagen de referencia aporta información que el texto no puede transmitir. El usuario necesita ver, no solo leer.
 
 **Dos sub-opciones a evaluar:**
 
@@ -264,96 +346,23 @@ El agente de plan de diseño (FUTURE-010) produce un texto con técnicas y venta
 
 **Recomendación:** Implementar Opción A primero. Migrar a Opción B si la referencia estética resulta insuficiente o si el usuario pide anotaciones sobre su árbol real.
 
-**Dependencia:** FUTURE-010 debe estar implementado (el agente de plan de diseño es el host natural de este tool).
+**Prompts:** Los prompts de generación están versionados en [`docs/image_prompts.md`](image_prompts.md). `sketch-from-photo-v1` es el prompt inicial para Opción A — transforma una foto del árbol en un sketch de tinta en blanco y negro al estilo de un boceto de diseño tradicional.
 
----
-
-## FUTURE-013 — Soporte multi-usuario ✅ Implementado (2026-06-07)
-
-**Nota de implementación:**
-- Se reutilizó `user_settings` (PK = `telegram_user_id`) como identidad de usuario en lugar de crear una entidad `User` separada. El `user_id` en sesión ADK es el `telegram_user_id` raw, que coincide con el PK de `user_settings`. FUTURE-014 debe tener en cuenta que no hay UUID interno — la referencia de colección será `user_settings.user_id`.
-- `user_id` añadido como FK a `bonsai`, `fertilizer`, `phytosanitary` (migración `k2l3m4n5o6p7`). Todos los tools del sensei y del storekeeper resuelven `user_id` desde `tool_context` y lo aplican en lookups y creaciones.
-- `wiki_path` de entidades de usuario usa prefijo `users/{user_id}/bonsai/` en todos los builders (bonsái, planes, informes kantei). Almacén de fotos del sensei también usa `{user_id}/{slug}/`.
-- FalkorDB: nodos `WikiPage` llevan `user_id`; búsqueda KNN filtra `global-only` o `global+user` según contexto.
-- Observations pipeline: observaciones del usuario siempre van a zona `users/{user_id}/`; nunca se promueven a wiki global.
-- `user_settings` se crea automáticamente al primer mensaje Telegram. La REST API no auto-crea — los tests de aceptación usan fixture `setup_user_settings` en root conftest para garantizar la FK antes de crear entidades.
-
-**Contexto:**
-El sistema asume implícitamente un único usuario: los bonsáis no tienen FK de usuario en BD, y los `wiki_path` usan `bonsai/<slug>/` sin namespace de usuario — lo que produce colisiones si dos usuarios tienen árboles con el mismo slug. Esta iniciativa establece la base de identidad de usuario que habilita tanto el aislamiento de datos como la futura multi-colección (FUTURE-014).
-
-### Cambios en BD
-
-```
-User
-  id
-  telegram_user_id    unique
-  location            str (nullable)
-  created_at
-
-Bonsai
-  user_id    FK → User    ← nuevo (nullable en migración, backfill con usuario único actual)
-```
-
-Alembic migrations:
-1. `create_user_table`
-2. `add_user_id_to_bonsai` — nullable, backfill con el ID del usuario existente, luego NOT NULL
-
-### Cambio de convención de wiki_path
-
-Todos los builders que construyen `wiki_path` para entidades de usuario deben usar el prefijo `users/{user_id}/`:
-
-```
-# Antes
-bonsai/<slug>/
-bonsai/<slug>/fertilization-plans/
-bonsai/<slug>/design-plans/
-
-# Después
-users/{user_id}/bonsai/<slug>/
-users/{user_id}/bonsai/<slug>/fertilization-plans/
-users/{user_id}/bonsai/<slug>/design-plans/
-```
-
-El conocimiento general (dreamer/keeper) sigue en `species/`, `techniques/`, `diseases/` — sin cambio.
-
-**Este cambio debe hacerse antes de que haya datos de producción reales.** Si ya existen páginas wiki de usuario, se requiere un script de migración: mover archivos en disco + actualizar strings `wiki_path` en BD.
-
-### Wiki index (FalkorDB)
-
-Añadir propiedad `user_id` (nullable) a nodos `WikiPage`. Las páginas de conocimiento general tienen `user_id=null`; las de usuario llevan su `user_id`. Las queries KNN de `search_wiki_knowledge` filtran por `user_id IS NULL OR user_id = $user_id` para devolver solo conocimiento relevante.
-
-Alternativa más limpia: dos grafos separados en FalkorDB (`wiki_index` para conocimiento general, `user_wiki_index` para contenido de usuario). Evita filtros en queries y aísla operaciones de dreamer/keeper de las del sensei.
-
-### Sesión ADK
-
-`user_id` ya existe en las sesiones ADK (usado para routing de confirmaciones). Pasar a ser el ID de la entidad `User` en BD en lugar del `telegram_user_id` crudo.
-
-### Punto de partida al retomar
-
-1. Crear `User` + migration.
-2. Añadir `user_id` a `Bonsai` + migration con backfill.
-3. Cambiar builders de `wiki_path` al nuevo prefijo.
-4. Añadir `user_id` a nodos `WikiPage` del índice (o dividir en dos grafos).
-5. Actualizar context de sesión ADK para usar `User.id`.
-6. Tests de aceptación con usuarios distintos y verificación de aislamiento.
-
-**Dependencia:** Ninguna. Puede implementarse independientemente. FUTURE-014 depende de esta.
+**Dependencia:** FUTURE-012 implementado ✅ (el agente de plan de diseño es el host natural de este tool).
 
 ---
 
 ## FUTURE-014 — Multi-colección por usuario
 
 **Contexto:**
-Con la identidad de usuario establecida (FUTURE-013), esta iniciativa añade el concepto de `Collection` como agrupación de bonsáis dentro de un usuario. Un usuario puede tener varias colecciones (jardín, taller, vivero). El sensei trabaja en el contexto de una colección activa fijada en la sesión.
-
-**Dependencia obligatoria:** FUTURE-013 implementado.
+Con la identidad de usuario establecida (FUTURE-013 implementado ✅), esta iniciativa añade el concepto de `Collection` como agrupación de bonsáis dentro de un usuario. Un usuario puede tener varias colecciones (jardín, taller, vivero). El sensei trabaja en el contexto de una colección activa fijada en la sesión.
 
 ### Entidad `Collection`
 
 ```
 Collection
   id
-  user_id       FK → User
+  user_id       FK → user_settings
   name          str
   description   str (nullable)
   created_at

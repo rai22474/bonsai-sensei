@@ -1,6 +1,10 @@
-def create_list_planned_works_tool(get_bonsai_by_name_func, list_planned_works_func):
+import calendar
+from datetime import date
+
+
+def create_list_planned_works_tool(get_bonsai_by_name_func, list_planned_works_in_date_range_func, get_today_func=date.today):
     def list_planned_works_for_bonsai(bonsai_name: str) -> dict:
-        """List all planned works for a bonsai by its name, sorted by scheduled date.
+        """List planned works for a bonsai scheduled within the current calendar month, sorted by date.
 
         Args:
             bonsai_name: Name of the bonsai whose planned works to list.
@@ -15,7 +19,14 @@ def create_list_planned_works_tool(get_bonsai_by_name_func, list_planned_works_f
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}
 
-        planned_works = list_planned_works_func(bonsai_id=bonsai.id)
+        today = get_today_func()
+        start_of_month = today.replace(day=1)
+        last_day = calendar.monthrange(today.year, today.month)[1]
+        end_of_month = today.replace(day=last_day)
+
+        planned_works = list_planned_works_in_date_range_func(
+            bonsai_id=bonsai.id, start_date=start_of_month, end_date=end_of_month
+        )
         return {
             "status": "success",
             "planned_works": [

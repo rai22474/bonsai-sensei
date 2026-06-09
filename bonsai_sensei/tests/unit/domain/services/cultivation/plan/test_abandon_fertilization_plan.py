@@ -37,7 +37,7 @@ async def should_return_error_when_bonsai_not_found(tool, tool_context):
 
 
 @pytest.mark.asyncio
-async def should_return_error_when_no_active_plan(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
+async def should_return_error_when_no_active_plan(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func, ask_human_func, build_bonsai_name_question_func):
     tool = create_abandon_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_active_fertilization_plan_func=lambda bonsai_id: None,
@@ -45,6 +45,8 @@ async def should_return_error_when_no_active_plan(tool_context, get_bonsai_by_na
         delete_future_planned_works_func=lambda plan_id, cutoff_date: 0,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_confirm,
         build_confirmation_message=build_abandon_confirmation_message,
     )
@@ -56,7 +58,7 @@ async def should_return_error_when_no_active_plan(tool_context, get_bonsai_by_na
 
 
 @pytest.mark.asyncio
-async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, build_abandon_confirmation_message, read_wiki_page_func):
+async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by_name_func, build_abandon_confirmation_message, read_wiki_page_func, ask_human_func, build_bonsai_name_question_func):
     tool = create_abandon_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_active_fertilization_plan_func=lambda bonsai_id: _active_plan(),
@@ -64,6 +66,8 @@ async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by
         delete_future_planned_works_func=lambda plan_id, cutoff_date: 0,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_cancel,
         build_confirmation_message=build_abandon_confirmation_message,
     )
@@ -74,7 +78,7 @@ async def should_return_cancelled_when_user_declines(tool_context, get_bonsai_by
 
 
 @pytest.mark.asyncio
-async def should_mark_plan_as_abandoned_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
+async def should_mark_plan_as_abandoned_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func, ask_human_func, build_bonsai_name_question_func):
     updated_plans = []
 
     def update_plan(plan: FertilizationPlan) -> FertilizationPlan:
@@ -88,6 +92,8 @@ async def should_mark_plan_as_abandoned_on_confirm(tool_context, get_bonsai_by_n
         delete_future_planned_works_func=lambda plan_id, cutoff_date: 0,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_confirm,
         build_confirmation_message=build_abandon_confirmation_message,
     )
@@ -100,7 +106,7 @@ async def should_mark_plan_as_abandoned_on_confirm(tool_context, get_bonsai_by_n
 
 
 @pytest.mark.asyncio
-async def should_delete_future_works_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
+async def should_delete_future_works_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func, ask_human_func, build_bonsai_name_question_func):
     deleted_calls = []
 
     def delete_future_works(plan_id, cutoff_date):
@@ -114,6 +120,8 @@ async def should_delete_future_works_on_confirm(tool_context, get_bonsai_by_name
         delete_future_planned_works_func=delete_future_works,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_confirm,
         build_confirmation_message=build_abandon_confirmation_message,
     )
@@ -125,7 +133,7 @@ async def should_delete_future_works_on_confirm(tool_context, get_bonsai_by_name
 
 
 @pytest.mark.asyncio
-async def should_update_wiki_page_with_abandonment_section_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
+async def should_update_wiki_page_with_abandonment_section_on_confirm(tool_context, get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func, ask_human_func, build_bonsai_name_question_func):
     written_pages = {}
 
     tool = create_abandon_fertilization_plan_tool(
@@ -135,6 +143,8 @@ async def should_update_wiki_page_with_abandonment_section_on_confirm(tool_conte
         delete_future_planned_works_func=lambda plan_id, cutoff_date: 0,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: written_pages.update({path: content}) or {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_confirm,
         build_confirmation_message=build_abandon_confirmation_message,
     )
@@ -192,7 +202,19 @@ def read_wiki_page_func():
 
 
 @pytest.fixture
-def tool(get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
+def ask_human_func():
+    async def ask_human(question, tool_context=None):
+        return "Shikamaru"
+    return ask_human
+
+
+@pytest.fixture
+def build_bonsai_name_question_func():
+    return lambda: "¿Para qué bonsái?"
+
+
+@pytest.fixture
+def tool(get_bonsai_by_name_func, ask_human_func, build_bonsai_name_question_func, ask_confirmation_confirm, build_abandon_confirmation_message, read_wiki_page_func):
     return create_abandon_fertilization_plan_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
         get_active_fertilization_plan_func=lambda bonsai_id: _active_plan(),
@@ -200,6 +222,8 @@ def tool(get_bonsai_by_name_func, ask_confirmation_confirm, build_abandon_confir
         delete_future_planned_works_func=lambda plan_id, cutoff_date: 0,
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=lambda path, content: {"status": "success"},
+        ask_human=ask_human_func,
+        build_bonsai_name_question=build_bonsai_name_question_func,
         ask_confirmation=ask_confirmation_confirm,
         build_confirmation_message=build_abandon_confirmation_message,
     )

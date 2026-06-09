@@ -116,7 +116,7 @@ def captured_update():
 
 @pytest.fixture
 def update_phytosanitary_func(captured_update):
-    def update_phytosanitary(name: str, phytosanitary_data: dict) -> None:
+    def update_phytosanitary(name: str, phytosanitary_data: dict, user_id=None) -> None:
         captured_update["name"] = name
         captured_update["phytosanitary_data"] = phytosanitary_data
     return update_phytosanitary
@@ -124,14 +124,14 @@ def update_phytosanitary_func(captured_update):
 
 @pytest.fixture
 def get_phytosanitary_by_name_func():
-    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+    def get_phytosanitary_by_name(name: str, user_id=None) -> Phytosanitary | None:
         return Phytosanitary(name=name, recommended_amount="1 ml/L")
     return get_phytosanitary_by_name
 
 
 @pytest.fixture
 def get_phytosanitary_by_name_not_found():
-    def get_phytosanitary_by_name(name: str) -> Phytosanitary | None:
+    def get_phytosanitary_by_name(name: str, user_id=None) -> Phytosanitary | None:
         return None
     return get_phytosanitary_by_name
 

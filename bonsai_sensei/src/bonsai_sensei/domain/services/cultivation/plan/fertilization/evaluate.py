@@ -48,6 +48,8 @@ def create_evaluate_fertilization_plan_tool(
     list_bonsai_events_func: Callable,
     read_wiki_page_func: Callable,
     list_wiki_files_func: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
 ) -> Callable:
     return create_evaluate_plan_tool(
         tool_name="evaluate_fertilization_plan",
@@ -60,4 +62,6 @@ def create_evaluate_fertilization_plan_tool(
         list_bonsai_events_func=list_bonsai_events_func,
         read_wiki_page_func=read_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
+        ask_human=ask_human,
+        build_bonsai_name_question=build_bonsai_name_question,
     )

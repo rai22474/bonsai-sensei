@@ -9,6 +9,16 @@ Feature: Manage fertilization plans for bonsais via advice
     Then "Hanako" should have an active fertilization plan
     And "Hanako" should have planned works linked to the fertilization plan
 
+  Scenario: Fertilization plan uses active design plan as context
+    Given species "Pinus Sylvestris" exists with scientific name "Pinus sylvestris"
+    And a bonsai named "Matsu" exists for species "Pinus Sylvestris"
+    And fertilizer "Biogold" is registered
+    And "Matsu" has an active design plan with goal "engorde de tronco en maceta de vivero"
+    When I request a fertilization plan for "Matsu" from "2026-09-01" to "2026-11-30"
+    And I confirm the fertilization plan for "Matsu"
+    Then "Matsu" should have an active fertilization plan
+    And "Matsu" should have planned works linked to the fertilization plan
+
   Scenario: Abandon an active fertilization plan
     Given species "Ficus Retusa" exists with scientific name "Ficus retusa"
     And a bonsai named "Hanako" exists for species "Ficus Retusa"

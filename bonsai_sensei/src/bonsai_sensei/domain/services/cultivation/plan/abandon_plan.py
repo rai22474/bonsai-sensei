@@ -4,6 +4,7 @@ from typing import Callable
 from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.cultivation.plan.wiki_utils import update_wiki_on_abandon
+from bonsai_sensei.domain.services.human_input import resolve_bonsai_name
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -17,16 +18,20 @@ def create_abandon_plan_tool(
     delete_future_planned_works_func: Callable,
     read_wiki_page_func: Callable,
     write_wiki_page_func: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
 ) -> Callable:
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
     async def abandon_plan(
-        bonsai_name: str,
-        reason: str,
+        bonsai_name: str | None = None,
+        reason: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
+        bonsai_name = await resolve_bonsai_name(bonsai_name, ask_human, build_bonsai_name_question, tool_context)
+
         bonsai = get_bonsai_by_name_func(bonsai_name)
         if not bonsai:
             return {"status": "error", "message": "bonsai_not_found"}

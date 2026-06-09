@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from bonsai_sensei.domain.planned_work import PlannedWork
 from bonsai_sensei.domain.services.cultivation.plan.plan_context import bonsai_slug, load_bonsai_plan_context
 from bonsai_sensei.domain.services.cultivation.plan.wiki_utils import read_wiki_content, update_wiki_on_abandon
+from bonsai_sensei.domain.services.human_input import resolve_bonsai_name
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -42,6 +43,8 @@ def create_manage_plan_tool(
     list_wiki_files_func: Callable,
     run_clarification_loop: Callable,
     run_plan_proposal: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
 ) -> Callable:
     env = Environment(
         loader=FileSystemLoader(str(template_dir)),
@@ -56,11 +59,13 @@ def create_manage_plan_tool(
     @trace_tool_call
     @limit_tool_calls(agent_name="kikaru")
     async def manage_plan(
-        bonsai_name: str,
-        start_date: str,
-        end_date: str,
+        bonsai_name: str | None = None,
+        start_date: str = "",
+        end_date: str = "",
         tool_context: ToolContext | None = None,
     ) -> dict:
+        bonsai_name = await resolve_bonsai_name(bonsai_name, ask_human, build_bonsai_name_question, tool_context)
+
         outer_tool_context = tool_context
 
         @node
@@ -113,6 +118,7 @@ def create_manage_plan_tool(
                 events=bonsai_context["events"],
                 reports=bonsai_context["reports"],
                 bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
+                active_design_plan_content=bonsai_context.get("active_design_plan_content", ""),
                 existing_plan_content=ctx.state.get("existing_plan_wiki", ""),
                 reclarify_reason=reclarify_reason,
             )
@@ -146,6 +152,7 @@ def create_manage_plan_tool(
                 product_pages=_load_product_wiki_pages(products, read_wiki_page_func),
                 reports=bonsai_context["reports"],
                 bonsai_wiki_content=bonsai_context["bonsai_wiki_content"],
+                active_design_plan_content=bonsai_context.get("active_design_plan_content", ""),
             )
             proposal = await run_plan_proposal(rendered_prompt, outer_tool_context)
 

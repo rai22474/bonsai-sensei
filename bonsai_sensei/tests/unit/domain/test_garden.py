@@ -1,4 +1,5 @@
 import pytest
+from bonsai_sensei.domain.user_settings import UserSettings
 from sqlmodel import create_engine, Session, SQLModel
 from hamcrest import assert_that, equal_to
 
@@ -46,5 +47,5 @@ def should_store_mixed_case_input_as_lowercase(create_session, existing_species_
 @pytest.fixture
 def in_memory_engine():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
-    SQLModel.metadata.create_all(engine, tables=[Species.__table__, Bonsai.__table__])
+    SQLModel.metadata.create_all(engine, tables=[UserSettings.__table__, Species.__table__, Bonsai.__table__])
     return engine

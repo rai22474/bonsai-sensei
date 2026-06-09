@@ -12,3 +12,12 @@ Feature: Mimamori daily reflection
     Given user "weekend-reminder-test-user" has chat id "99001" registered
     When the mimamori triggers
     Then the response for "weekend-reminder-test-user" is non-empty
+
+  Scenario: Mimamori alerts about fertilization plan misaligned with design plan
+    Given user "weekend-reminder-test-user" has chat id "99001" registered
+    And species "Pinus Sylvestris" exists with scientific name "Pinus sylvestris"
+    And a bonsai named "Kuro" exists for species "Pinus Sylvestris"
+    And "Kuro" has an outdated fertilization plan
+    And "Kuro" has a newer active design plan
+    When the mimamori triggers
+    Then the response for "weekend-reminder-test-user" mentions "Kuro"

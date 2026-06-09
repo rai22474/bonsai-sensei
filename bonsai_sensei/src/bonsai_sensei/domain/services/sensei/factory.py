@@ -50,9 +50,9 @@ from bonsai_sensei.domain.services.garden.kantei.factory import (
     ANALYZE_TOOL_DESCRIPTION,
     COMPARE_TOOL_DESCRIPTION,
 )
-from bonsai_sensei.domain.services.mitori import create_mitori
-from bonsai_sensei.domain.services.shokunin import Shokunin
-from bonsai_sensei.domain.services.sensei import create_sensei
+from bonsai_sensei.domain.services.sensei.mitori import create_mitori
+from bonsai_sensei.domain.services.sensei.shokunin import Shokunin
+from bonsai_sensei.domain.services.sensei.sensei import create_sensei
 from bonsai_sensei.domain.services.storekeeper.fertilizers.list_fertilizers import create_list_fertilizers_tool
 from bonsai_sensei.domain.services.storekeeper.fertilizers.get_fertilizer_by_name import create_get_fertilizer_by_name_tool
 from bonsai_sensei.domain.services.storekeeper.phytosanitary.list_phytosanitary import create_list_phytosanitary_tool
@@ -104,7 +104,7 @@ def _create_query_tools(session_factory, kb_base_url: str) -> list:
     )
     list_planned_works_tool = create_list_planned_works_tool(
         get_bonsai_by_name_func=get_bonsai_by_name_func,
-        list_planned_works_func=partial(cultivation_plan.list_planned_works, create_session=session_factory),
+        list_planned_works_in_date_range_func=partial(cultivation_plan.list_planned_works_in_date_range, create_session=session_factory),
     )
     list_planned_works_tool.__name__ = "list_planned_works_for_bonsai"
     list_bonsai_photos_func = partial(bonsai_photo_store.list_bonsai_photos, create_session=session_factory)

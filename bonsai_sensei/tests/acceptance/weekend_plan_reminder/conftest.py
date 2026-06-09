@@ -3,6 +3,8 @@ from datetime import date, timedelta
 import pytest
 from pytest_bdd import given, parsers
 
+from design_plan.development_plans_api import delete_development_plan, list_development_plans
+from fertilization_plan.fertilization_plans_api import delete_fertilization_plan, list_fertilization_plans
 from http_client import delete, get, post, put
 from manage_bonsai.bonsai_api import create_bonsai, delete_bonsai_by_name
 from manage_species.species_api import create_species, delete_species_by_name
@@ -24,14 +26,22 @@ def context():
     return {
         "bonsai_created": [],
         "species_created": [],
+        "bonsai_ids": {},
+        "species_ids": {},
     }
 
 
 @pytest.fixture(autouse=True)
 def cleanup_records(context):
     yield
-    for name in context["bonsai_created"]:
-        delete_bonsai_by_name(get, delete, name)
+    for bonsai_name in context["bonsai_created"]:
+        bonsai_id = context.get("bonsai_ids", {}).get(bonsai_name)
+        if bonsai_id:
+            for plan in list_fertilization_plans(get, bonsai_id):
+                delete_fertilization_plan(delete, plan["id"])
+            for plan in list_development_plans(get, bonsai_id):
+                delete_development_plan(delete, plan["id"])
+        delete_bonsai_by_name(get, delete, bonsai_name)
     for name in context["species_created"]:
         delete_species_by_name(get, delete, name)
     delete(f"/api/users/{TEST_USER_ID}/settings")
@@ -55,8 +65,38 @@ def ensure_bonsai_exists(context, bonsai_name, species_name):
     species_id = context["species_ids"][species_name]
     bonsai = create_bonsai(post, bonsai_name, species_id)
     context["bonsai_created"].append(bonsai_name)
-    context["bonsai_ids"] = context.get("bonsai_ids", {})
     context["bonsai_ids"][bonsai_name] = bonsai.get("id")
+
+
+@given(parsers.parse('"{bonsai_name}" has an outdated fertilization plan'))
+def create_outdated_fertilization_plan(context, bonsai_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    two_months_ago = (date.today() - timedelta(days=60)).isoformat()
+    post(f"/api/bonsai/{bonsai_id}/fertilization-plans", {
+        "bonsai_id": bonsai_id,
+        "period_start": two_months_ago,
+        "period_end": (date.today() + timedelta(days=60)).isoformat(),
+        "status": "active",
+        "wiki_path": f"bonsai/test/plans/{bonsai_id}-outdated.md",
+        "goal": "engorde de tronco",
+        "created_at": two_months_ago,
+    })
+
+
+@given(parsers.parse('"{bonsai_name}" has a newer active design plan'))
+def create_newer_design_plan(context, bonsai_name):
+    bonsai_id = context["bonsai_ids"][bonsai_name]
+    post(f"/api/bonsai/{bonsai_id}/development-plans", {
+        "bonsai_id": bonsai_id,
+        "development_path": "planton",
+        "current_phase": "refinamiento",
+        "target_style": "moyogi",
+        "design_goal": "refinamiento de ápice",
+        "period_start": date.today().isoformat(),
+        "period_end": (date.today() + timedelta(days=365)).isoformat(),
+        "status": "active",
+        "wiki_path": f"bonsai/test/design-plans/{bonsai_id}-newer.md",
+    })
 
 
 @given(parsers.parse('"{bonsai_name}" has a fertilization planned for next Saturday'))

@@ -19,11 +19,24 @@ def load_bonsai_plan_context(
         "events": [_format_event(event) for event in events],
         "reports": _load_reports(slug, user_id, list_wiki_files_func, read_wiki_page_func),
         "bonsai_wiki_content": read_wiki_content(bonsai.wiki_path, read_wiki_page_func) if bonsai.wiki_path else "",
+        "active_design_plan_content": _load_active_design_plan_content(slug, user_id, list_wiki_files_func, read_wiki_page_func),
     }
 
 
 def bonsai_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def _load_active_design_plan_content(slug: str, user_id: str, list_wiki_files_func: Callable, read_wiki_page_func: Callable) -> str:
+    paths = [
+        path for path in list_wiki_files_func(f"users/{user_id}/bonsai/{slug}/design-plans")
+        if not path.endswith("index.md")
+    ]
+    if not paths:
+        return ""
+    latest_path = sorted(paths)[-1]
+    page = read_wiki_page_func(path=latest_path)
+    return page.get("content", "") if page.get("status") == "success" else ""
 
 
 def _load_reports(slug: str, user_id: str, list_wiki_files_func: Callable, read_wiki_page_func: Callable) -> list[str]:

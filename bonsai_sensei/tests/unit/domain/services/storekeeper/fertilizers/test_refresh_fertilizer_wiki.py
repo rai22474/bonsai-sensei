@@ -116,7 +116,7 @@ def captured_update():
 
 @pytest.fixture
 def update_fertilizer_func(captured_update):
-    def update_fertilizer(name: str, fertilizer_data: dict) -> None:
+    def update_fertilizer(name: str, fertilizer_data: dict, user_id=None) -> None:
         captured_update["name"] = name
         captured_update["fertilizer_data"] = fertilizer_data
     return update_fertilizer
@@ -124,14 +124,14 @@ def update_fertilizer_func(captured_update):
 
 @pytest.fixture
 def get_fertilizer_by_name_func():
-    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+    def get_fertilizer_by_name(name: str, user_id=None) -> Fertilizer | None:
         return Fertilizer(name=name, recommended_amount="2 ml/L")
     return get_fertilizer_by_name
 
 
 @pytest.fixture
 def get_fertilizer_by_name_not_found():
-    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+    def get_fertilizer_by_name(name: str, user_id=None) -> Fertilizer | None:
         return None
     return get_fertilizer_by_name
 

@@ -37,9 +37,9 @@ async def should_return_cancelled_when_selection_is_cancelled(tool_context, exis
         return SelectionNoneResult(reason="changed mind")
 
     tool = create_delete_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
-        delete_bonsai_photo_func=lambda photo_id: None,
+        get_bonsai_by_name_func=lambda name, **_: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id, **_: [existing_photo] if bonsai_id == existing_bonsai.id else [],
+        delete_bonsai_photo_func=lambda photo_id, **_: None,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_cancel,
         build_selection_question=lambda name: f"Select photo for '{name}'",
@@ -71,9 +71,9 @@ async def should_return_success_when_confirmed(delete_photo_tool, tool_context):
 @pytest.mark.asyncio
 async def should_return_cancelled_when_user_declines_confirmation(tool_context, existing_bonsai, existing_photo):
     tool = create_delete_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
-        delete_bonsai_photo_func=lambda photo_id: None,
+        get_bonsai_by_name_func=lambda name, **_: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id, **_: [existing_photo] if bonsai_id == existing_bonsai.id else [],
+        delete_bonsai_photo_func=lambda photo_id, **_: None,
         ask_confirmation=ask_confirmation_cancel,
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",
@@ -122,9 +122,9 @@ def tool_context():
 @pytest.fixture
 def delete_photo_tool(existing_bonsai, existing_photo, deleted_photo_ids):
     return create_delete_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_photos_func=lambda bonsai_id: [existing_photo] if bonsai_id == existing_bonsai.id else [],
-        delete_bonsai_photo_func=lambda photo_id: deleted_photo_ids.append(photo_id),
+        get_bonsai_by_name_func=lambda name, **_: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id, **_: [existing_photo] if bonsai_id == existing_bonsai.id else [],
+        delete_bonsai_photo_func=lambda photo_id, **_: deleted_photo_ids.append(photo_id),
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",
@@ -136,9 +136,9 @@ def delete_photo_tool(existing_bonsai, existing_photo, deleted_photo_ids):
 @pytest.fixture
 def delete_photo_tool_no_photos(existing_bonsai):
     return create_delete_bonsai_photo_tool(
-        get_bonsai_by_name_func=lambda name: existing_bonsai if name == existing_bonsai.name else None,
-        list_bonsai_photos_func=lambda bonsai_id: [],
-        delete_bonsai_photo_func=lambda photo_id: None,
+        get_bonsai_by_name_func=lambda name, **_: existing_bonsai if name == existing_bonsai.name else None,
+        list_bonsai_photos_func=lambda bonsai_id, **_: [],
+        delete_bonsai_photo_func=lambda photo_id, **_: None,
         ask_confirmation=ask_confirmation_confirm,
         ask_selection=ask_selection_confirm,
         build_selection_question=lambda name: f"Select photo for '{name}'",

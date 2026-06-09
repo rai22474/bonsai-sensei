@@ -1,10 +1,10 @@
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from hamcrest import assert_that, equal_to, contains_string, has_key, not_, not_none
 
-from bonsai_sensei.domain.services.shokunin import (
+from bonsai_sensei.domain.services.sensei.shokunin import (
     Shokunin,
     _build_request,
     _is_terminal,
@@ -291,7 +291,13 @@ async def should_record_unregistered_callable_tool_and_continue():
 
 
 def _make_executor(agent_tools: dict, callable_tools: dict = {}) -> Shokunin:
-    return Shokunin(name="shokunin", description="test executor", agent_tools=agent_tools, callable_tools=callable_tools)
+    return Shokunin(
+        name="shokunin",
+        description="test executor",
+        agent_tools=agent_tools,
+        callable_tools=callable_tools,
+        create_tool_context=lambda **_: MagicMock(),
+    )
 
 
 def _make_agent_tool(run_async_mock) -> MagicMock:
@@ -309,11 +315,6 @@ def _make_ctx(action_plan) -> MagicMock:
 
 
 # Fixtures
-
-@pytest.fixture(autouse=True)
-def patch_tool_context():
-    with patch("bonsai_sensei.domain.services.shokunin.ToolContext"):
-        yield
 
 
 from google.adk.agents.invocation_context import InvocationContext

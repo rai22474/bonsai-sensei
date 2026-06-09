@@ -7,14 +7,17 @@ Main Telegram bot and bonsai domain service. Handles all user-facing interaction
 - Telegram bot for end users (messages, photos, inline keyboards, polls)
 - Bonsai collection, species registry, fertilizers, phytosanitary, cultivation plans
 - Multi-agent AI pipeline (sensei → mitori → shokunin → sub-agents)
-- Episodic memory via Honcho (conversational context across sessions)
+- Mimamori: daily morning reflection agent (cross-domain, ephemeral, episodic memory read)
+- Episodic memory via Graphiti (conversational context across sessions)
 - Wiki knowledge search via HTTP to `knowledge_base`
 
 ## Agent architecture
 
+### Conversational pipeline (user-triggered)
+
 ```
-sensei                          [orchestrator]
-├── [query tools]               Direct read-only tools
+sensei                          [orchestrator, persistent session]
+├── [query tools]               Direct read-only tools (wiki, bonsai, events, plans…)
 └── command_pipeline            SequentialAgent for write operations
     ├── mitori                  Planner: produces a JSON action plan
     └── shokunin                Deterministic executor (no LLM)
@@ -30,12 +33,25 @@ sensei                          [orchestrator]
         └── storekeeper         Fertilizer & phytosanitary catalogues
 ```
 
+### Mimamori (scheduled, independent)
+
+```
+mimamori                        [ephemeral InMemoryRunner, runs at 08:00]
+├── reads episodic memory       PreloadMemory per user (read-only, no write-back)
+├── search_wiki_knowledge       Species care, seasonal windows
+├── read_wiki_page              Specific wiki pages
+└── list_bonsai_events          Detailed bonsai history
+```
+
+Mimamori is fully decoupled from the sensei pipeline. It receives pre-built context (bonsai snapshots, overdue/upcoming works, desalignment flags) via injected callables and sends a Telegram message per user.
+
 | Agent | Japanese | Role |
 |---|---|---|
 | sensei | 先生 | Entry point, routes queries and commands |
 | mitori | 見取り | Planner, produces typed JSON action plan |
 | shokunin | 職人 | Deterministic executor |
 | kikaru | 木刈る | Cultivation work calendar |
+| mimamori | 見守り | Daily guardian, morning reflection |
 
 ## Telegram commands
 
@@ -80,9 +96,9 @@ Runs database migrations on startup via `alembic upgrade head`.
 | `KB_BASE_URL` | knowledge_base service URL (default: `http://knowledge_base:8080`) |
 | `PHOTOS_PATH` | Photo storage directory (default: `./photos`) |
 | `TAVILY_API_KEY` | Web search for wiki content generation |
-| `HONCHO_API_KEY` | Honcho API key for episodic memory |
-| `HONCHO_WORKSPACE_ID` | Honcho workspace ID (default: `bonsai-sensei`) |
-| `HONCHO_BASE_URL` | Honcho base URL (optional, for self-hosted) |
+| `EPISODIC_MEMORY_URL` | Episodic memory service URL (optional; disables memory if unset) |
+| `MIMAMORI_HOUR` | Hour to trigger mimamori (default: `8`) |
+| `MIMAMORI_MINUTE` | Minute to trigger mimamori (default: `0`) |
 | `ADMIN_TELEGRAM_BOT_TOKEN` | Admin bot token |
 | `ADMIN_TELEGRAM_CHAT_ID` | Admin chat ID |
 
@@ -92,7 +108,11 @@ Runs database migrations on startup via `alembic upgrade head`.
 cd bonsai_sensei
 pytest tests/unit/
 pytest tests/integration/ -m integration
-pytest tests/acceptance/   # requires running stack
+
+# Acceptance tests (requires Docker):
+bash tests/acceptance/run_acceptance.sh                          # all scenarios
+bash tests/acceptance/run_acceptance.sh tests/acceptance/mimamori  # single module
+bash tests/acceptance/run_acceptance.sh tests/acceptance/fertilization_plan "design_plan"  # with filter
 ```
 
 ## API

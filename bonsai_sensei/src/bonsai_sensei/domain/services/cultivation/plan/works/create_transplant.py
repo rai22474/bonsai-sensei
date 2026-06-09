@@ -4,6 +4,7 @@ from google.adk.tools.tool_context import ToolContext
 
 from bonsai_sensei.domain.services.cultivation.plan.works.planned_work_creation import execute_planned_work_creation
 from bonsai_sensei.domain.services.cultivation.plan.works.planned_work_payload_builders import build_transplant_payload
+from bonsai_sensei.domain.services.human_input import resolve_bonsai_name
 from bonsai_sensei.domain.services.tool_limiter import limit_tool_calls
 from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 
@@ -11,6 +12,8 @@ from bonsai_sensei.domain.services.tool_tracer import trace_tool_call
 def create_create_transplant_tool(
     get_bonsai_by_name_func: Callable,
     create_planned_work_func: Callable,
+    ask_human: Callable,
+    build_bonsai_name_question: Callable,
     ask_confirmation: Callable,
     build_confirmation_message: Callable,
 ):
@@ -43,8 +46,7 @@ def create_create_transplant_tool(
             Error reasons: "bonsai_name_required", "scheduled_date_required",
                 "invalid_scheduled_date_format", "bonsai_not_found".
         """
-        if not bonsai_name:
-            return {"status": "error", "message": "bonsai_name_required"}
+        bonsai_name = await resolve_bonsai_name(bonsai_name, ask_human, build_bonsai_name_question, tool_context)
 
         if not scheduled_date:
             scheduled_date = tool_context.state.get("next_saturday") if tool_context else None

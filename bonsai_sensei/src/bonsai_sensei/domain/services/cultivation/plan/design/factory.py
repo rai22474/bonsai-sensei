@@ -21,6 +21,7 @@ def create_design_plan_tools(
     ask_human: Callable,
     ask_plan_review: Callable,
     build_abandon_development_plan_confirmation: Callable,
+    build_bonsai_name_question: Callable,
     read_wiki_page_func: Callable,
     write_wiki_page_func: Callable,
     list_wiki_files_func: Callable,
@@ -64,6 +65,8 @@ def create_design_plan_tools(
         record_bonsai_event_func=partial(bonsai_history.record_bonsai_event, create_session=session_factory),
         read_wiki_page_func=read_wiki_page_func,
         write_wiki_page_func=write_wiki_page_func,
+        ask_human=ask_human,
+        build_bonsai_name_question=build_bonsai_name_question,
         ask_confirmation=ask_confirmation,
         build_confirmation_message=build_abandon_development_plan_confirmation,
     )
@@ -75,6 +78,8 @@ def create_design_plan_tools(
         list_bonsai_events_func=partial(bonsai_history.list_bonsai_events, create_session=session_factory),
         read_wiki_page_func=read_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
+        ask_human=ask_human,
+        build_bonsai_name_question=build_bonsai_name_question,
     )
 
     return {

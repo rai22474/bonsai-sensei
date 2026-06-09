@@ -123,7 +123,7 @@ def wiki_page_builder():
 
 @pytest.fixture
 def get_fertilizer_by_name_func():
-    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+    def get_fertilizer_by_name(name: str, user_id=None) -> Fertilizer | None:
         return None
 
     return get_fertilizer_by_name
@@ -131,7 +131,7 @@ def get_fertilizer_by_name_func():
 
 @pytest.fixture
 def existing_fertilizer_func():
-    def get_fertilizer_by_name(name: str) -> Fertilizer | None:
+    def get_fertilizer_by_name(name: str, user_id=None) -> Fertilizer | None:
         return Fertilizer(name=name, recommended_amount="5 ml/L")
 
     return get_fertilizer_by_name

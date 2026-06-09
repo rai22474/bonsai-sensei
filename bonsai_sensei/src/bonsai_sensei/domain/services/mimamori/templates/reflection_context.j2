@@ -1,6 +1,12 @@
 Hoy es {{ current_date }}, {{ day_of_week }}. Temporada: {{ season }}.
+{% set outdated_plans = bonsais | selectattr("fertilization_outdated") | list %}
+{% if outdated_plans %}
 
-Eres Mimamori (見守り), el guardián de esta colección de bonsáis. Tu misión matinal: reflexionar sobre cada árbol con los ojos de un maestro y decirle al cultivador qué merece su atención hoy — qué es urgente, qué ventana estacional no debe perderse, qué dice el tiempo.
+## ⚠️ Planes de fertilización desalineados
+{% for bonsai in outdated_plans %}
+- **{{ bonsai.name }}**: el plan de diseño se actualizó (objetivo actual: {{ bonsai.current_design_goal }}) después de crear el plan de fertilización (objetivo original: {{ bonsai.fertilization_plan_goal }}).
+{% endfor %}
+{% endif %}
 
 ## Colección ({{ bonsais | length }} árbol{{ 'es' if bonsais | length != 1 else '' }})
 {% for bonsai in bonsais %}
@@ -39,6 +45,4 @@ Sin trabajos planificados en los próximos 14 días.
 {{ weather }}
 {% endif %}
 
-Usa las herramientas para profundizar donde lo necesites: consulta la wiki de la especie para verificar ventanas estacionales, revisa el historial de un árbol si necesitas más contexto.
-
-Escribe la reflexión de esta mañana. No listes los datos que ya tienes arriba — da consejo de maestro: qué árboles necesitan atención urgente, qué oportunidades no deben perderse esta {{ season }}, cómo el tiempo afecta los cuidados de hoy.{% if is_friday %} Es viernes — incluye perspectiva sobre el fin de semana como ventana de trabajo.{% endif %}
+Escribe la reflexión de esta mañana. Qué árboles necesitan atención urgente, qué oportunidades no deben perderse esta {{ season }}, cómo el tiempo afecta los cuidados de hoy.{% if is_friday %} Es viernes — incluye perspectiva sobre el fin de semana como ventana de trabajo.{% endif %}
