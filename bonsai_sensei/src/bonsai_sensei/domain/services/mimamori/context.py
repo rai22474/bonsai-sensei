@@ -82,6 +82,7 @@ async def build_reflection_context(
     upcoming_summaries: list[dict],
     user_settings,
     fetch_weather_func: Callable,
+    recent_memory_facts: str | None = None,
 ) -> str:
     weather_summary = None
     if user_settings.location:
@@ -98,4 +99,5 @@ async def build_reflection_context(
         upcoming_works=upcoming_summaries,
         weather=weather_summary,
         location=user_settings.location,
+        recent_memory_facts=recent_memory_facts,
     )

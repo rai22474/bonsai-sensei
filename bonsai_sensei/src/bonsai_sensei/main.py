@@ -13,7 +13,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
 from bonsai_sensei.domain.services.sensei.advisor import create_advisor
-from bonsai_sensei.memory.episodic_memory_service import EpisodicMemoryService
+from bonsai_sensei.memory.episodic_memory_service import EpisodicMemoryService, create_search_memory_func
 from bonsai_sensei.domain.services.sensei.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
 from bonsai_sensei.domain.services.data_services import create_data_services
@@ -256,6 +256,10 @@ async def lifespan(app: FastAPI):
     tavily_base_url = os.getenv("TAVILY_API_BASE")
     tavily_searcher = create_tavily_searcher(tavily_api_key, tavily_base_url) if tavily_api_key else None
 
+    episodic_memory_url = os.getenv("EPISODIC_MEMORY_URL", "")
+    memory_service = EpisodicMemoryService(episodic_memory_url) if episodic_memory_url else None
+    search_memory_func = create_search_memory_func(episodic_memory_url) if episodic_memory_url else None
+
     sensei_agent = create_sensei_agent(
         model=model,
         session_factory=get_session_partial,
@@ -269,6 +273,7 @@ async def lifespan(app: FastAPI):
         searcher=tavily_searcher,
         register_background_task=lambda task: app.state.background_tasks.add(task),
         kb_base_url=KB_BASE_URL,
+        search_memory_func=search_memory_func,
         cultivation_messages={
             "build_fertilizer_selection_question": build_fertilizer_selection_question,
             "build_fertilization_type_question": build_fertilization_type_question,
@@ -322,9 +327,6 @@ async def lifespan(app: FastAPI):
             "build_delete_pest_confirmation": build_delete_pest_confirmation,
         },
     )
-
-    episodic_memory_url = os.getenv("EPISODIC_MEMORY_URL", "")
-    memory_service = EpisodicMemoryService(episodic_memory_url) if episodic_memory_url else None
 
     app.state.advisor, app.state.reset_session = create_advisor(
         sensei_agent=sensei_agent,
@@ -485,6 +487,7 @@ async def lifespan(app: FastAPI):
         list_species_func=services["herbarium"]["list_species"],
         list_planned_works_in_date_range_func=services["cultivation_plan"]["list_planned_works_in_date_range"],
         send_telegram_message_func=app.state.bot.send_message,
+        search_memory_func=search_memory_func,
     )
 
     yield

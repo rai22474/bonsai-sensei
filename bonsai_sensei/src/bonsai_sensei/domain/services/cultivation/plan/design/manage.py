@@ -55,6 +55,7 @@ def create_manage_development_plan_tool(
     get_user_settings_func: Callable,
     run_clarification_loop: Callable,
     run_plan_proposal: Callable,
+    search_memory_func: Callable | None = None,
 ) -> Callable:
     env = Environment(
         loader=FileSystemLoader(str(_TEMPLATE_DIR)),
@@ -126,6 +127,11 @@ def create_manage_development_plan_tool(
             bonsai_context = ctx.state["bonsai_context"]
             reclarify_reason = ctx.state.get("reclarify_reason", "")
 
+            recalled_preferences = None
+            if search_memory_func:
+                bonsai_user_id = ctx.state["bonsai_user_id"]
+                recalled_preferences = await search_memory_func(bonsai_user_id, f"preferencias diseño {bonsai_name}")
+
             rendered_prompt = clarification_prompt_template.render(
                 bonsai_name=bonsai_name,
                 start_date=start_date,
@@ -141,6 +147,7 @@ def create_manage_development_plan_tool(
                 events=bonsai_context["events"],
                 existing_plan_content=ctx.state.get("existing_plan_wiki", ""),
                 reclarify_reason=reclarify_reason,
+                recalled_preferences=recalled_preferences,
             )
             clarification = await run_clarification_loop(rendered_prompt, outer_tool_context)
 

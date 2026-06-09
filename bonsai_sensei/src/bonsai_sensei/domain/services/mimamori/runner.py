@@ -17,6 +17,7 @@ async def run_mimamori(
     list_species_func: Callable,
     list_planned_works_in_date_range_func: Callable,
     send_telegram_message_func: Callable,
+    search_memory_func: Callable | None = None,
 ) -> AsyncIterator[str]:
     today = date.today()
     species_map = {species.id: species.name for species in list_species_func()}
@@ -41,12 +42,20 @@ async def run_mimamori(
 
         logger.info("Running mimamori for user_id=%s", user_settings.user_id)
 
+        recent_memory_facts = None
+        if search_memory_func:
+            recent_memory_facts = await search_memory_func(
+                user_settings.user_id,
+                "conversaciones recientes bonsáis últimos 7 días",
+            )
+
         context = await build_reflection_context_func(
             today=today,
             bonsai_snapshots=bonsai_snapshots,
             overdue_summaries=overdue_summaries,
             upcoming_summaries=upcoming_summaries,
             user_settings=user_settings,
+            recent_memory_facts=recent_memory_facts,
         )
 
         response_text = await run_mimamori_reflection(context, user_id=user_settings.user_id)

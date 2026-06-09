@@ -32,6 +32,11 @@ Sin eventos registrados.
 Plan de diseño activo del bonsái (usa esto como punto de partida para proponer el objetivo de fertilización):
 {{ active_design_plan_content }}
 {% endif %}
+{% if recalled_preferences %}
+
+Preferencias expresadas en conversaciones anteriores (úsalas para anticipar respuestas y evitar preguntas ya respondidas):
+{{ recalled_preferences }}
+{% endif %}
 {% if existing_plan_content %}
 
 Plan activo existente (será abandonado si el usuario confirma uno nuevo):

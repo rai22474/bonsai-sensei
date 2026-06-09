@@ -45,6 +45,8 @@ def create_manage_plan_tool(
     run_plan_proposal: Callable,
     ask_human: Callable,
     build_bonsai_name_question: Callable,
+    search_memory_func: Callable | None = None,
+    search_memory_query_prefix: str = "",
 ) -> Callable:
     env = Environment(
         loader=FileSystemLoader(str(template_dir)),
@@ -110,6 +112,11 @@ def create_manage_plan_tool(
             bonsai_context = ctx.state["bonsai_context"]
             reclarify_reason = ctx.state.get("reclarify_reason", "")
 
+            recalled_preferences = None
+            if search_memory_func and search_memory_query_prefix:
+                user_id = ctx.state["bonsai_user_id"]
+                recalled_preferences = await search_memory_func(user_id, f"{search_memory_query_prefix} {bonsai_name}")
+
             rendered_prompt = clarification_prompt_template.render(
                 bonsai_name=bonsai_name,
                 start_date=start_date,
@@ -121,6 +128,7 @@ def create_manage_plan_tool(
                 active_design_plan_content=bonsai_context.get("active_design_plan_content", ""),
                 existing_plan_content=ctx.state.get("existing_plan_wiki", ""),
                 reclarify_reason=reclarify_reason,
+                recalled_preferences=recalled_preferences,
             )
             clarification = await run_clarification_loop(rendered_prompt, outer_tool_context)
 

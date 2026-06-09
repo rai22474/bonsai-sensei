@@ -27,6 +27,11 @@ Hoy es {{ current_date }}, {{ day_of_week }}. Temporada: {{ season }}.
 {% endfor %}
 {% endif %}
 
+{% if recent_memory_facts %}
+## Conversaciones recientes (últimos 7 días)
+{{ recent_memory_facts }}
+{% endif %}
+
 ## Colección ({{ bonsais | length }} árbol{{ 'es' if bonsais | length != 1 else '' }})
 {% for bonsai in bonsais %}
 **{{ bonsai.name }}** — {{ bonsai.species_name }}

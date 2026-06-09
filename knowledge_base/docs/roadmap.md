@@ -38,25 +38,6 @@ ORDER BY score DESC LIMIT 10
 
 ---
 
-## FUTURE-008 — Auto-detección de canal desde URL de YouTube
-
-**Contexto:**
-Al ingerir un video via Telegram (`/ingest <url>` o enviando la URL directamente), el admin debe especificar el canal manualmente como segundo argumento. Sin él, se usa `WIKI_DEFAULT_CHANNEL` ("general"), lo que mezcla todos los videos en un único directorio.
-
-**Objetivo:**
-Cuando no se proporciona canal, resolverlo automáticamente desde los metadatos del video (campo `uploader_id` de `yt-dlp`) y normalizarlo a slug: `@BonsaiEmpire` → `bonsaiempire`.
-
-**Implementación:**
-- `pyproject.toml`: añadir `yt-dlp`
-- `ingestion/transcript_loader.py`: añadir `create_channel_resolver(ydl_opts_factory) -> Callable[[str], str]` — extrae `uploader_id`, normaliza a lowercase slug
-- `telegram/handle_admin_ingest.py`: añadir param `resolve_channel: Callable | None`; si no hay canal en el mensaje, llamarlo antes de ingestar
-- `telegram/admin_bot.py`: inyectar `resolve_channel` en los handlers de ingest vía `partial`
-- `main.py`: crear `resolve_channel = create_channel_resolver(lambda: {"quiet": True, "skip_download": True})` y pasarlo al `AdminBotManager`
-
-**Trade-off:** `yt-dlp` hace una petición HTTP extra (~1-2 s) antes de responder al admin. Aceptable dado que la ingestión ya tarda varios segundos.
-
----
-
 ## FUTURE-009 — Ingestión de PDFs (libros y textos técnicos)
 
 **Contexto:**

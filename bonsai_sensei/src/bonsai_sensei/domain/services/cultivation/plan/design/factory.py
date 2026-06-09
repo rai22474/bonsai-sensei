@@ -27,6 +27,7 @@ def create_design_plan_tools(
     list_wiki_files_func: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
+    search_memory_func: Callable | None = None,
 ) -> dict:
     effective_model = orchestrator_model or model
 
@@ -43,6 +44,7 @@ def create_design_plan_tools(
         write_wiki_page_func=write_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
         get_user_settings_func=partial(user_settings_store.get_user_settings, create_session=session_factory),
+        search_memory_func=search_memory_func,
         run_clarification_loop=create_clarification_loop_runner(
             model=effective_model,
             ask_human=ask_human,

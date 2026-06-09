@@ -41,6 +41,11 @@ Sin eventos registrados.
 Plan activo existente (será abandonado si el usuario confirma uno nuevo):
 {{ existing_plan_content }}
 {% endif %}
+{% if recalled_preferences %}
+
+Preferencias expresadas en conversaciones anteriores (úsalas para anticipar respuestas y evitar preguntas ya respondidas):
+{{ recalled_preferences }}
+{% endif %}
 
 {% if reclarify_reason %}
 

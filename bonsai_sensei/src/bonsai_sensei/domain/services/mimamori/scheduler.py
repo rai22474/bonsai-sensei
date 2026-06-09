@@ -17,6 +17,7 @@ def create_mimamori_scheduler(
     list_species_func: Callable,
     list_planned_works_in_date_range_func: Callable,
     send_telegram_message_func: Callable,
+    search_memory_func: Callable | None = None,
 ) -> AsyncIOScheduler:
     """Create and start an APScheduler that runs the daily mimamori reflection.
 
@@ -38,6 +39,7 @@ def create_mimamori_scheduler(
             "list_species_func": list_species_func,
             "list_planned_works_in_date_range_func": list_planned_works_in_date_range_func,
             "send_telegram_message_func": send_telegram_message_func,
+            "search_memory_func": search_memory_func,
         },
     )
     scheduler.start()
@@ -53,6 +55,7 @@ async def _dispatch_mimamori(
     list_species_func: Callable,
     list_planned_works_in_date_range_func: Callable,
     send_telegram_message_func: Callable,
+    search_memory_func: Callable | None = None,
 ):
     logging.info("Running scheduled mimamori reflection")
     async for _ in run_mimamori(
@@ -64,5 +67,6 @@ async def _dispatch_mimamori(
         list_species_func=list_species_func,
         list_planned_works_in_date_range_func=list_planned_works_in_date_range_func,
         send_telegram_message_func=send_telegram_message_func,
+        search_memory_func=search_memory_func,
     ):
         pass

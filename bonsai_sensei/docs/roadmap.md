@@ -125,7 +125,7 @@ Snapshot añade `plans_pending_recreation: list[str]` (nombres de los tipos de p
 
 ---
 
-## FUTURE-020 — Activar lectura de memoria episódica en el sensei y agentes de plan
+## ~~FUTURE-020~~ — Activar lectura de memoria episódica en el sensei y agentes de plan ✅
 
 **Contexto:**
 La memoria episódica está **escribiendo** correctamente: tras cada turno de conversación, `_capture_session_to_memory` llama a `EpisodicMemoryService.add_session_to_memory` ([advisor.py](../src/bonsai_sensei/domain/services/advisor.py)), que indexa los mensajes en Graphiti. Pero la **lectura nunca ocurre**:
@@ -177,6 +177,55 @@ Mimamori genera reflexiones independientes cada día. Si el usuario mencionó ay
 3. Implementar llamada HTTP a `search_memory` en `manage_plan.py` antes del clarification loop; inyectar en template como `recalled_preferences`.
 4. Implementar llamada en `run_mimamori`; inyectar en template como `recent_memory_facts`.
 5. Tests de integración: mock del endpoint HTTP de `episodic_memory` para verificar que se llama con las queries correctas en los tres puntos.
+
+---
+
+## FUTURE-020 — Extraer boilerplate de InMemoryRunner a factory compartida
+
+**Contexto:**
+El patrón `Agent → InMemoryRunner → create_session → run_async` está copiado en ~12 ficheros:
+`fertilizer_recommendation_runner.py`, `phytosanitary_recommendation_runner.py`, `plan_evaluation_runner.py`,
+`photo_analysis_runner.py`, `photo_comparison_runner.py`, `fertilizer_wiki_compiler.py`,
+`phytosanitary_wiki_compiler.py`, `species_wiki_compiler.py`, `pest_wiki_compiler.py`,
+`pest_catalog_seeder.py`, `mimamori_agent_runner.py`, y otros.
+
+La única utilidad compartida hoy es `extract_text_from_events.py`. El loop de sesión se copia-pega entero.
+
+### Abstracción propuesta
+
+Factory `create_single_turn_llm_runner` en `domain/services/llm_runner.py`:
+
+```python
+def create_single_turn_llm_runner(
+    model, app_name, instruction, tools=(), max_llm_calls=10
+) -> Callable[[types.Content], Coroutine]:
+    agent = Agent(model=model, name=app_name, instruction=instruction, tools=list(tools))
+    runner = InMemoryRunner(agent=agent, app_name=app_name)
+
+    async def run(message: types.Content):
+        session_id = str(uuid.uuid4())
+        await runner.session_service.create_session(
+            app_name=app_name, user_id=app_name, session_id=session_id
+        )
+        return runner.run_async(
+            user_id=app_name, session_id=session_id,
+            new_message=message, run_config=RunConfig(max_llm_calls=max_llm_calls)
+        )
+
+    return run
+```
+
+Encaja con el patrón CLAUDE.md: factory como composition root, `run` como closure puro sin I/O propio.
+
+**No aplica a:**
+- `advisor.py` + `mimamori_agent_runner.py` — usan `Runner` real con `memory_service` (variante distinta)
+- `clarification_runner.py` — marcado para reescritura por ADR-015
+
+### Punto de partida al retomar
+
+1. Crear `domain/services/llm_runner.py` con `create_single_turn_llm_runner`.
+2. Migrar los ~12 runners uno a uno, verificando tests unitarios y de aceptación tras cada migración.
+3. No tocar `advisor.py`, `mimamori_agent_runner.py`, ni `clarification_runner.py`.
 
 ---
 

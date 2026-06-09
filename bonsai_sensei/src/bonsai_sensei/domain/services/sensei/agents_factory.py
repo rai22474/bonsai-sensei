@@ -24,6 +24,7 @@ def create_sensei_agent(
     ask_poll: Callable | None = None,
     searcher: Callable | None = None,
     register_background_task: Callable | None = None,
+    search_memory_func: Callable | None = None,
 ):
     cultivation_group_factory = partial(
         create_cultivation_group,
@@ -35,6 +36,7 @@ def create_sensei_agent(
         ask_poll=ask_poll,
         orchestrator_model=orchestrator_model,
         register_background_task=register_background_task,
+        search_memory_func=search_memory_func,
         **cultivation_messages,
         **botanist_messages,
     )

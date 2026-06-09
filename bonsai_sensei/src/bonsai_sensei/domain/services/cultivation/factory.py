@@ -36,6 +36,7 @@ def create_cultivation_group(
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
     register_background_task: Callable | None = None,
+    search_memory_func: Callable | None = None,
 ):
     botanist = create_botanist_group(
         model=model,
@@ -76,5 +77,6 @@ def create_cultivation_group(
         build_bonsai_name_question=build_bonsai_name_question,
         orchestrator_model=orchestrator_model,
         ask_poll=ask_poll,
+        search_memory_func=search_memory_func,
     )
     return botanist, kikaru

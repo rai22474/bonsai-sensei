@@ -39,6 +39,7 @@ def create_manage_fertilization_plan_tool(
     run_plan_proposal: Callable,
     ask_human: Callable,
     build_bonsai_name_question: Callable,
+    search_memory_func: Callable | None = None,
 ) -> Callable:
     return create_manage_plan_tool(
         tool_name="manage_fertilization_plan",
@@ -68,4 +69,6 @@ def create_manage_fertilization_plan_tool(
         run_plan_proposal=run_plan_proposal,
         ask_human=ask_human,
         build_bonsai_name_question=build_bonsai_name_question,
+        search_memory_func=search_memory_func,
+        search_memory_query_prefix="preferencias fertilización",
     )

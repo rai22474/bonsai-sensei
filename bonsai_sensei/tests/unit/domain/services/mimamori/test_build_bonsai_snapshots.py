@@ -10,62 +10,36 @@ from bonsai_sensei.domain.services.mimamori.context import build_bonsai_snapshot
 
 def should_include_bonsai_name_in_snapshot():
     bonsai = _make_bonsai(1, "Hanako", species_id=10)
-    result = build_bonsai_snapshots(
-        bonsais=[bonsai],
-        species_map={10: "Ficus"},
-        list_bonsai_events_func=lambda **_: [],
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
-    )
+    result = _build_snapshots(bonsais=[bonsai], species_map={10: "Ficus"})
     assert_that(result[0]["name"], equal_to("Hanako"))
 
 
 def should_resolve_species_name_from_map():
     bonsai = _make_bonsai(1, "Hanako", species_id=10)
-    result = build_bonsai_snapshots(
-        bonsais=[bonsai],
-        species_map={10: "Ficus retusa"},
-        list_bonsai_events_func=lambda **_: [],
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
-    )
+    result = _build_snapshots(bonsais=[bonsai], species_map={10: "Ficus retusa"})
     assert_that(result[0]["species_name"], equal_to("Ficus retusa"))
 
 
 def should_use_unknown_species_when_not_in_map():
     bonsai = _make_bonsai(1, "Hanako", species_id=99)
-    result = build_bonsai_snapshots(
-        bonsais=[bonsai],
-        species_map={},
-        list_bonsai_events_func=lambda **_: [],
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
-    )
+    result = _build_snapshots(bonsais=[bonsai], species_map={})
     assert_that(result[0]["species_name"], equal_to("Especie desconocida"))
 
 
 def should_include_development_phase_when_plan_exists():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
     dev_plan = _make_dev_plan(current_phase="engorde", design_goal="trunk thickening", created_at=_dt(2025, 1, 1))
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
         get_active_development_plan_func=lambda **_: dev_plan,
-        get_active_fertilization_plan_func=lambda **_: None,
     )
     assert_that(result[0]["development_phase"], equal_to("engorde"))
 
 
 def should_have_none_development_phase_when_no_plan():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
-    result = build_bonsai_snapshots(
-        bonsais=[bonsai],
-        species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
-    )
+    result = _build_snapshots(bonsais=[bonsai], species_map={1: "Pinus"})
     assert_that(result[0]["development_phase"], none())
 
 
@@ -73,10 +47,9 @@ def should_detect_fertilization_outdated_when_design_plan_newer():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
     fert_plan = _make_fert_plan(goal="engorde", created_at=_dt(2025, 1, 1))
     dev_plan = _make_dev_plan(current_phase="refinamiento", design_goal="new goal", created_at=_dt(2025, 6, 1))
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
         get_active_development_plan_func=lambda **_: dev_plan,
         get_active_fertilization_plan_func=lambda **_: fert_plan,
     )
@@ -87,10 +60,9 @@ def should_not_flag_outdated_when_fertilization_plan_newer():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
     dev_plan = _make_dev_plan(current_phase="engorde", design_goal="goal", created_at=_dt(2025, 1, 1))
     fert_plan = _make_fert_plan(goal="engorde", created_at=_dt(2025, 6, 1))
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
         get_active_development_plan_func=lambda **_: dev_plan,
         get_active_fertilization_plan_func=lambda **_: fert_plan,
     )
@@ -100,12 +72,10 @@ def should_not_flag_outdated_when_fertilization_plan_newer():
 def should_not_flag_outdated_when_no_fertilization_plan():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
     dev_plan = _make_dev_plan(current_phase="engorde", design_goal="goal", created_at=_dt(2025, 6, 1))
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
         get_active_development_plan_func=lambda **_: dev_plan,
-        get_active_fertilization_plan_func=lambda **_: None,
     )
     assert_that(result[0]["fertilization_outdated"], equal_to(False))
 
@@ -114,10 +84,9 @@ def should_include_outdated_goals_when_fertilization_outdated():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
     fert_plan = _make_fert_plan(goal="old goal", created_at=_dt(2025, 1, 1))
     dev_plan = _make_dev_plan(current_phase="refinamiento", design_goal="new goal", created_at=_dt(2025, 6, 1))
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
         get_active_development_plan_func=lambda **_: dev_plan,
         get_active_fertilization_plan_func=lambda **_: fert_plan,
     )
@@ -131,26 +100,30 @@ def should_include_last_event_when_events_exist():
         {"event_type": "fertilizer_application", "occurred_at": "2026-03-01T10:00:00"},
         {"event_type": "watering", "occurred_at": "2026-05-15T08:00:00"},
     ]
-    result = build_bonsai_snapshots(
+    result = _build_snapshots(
         bonsais=[bonsai],
         species_map={1: "Pinus"},
         list_bonsai_events_func=lambda **_: events,
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
     )
     assert_that(result[0]["last_event_type"], equal_to("watering"))
 
 
 def should_have_none_last_event_when_no_events():
     bonsai = _make_bonsai(1, "Hanako", species_id=1)
-    result = build_bonsai_snapshots(
-        bonsais=[bonsai],
-        species_map={1: "Pinus"},
-        list_bonsai_events_func=lambda **_: [],
-        get_active_development_plan_func=lambda **_: None,
-        get_active_fertilization_plan_func=lambda **_: None,
-    )
+    result = _build_snapshots(bonsais=[bonsai], species_map={1: "Pinus"})
     assert_that(result[0]["last_event_type"], none())
+
+
+def _build_snapshots(bonsais, species_map, **overrides):
+    defaults = {
+        "list_bonsai_events_func": lambda **_: [],
+        "get_active_development_plan_func": lambda **_: None,
+        "get_active_fertilization_plan_func": lambda **_: None,
+        "get_recent_unlinked_pest_events_func": lambda **_: [],
+        "get_recently_abandoned_fertilization_plans_func": lambda **_: [],
+        "get_recently_abandoned_development_plans_func": lambda **_: [],
+    }
+    return build_bonsai_snapshots(bonsais=bonsais, species_map=species_map, **{**defaults, **overrides})
 
 
 def _make_bonsai(bonsai_id: int, name: str, species_id: int) -> Bonsai:

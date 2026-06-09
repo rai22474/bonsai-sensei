@@ -67,6 +67,7 @@ def create_kikaru_group(
     build_bonsai_name_question: Callable,
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
+    search_memory_func: Callable | None = None,
 ):
     effective_orchestrator_model = orchestrator_model or model
     kb_base_url = os.getenv("KB_BASE_URL", "http://knowledge_base:8080")
@@ -84,6 +85,7 @@ def create_kikaru_group(
         write_wiki_page_func=write_wiki_page_func,
         list_wiki_files_func=list_wiki_files_func,
         ask_poll=ask_poll,
+        search_memory_func=search_memory_func,
     )
     abandon_fertilization_plan_tool = _create_abandon_fertilization_plan_tool(
         session_factory=session_factory,
@@ -202,6 +204,7 @@ def create_kikaru_group(
         list_wiki_files_func=list_wiki_files_func,
         orchestrator_model=effective_orchestrator_model,
         ask_poll=ask_poll,
+        search_memory_func=search_memory_func,
     )
 
     return create_kikaru(
@@ -221,7 +224,7 @@ def create_kikaru_group(
     )
 
 
-def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, build_bonsai_name_question, ask_plan_review, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable, ask_poll: Callable | None = None):
+def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, build_bonsai_name_question, ask_plan_review, read_wiki_page_func, write_wiki_page_func, list_wiki_files_func: Callable, ask_poll: Callable | None = None, search_memory_func: Callable | None = None):
     from bonsai_sensei.domain.services.cultivation.plan.plan_proposal_runner import create_plan_proposal_runner as create_fertilization_plan_runner
     from bonsai_sensei.domain.services.cultivation.plan.clarification_runner import create_clarification_loop_runner
     return create_manage_fertilization_plan_tool(
@@ -241,6 +244,7 @@ def _create_manage_fertilization_plan_tool(model, session_factory, ask_human, bu
         run_plan_proposal=create_fertilization_plan_runner(model=model, ask_human=ask_human, ask_plan_review=ask_plan_review, app_name="fertilization_plan_proposal"),
         ask_human=ask_human,
         build_bonsai_name_question=build_bonsai_name_question,
+        search_memory_func=search_memory_func,
     )
 
 

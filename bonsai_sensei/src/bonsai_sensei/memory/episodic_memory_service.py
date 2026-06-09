@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import Callable
 
 import httpx
 from google.adk.events.event import Event
@@ -8,6 +9,28 @@ from google.adk.sessions.session import Session
 from google.genai import types
 
 _MEMORY_SYNCED_KEY = "memory_synced_event_count"
+
+
+def create_search_memory_func(base_url: str) -> Callable:
+    """Create a callable that searches episodic memory via HTTP.
+
+    Returns an async callable(user_id, query) -> str | None with the facts
+    joined as newline-separated text, or None when no memories are found.
+    """
+    normalized_url = base_url.rstrip("/")
+
+    async def search_memory(user_id: str, query: str) -> str | None:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{normalized_url}/memory",
+                params={"user_id": user_id, "query": query},
+                timeout=30,
+            )
+            response.raise_for_status()
+            memories = response.json().get("memories", [])
+        return "\n".join(memories) if memories else None
+
+    return search_memory
 
 
 class EpisodicMemoryService(BaseMemoryService):
