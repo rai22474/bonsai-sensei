@@ -25,6 +25,11 @@ def get_bonsai_by_name(session: Session, name: str, user_id: str | None = None) 
 
 
 @with_session
+def get_bonsai_by_id(session: Session, bonsai_id: int) -> Bonsai | None:
+    return session.get(Bonsai, bonsai_id)
+
+
+@with_session
 def create_bonsai(session: Session, bonsai: Bonsai) -> Bonsai | None:
     species = session.get(Species, bonsai.species_id)
     if not species:

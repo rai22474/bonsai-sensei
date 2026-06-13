@@ -61,6 +61,7 @@ def create_sensei_agent(
         kb_base_url=kb_base_url,
         searcher=searcher,
     )
+
     return create_agents(
         model=model,
         create_cultivation_group=cultivation_group_factory,

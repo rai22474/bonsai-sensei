@@ -473,3 +473,42 @@ ADK 2.0 ofrece `ResumabilityConfig` para replay de sub-agentes completados tras 
 - `bonsai_sensei/src/bonsai_sensei/domain/services/cultivation/plan/clarification_runner.py` — ídem
 - `bonsai_sensei/src/bonsai_sensei/domain/services/advisor.py` — detectar `adk_request_input`
 - `bonsai_sensei/src/bonsai_sensei/api/advice.py` — unificar endpoints de respuesta bajo `FunctionResponse`
+
+---
+
+## ADR-016 — Canales: routing multi-turno y contexto de sub-agentes en ADK
+
+**Estado:** Implementado (2026-06-13)
+
+**Contexto:**
+El agente kiroku necesita gestionar sesiones conversacionales multi-turno: el usuario envía varios mensajes (preguntas, fotos, comentarios) antes de cerrar. ADK 2.0 no tiene soporte nativo para que un sub-agente tome el control del canal durante múltiples turnos consecutivos, ni mecanismo estándar para pasarle contexto de inicialización.
+
+**Decisión — Routing multi-turno (canal custom):**
+Cada canal tiene su propio `Runner` ADK y su propia sesión (`session_id = f"{user_id}:kiroku"`). `_generate_advise` lee `active_channel` del estado de la sesión principal y enruta el mensaje al runner del canal activo. El canal se activa cuando un tool escribe `active_channel = "kiroku"` en estado, y se desactiva cuando otro tool escribe `active_channel = None`. Tras cada turno, `_handle_channel_transition` detecta el cambio e invoca los callbacks `on_enter` / `on_exit`.
+
+La sesión separada da al canal historial de conversación propio — no contamina el historial de sensei.
+
+**Decisión — Contexto del sub-agente: dos capas independientes:**
+
+ADK ofrece un único mecanismo documentado para datos persistentes entre turnos: `tool_context.state`. No hay API para "pasar contexto al activar un sub-agente". A partir de esa restricción se establecieron dos capas con responsabilidades distintas:
+
+*Capa 1 — Datos de dominio para tools (session state):*
+`start_work_documentation` escribe los identificadores de la sesión en el estado del canal: `kiroku_work_id`, `kiroku_work_type`, `kiroku_bonsai_name`, `kiroku_session_type`, y el acumulador `kiroku_photo_analyses`. Los tools los leen directamente de `tool_context.state`. El mínimo de estado es el que no puede derivarse en runtime: `work_id` (clave de BD), nombres para display (`bonsai_name`, `work_type`), tipo de sesión, y el acumulador de análisis de fotos. Todo lo demás (bonsai_id, user_id, session_date, photo_count) se deriva en el momento de uso desde la BD o se computa.
+
+*Capa 2 — Contexto para el LLM (instruction injection):*
+Los valores de sesión se inyectan en `KIROKU_INSTRUCTION` via variables de estado de ADK (`{kiroku_bonsai_name?}`, `{kiroku_work_type?}`, `{kiroku_session_type?}`, `{kiroku_work_id?}`). Esto permite que el LLM pase `work_id` y `session_type` como parámetros explícitos a los tools — el LLM los lee de su instrucción y los pasa, en lugar de que los tools los lean de state. Sin esta inyección el LLM ignora el contexto de sesión y pide clarificación al usuario.
+
+La regla resultante: **state para acumuladores y para inyectar contexto en la instrucción; parámetros LLM para lo que el LLM puede pasar directamente desde su contexto**.
+
+**Tensión aceptada:**
+`start_work_documentation` hace dos cosas: seleccionar el trabajo (dominio) y activar el canal escribiendo estado (routing). ADK no ofrece separación nativa de estas responsabilidades. La alternativa — inyectar el contexto vía un mensaje `[sistema]` en el `on_enter` callback — requeriría dar al callback acceso al runner del canal y costaría un LLM call extra de inicialización. No vale el coste.
+
+**Separación domain/lifecycle en los tools del canal:**
+- `document_work_session`: genera y escribe la wiki. Lógica de dominio pura; no toca estado del canal.
+- `close_work_session`: cierra el canal (limpia state, escribe `channel_handoff_summary`, setea `active_channel=None`). Separado de `document_work_session` porque son responsabilidades distintas: una es dominio, la otra es ciclo de vida del canal.
+
+**Consecuencias:**
+- Multi-turno funciona de forma transparente; el canal persiste hasta que `close_work_session` lo libera.
+- Minimizar el estado del canal reduce acoplamiento: cuanto menos estado, menos riesgo de inconsistencia entre sesión principal y sesión del canal.
+- Si ADK añade soporte nativo para canales o contexto de activación, el mecanismo custom puede simplificarse sin cambiar los tools ni la instrucción.
+- El acumulador `kiroku_photo_analyses` no tiene alternativa en state: una lista que crece durante la sesión no puede pasarse como parámetro LLM (demasiado grande; no es fiable que el LLM la gestione íntegra).

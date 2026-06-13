@@ -17,6 +17,7 @@ Próximo sábado: {{next_saturday}}
 - Usa el próximo sábado como fecha por defecto cuando el usuario no especifique una.
 - Para eliminar un trabajo planificado: lista primero los trabajos del bonsái para obtener el ID, luego elimínalo.
 - Los tratamientos fitosanitarios solo entran aquí cuando el usuario quiere programar uno con fecha. Las peticiones de consejo o recomendación no son tuyas.
+- Cuando el usuario quiera abrir una sesión de documentación de un trabajo planificado — preparar cómo ejecutarlo (análisis previo) o registrar lo que hizo tras terminarlo (resultado) — inicia la documentación del trabajo. Esto transfiere el canal al agente de documentación.
 {TOOL_CONTRACT}
 - Si una herramienta devuelve status 'cancelled': no ofrezcas alternativas ni hagas más preguntas.
 
@@ -27,7 +28,6 @@ Responde en castellano.
 
 def create_kikaru(
     model: object,
-
     schedule_fertilization_tool: Callable | None = None,
     abandon_fertilization_plan_tool: Callable | None = None,
     evaluate_fertilization_plan_tool: Callable | None = None,
@@ -40,6 +40,7 @@ def create_kikaru(
     create_transplant_tool: Callable | None = None,
     delete_planned_work_tool: Callable | None = None,
     list_planned_works_tool: Callable | None = None,
+    start_work_documentation_tool: Callable | None = None,
 ) -> LlmAgent:
     tools = [
         tool
@@ -56,6 +57,7 @@ def create_kikaru(
             create_transplant_tool,
             delete_planned_work_tool,
             list_planned_works_tool,
+            start_work_documentation_tool,
         ]
         if tool is not None
     ]
@@ -63,7 +65,7 @@ def create_kikaru(
     return LlmAgent(
         model=model,
         name="kikaru",
-        description="Programa fertilizaciones y tratamientos fitosanitarios (puntuales o por período), gestiona planes de desarrollo artístico del bonsái (fase, estilo, objetivo de diseño, calendario de trabajos estacionales), gestiona planes activos (abandono y evaluación), crea trasplantes, y elimina trabajos planificados. Decide la fecha por defecto (próximo sábado) cuando el usuario no especifica una.",
+        description="Programa fertilizaciones y tratamientos fitosanitarios (puntuales o por período), gestiona planes de desarrollo artístico del bonsái (fase, estilo, objetivo de diseño, calendario de trabajos estacionales), gestiona planes activos (abandono y evaluación), crea trasplantes, elimina trabajos planificados, y abre sesiones de documentación de trabajos planificados (análisis previo a ejecutar un trabajo o registro del resultado tras haberlo realizado). Decide la fecha por defecto (próximo sábado) cuando el usuario no especifica una.",
         instruction=KIKARU_INSTRUCTION,
         after_model_callback=limit_to_single_tool_call,
         tools=tools,

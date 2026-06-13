@@ -26,7 +26,8 @@ sensei                          [orchestrator, persistent session]
         ├── get_weather_risk
         ├── recommend_fertilizer
         ├── botanist            Species registry + wiki generation
-        ├── kikaru              Cultivation planning
+        ├── kikaru              Cultivation planning (calendar, plans, transplants)
+        ├── kiroku              Work documentation (pre-work analysis, post-work records)
         ├── nursery             Bonsai CRUD
         ├── caretaker           Event recording
         ├── gallery             Photo management
@@ -50,7 +51,8 @@ Mimamori is fully decoupled from the sensei pipeline. It receives pre-built cont
 | sensei | 先生 | Entry point, routes queries and commands |
 | mitori | 見取り | Planner, produces typed JSON action plan |
 | shokunin | 職人 | Deterministic executor |
-| kikaru | 木刈る | Cultivation work calendar |
+| kikaru | 木刈る | Cultivation work calendar (transactional) |
+| kiroku | 記録 | Work documentation — pre-work analysis and post-work records (conversational) |
 | mimamori | 見守り | Daily guardian, morning reflection |
 
 ## Telegram commands

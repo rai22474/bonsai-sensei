@@ -1,0 +1,57 @@
+Redacta una página de wiki estructurada en Markdown con el análisis y conclusiones de la siguiente sesión de trabajo sobre bonsái.
+
+La página debe estar en castellano, ser detallada y servir como referencia técnica para ejecutar o aprender del trabajo.
+
+## Datos de la sesión
+
+Bonsái: {{ bonsai_name }}
+Tipo de trabajo: {{ work_type }}
+Fecha: {{ today }}
+
+## Notas y conclusiones de la sesión
+
+{{ notes }}
+{% if photo_analyses %}
+
+## Análisis de fotos realizados durante la sesión
+
+{% for analysis in photo_analyses %}
+---
+{{ analysis }}
+{% endfor %}
+{% endif %}
+{% if planned_works %}
+
+## Trabajos planificados relacionados
+
+{% for work in planned_works %}
+- {{ work.work_type }} — fecha programada: {{ work.scheduled_date }}{% if work.notes %} — notas: {{ work.notes }}{% endif %}
+
+{% endfor %}
+{% endif %}
+{% if plan_wiki_content %}
+
+## Plan de desarrollo asociado
+
+{{ plan_wiki_content }}
+{% endif %}
+{% if bonsai_wiki_content %}
+
+## Contexto del bonsái
+
+{{ bonsai_wiki_content }}
+{% endif %}
+
+## Instrucciones de formato
+
+Genera la página wiki con estas secciones:
+
+1. **Encabezado**: título, bonsái, fecha, tipo de trabajo
+2. **Contexto**: estado del árbol antes del trabajo, objetivos
+3. **Análisis**: decisiones tomadas, técnicas discutidas, consideraciones clave. Si hay fotos, sintetiza las observaciones visuales.
+4. **Plan de ejecución** (si es análisis previo): pasos concretos, herramientas, precauciones
+5. **Registro del trabajo** (si es documentación posterior): qué se hizo, resultado observado, fotos enviadas
+6. **Seguimiento**: qué observar después, cuándo revisar el resultado
+
+Usa Markdown: # para secciones, **negrita** para puntos clave, listas con - para pasos.
+Responde ÚNICAMENTE con el contenido Markdown de la página, sin texto adicional.

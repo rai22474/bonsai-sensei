@@ -1,49 +1,34 @@
-import asyncio
-import logging
-import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
 from typing import Callable, Optional
 from functools import partial
 
 from google.adk.apps.app import App, EventsCompactionConfig
 from google.adk.artifacts import InMemoryArtifactService
 from google.adk.memory import BaseMemoryService
-from google.adk.runners import InMemoryRunner, Runner, RunConfig
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
-from opentelemetry import metrics, trace
 
-DEFAULT_MAX_LLM_CALLS = 20
-INACTIVITY_THRESHOLD_HOURS = 8
-_LAST_ACTIVITY_KEY = "last_activity_at"
-
-_COMPACTION_INTERVAL = 5
-_COMPACTION_OVERLAP = 2
-
-_PROGRESS_MESSAGES = {
-    "command_pipeline": "🗺️ Elaborando un plan de acción...",
-    "gardener": "🌱 Gestionando la colección de bonsáis...",
-    "kantei": "🔍 Analizando la foto...",
-    "botanist": "🌿 Consultando el herbario de especies...",
-    "kikaru": "📅 Planificando trabajos de cultivo...",
-    "weather_advisor": "🌤️ Consultando el pronóstico meteorológico...",
-    "storekeeper": "📦 Consultando el catálogo de insumos...",
-    "recommend_fertilizer": "🧪 Seleccionando fertilizante...",
-    "recommend_phytosanitary": "🛡️ Seleccionando producto fitosanitario...",
-}
-
-_tracer = trace.get_tracer(__name__)
-_meter = metrics.get_meter(__name__)
-_execution_counter = _meter.create_counter(
-    "agent.execution.count",
-    description="Number of agent executions",
+from bonsai_sensei.domain.services.sensei.session_manager import (
+    APP_NAME,
+    ChannelConfig,
+    ACTIVE_CHANNEL_MAIN_STATE_KEY,
+    sync_session,
+    create_channel_session,
+    release_channel_in_main_session,
+    sync_handoff_summary_to_main_session,
+    inject_handoff_summary,
 )
-_execution_latency = _meter.create_histogram(
-    "agent.execution.latency",
-    unit="ms",
-    description="Agent execution latency in milliseconds",
+from bonsai_sensei.domain.services.sensei.runner import (
+    run_runner,
+    pop_state_list,
+    build_user_message,
+    build_response_texts,
+    capture_session_to_memory_safe,
 )
+
+COMPACTION_INTERVAL = 5
+COMPACTION_OVERLAP = 2
 
 
 @dataclass
@@ -54,41 +39,57 @@ class AdvisorResponse:
 
 
 def create_advisor(
-    sensei_agent,
-    get_user_settings_func: Callable | None = None,
+    default_agent,
+    channels: list[ChannelConfig] | None = None,
+    progress_messages: dict[str, str] | None = None,
+    context_state_builder: Callable[[str], dict] | None = None,
     memory_service: Optional[BaseMemoryService] = None,
 ) -> tuple[Callable[..., AdvisorResponse], Callable[..., None]]:
-    app = App(
-        name="bonsai_sensei",
-        root_agent=sensei_agent,
+    session_service = InMemorySessionService()
+
+    default_app = App(
+        name=APP_NAME,
+        root_agent=default_agent,
         events_compaction_config=EventsCompactionConfig(
-            compaction_interval=_COMPACTION_INTERVAL,
-            overlap_size=_COMPACTION_OVERLAP,
+            compaction_interval=COMPACTION_INTERVAL,
+            overlap_size=COMPACTION_OVERLAP,
         ),
     )
-    if memory_service is not None:
-        runner = Runner(
-            app=app,
-            app_name="bonsai_sensei",
-            artifact_service=InMemoryArtifactService(),
-            session_service=InMemorySessionService(),
-            memory_service=memory_service,
-        )
-    else:
-        runner = InMemoryRunner(app=app)
+    default_runner = Runner(
+        app=default_app,
+        app_name=APP_NAME,
+        artifact_service=InMemoryArtifactService(),
+        session_service=session_service,
+        memory_service=memory_service,
+    )
+
+    channel_runners = _build_channel_runners(channels, session_service, default_runner)
+
+    _progress = progress_messages or {}
+    _ctx_builder = context_state_builder or (lambda _uid: {})
 
     async def reset_session(user_id: str) -> None:
-        await runner.session_service.delete_session(
-            app_name="bonsai_sensei",
-            user_id=user_id,
-            session_id=str(user_id),
+        await session_service.delete_session(
+            app_name=APP_NAME, user_id=user_id, session_id=str(user_id)
         )
+        for channel_cfg, _ in channel_runners.values():
+            try:
+                await session_service.delete_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=channel_cfg.session_id_for(user_id),
+                )
+            except Exception:
+                pass
 
     return (
         partial(
             _generate_advise,
-            runner=runner,
-            get_user_settings_func=get_user_settings_func,
+            default_runner=default_runner,
+            channel_runners=channel_runners,
+            session_service=session_service,
+            progress_messages=_progress,
+            context_state_builder=_ctx_builder,
             memory_service=memory_service,
         ),
         reset_session,
@@ -97,181 +98,158 @@ def create_advisor(
 
 async def _generate_advise(
     content: types.Content | str,
-    runner: InMemoryRunner,
+    default_runner: Runner,
+    channel_runners: dict[str, tuple[ChannelConfig, Runner]],
+    session_service,
     user_id: str = "default_user",
-    get_user_settings_func: Callable | None = None,
+    progress_messages: dict[str, str] | None = None,
+    context_state_builder: Callable[[str], dict] | None = None,
     progress_callback: Callable[[str], None] | None = None,
     memory_service: Optional[BaseMemoryService] = None,
 ) -> AdvisorResponse:
-    state_delta = _build_context_state(user_id, get_user_settings_func)
-    await _sync_session(runner, user_id, state_delta)
-    message = content if isinstance(content, types.Content) else _build_user_message(content)
-    events = await _run_agent(runner, user_id, message, progress_callback)
+    context_state = context_state_builder(user_id) if context_state_builder else {}
+    await sync_session(session_service, user_id, context_state)
+
+    message = (
+        content if isinstance(content, types.Content) else build_user_message(content)
+    )
+
+    session = await session_service.get_session(
+        app_name=APP_NAME, user_id=user_id, session_id=str(user_id)
+    )
+    active_channel = (
+        session.state.get(ACTIVE_CHANNEL_MAIN_STATE_KEY) if session else None
+    )
+    current_channel = active_channel if active_channel in channel_runners else None
+
+    current_runner, current_session_id = _resolve_runner_for_channel(
+        current_channel, channel_runners, default_runner, user_id
+    )
+
+    events = await run_runner(
+        runner=current_runner,
+        session_id=current_session_id,
+        user_id=user_id,
+        message=message,
+        progress_callback=progress_callback,
+        progress_messages=progress_messages or {},
+        record_metrics=(current_channel is None),
+    )
+
+    await _handle_channel_transition(
+        current_channel=current_channel,
+        current_session_id=current_session_id,
+        channel_runners=channel_runners,
+        session_service=session_service,
+        user_id=user_id,
+    )
+
     if memory_service is not None:
-        await _capture_session_to_memory_safe(runner, user_id, memory_service)
-    photos_taken_on = await _pop_photos_taken_on(runner, user_id)
-    response_text = "\n".join(_build_response_texts(events))
-    photos = await _collect_and_clear_photos(runner, user_id)
-    return AdvisorResponse(text=response_text, photos=photos, photos_taken_on=photos_taken_on)
+        await capture_session_to_memory_safe(session_service, user_id, memory_service)
+
+    return await _collect_response(session_service, user_id, events)
 
 
-def _build_context_state(user_id: str, get_user_settings_func: Callable | None) -> dict:
-    user_settings = get_user_settings_func(user_id) if get_user_settings_func else None
-    user_location = user_settings.location if user_settings and user_settings.location else ""
-    today = date.today()
-    days_until_saturday = (5 - today.weekday()) % 7 or 7
-    next_saturday = (today + timedelta(days=days_until_saturday)).isoformat()
-    return {
-        "current_date": today.isoformat(),
-        "next_saturday": next_saturday,
-        "user_location": user_location,
-        "photos_to_display": [],
-        "photos_for_analysis_taken_on": [],
-        _LAST_ACTIVITY_KEY: datetime.now(timezone.utc).isoformat(),
-    }
-
-
-async def _sync_session(runner: InMemoryRunner, user_id: str, state_delta: dict) -> None:
-    session = await runner.session_service.get_session(
-        app_name="bonsai_sensei",
-        user_id=user_id,
-        session_id=str(user_id),
-    )
-    if session is not None and _is_session_stale(session):
-        await runner.session_service.delete_session(
-            app_name="bonsai_sensei",
-            user_id=user_id,
-            session_id=str(user_id),
+def _build_channel_runners(
+    channels: list[ChannelConfig] | None,
+    session_service,
+    default_runner: Runner,
+) -> dict[str, tuple[ChannelConfig, Runner]]:
+    result: dict[str, tuple[ChannelConfig, Runner]] = {}
+    for channel in channels or []:
+        channel_app = App(name=APP_NAME, root_agent=channel.agent)
+        channel_runner = Runner(
+            app=channel_app,
+            app_name=APP_NAME,
+            artifact_service=InMemoryArtifactService(),
+            session_service=session_service,
         )
-        await runner.session_service.create_session(
-            app_name="bonsai_sensei",
-            user_id=user_id,
-            session_id=str(user_id),
-            state=state_delta,
+        channel_with_callbacks = _wire_channel_callbacks(channel, default_runner)
+        result[channel.name] = (channel_with_callbacks, channel_runner)
+    return result
+
+
+def _wire_channel_callbacks(
+    channel: ChannelConfig, default_runner: Runner
+) -> ChannelConfig:
+    if channel.on_enter is None:
+        channel.on_enter = partial(_initialize_channel_session, channel=channel)
+    if channel.on_exit is None:
+        channel.on_exit = partial(
+            _handoff_channel_to_default, channel=channel, default_runner=default_runner
         )
-        return
-    if session is None:
-        await runner.session_service.create_session(
-            app_name="bonsai_sensei",
-            user_id=user_id,
-            session_id=str(user_id),
-            state=state_delta,
-        )
-        return
-    storage_session = runner.session_service.sessions.get("bonsai_sensei", {}).get(user_id, {}).get(str(user_id))
-    if storage_session:
-        storage_session.state.update(state_delta)
+    return channel
 
 
-def _is_session_stale(session) -> bool:
-    last_activity_raw = session.state.get(_LAST_ACTIVITY_KEY)
-    if last_activity_raw is None:
-        return False
-    last_activity = datetime.fromisoformat(last_activity_raw)
-    if last_activity.tzinfo is None:
-        last_activity = last_activity.replace(tzinfo=timezone.utc)
-    return datetime.now(timezone.utc) - last_activity > timedelta(hours=INACTIVITY_THRESHOLD_HOURS)
-
-
-def _build_user_message(text: str) -> types.Content:
-    return types.Content(role="user", parts=[types.Part(text=text)])
-
-
-async def _pop_photos_taken_on(runner: InMemoryRunner, user_id: str) -> list:
-    session = await runner.session_service.get_session(
-        app_name="bonsai_sensei",
-        user_id=user_id,
-        session_id=str(user_id),
-    )
-    if session is None:
-        return []
-    taken_on_list = list(session.state.get("photos_for_analysis_taken_on") or [])
-    session.state["photos_for_analysis_taken_on"] = []
-    return taken_on_list
-
-
-async def _run_agent(
-    runner: InMemoryRunner,
+async def _handle_channel_transition(
+    current_channel: str | None,
+    current_session_id: str,
+    channel_runners: dict[str, tuple[ChannelConfig, Runner]],
+    session_service,
     user_id: str,
-    message: types.Content,
-    progress_callback: Callable[[str], None] | None,
-) -> list:
-    run_config = RunConfig(max_llm_calls=DEFAULT_MAX_LLM_CALLS)
-    with _tracer.start_as_current_span("agent.run") as span:
-        span.set_attribute("session.id", user_id)
-        span.set_attribute("agent.name", "sensei")
-        span.set_attribute("model.max_llm_calls", DEFAULT_MAX_LLM_CALLS)
-        start_time = time.monotonic()
-        events = []
-        async for event in runner.run_async(
-            user_id=user_id,
-            session_id=str(user_id),
-            new_message=message,
-            run_config=run_config,
-        ):
-            events.append(event)
-            if progress_callback:
-                progress_text = _extract_progress_message(event)
-                if progress_text:
-                    await progress_callback(progress_text)
-        latency_ms = (time.monotonic() - start_time) * 1000
-        span.set_attribute("agent.event_count", len(events))
-    _execution_counter.add(1, {"user.id": user_id})
-    _execution_latency.record(latency_ms, {"user.id": user_id})
-    return events
-
-
-def _extract_progress_message(event) -> str | None:
-    if not (event.content and hasattr(event.content, "parts") and event.content.parts):
-        return None
-    for part in event.content.parts:
-        function_call = getattr(part, "function_call", None)
-        if function_call and function_call.name in _PROGRESS_MESSAGES:
-            return _PROGRESS_MESSAGES[function_call.name]
-    return None
-
-
-async def _collect_and_clear_photos(runner: InMemoryRunner, user_id: str) -> list[str]:
-    session = await runner.session_service.get_session(
-        app_name="bonsai_sensei",
-        user_id=user_id,
-        session_id=str(user_id),
+) -> None:
+    check_session = await session_service.get_session(
+        app_name=APP_NAME, user_id=user_id, session_id=current_session_id
     )
-    if session is None:
-        return []
-    photos = list(session.state.get("photos_to_display") or [])
-    session.state["photos_to_display"] = []
-    return photos
-
-
-async def _capture_session_to_memory_safe(runner: InMemoryRunner, user_id: str, memory_service: BaseMemoryService) -> None:
-    try:
-        await _capture_session_to_memory(runner, user_id, memory_service)
-    except Exception:
-        logging.exception("Memory capture failed for user_id=%s", user_id)
-
-
-async def _capture_session_to_memory(runner: InMemoryRunner, user_id: str, memory_service: BaseMemoryService) -> None:
-    session = await runner.session_service.get_session(
-        app_name="bonsai_sensei",
-        user_id=user_id,
-        session_id=str(user_id),
+    new_channel_raw = (
+        check_session.state.get(ACTIVE_CHANNEL_MAIN_STATE_KEY)
+        if check_session
+        else None
     )
-    if session is None:
+    new_channel = new_channel_raw if new_channel_raw in channel_runners else None
+
+    if new_channel == current_channel:
         return
-    await memory_service.add_session_to_memory(session)
-    stored_session = runner.session_service.sessions.get("bonsai_sensei", {}).get(user_id, {}).get(str(user_id))
-    if stored_session:
-        stored_session.state.update({key: value for key, value in session.state.items() if key not in stored_session.state or stored_session.state[key] != value})
+    if current_channel:
+        channel_cfg, _ = channel_runners[current_channel]
+        if channel_cfg.on_exit:
+            await channel_cfg.on_exit(session_service, user_id)
+    if new_channel:
+        new_cfg, _ = channel_runners[new_channel]
+        main_session = await session_service.get_session(
+            app_name=APP_NAME, user_id=user_id, session_id=str(user_id)
+        )
+        if new_cfg.on_enter and main_session:
+            await new_cfg.on_enter(session_service, user_id, main_session)
 
 
-def _build_response_texts(events: list) -> list[str]:
-    response_texts = []
+async def _collect_response(
+    session_service, user_id: str, events: list
+) -> AdvisorResponse:
+    photos_taken_on = await pop_state_list(
+        session_service, user_id, "photos_for_analysis_taken_on"
+    )
+    photos = await pop_state_list(session_service, user_id, "photos_to_display")
+    return AdvisorResponse(
+        text="\n".join(build_response_texts(events)),
+        photos=photos,
+        photos_taken_on=photos_taken_on,
+    )
 
-    for event in events:
-        if event.content and hasattr(event.content, "parts") and event.content.parts:
-            for part in event.content.parts:
-                if hasattr(part, "text") and part.text:
-                    response_texts.append(part.text)
 
-    return response_texts
+def _resolve_runner_for_channel(
+    current_channel: str | None,
+    channel_runners: dict[str, tuple[ChannelConfig, Runner]],
+    default_runner: Runner,
+    user_id: str,
+) -> tuple[Runner, str]:
+    if current_channel:
+        channel_cfg, channel_runner = channel_runners[current_channel]
+        return channel_runner, channel_cfg.session_id_for(user_id)
+    return default_runner, str(user_id)
+
+
+async def _initialize_channel_session(
+    session_service, user_id: str, main_session, *, channel: ChannelConfig
+) -> None:
+    await create_channel_session(session_service, user_id, channel, main_session)
+
+
+async def _handoff_channel_to_default(
+    session_service, user_id: str, *, channel: ChannelConfig, default_runner: Runner
+) -> None:
+    await sync_handoff_summary_to_main_session(
+        session_service, user_id, channel.session_id_for(user_id)
+    )
+    await release_channel_in_main_session(session_service, user_id)
+    await inject_handoff_summary(default_runner, session_service, user_id)

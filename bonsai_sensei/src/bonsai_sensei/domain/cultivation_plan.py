@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 from sqlmodel import select, Session
 
-from bonsai_sensei.domain.planned_work import PlannedWork
+from bonsai_sensei.domain.planned_work import PlannedWork, PlannedWorkPhoto
 from bonsai_sensei.database.session_wrapper import with_session
 
 
@@ -40,6 +40,24 @@ def get_planned_work(session: Session, work_id: int) -> PlannedWork | None:
 def create_planned_work(session: Session, planned_work: PlannedWork) -> PlannedWork:
     session.add(planned_work)
     return planned_work
+
+
+@with_session
+def update_planned_work_wiki_paths(
+    session: Session,
+    work_id: int,
+    refinement_wiki_path: str | None = None,
+    result_wiki_path: str | None = None,
+) -> PlannedWork | None:
+    work = session.get(PlannedWork, work_id)
+    if not work:
+        return None
+    if refinement_wiki_path is not None:
+        work.refinement_wiki_path = refinement_wiki_path
+    if result_wiki_path is not None:
+        work.result_wiki_path = result_wiki_path
+    session.add(work)
+    return work
 
 
 @with_session
@@ -88,3 +106,21 @@ def delete_future_planned_works_by_plan(session: Session, plan_id: int, cutoff_d
     for work in works:
         session.delete(work)
     return len(works)
+
+
+@with_session
+def link_recent_photos_to_work(session: Session, bonsai_id: int, planned_work_id: int, hours: int = 24) -> int:
+    from bonsai_sensei.domain.bonsai_photo import BonsaiPhoto
+    cutoff_date = (datetime.now(timezone.utc) - timedelta(hours=hours)).date()
+    already_linked_ids = set(session.exec(
+        select(PlannedWorkPhoto.photo_id).where(PlannedWorkPhoto.planned_work_id == planned_work_id)
+    ).all())
+    photos = session.exec(
+        select(BonsaiPhoto)
+        .where(BonsaiPhoto.bonsai_id == bonsai_id)
+        .where(BonsaiPhoto.taken_on >= cutoff_date)
+    ).all()
+    new_links = [photo for photo in photos if photo.id not in already_linked_ids]
+    for photo in new_links:
+        session.add(PlannedWorkPhoto(planned_work_id=planned_work_id, photo_id=photo.id))
+    return len(new_links)

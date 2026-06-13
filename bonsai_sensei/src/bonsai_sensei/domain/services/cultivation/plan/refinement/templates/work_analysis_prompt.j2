@@ -1,0 +1,54 @@
+Redacta una página de wiki de **análisis previo al trabajo** en Markdown.
+El objetivo es documentar las decisiones tomadas antes de ejecutar el trabajo para poder retomarlo con claridad.
+
+## Datos
+
+Bonsái: {{ bonsai_name }}
+Tipo de trabajo: {{ work_type }}
+Fecha del análisis: {{ today }}
+{% if planned_works %}
+
+Trabajos planificados relacionados:
+{% for work in planned_works %}
+- {{ work.work_type }} — fecha: {{ work.scheduled_date }}{% if work.notes %} — {{ work.notes }}{% endif %}
+{% endfor %}
+{% endif %}
+
+## Síntesis de la sesión
+
+{{ notes }}
+{% if photo_analyses %}
+
+## Observaciones visuales (fotos analizadas)
+
+{% for analysis in photo_analyses %}
+---
+{{ analysis }}
+{% endfor %}
+{% endif %}
+{% if plan_wiki_content %}
+
+## Plan de desarrollo asociado
+
+{{ plan_wiki_content }}
+{% endif %}
+{% if bonsai_wiki_content %}
+
+## Ficha del bonsái
+
+{{ bonsai_wiki_content }}
+{% endif %}
+
+## Instrucciones de formato
+
+Genera la página wiki con estas secciones:
+
+1. **Encabezado**: título "Análisis previo — {work_type} — {bonsai_name} — {today}", fecha, tipo de trabajo
+2. **Estado del árbol**: observaciones sobre el estado actual relevantes para el trabajo
+3. **Objetivo del trabajo**: qué se quiere conseguir con esta intervención
+4. **Decisiones técnicas**: qué hacer exactamente, dónde, cómo, con qué herramientas
+5. **Precauciones**: riesgos a tener en cuenta, lo que NO hacer
+6. **Seguimiento post-trabajo**: qué observar después, cuándo revisar el resultado
+
+Usa Markdown: # para secciones, **negrita** para puntos clave, - para listas.
+Responde ÚNICAMENTE con el contenido Markdown, sin texto adicional.

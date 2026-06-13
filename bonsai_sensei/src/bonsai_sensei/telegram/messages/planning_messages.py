@@ -102,3 +102,13 @@ def build_delete_confirmation(work) -> str:
 
 def build_bonsai_name_question() -> str:
     return "¿Para qué bonsái?"
+
+
+def build_kiroku_work_selection_question(bonsai_name: str) -> str:
+    return f"¿Sobre qué trabajo planificado de '{display_name(bonsai_name)}' quieres trabajar?"
+
+
+def build_kiroku_work_option_label(work) -> str:
+    date_str = format_date(work.scheduled_date)
+    return f"{work.work_type} — {date_str}"
+

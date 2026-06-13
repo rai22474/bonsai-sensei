@@ -4,6 +4,41 @@ Iniciativas pendientes que aún no están listas para implementar. Consultar ant
 
 ---
 
+## FUTURE-022 — Mover advisor/session_manager/runner a capa de infraestructura
+
+**Motivación**: `advisor.py`, `session_manager.py` y `runner.py` viven en `domain/services/sensei/` pero son adaptadores de infraestructura ADK — saben de `Runner`, `InMemorySessionService`, `App`, lifecycle de sesiones. Son **port adapters** que conectan el canal de usuario (Telegram/HTTP) con los agentes del dominio, no lógica de dominio.
+
+**Cambio propuesto**:
+```
+domain/services/sensei/       ← solo agentes, instrucciones, factories
+infrastructure/advisor/        ← advisor.py, session_manager.py, runner.py
+infrastructure/adk/            ← tool_tracer.py, tool_limiter.py,
+                                  single_tool_call_callback.py
+```
+
+`tool_tracer.py` (OpenTelemetry), `tool_limiter.py` (ToolContext ADK) y `single_tool_call_callback.py` (after_model_callback ADK) viven actualmente en `domain/services/` pero son adaptadores de infraestructura ADK/observabilidad, no lógica de dominio.
+
+**Bloqueante**: requiere actualizar imports en `main.py`, `api/advice.py`, todos los factories de agentes, y tests. Sin impacto funcional.
+
+---
+
+## FUTURE-021 — Rediseño del dominio con DDD
+
+**Motivación**: El dominio actual mezcla patrones. Las entidades SQLModel son anémicas (solo datos), los "repositorios" (`cultivation_plan.py`, `bonsai_photo_store.py`, etc.) hacen CRUD directo con `@with_session`, y los "domain services" son en realidad herramientas de agente ADK. No hay aggregates, value objects ni domain events definidos explícitamente.
+
+**Problema concreto que lo originó**: `link_recent_photos_to_work` cruza la frontera entre el aggregate `PlannedWork` y el aggregate `BonsaiPhoto`. En DDD estricto, esto es trabajo de un Domain Service, pero el proyecto no tiene esa capa separada de los agentes ADK.
+
+**Alcance del rediseño**:
+- Identificar aggregates, aggregate roots y value objects para cada bounded context (garden, cultivation, storekeeper).
+- Separar repositorios DDD (solo persistencia del aggregate) de los domain services (lógica de negocio que cruza fronteras).
+- Decidir si las entidades SQLModel deben ser ricas (comportamiento en el aggregate) o seguir anémicas con repositorios que encapsulan la lógica.
+- Revisar si los `@with_session` stores actuales son repositorios DDD o anti-patterns.
+- Documentar los bounded contexts y su mapping al código.
+
+**No urgente**: el diseño actual funciona y los tests pasan. Abordar cuando haya tiempo para refactor profundo sin presión de features.
+
+---
+
 ## FUTURE-016 — Refinación de trabajos planificados
 
 **Contexto:**
@@ -293,72 +328,198 @@ Ambos agentes son pure side-effect (no yieldan eventos). Para que Python los tra
 ## FUTURE-011 — DesignVision: visión artística evolutiva del bonsái
 
 **Contexto:**
-El agente de plan de diseño produce un calendario de trabajos técnicos, pero carece de ancla visual. El usuario necesita ver cómo evolucionará el árbol como obra artística antes de planificar. Esta iniciativa introduce `DesignVision` como entidad que captura esa visión mediante un diálogo abierto y una cadena de sketches generados por IA. El `DevelopmentPlan` se crea *a partir* de la visión, no al revés.
+El agente de plan de diseño produce un calendario de trabajos técnicos, pero carece de ancla visual. El usuario necesita ver cómo evolucionará el árbol como obra artística antes de planificar. Esta iniciativa introduce `DesignVision` como entidad que captura esa visión mediante un diálogo abierto y una cadena de estados estructurados que se materializan en sketches generados por IA. El `DevelopmentPlan` se crea *a partir* de la visión, no al revés.
+
+**Principio de diseño central:** el schema textual (`BonsaiDesignState`) es la fuente de verdad. Los sketches son visualizaciones del schema, no el sustrato del razonamiento. El LLM razona sobre schemas; Imagen API renderiza el resultado. Esto garantiza coherencia estructural, trazabilidad de decisiones y aplicación fiable de reglas de especie.
 
 ---
 
-### Entidad `DesignVision`
+### Entidades
 
 ```
 DesignVision
   id
-  bonsai_id       FK → bonsai
-  status          "active" | "archived"
+  bonsai_id         FK → bonsai
+  status            "active" | "archived"
   created_at
-  archived_at     nullable
-  wiki_path       ruta al directorio de sketches dentro del plan (design-plans/{periodo}/)
+  archived_at       nullable
+  wiki_path         ruta al directorio de sketches (design-plans/{periodo}/)
 
 DesignVisionPhase
   id
   design_vision_id  FK → design_vision
   phase_order       int (0 = estado actual, 1..N = fases intermedias, -1 = visión final)
   label             str  (ej. "temporada 1", "temporada 2", "visión final")
-  description       str  (descripción textual del objetivo de esta fase)
-  sketch_path       ruta al archivo de imagen generado
+  state_json        BonsaiDesignState  ← schema estructurado de esta fase
+  sketch_path       ruta al archivo de imagen generado (nullable hasta que se renderice)
+
+PhaseTransition
+  id
+  design_vision_id  FK → design_vision
+  from_phase_order  int
+  to_phase_order    int
+  status            "pending" | "applied" | "needs_recompute"
+  techniques_json   lista de Technique  ← trabajos necesarios para pasar de una fase a la siguiente
+  expected_growth   GrowthEstimate      ← crecimiento natural esperado entre fases
 ```
 
 Un árbol tiene como máximo una `DesignVision` con `status = "active"`. Cuando se sustituye, la anterior pasa a `archived`.
 
 ---
 
-### Cadena de sketches
+### BonsaiDesignState — schema por fase
 
-Cada fase se materializa como un sketch de tinta generado por Imagen API:
+Cada `DesignVisionPhase` persiste un `BonsaiDesignState` que describe el árbol en ese punto de la visión. El schema captura anatomía inmutable (tronco, ramas primarias, madera muerta) y estado mutable (follaje, espacio negativo, intención de diseño).
 
-- **Fase 0 (estado actual):** foto real más reciente de galería → Imagen API con prompt `sketch-from-photo-v2` → sketch inicial fiel al árbol real.
-- **Fases intermedias y final:** sketch de la fase anterior → Imagen API con prompt que incorpora descripción textual del objetivo + principios de diseño de la especie + reglas de estilo desde wiki → sketch evolucionado.
-
-Los sketches no se regeneran desde foto real; se encadenan desde el sketch anterior. Esto mantiene la coherencia estructural a lo largo de la secuencia.
-
-**Riesgo técnico:** la cadena requiere que Imagen API soporte image-to-image editing (imagen entrada + instrucción textual). Verificar disponibilidad en `google.genai` antes de implementar. Alternativa si no disponible: texto → imagen pura para fases intermedias, aceptando menos fidelidad estructural.
+```json
+{
+  "version": "1.0",
+  "phase_order": 0,
+  "provenance": {
+    "type": "photo_initial | photo_recalibration | planned",
+    "photo_uri": "...",
+    "recalibrates_phase": null
+  },
+  "tree_state": {
+    "style_current": "moyogi",
+    "trunk": {
+      "base_position": "centrado, inclinación leve izquierda",
+      "movement": "curva suave hacia arriba con ligero giro en el tercio superior",
+      "visual_priority": "primary_feature",
+      "preserve_exact_line": true,
+      "visibility": "dominant"
+    },
+    "primary_branches": [
+      {
+        "id": "b1",
+        "position": "primer tercio inferior izquierda",
+        "direction": "se extiende izquierda y hacia delante",
+        "preserve": true
+      }
+    ],
+    "deadwood": {
+      "presence": true,
+      "location": "apex y rama b2 superior derecha",
+      "importance": "dominant_focal_point",
+      "preserve": true
+    },
+    "foliage_pads": [
+      {
+        "id": "fp1",
+        "position": "inferior izquierda",
+        "role": "primera rama principal",
+        "size": "large",
+        "shape": "horizontal extendida",
+        "direction": "hacia izquierda y adelante"
+      }
+    ],
+    "negative_space": {
+      "current_level": "low"
+    }
+  },
+  "design_intent": {
+    "style_target": "moyogi refinado",
+    "aesthetic_goals": ["abrir espacio negativo en apex", "definir pads triangulares"],
+    "intensity": "moderate",
+    "negative_space_target": "medium"
+  },
+  "planned_changes": {
+    "preserve": ["línea exacta del tronco", "jin del apex", "rama b1"],
+    "reduce": ["densidad follaje zona superior derecha"],
+    "create": ["pad triangular fp3 zona media izquierda"],
+    "avoid": ["eliminar más del 30% del follaje total — especie pino"]
+  },
+  "target_state": {
+    "description": "Copa más aireada con tres pads triangulares bien definidos. Madera muerta del apex visible como elemento focal.",
+    "foliage_pads": [
+      {
+        "id": "fp1",
+        "position": "inferior izquierda",
+        "role": "primera rama principal",
+        "size": "large",
+        "shape": "horizontal extendida",
+        "direction": "hacia izquierda y adelante"
+      }
+    ]
+  }
+}
+```
 
 ---
 
-### Flujo de creación
+### PhaseTransition — técnicas y crecimiento esperado
 
-Se invoca como parte del tool "crear plan de diseño". Si el árbol ya tiene una `DesignVision` activa, se salta la sesión y se usa directamente para crear el `DevelopmentPlan`.
+Cada transición entre fases persiste las técnicas necesarias y el crecimiento natural esperado. Las técnicas se derivan de la diferencia entre `tree_state` de fase N y `target_state` de fase N, filtradas por las reglas de especie de la wiki.
 
-1. **Check:** ¿existe `DesignVision` activa para el árbol?
-   - Sí → ir directamente a creación del `DevelopmentPlan` con la visión existente.
-   - No → ejecutar sesión de diseño visual.
+```json
+{
+  "techniques": [
+    {
+      "id": "t1",
+      "category": "pruning | wiring | defoliation | repotting | jin_creation | pinching | grafting",
+      "description": "reducir copa derecha superior para abrir espacio negativo hacia el apex",
+      "target_elements": ["fp2", "b3"],
+      "species_compatible": true,
+      "risk_level": "low | medium | high | lethal",
+      "timing_constraint": "post-dormancy | growing_season | any",
+      "becomes_work_item": true
+    }
+  ],
+  "expected_growth": {
+    "seasons_estimated": 2,
+    "foliage_density_change": "increase_moderate",
+    "branch_extension": "ramas primarias extienden ~8cm",
+    "notes": "pino: no recupera follaje eliminado — conservar mínimo 1 par de acículas por rama"
+  }
+}
+```
 
-2. **Sesión de diseño visual** (diálogo abierto, sin preguntas rígidas):
-   - El sistema genera el sketch inicial (fase 0) a partir de la foto más reciente.
-   - El sistema sugiere posibilidades de diseño basadas en wiki de especie + estilo objetivo + técnicas disponibles.
-   - Diálogo libre: el usuario describe qué quiere que sea el árbol como obra artística. El sistema hace preguntas solo si necesita clarificación.
-   - El sistema propone un número de fases con descripción textual de cada una.
-   - Para cada fase acordada: genera el sketch correspondiente encadenando desde el anterior.
-   - El usuario aprueba o pide ajustes en la descripción textual (no en la imagen directamente — texto primero, imagen al final de cada fase).
-
-3. **Persistencia:** se crea `DesignVision` + `DesignVisionPhase` por cada fase. Los sketches se guardan en `users/{user_id}/bonsai/{slug}/design-plans/{periodo}/sketches/`.
-
-4. **Creación del `DevelopmentPlan`:** el LLM recibe el sketch de la fase 0 + sketch de la fase objetivo (la siguiente en la secuencia) en paralelo (comparación multimodal) → infiere la brecha visual → genera el calendario de trabajos técnicos para cerrar esa brecha.
+El campo `becomes_work_item: true` marca las técnicas que se convierten directamente en `PlannedWork` del `DevelopmentPlan`. Las reglas de especie (`risk_level: "lethal"`) provienen de la wiki y se aplican durante el razonamiento textual, no durante la generación de imagen.
 
 ---
 
-### Comparación multimodal para generar trabajos
+### Flujo de generación (razonamiento textual → sketch como output)
 
-El LLM recibe ambas imágenes (estado actual + objetivo de fase) vía `types.Part(inline_data=...)` más el contexto textual de la fase. Razona visualmente sobre la brecha (dirección de ramas, densidad de follaje, proporción tronco/copa, etc.) y produce la lista de técnicas necesarias para la temporada.
+El razonamiento ocurre sobre schemas; la imagen es el resultado final, no el input del siguiente paso.
+
+**Fase 0 — extracción inicial (único paso visual→textual):**
+1. Foto real más reciente → LLM visión → `BonsaiDesignState_0` (provenance: `photo_initial`)
+2. Usuario valida y corrige el schema antes de continuar
+
+**Fases 1..N — razonamiento textual:**
+1. `BonsaiDesignState_N` + `design_intent` + wiki de especie → LLM texto → `PhaseTransition_N→N+1` + `BonsaiDesignState_N+1`
+2. Usuario revisa técnicas y estado objetivo; puede ajustar antes de renderizar
+3. `BonsaiDesignState_N+1` → prompt estructurado → Imagen API → `Sketch_N+1`
+
+Los sketches no se encadenan entre sí. Cada sketch se genera desde el schema de su fase — el schema es la continuidad, no la imagen.
+
+---
+
+### Recalibración — nueva foto en cualquier fase
+
+En cualquier momento el usuario puede aportar una nueva foto del árbol real. Esto actualiza el estado observado y puede invalidar transiciones planificadas.
+
+1. Nueva foto → LLM visión → `BonsaiDesignState_N_observed` (provenance: `photo_recalibration`, `recalibrates_phase: N`)
+2. LLM texto: `delta(State_N_planned, State_N_observed)` → lista de diferencias
+3. Usuario revisa delta: acepta o ajusta
+4. `BonsaiDesignState_N_observed` reemplaza `State_N_planned` como base
+5. Transiciones `N→N+1`, `N+1→N+2`... pasan a `status: "needs_recompute"`
+6. LLM recomputa cada transición afectada desde el nuevo estado observado
+7. Sketches de fases downstream se invalidan y regeneran desde los nuevos schemas
+
+El árbol real manda; el plan se adapta.
+
+---
+
+### Creación del DevelopmentPlan desde la visión
+
+Una vez creada la `DesignVision`, el `DevelopmentPlan` se genera leyendo la `PhaseTransition` cuyo `from_phase_order` corresponde a la fase actual:
+
+1. Filtrar técnicas donde `becomes_work_item: true`
+2. Agrupar por `timing_constraint` → calendario de temporada
+3. Usar `expected_growth.seasons_estimated` para proyectar fechas
+
+El plan no infiere técnicas desde imágenes — las lee de la transición ya validada.
 
 ---
 
@@ -378,6 +539,11 @@ users/{user_id}/bonsai/{slug}/design-plans/{periodo}/
     01-temporada-1.png
     02-temporada-2.png
     final.png
+  states/
+    00-estado-actual.json   ← BonsaiDesignState por fase
+    01-temporada-1.json
+    02-temporada-2.json
+    final.json
 ```
 
 ---
@@ -385,12 +551,12 @@ users/{user_id}/bonsai/{slug}/design-plans/{periodo}/
 ### Prompts
 
 Los prompts de generación están versionados en [`docs/image_prompts.md`](image_prompts.md):
-- `sketch-from-photo-v2` (activo) — foto real → sketch inicial fiel al tronco real.
-- Pendiente: prompt para evolución de sketch (fase anterior → fase siguiente). Diseñar cuando se confirme soporte image-to-image en Imagen API.
+- `sketch-from-photo-v2` (activo) — foto real → `BonsaiDesignState_0` inicial.
+- Pendiente: prompt schema→sketch (renderizado de `BonsaiDesignState` → sketch de tinta). Las constraints `preserve: true` del schema se inyectan como restricciones duras.
 
 ---
 
-**Dependencia:** FUTURE-012 implementado ✅. Verificar soporte image-to-image en `google.genai` Imagen API antes de comenzar la implementación de la cadena de sketches.
+**Dependencia:** FUTURE-012 implementado ✅.
 
 ---
 

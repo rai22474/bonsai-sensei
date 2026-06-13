@@ -1,0 +1,54 @@
+Redacta una página de wiki de **resultado del trabajo** en Markdown.
+El objetivo es documentar lo que se hizo, el resultado observado y los aprendizajes para consultas futuras.
+
+## Datos
+
+Bonsái: {{ bonsai_name }}
+Tipo de trabajo: {{ work_type }}
+Fecha de ejecución: {{ today }}
+{% if planned_works %}
+
+Trabajos planificados relacionados:
+{% for work in planned_works %}
+- {{ work.work_type }} — fecha planificada: {{ work.scheduled_date }}{% if work.notes %} — {{ work.notes }}{% endif %}
+{% endfor %}
+{% endif %}
+
+## Síntesis de la sesión
+
+{{ notes }}
+{% if photo_analyses %}
+
+## Análisis de fotos del resultado
+
+{% for analysis in photo_analyses %}
+---
+{{ analysis }}
+{% endfor %}
+{% endif %}
+{% if plan_wiki_content %}
+
+## Plan de desarrollo asociado
+
+{{ plan_wiki_content }}
+{% endif %}
+{% if bonsai_wiki_content %}
+
+## Ficha del bonsái
+
+{{ bonsai_wiki_content }}
+{% endif %}
+
+## Instrucciones de formato
+
+Genera la página wiki con estas secciones:
+
+1. **Encabezado**: título "Resultado — {work_type} — {bonsai_name} — {today}", fecha, tipo de trabajo
+2. **Trabajo realizado**: descripción concreta de lo que se hizo (ramas cortadas, técnicas aplicadas, materiales usados)
+3. **Resultado observado**: estado del árbol después del trabajo, respuesta inmediata
+4. **Análisis fotográfico**: si hay fotos, describe lo que se aprecia en el resultado visual
+5. **Aprendizajes**: qué funcionó bien, qué mejorar en la próxima vez, observaciones relevantes
+6. **Seguimiento**: qué vigilar en las próximas semanas, cuándo revisar la recuperación
+
+Usa Markdown: # para secciones, **negrita** para puntos clave, - para listas.
+Responde ÚNICAMENTE con el contenido Markdown, sin texto adicional.

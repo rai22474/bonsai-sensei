@@ -36,6 +36,7 @@ from bonsai_sensei.domain.services.cultivation.plan.fertilization.evaluate impor
     create_evaluate_fertilization_plan_tool,
 )
 from bonsai_sensei.domain.services.cultivation.plan.design.factory import create_design_plan_tools
+from bonsai_sensei.domain.services.cultivation.plan.refinement.start_work_documentation import create_start_work_documentation_tool
 from bonsai_sensei.infrastructure.wiki_client import (
     create_http_read_wiki_page_tool,
     create_http_write_wiki_page_tool,
@@ -68,6 +69,8 @@ def create_kikaru_group(
     orchestrator_model: object = None,
     ask_poll: Callable | None = None,
     search_memory_func: Callable | None = None,
+    build_kiroku_work_selection_question: Callable | None = None,
+    build_kiroku_work_option_label: Callable | None = None,
 ):
     effective_orchestrator_model = orchestrator_model or model
     kb_base_url = os.getenv("KB_BASE_URL", "http://knowledge_base:8080")
@@ -206,6 +209,17 @@ def create_kikaru_group(
         ask_poll=ask_poll,
         search_memory_func=search_memory_func,
     )
+    start_work_documentation_tool = None
+    if build_kiroku_work_selection_question and build_kiroku_work_option_label:
+        start_work_documentation_tool = create_start_work_documentation_tool(
+            get_bonsai_by_name_func=partial(garden.get_bonsai_by_name, create_session=session_factory),
+            list_planned_works_func=partial(cultivation_plan.list_planned_works, create_session=session_factory),
+            ask_human=ask_human,
+            ask_selection=ask_selection,
+            build_bonsai_name_question=build_bonsai_name_question,
+            build_work_selection_question=build_kiroku_work_selection_question,
+            build_work_option_label=build_kiroku_work_option_label,
+        )
 
     return create_kikaru(
         model=model,
@@ -221,6 +235,7 @@ def create_kikaru_group(
         create_transplant_tool=create_transplant_tool,
         delete_planned_work_tool=delete_planned_work_tool,
         list_planned_works_tool=list_planned_works_tool,
+        start_work_documentation_tool=start_work_documentation_tool,
     )
 
 

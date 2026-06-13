@@ -37,6 +37,8 @@ def create_cultivation_group(
     ask_poll: Callable | None = None,
     register_background_task: Callable | None = None,
     search_memory_func: Callable | None = None,
+    build_kiroku_work_selection_question: Callable | None = None,
+    build_kiroku_work_option_label: Callable | None = None,
 ):
     botanist = create_botanist_group(
         model=model,
@@ -78,5 +80,7 @@ def create_cultivation_group(
         orchestrator_model=orchestrator_model,
         ask_poll=ask_poll,
         search_memory_func=search_memory_func,
+        build_kiroku_work_selection_question=build_kiroku_work_selection_question,
+        build_kiroku_work_option_label=build_kiroku_work_option_label,
     )
     return botanist, kikaru

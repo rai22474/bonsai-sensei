@@ -3,6 +3,7 @@ import os
 import time
 import traceback
 from contextlib import asynccontextmanager
+from datetime import date, datetime, timedelta, timezone
 from functools import partial
 from pathlib import Path
 
@@ -12,7 +13,10 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, PollAnswerHandler, filters
 
-from bonsai_sensei.domain.services.sensei.advisor import create_advisor
+from bonsai_sensei.domain.services.sensei.advisor import create_advisor, AdvisorResponse
+from bonsai_sensei.domain.services.sensei.session_manager import ChannelConfig
+from bonsai_sensei.domain.services.sensei.session_manager import LAST_ACTIVITY_STATE_KEY
+from bonsai_sensei.domain.services.cultivation.plan.refinement.factory import create_kiroku_group
 from bonsai_sensei.memory.episodic_memory_service import EpisodicMemoryService, create_search_memory_func
 from bonsai_sensei.domain.services.sensei.agents_factory import create_sensei_agent
 from bonsai_sensei.domain.services.cultivation.species.tavily_searcher import create_tavily_searcher
@@ -73,6 +77,8 @@ from bonsai_sensei.telegram.messages.planning_messages import (
     build_abandon_phytosanitary_plan_confirmation,
     build_abandon_development_plan_confirmation,
     build_bonsai_name_question,
+    build_kiroku_work_selection_question,
+    build_kiroku_work_option_label,
 )
 from bonsai_sensei.telegram.messages.storekeeper_messages import (
     build_create_fertilizer_confirmation,
@@ -290,6 +296,8 @@ async def lifespan(app: FastAPI):
             "build_abandon_phytosanitary_plan_confirmation": build_abandon_phytosanitary_plan_confirmation,
             "build_abandon_development_plan_confirmation": build_abandon_development_plan_confirmation,
             "build_bonsai_name_question": build_bonsai_name_question,
+            "build_kiroku_work_selection_question": build_kiroku_work_selection_question,
+            "build_kiroku_work_option_label": build_kiroku_work_option_label,
         },
         garden_messages={
             "build_create_bonsai_confirmation": build_create_bonsai_confirmation,
@@ -328,9 +336,59 @@ async def lifespan(app: FastAPI):
         },
     )
 
+    kiroku_agent = create_kiroku_group(
+        model=model,
+        session_factory=get_session_partial,
+        ask_human=ask_human_func,
+        ask_selection=ask_selection_func,
+        build_bonsai_name_question=build_bonsai_name_question,
+        build_work_selection_question=build_kiroku_work_selection_question,
+        build_work_option_label=build_kiroku_work_option_label,
+        pending_photos=app.state.pending_photos,
+        orchestrator_model=orchestrator_model,
+        search_memory_func=search_memory_func,
+    )
+
+    get_user_settings_func = services["user_settings"]["get_user_settings"]
+
+    def build_sensei_context_state(user_id: str) -> dict:
+        user_settings = get_user_settings_func(user_id)
+        user_location = user_settings.location if user_settings and user_settings.location else ""
+        today = date.today()
+        days_until_saturday = (5 - today.weekday()) % 7 or 7
+        next_saturday = (today + timedelta(days=days_until_saturday)).isoformat()
+        return {
+            "current_date": today.isoformat(),
+            "next_saturday": next_saturday,
+            "user_location": user_location,
+            "photos_to_display": [],
+            "photos_for_analysis_taken_on": [],
+            LAST_ACTIVITY_STATE_KEY: datetime.now(timezone.utc).isoformat(),
+        }
+
     app.state.advisor, app.state.reset_session = create_advisor(
-        sensei_agent=sensei_agent,
-        get_user_settings_func=services["user_settings"]["get_user_settings"],
+        default_agent=sensei_agent,
+        channels=[
+            ChannelConfig(
+                name="kiroku",
+                agent=kiroku_agent,
+                session_id_for=lambda uid: f"{uid}:kiroku",
+                state_init_prefix="kiroku_",
+            ),
+        ],
+        progress_messages={
+            "command_pipeline": "🗺️ Elaborando un plan de acción...",
+            "gardener": "🌱 Gestionando la colección de bonsáis...",
+            "kantei": "🔍 Analizando la foto...",
+            "botanist": "🌿 Consultando el herbario de especies...",
+            "kikaru": "📅 Planificando trabajos de cultivo...",
+            "kiroku": "📝 Documentando el trabajo...",
+            "weather_advisor": "🌤️ Consultando el pronóstico meteorológico...",
+            "storekeeper": "📦 Consultando el catálogo de insumos...",
+            "recommend_fertilizer": "🧪 Seleccionando fertilizante...",
+            "recommend_phytosanitary": "🛡️ Seleccionando producto fitosanitario...",
+        },
+        context_state_builder=build_sensei_context_state,
         memory_service=memory_service,
     )
 
